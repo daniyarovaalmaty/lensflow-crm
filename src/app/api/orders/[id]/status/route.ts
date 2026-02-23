@@ -60,6 +60,10 @@ export async function PATCH(
             order.shipped_at = now;
         }
 
+        if (validatedData.status === 'delivered' && !order.delivered_at) {
+            order.delivered_at = now;
+        }
+
         if (validatedData.notes) {
             order.notes = validatedData.notes;
         }

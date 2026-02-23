@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Package, Clock, CheckCircle, TruckIcon,
     Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock
+    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin
 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
@@ -66,6 +66,19 @@ export default function OpticDashboard() {
             console.error('Failed to load orders:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const confirmDelivery = async (orderId: string) => {
+        try {
+            await fetch(`/api/orders/${orderId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'delivered' }),
+            });
+            await loadOrders();
+        } catch (err) {
+            console.error('Failed to confirm delivery:', err);
         }
     };
 
@@ -475,18 +488,50 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                             {isExpanded ? 'Свернуть' : 'Подробнее'}
                                         </button>
 
+                                        {/* out_for_delivery: prominent confirmation button */}
+                                        {order.status === 'out_for_delivery' && (
+                                            <div className="mb-3">
+                                                <div className="flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2 mb-2">
+                                                    <Truck className="w-3.5 h-3.5" />
+                                                    Курьер доставляет ваш заказ
+                                                </div>
+                                                <button
+                                                    onClick={() => confirmDelivery(order.order_id)}
+                                                    className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                                                >
+                                                    <CheckCircle className="w-4 h-4" />
+                                                    Подтвердить получение
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* delivered: confirmation banner */}
+                                        {order.status === 'delivered' && (
+                                            <div className="flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2 mb-3">
+                                                <CheckCircle className="w-3.5 h-3.5" />
+                                                <span>Доставлен — вы подтвердили получение</span>
+                                                {order.delivered_at && (
+                                                    <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>
+                                                )}
+                                            </div>
+                                        )}
+
                                         {/* Edit window indicator */}
                                         {(() => {
                                             const editable = canEditOrder(order);
                                             const remainMs = editWindowRemainingMs(order);
                                             const countdown = formatCountdown(remainMs);
                                             if (order.status !== 'new') {
-                                                return (
-                                                    <span className="flex items-center gap-1 text-xs text-gray-400">
-                                                        <Lock className="w-3.5 h-3.5" />
-                                                        В производстве
-                                                    </span>
-                                                );
+                                                // show lock only if in non-editable production states
+                                                if (['in_production', 'ready', 'rework', 'shipped', 'cancelled'].includes(order.status)) {
+                                                    return (
+                                                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                                                            <Lock className="w-3.5 h-3.5" />
+                                                            В производстве
+                                                        </span>
+                                                    );
+                                                }
+                                                return null; // out_for_delivery and delivered have banners above
                                             }
                                             if (editable) {
                                                 return (

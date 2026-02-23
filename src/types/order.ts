@@ -87,6 +87,8 @@ export const OrderStatusEnum = z.enum([
     'ready',
     'rework',
     'shipped',
+    'out_for_delivery',
+    'delivered',
     'cancelled',
 ]);
 
@@ -98,6 +100,8 @@ export const OrderStatusLabels: Record<OrderStatus, string> = {
     ready: 'Готов',
     rework: 'На доработку',
     shipped: 'Отгружен',
+    out_for_delivery: 'В доставке',
+    delivered: 'Доставлен',
     cancelled: 'Отменен',
 };
 
@@ -107,6 +111,8 @@ export const OrderStatusColors: Record<OrderStatus, string> = {
     ready: 'bg-green-100 text-green-700',
     rework: 'bg-orange-100 text-orange-700',
     shipped: 'bg-gray-100 text-gray-700',
+    out_for_delivery: 'bg-purple-100 text-purple-700',
+    delivered: 'bg-teal-100 text-teal-700',
     cancelled: 'bg-red-100 text-red-700',
 };
 
@@ -177,6 +183,7 @@ export const OrderSchema = z.object({
     production_started_at: z.string().datetime().optional(),
     production_completed_at: z.string().datetime().optional(),
     shipped_at: z.string().datetime().optional(),
+    delivered_at: z.string().datetime().optional(),
     notes: z.string().optional(),
     payment_status: PaymentStatusEnum.optional(),
     defects: z.array(DefectRecordSchema).optional(),

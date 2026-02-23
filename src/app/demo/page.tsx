@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Rocket, Eye, Factory, Stethoscope, Shield, CheckCircle, Calculator, Briefcase, Users } from 'lucide-react';
+import { Rocket, Eye, Factory, Stethoscope, Shield, CheckCircle, Calculator, Briefcase, Users, Truck } from 'lucide-react';
 
 interface DemoAccount {
     key: string;
@@ -57,6 +57,15 @@ const DEMO_GROUPS = [
                 password: 'password123',
                 redirect: '/laboratory/production',
                 icon: Calculator,
+            },
+            {
+                key: 'lab_logistics',
+                label: 'Логист',
+                description: 'Доставка заказов',
+                email: 'logistics@lensflow.ru',
+                password: 'password123',
+                redirect: '/laboratory/production',
+                icon: Truck,
             },
         ],
     },

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
-    RotateCcw, Eye, ChevronDown, DollarSign, Zap
+    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs } from '@/types/order';
@@ -255,6 +255,8 @@ export default function ProductionHubPage() {
         ready: filteredOrders.filter(o => o.status === 'ready'),
         rework: filteredOrders.filter(o => o.status === 'rework'),
         shipped: filteredOrders.filter(o => o.status === 'shipped'),
+        out_for_delivery: filteredOrders.filter(o => o.status === 'out_for_delivery'),
+        delivered: filteredOrders.filter(o => o.status === 'delivered'),
     };
 
     const allDefects = useMemo(() => {
@@ -697,6 +699,33 @@ export default function ProductionHubPage() {
                                     Вернуть в работу
                                 </button>
                             )}
+
+                            {/* Logistician: take shipped order out for delivery */}
+                            {perms.canDeliver && order.status === 'shipped' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
+                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
+                                >
+                                    <Truck className="w-3.5 h-3.5" />
+                                    Передать в доставку
+                                </button>
+                            )}
+
+                            {/* Delivered: show confirmation pending */}
+                            {order.status === 'out_for_delivery' && (
+                                <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    Ждём подтверждения от врача
+                                </div>
+                            )}
+
+                            {order.status === 'delivered' && (
+                                <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                    Получение подтверждено
+                                    {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </motion.div>
@@ -1004,6 +1033,8 @@ export default function ProductionHubPage() {
                         <Column title="Готово" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
                         <Column title="На доработку" icon={RotateCcw} orders={ordersByStatus.rework} color="bg-orange-50 text-orange-700" />
                         <Column title="Отгружено" icon={TruckIcon} orders={ordersByStatus.shipped} color="bg-gray-50 text-gray-700" />
+                        <Column title="В доставке" icon={Truck} orders={ordersByStatus.out_for_delivery} color="bg-purple-50 text-purple-700" />
+                        <Column title="Доставлено" icon={CheckCircle} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
 
                         {/* Defects Column */}
                         <div className="flex-1 min-w-[260px]">

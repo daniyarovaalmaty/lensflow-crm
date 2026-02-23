@@ -55,6 +55,17 @@ export function seedDemoUsers() {
                 labName: 'Производственная лаборатория №1',
             },
         },
+        {
+            email: 'logistics@lensflow.ru',
+            password: bcrypt.hashSync('password123', 10),
+            role: 'laboratory',
+            subRole: 'lab_logistics',
+            profile: {
+                fullName: 'Логист Курьеров Тимур',
+                phone: '+77001001005',
+                labName: 'Производственная лаборатория №1',
+            },
+        },
         // ==================== Clinic (Optic) ====================
         {
             email: 'optic@lensflow.ru',

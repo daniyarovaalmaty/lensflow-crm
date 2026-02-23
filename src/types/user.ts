@@ -15,6 +15,7 @@ export const SubRoleEnum = z.enum([
     // Laboratory sub-roles
     'lab_engineer',     // Инженер
     'lab_quality',      // Контроль качества
+    'lab_logistics',    // Логист
     'lab_admin',        // Администратор
     'lab_accountant',   // Бухгалтер
 
@@ -31,6 +32,7 @@ export type SubRole = z.infer<typeof SubRoleEnum>;
 export const SubRoleLabels: Record<SubRole, string> = {
     lab_engineer: 'Инженер',
     lab_quality: 'Контроль качества',
+    lab_logistics: 'Логист',
     lab_admin: 'Администратор',
     lab_accountant: 'Бухгалтер',
     optic_manager: 'Руководитель',
@@ -41,7 +43,7 @@ export const SubRoleLabels: Record<SubRole, string> = {
 
 // Which sub-roles belong to which top-level role
 export const SubRolesByRole: Record<UserRole, SubRole[]> = {
-    laboratory: ['lab_engineer', 'lab_quality', 'lab_admin', 'lab_accountant'],
+    laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_admin', 'lab_accountant'],
     optic: ['optic_manager', 'optic_doctor', 'optic_accountant'],
     doctor: ['doctor'],
 };
@@ -59,6 +61,7 @@ export interface PermissionSet {
     canChangeStatus: boolean;  // generic: take to in_production / back from rework
     canMarkReady: boolean;     // engineer: in_production → ready
     canMarkRework: boolean;    // quality: ready → rework
+    canDeliver: boolean;       // logistics: shipped → out_for_delivery
     canAddDefects: boolean;
     canViewPayments: boolean;
     canChangePayments: boolean;
@@ -73,10 +76,11 @@ export interface PermissionSet {
 export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     lab_engineer: {
         canViewKanban: true,
-        canChangeStatus: true,   // takes order В работу
-        canMarkReady: true,      // sends to 'ready'
+        canChangeStatus: true,
+        canMarkReady: true,
         canMarkRework: false,
-        canAddDefects: true,     // logs defects at their stage
+        canDeliver: false,
+        canAddDefects: true,
         canViewPayments: false,
         canChangePayments: false,
         canShip: false,
@@ -88,13 +92,30 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     },
     lab_quality: {
         canViewKanban: true,
-        canChangeStatus: true,   // can return from rework
+        canChangeStatus: true,
         canMarkReady: false,
-        canMarkRework: true,     // sends 'ready' → 'rework'
+        canMarkRework: true,
+        canDeliver: false,
         canAddDefects: true,
         canViewPayments: false,
         canChangePayments: false,
-        canShip: true,           // отгрузить
+        canShip: true,
+        canPrint: true,
+        canCreateOrders: false,
+        canViewOrders: true,
+        canViewAllOrders: true,
+        canViewStats: false,
+    },
+    lab_logistics: {
+        canViewKanban: true,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: true,        // shipped → out_for_delivery
+        canAddDefects: false,
+        canViewPayments: false,
+        canChangePayments: false,
+        canShip: false,
         canPrint: true,
         canCreateOrders: false,
         canViewOrders: true,
@@ -106,6 +127,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canChangeStatus: true,
         canMarkReady: true,
         canMarkRework: true,
+        canDeliver: true,
         canAddDefects: true,
         canViewPayments: true,
         canChangePayments: true,
@@ -121,6 +143,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canChangeStatus: false,
         canMarkReady: false,
         canMarkRework: false,
+        canDeliver: false,
         canAddDefects: false,
         canViewPayments: true,
         canChangePayments: false,
@@ -136,6 +159,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canChangeStatus: false,
         canMarkReady: false,
         canMarkRework: false,
+        canDeliver: false,
         canAddDefects: false,
         canViewPayments: true,
         canChangePayments: false,
@@ -151,6 +175,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canChangeStatus: false,
         canMarkReady: false,
         canMarkRework: false,
+        canDeliver: false,
         canAddDefects: false,
         canViewPayments: false,
         canChangePayments: false,
@@ -166,6 +191,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canChangeStatus: false,
         canMarkReady: false,
         canMarkRework: false,
+        canDeliver: false,
         canAddDefects: false,
         canViewPayments: true,
         canChangePayments: false,
@@ -181,6 +207,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canChangeStatus: false,
         canMarkReady: false,
         canMarkRework: false,
+        canDeliver: false,
         canAddDefects: false,
         canViewPayments: false,
         canChangePayments: false,
