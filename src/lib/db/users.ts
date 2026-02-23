@@ -195,7 +195,7 @@ export function seedDemoUsers() {
 
         // ==================== PRODUCTION: Врач ЦКК ====================
         {
-            email: 'doctor@ckk.kz',
+            email: 'Azamat.ivdh@gmail.com',
             password: bcrypt.hashSync('CKK2026!', 10),
             role: 'doctor',
             subRole: 'doctor',
