@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
-import { Copy, Package, User, Building2, Truck, Receipt } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock } from 'lucide-react';
 
 const PRICE_PER_LENS = 40000; // тенге
 
@@ -32,6 +32,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         defaultValues: {
             optic_id: opticId,
             doctor: session?.user?.profile?.fullName || '',
+            is_urgent: false,
             patient: {
                 name: '',
                 phone: '',
@@ -87,10 +88,67 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const osQty = watch('config.eyes.os.qty') || 0;
     const totalLenses = Number(odQty) + Number(osQty);
     const totalPrice = totalLenses * PRICE_PER_LENS;
+    const isUrgent = watch('is_urgent');
 
     return (
         <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="max-w-5xl mx-auto space-y-8">
-            {/* Company & Delivery Info */}
+            {/* Urgency Picker */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`card border-2 transition-colors ${isUrgent ? 'border-amber-400 bg-amber-50' : 'border-transparent'
+                    }`}
+            >
+                <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isUrgent ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                        {isUrgent ? <Zap className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-900">Тип заказа</h2>
+                        <p className="text-sm text-gray-500">
+                            {isUrgent
+                                ? 'Срочный — лаборатория может приступить сразу'
+                                : 'Обычный — лаборатория начнёт через 4 часа (время на редактирование)'}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setValue('is_urgent', false)}
+                        className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${!isUrgent
+                                ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                            }`}
+                    >
+                        <Clock className="w-5 h-5 shrink-0" />
+                        <div className="text-left">
+                            <div className="font-semibold">Обычный</div>
+                            <div className="text-xs opacity-70">4 часа на изменение</div>
+                        </div>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setValue('is_urgent', true)}
+                        className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${isUrgent
+                                ? 'border-amber-500 bg-amber-50 text-amber-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                            }`}
+                    >
+                        <Zap className="w-5 h-5 shrink-0" />
+                        <div className="text-left">
+                            <div className="font-semibold">Срочный</div>
+                            <div className="text-xs opacity-70">Начнут сразу</div>
+                        </div>
+                    </button>
+                </div>
+
+                {/* Hidden input for react-hook-form */}
+                <input type="hidden" {...register('is_urgent', { setValueAs: v => v === true || v === 'true' })} />
+            </motion.div>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

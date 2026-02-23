@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Package, Clock, CheckCircle, TruckIcon,
     Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X
+    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock
 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
-import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
+import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
 import { getPermissions, SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
@@ -40,6 +40,16 @@ export default function OpticDashboard() {
     const [dateTo, setDateTo] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+    // tick every 30s to refresh countdown displays
+    const [, setTick] = useState(0);
+    useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
+
+    const formatCountdown = (ms: number) => {
+        if (ms <= 0) return null;
+        const h = Math.floor(ms / 3600_000);
+        const m = Math.floor((ms % 3600_000) / 60_000);
+        return h > 0 ? `${h}ч ${m}м` : `${m}м`;
+    };
 
     useEffect(() => {
         loadOrders();
@@ -412,6 +422,12 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                                 <span className={`badge ${OrderStatusColors[order.status]}`}>
                                                     {OrderStatusLabels[order.status]}
                                                 </span>
+                                                {/* Urgent badge */}
+                                                {order.is_urgent && (
+                                                    <span className="badge bg-amber-100 text-amber-700 flex items-center gap-1">
+                                                        <Zap className="w-3 h-3" /> СРОЧНО
+                                                    </span>
+                                                )}
                                                 {perms.canViewPayments && (() => {
                                                     const ps = (order as any).payment_status || 'unpaid';
                                                     return (
@@ -458,6 +474,47 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                             <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                             {isExpanded ? 'Свернуть' : 'Подробнее'}
                                         </button>
+
+                                        {/* Edit window indicator */}
+                                        {(() => {
+                                            const editable = canEditOrder(order);
+                                            const remainMs = editWindowRemainingMs(order);
+                                            const countdown = formatCountdown(remainMs);
+                                            if (order.status !== 'new') {
+                                                return (
+                                                    <span className="flex items-center gap-1 text-xs text-gray-400">
+                                                        <Lock className="w-3.5 h-3.5" />
+                                                        В производстве
+                                                    </span>
+                                                );
+                                            }
+                                            if (editable) {
+                                                return (
+                                                    <>
+                                                        <Link
+                                                            href={`/optic/orders/${order.order_id}/edit`}
+                                                            className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors"
+                                                        >
+                                                            <Pencil className="w-3.5 h-3.5" />
+                                                            Редактировать
+                                                        </Link>
+                                                        {countdown && !order.is_urgent && (
+                                                            <span className="text-xs text-amber-600 flex items-center gap-1">
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                ещё {countdown}
+                                                            </span>
+                                                        )}
+                                                    </>
+                                                );
+                                            }
+                                            return (
+                                                <span className="flex items-center gap-1 text-xs text-gray-400">
+                                                    <Lock className="w-3.5 h-3.5" />
+                                                    Окно редактирования закрыто
+                                                </span>
+                                            );
+                                        })()}
+
                                         {perms.canViewPayments && (
                                             <button
                                                 onClick={() => handlePrintInvoice(order)}

@@ -64,19 +64,27 @@ export async function POST(request: NextRequest) {
         const orderId = `LX-${Date.now().toString(36).toUpperCase()}`;
 
         // Create order object
-        const now = new Date().toISOString();
+        const now = new Date();
+        const is_urgent = validatedData.is_urgent ?? false;
+        // Normal orders: 4-hour edit window. Urgent: no edit window (can start immediately)
+        const edit_deadline = is_urgent
+            ? now.toISOString()
+            : new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
+
         const order = {
             order_id: orderId,
             meta: {
                 optic_id: validatedData.optic_id,
-                optic_name: `Optic ${validatedData.optic_id}`, // In real app, fetch from DB
+                optic_name: `Optic ${validatedData.optic_id}`,
                 doctor: validatedData.doctor,
-                created_at: now,
-                updated_at: now,
+                created_at: now.toISOString(),
+                updated_at: now.toISOString(),
             },
             patient: validatedData.patient,
             config: validatedData.config,
             status: 'new',
+            is_urgent,
+            edit_deadline,
             notes: validatedData.notes,
         };
 

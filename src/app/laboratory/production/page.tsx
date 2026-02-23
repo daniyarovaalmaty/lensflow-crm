@@ -6,10 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
-    RotateCcw, Eye, ChevronDown, DollarSign
+    RotateCcw, Eye, ChevronDown, DollarSign, Zap
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus } from '@/types/order';
-import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
+import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
 import type { Characteristic } from '@/types/order';
 import { getPermissions, SubRoleLabels } from '@/types/user';
@@ -26,6 +26,9 @@ export default function ProductionHubPage() {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    // Tick every minute to refresh countdown displays
+    const [, setTick] = useState(0);
+    useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
 
     // Modal state
     // Modal state - store IDs only to avoid sync issues
@@ -334,9 +337,16 @@ export default function ProductionHubPage() {
                             </h4>
                             <p className="text-xs text-gray-600">{order.patient.name}</p>
                         </div>
-                        <span className="text-xs text-gray-400">
-                            {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="text-xs text-gray-400">
+                                {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
+                            </span>
+                            {order.is_urgent && (
+                                <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded px-1.5 py-0.5">
+                                    <Zap className="w-2.5 h-2.5" /> СРОЧНО
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -620,14 +630,32 @@ export default function ProductionHubPage() {
                                 </button>
                             )}
 
-                            {perms.canChangeStatus && order.status === 'new' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                >
-                                    В работу
-                                </button>
-                            )}
+                            {perms.canChangeStatus && order.status === 'new' && (() => {
+                                const canStart = canStartProduction(order);
+                                const remainMs = editWindowRemainingMs(order);
+                                const h = Math.floor(remainMs / 3600_000);
+                                const m = Math.floor((remainMs % 3600_000) / 60_000);
+                                const countdownStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;
+                                return (
+                                    <div className="flex-1">
+                                        {!canStart && (
+                                            <div className="text-xs text-amber-600 flex items-center gap-1 mb-1.5">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                Доступно через {countdownStr} — врач редактирует
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => { if (canStart) { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); } }}
+                                            disabled={!canStart}
+                                            title={!canStart ? `Заказ можно взять в работу через ${countdownStr}` : undefined}
+                                            className={`btn text-xs py-2 px-4 w-full ${canStart ? 'btn-primary' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                        >
+                                            {canStart ? 'В работу' : `Заблокировано (${countdownStr})`}
+                                        </button>
+                                    </div>
+                                );
+                            })()}
+
                             {perms.canChangeStatus && order.status === 'in_production' && (
                                 <button
                                     onClick={() => { updateOrderStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}

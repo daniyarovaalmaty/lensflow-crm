@@ -171,6 +171,8 @@ export const OrderSchema = z.object({
     delivery_address: z.string().optional(),
     doctor_email: z.string().email().optional().or(z.literal('')),
     status: OrderStatusEnum,
+    is_urgent: z.boolean().default(false),
+    edit_deadline: z.string().datetime().optional(),
     tracking_number: z.string().optional(),
     production_started_at: z.string().datetime().optional(),
     production_completed_at: z.string().datetime().optional(),
@@ -179,6 +181,27 @@ export const OrderSchema = z.object({
     payment_status: PaymentStatusEnum.optional(),
     defects: z.array(DefectRecordSchema).optional(),
 });
+
+// ==================== Order Edit & Production Helpers ====================
+/** Doctor can edit: only when status is 'new' AND edit_deadline has not passed */
+export function canEditOrder(order: Order): boolean {
+    if (order.status !== 'new') return false;
+    if (!order.edit_deadline) return true;
+    return new Date() < new Date(order.edit_deadline);
+}
+
+/** Engineer can start production: urgent orders immediately, normal after edit_deadline */
+export function canStartProduction(order: Order): boolean {
+    if (order.is_urgent) return true;
+    if (!order.edit_deadline) return true;
+    return new Date() >= new Date(order.edit_deadline);
+}
+
+/** Returns remaining ms until edit_deadline (0 if passed) */
+export function editWindowRemainingMs(order: Order): number {
+    if (!order.edit_deadline) return 0;
+    return Math.max(0, new Date(order.edit_deadline).getTime() - Date.now());
+}
 
 export type Order = z.infer<typeof OrderSchema>;
 
@@ -191,9 +214,11 @@ export const CreateOrderSchema = OrderSchema.omit({
     production_started_at: true,
     production_completed_at: true,
     shipped_at: true,
+    edit_deadline: true,
 }).extend({
     optic_id: z.string(),
     doctor: z.string().optional(),
+    is_urgent: z.boolean().default(false),
 });
 
 export type CreateOrderDTO = z.infer<typeof CreateOrderSchema>;
