@@ -124,6 +124,123 @@ export function seedDemoUsers() {
                 clinic: 'Частная практика',
             },
         },
+
+        // ==================== PRODUCTION: Лаборатория MedInvision ====================
+        {
+            email: 'engineer@medinvision.kz',
+            password: bcrypt.hashSync('MedInvision2026!', 10),
+            role: 'laboratory',
+            subRole: 'lab_engineer',
+            profile: {
+                fullName: '',
+                phone: '',
+                labName: 'MedInvision',
+            },
+        },
+        {
+            email: 'quality@medinvision.kz',
+            password: bcrypt.hashSync('MedInvision2026!', 10),
+            role: 'laboratory',
+            subRole: 'lab_quality',
+            profile: {
+                fullName: '',
+                phone: '',
+                labName: 'MedInvision',
+            },
+        },
+        {
+            email: 'logistics@medinvision.kz',
+            password: bcrypt.hashSync('MedInvision2026!', 10),
+            role: 'laboratory',
+            subRole: 'lab_logistics',
+            profile: {
+                fullName: '',
+                phone: '',
+                labName: 'MedInvision',
+            },
+        },
+        {
+            email: 'head@medinvision.kz',
+            password: bcrypt.hashSync('MedInvision2026!', 10),
+            role: 'laboratory',
+            subRole: 'lab_head',
+            profile: {
+                fullName: '',
+                phone: '',
+                labName: 'MedInvision',
+            },
+        },
+        {
+            email: 'admin@medinvision.kz',
+            password: bcrypt.hashSync('MedInvision2026!', 10),
+            role: 'laboratory',
+            subRole: 'lab_admin',
+            profile: {
+                fullName: '',
+                phone: '',
+                labName: 'MedInvision',
+            },
+        },
+        {
+            email: 'accountant@medinvision.kz',
+            password: bcrypt.hashSync('MedInvision2026!', 10),
+            role: 'laboratory',
+            subRole: 'lab_accountant',
+            profile: {
+                fullName: '',
+                phone: '',
+                labName: 'MedInvision',
+            },
+        },
+
+        // ==================== PRODUCTION: Врач ЦКК ====================
+        {
+            email: 'doctor@ckk.kz',
+            password: bcrypt.hashSync('CKK2026!', 10),
+            role: 'doctor',
+            subRole: 'doctor',
+            profile: {
+                fullName: '',
+                phone: '',
+                clinic: 'ЦКК',
+            },
+        },
+
+        // ==================== PRODUCTION: Оптика New Eye ====================
+        {
+            email: 'manager@neweye.kz',
+            password: bcrypt.hashSync('NewEye2026!', 10),
+            role: 'optic',
+            subRole: 'optic_manager',
+            profile: {
+                fullName: '',
+                phone: '',
+                opticName: 'New Eye',
+            },
+        },
+        {
+            email: 'doctor@neweye.kz',
+            password: bcrypt.hashSync('NewEye2026!', 10),
+            role: 'optic',
+            subRole: 'optic_doctor',
+            profile: {
+                fullName: '',
+                phone: '',
+                opticName: 'New Eye',
+                clinic: 'New Eye',
+            },
+        },
+        {
+            email: 'accountant@neweye.kz',
+            password: bcrypt.hashSync('NewEye2026!', 10),
+            role: 'optic',
+            subRole: 'optic_accountant',
+            profile: {
+                fullName: '',
+                phone: '',
+                opticName: 'New Eye',
+            },
+        },
     ];
 
     users = demoUsers.map((user, index) => ({
