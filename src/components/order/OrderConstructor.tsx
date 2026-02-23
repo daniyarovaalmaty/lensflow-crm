@@ -84,11 +84,17 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     };
 
     // Price calculation
+    const DISCOUNT_PCT = 5; // 5% постоянный клиент
+    const URGENT_SURCHARGE_PCT = 25; // +25% за срочность
     const odQty = watch('config.eyes.od.qty') || 0;
     const osQty = watch('config.eyes.os.qty') || 0;
-    const totalLenses = Number(odQty) + Number(osQty);
-    const totalPrice = totalLenses * PRICE_PER_LENS;
     const isUrgent = watch('is_urgent');
+    const totalLenses = Number(odQty) + Number(osQty);
+    const basePrice = totalLenses * PRICE_PER_LENS;
+    const discountAmt = Math.round(basePrice * DISCOUNT_PCT / 100);
+    const priceAfterDiscount = basePrice - discountAmt;
+    const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+    const totalPrice = priceAfterDiscount + urgentSurcharge;
 
     return (
         <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="max-w-5xl mx-auto space-y-8">
@@ -108,8 +114,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         <h2 className="text-xl font-semibold text-gray-900">Тип заказа</h2>
                         <p className="text-sm text-gray-500">
                             {isUrgent
-                                ? 'Срочный — лаборатория может приступить сразу'
-                                : 'Обычный — лаборатория начнёт через 4 часа (время на редактирование)'}
+                                ? 'Срочный — лаборатория может приступить сразу (+25% к стоимости)'
+                                : 'Обычный — лаборатория начнёт через 2 часа (время на редактирование)'}
                         </p>
                     </div>
                 </div>
@@ -119,8 +125,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         type="button"
                         onClick={() => setValue('is_urgent', false)}
                         className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${!isUrgent
-                                ? 'border-primary-500 bg-primary-50 text-primary-700'
-                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                            ? 'border-primary-500 bg-primary-50 text-primary-700'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                             }`}
                     >
                         <Clock className="w-5 h-5 shrink-0" />
@@ -134,8 +140,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         type="button"
                         onClick={() => setValue('is_urgent', true)}
                         className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${isUrgent
-                                ? 'border-amber-500 bg-amber-50 text-amber-700'
-                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                            ? 'border-amber-500 bg-amber-50 text-amber-700'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                             }`}
                     >
                         <Zap className="w-5 h-5 shrink-0" />
@@ -402,6 +408,21 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             {(Number(osQty) * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸
                         </span>
                     </div>
+
+                    {/* Discount row */}
+                    <div className="flex justify-between items-center text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
+                        <span>Скидка постоянного клиента ({DISCOUNT_PCT}%)</span>
+                        <span className="font-medium">-{discountAmt.toLocaleString('ru-RU')} ₸</span>
+                    </div>
+
+                    {/* Urgent surcharge */}
+                    {isUrgent && (
+                        <div className="flex justify-between items-center text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                            <span>Срочность (+{URGENT_SURCHARGE_PCT}%)</span>
+                            <span className="font-medium">+{urgentSurcharge.toLocaleString('ru-RU')} ₸</span>
+                        </div>
+                    )}
+
                     <div className="border-t border-gray-200 pt-3 mt-3 flex justify-between items-center">
                         <span className="text-base font-semibold text-gray-900">Итого:</span>
                         <span className="text-xl font-bold text-primary-600">

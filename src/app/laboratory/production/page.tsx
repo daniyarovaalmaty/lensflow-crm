@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
-    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin
+    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs } from '@/types/order';
@@ -14,6 +14,7 @@ import { ProductionTimer } from '@/components/production/ProductionTimer';
 import type { Characteristic } from '@/types/order';
 import { getPermissions, SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
+import * as XLSX from 'xlsx';
 
 export default function ProductionHubPage() {
     const { data: session } = useSession();
@@ -122,6 +123,23 @@ export default function ProductionHubPage() {
         } finally {
             setAddingDefect(false);
         }
+    };
+
+    const exportToExcel = () => {
+        const rows = filteredOrders.map(o => ({
+            '№ заказа': o.order_id,
+            'Пациент': o.patient.name,
+            'Телефон': o.patient.phone,
+            'Статус': OrderStatusLabels[o.status],
+            'Оплата': o.payment_status === 'paid' ? 'Оплачен' : o.payment_status === 'partial' ? 'Частично' : 'Не оплачен',
+            'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
+            'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
+            'Ответственный': o.meta.doctor || o.meta.optic_name || '—',
+        }));
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Заказы');
+        XLSX.writeFile(wb, `LensFlow_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
     const toggleDefectArchive = async (orderId: string, defectId: string, archived: boolean) => {
@@ -944,6 +962,13 @@ export default function ProductionHubPage() {
                                 Сбросить
                             </button>
                         )}
+                        <button
+                            onClick={exportToExcel}
+                            className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
+                        >
+                            <Download className="w-4 h-4" />
+                            Экспорт XLS
+                        </button>
                     </div>
 
                     <AnimatePresence>

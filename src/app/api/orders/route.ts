@@ -66,10 +66,10 @@ export async function POST(request: NextRequest) {
         // Create order object
         const now = new Date();
         const is_urgent = validatedData.is_urgent ?? false;
-        // Normal orders: 4-hour edit window. Urgent: no edit window (can start immediately)
+        // Normal orders: 2-hour edit window. Urgent: no edit window (can start immediately)
         const edit_deadline = is_urgent
             ? now.toISOString()
-            : new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
+            : new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
 
         const order = {
             order_id: orderId,

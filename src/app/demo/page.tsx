@@ -52,10 +52,10 @@ const DEMO_GROUPS = [
             {
                 key: 'lab_accountant',
                 label: 'Бухгалтер',
-                description: 'Просмотр оплат',
+                description: 'Оплаты, документы, экспорт',
                 email: 'lab-buh@lensflow.ru',
                 password: 'password123',
-                redirect: '/laboratory/production',
+                redirect: '/laboratory/accountant',
                 icon: Calculator,
             },
             {
@@ -66,6 +66,15 @@ const DEMO_GROUPS = [
                 password: 'password123',
                 redirect: '/laboratory/production',
                 icon: Truck,
+            },
+            {
+                key: 'lab_head',
+                label: 'Руководитель',
+                description: 'Полный доступ, статистика',
+                email: 'head@lensflow.ru',
+                password: 'password123',
+                redirect: '/laboratory/production',
+                icon: Shield,
             },
         ],
     },

@@ -86,19 +86,6 @@ export function EyeParametersCard({
                     </select>
                 </div>
 
-                {/* MyOrtho-k */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">MyOrtho-k</label>
-                    <div className="flex items-center h-[42px] px-3 rounded-lg border border-gray-200 bg-gray-50">
-                        <input
-                            type="checkbox"
-                            {...register(`config.eyes.${eye}.myorthok`)}
-                            className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-600">Да</span>
-                    </div>
-                </div>
-
                 {/* Km — number input (0.20–55.00, step 0.01) — too many options for a dropdown */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Km</label>

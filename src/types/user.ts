@@ -16,6 +16,7 @@ export const SubRoleEnum = z.enum([
     'lab_engineer',     // Инженер
     'lab_quality',      // Контроль качества
     'lab_logistics',    // Логист
+    'lab_head',         // Руководитель
     'lab_admin',        // Администратор
     'lab_accountant',   // Бухгалтер
 
@@ -33,6 +34,7 @@ export const SubRoleLabels: Record<SubRole, string> = {
     lab_engineer: 'Инженер',
     lab_quality: 'Контроль качества',
     lab_logistics: 'Логист',
+    lab_head: 'Руководитель',
     lab_admin: 'Администратор',
     lab_accountant: 'Бухгалтер',
     optic_manager: 'Руководитель',
@@ -43,7 +45,7 @@ export const SubRoleLabels: Record<SubRole, string> = {
 
 // Which sub-roles belong to which top-level role
 export const SubRolesByRole: Record<UserRole, SubRole[]> = {
-    laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_admin', 'lab_accountant'],
+    laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_head', 'lab_admin', 'lab_accountant'],
     optic: ['optic_manager', 'optic_doctor', 'optic_accountant'],
     doctor: ['doctor'],
 };
@@ -121,6 +123,22 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: true,
         canViewStats: false,
+    },
+    lab_head: {
+        canViewKanban: true,
+        canChangeStatus: true,
+        canMarkReady: true,
+        canMarkRework: true,
+        canDeliver: true,
+        canAddDefects: true,
+        canViewPayments: true,
+        canChangePayments: true,
+        canShip: true,
+        canPrint: true,
+        canCreateOrders: false,
+        canViewOrders: true,
+        canViewAllOrders: true,
+        canViewStats: true,
     },
     lab_admin: {
         canViewKanban: true,

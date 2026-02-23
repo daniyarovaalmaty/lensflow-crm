@@ -66,6 +66,17 @@ export function seedDemoUsers() {
                 labName: 'Производственная лаборатория №1',
             },
         },
+        {
+            email: 'head@lensflow.ru',
+            password: bcrypt.hashSync('password123', 10),
+            role: 'laboratory',
+            subRole: 'lab_head',
+            profile: {
+                fullName: 'Руководитель Нургазиев Бахыт',
+                phone: '+77001001006',
+                labName: 'Производственная лаборатория №1',
+            },
+        },
         // ==================== Clinic (Optic) ====================
         {
             email: 'optic@lensflow.ru',
