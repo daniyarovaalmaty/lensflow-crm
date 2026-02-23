@@ -656,7 +656,7 @@ export default function ProductionHubPage() {
                                 );
                             })()}
 
-                            {perms.canChangeStatus && order.status === 'in_production' && (
+                            {perms.canMarkReady && order.status === 'in_production' && (
                                 <button
                                     onClick={() => { updateOrderStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
                                     className="btn btn-primary text-xs py-2 px-4 flex-1"
@@ -666,7 +666,7 @@ export default function ProductionHubPage() {
                             )}
                             {order.status === 'ready' && (
                                 <>
-                                    {perms.canChangeStatus && (
+                                    {perms.canMarkRework && (
                                         <button
                                             onClick={() => { updateOrderStatus(order.order_id, 'rework'); setSelectedOrderId(null); }}
                                             className="btn text-xs py-2 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors gap-1.5"

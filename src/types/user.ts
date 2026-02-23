@@ -56,7 +56,9 @@ export function getRoleFromSubRole(subRole: SubRole): UserRole {
 // ==================== Permissions ====================
 export interface PermissionSet {
     canViewKanban: boolean;
-    canChangeStatus: boolean;
+    canChangeStatus: boolean;  // generic: take to in_production / back from rework
+    canMarkReady: boolean;     // engineer: in_production → ready
+    canMarkRework: boolean;    // quality: ready → rework
     canAddDefects: boolean;
     canViewPayments: boolean;
     canChangePayments: boolean;
@@ -64,15 +66,17 @@ export interface PermissionSet {
     canPrint: boolean;
     canCreateOrders: boolean;
     canViewOrders: boolean;
-    canViewAllOrders: boolean; // vs only own orders
+    canViewAllOrders: boolean;
     canViewStats: boolean;
 }
 
 export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     lab_engineer: {
         canViewKanban: true,
-        canChangeStatus: true,
-        canAddDefects: false,
+        canChangeStatus: true,   // takes order В работу
+        canMarkReady: true,      // sends to 'ready'
+        canMarkRework: false,
+        canAddDefects: true,     // logs defects at their stage
         canViewPayments: false,
         canChangePayments: false,
         canShip: false,
@@ -84,11 +88,13 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     },
     lab_quality: {
         canViewKanban: true,
-        canChangeStatus: false,
+        canChangeStatus: true,   // can return from rework
+        canMarkReady: false,
+        canMarkRework: true,     // sends 'ready' → 'rework'
         canAddDefects: true,
         canViewPayments: false,
         canChangePayments: false,
-        canShip: false,
+        canShip: true,           // отгрузить
         canPrint: true,
         canCreateOrders: false,
         canViewOrders: true,
@@ -98,6 +104,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     lab_admin: {
         canViewKanban: true,
         canChangeStatus: true,
+        canMarkReady: true,
+        canMarkRework: true,
         canAddDefects: true,
         canViewPayments: true,
         canChangePayments: true,
@@ -111,6 +119,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     lab_accountant: {
         canViewKanban: false,
         canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
         canAddDefects: false,
         canViewPayments: true,
         canChangePayments: false,
@@ -124,6 +134,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     optic_manager: {
         canViewKanban: false,
         canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
         canAddDefects: false,
         canViewPayments: true,
         canChangePayments: false,
@@ -137,6 +149,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     optic_doctor: {
         canViewKanban: false,
         canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
         canAddDefects: false,
         canViewPayments: false,
         canChangePayments: false,
@@ -144,12 +158,14 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canPrint: true,
         canCreateOrders: true,
         canViewOrders: true,
-        canViewAllOrders: false, // only own orders
+        canViewAllOrders: false,
         canViewStats: false,
     },
     optic_accountant: {
         canViewKanban: false,
         canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
         canAddDefects: false,
         canViewPayments: true,
         canChangePayments: false,
@@ -163,6 +179,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     doctor: {
         canViewKanban: false,
         canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
         canAddDefects: false,
         canViewPayments: false,
         canChangePayments: false,
@@ -170,7 +188,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canPrint: true,
         canCreateOrders: true,
         canViewOrders: true,
-        canViewAllOrders: false, // only own
+        canViewAllOrders: false,
         canViewStats: false,
     },
 };
