@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
                 orderNumber,
                 status: 'new_order',
                 isUrgent: is_urgent,
-                organizationId: session.user.organizationId || validatedData.optic_id || undefined,
+                organizationId: session.user.organizationId || undefined,
                 createdById: session.user.id,
                 patientId,
                 opticName: session.user.profile?.opticName || '',
