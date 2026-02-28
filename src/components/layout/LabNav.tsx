@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { BarChart3, Columns3, FileText, LogOut } from 'lucide-react';
+import { BarChart3, Columns3, FileText, LogOut, User } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
@@ -57,6 +57,13 @@ export default function LabNav() {
                     <span className="text-xs text-gray-400 hidden sm:block">
                         {SubRoleLabels[subRole]}
                     </span>
+                    <Link
+                        href="/profile"
+                        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-blue-500 transition-colors py-2 px-2 rounded-lg hover:bg-blue-50"
+                    >
+                        <User className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Профиль</span>
+                    </Link>
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
                         className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors py-2 px-2 rounded-lg hover:bg-red-50"

@@ -6,7 +6,9 @@ export const config = {
     matcher: [
         '/optic/:path*',
         '/laboratory/:path*',
+        '/profile/:path*',
         '/api/orders/:path*',
+        '/api/profile/:path*',
     ],
 };
 
@@ -35,8 +37,15 @@ export default async function middleware(request: NextRequest) {
         }
     }
 
+    // Protect profile page (any authenticated user)
+    if (pathname.startsWith('/profile')) {
+        if (!session) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+    }
+
     // Protect API routes
-    if (pathname.startsWith('/api/orders')) {
+    if (pathname.startsWith('/api/orders') || pathname.startsWith('/api/profile')) {
         if (!session) {
             return new NextResponse('Unauthorized', { status: 401 });
         }

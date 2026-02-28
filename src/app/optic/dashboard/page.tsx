@@ -239,6 +239,13 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                     Создать заказ
                                 </Link>
                             )}
+                            <Link
+                                href="/profile"
+                                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
+                            >
+                                <User className="w-4 h-4" />
+                                Профиль
+                            </Link>
                             <button
                                 onClick={() => signOut({ callbackUrl: '/login' })}
                                 className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-red-500 transition-colors py-2 px-3 rounded-lg hover:bg-red-50"
