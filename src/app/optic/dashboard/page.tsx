@@ -432,9 +432,15 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <h3 className="text-lg font-semibold text-gray-900">{order.order_id}</h3>
-                                                <span className={`badge ${OrderStatusColors[order.status]}`}>
-                                                    {OrderStatusLabels[order.status]}
-                                                </span>
+                                                {/* Hide internal 'rework' status from optic — show as "В производстве" */}
+                                                {(() => {
+                                                    const displayStatus = order.status === 'rework' ? 'in_production' : order.status;
+                                                    return (
+                                                        <span className={`badge ${OrderStatusColors[displayStatus]}`}>
+                                                            {OrderStatusLabels[displayStatus]}
+                                                        </span>
+                                                    );
+                                                })()}
                                                 {/* Urgent badge */}
                                                 {order.is_urgent && (
                                                     <span className="badge bg-amber-100 text-amber-700 flex items-center gap-1">
