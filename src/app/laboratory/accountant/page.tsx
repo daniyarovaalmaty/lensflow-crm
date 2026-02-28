@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText, Download, DollarSign, CheckCircle, Clock, XCircle,
-    Search, Calendar, TrendingUp, Package
+    Search, Calendar, TrendingUp, Package, ChevronDown, ChevronUp, User, Building2, MapPin
 } from 'lucide-react';
 import type { Order, PaymentStatus } from '@/types/order';
-import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
+import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors, CharacteristicLabels } from '@/types/order';
+import type { Characteristic } from '@/types/order';
 import * as XLSX from 'xlsx';
 
 const FALLBACK_PRICE_PER_LENS = 17_500;
@@ -16,9 +17,7 @@ const DISCOUNT_PCT = 5;
 const URGENT_SURCHARGE_PCT = 25;
 
 function calcOrderTotal(order: Order): number {
-    // Use stored total_price (calculated server-side from catalog) if available
     if (order.total_price && order.total_price > 0) return order.total_price;
-    // Fallback for old orders without stored price
     const od = order.config.eyes.od?.qty ?? 0;
     const os = order.config.eyes.os?.qty ?? 0;
     const base = (Number(od) + Number(os)) * FALLBACK_PRICE_PER_LENS;
@@ -26,6 +25,11 @@ function calcOrderTotal(order: Order): number {
     const after = base - disc;
     const surcharge = order.is_urgent ? Math.round(after * URGENT_SURCHARGE_PCT / 100) : 0;
     return after + surcharge;
+}
+
+function getLensPrice(char: string | undefined): number {
+    if (char === 'toric') return 18_500;
+    return 17_500;
 }
 
 const PAYMENT_OPTIONS: { value: PaymentStatus; label: string; icon: any; color: string }[] = [
@@ -43,6 +47,7 @@ export default function AccountantPage() {
     const [dateTo, setDateTo] = useState('');
     const [payFilter, setPayFilter] = useState<'all' | PaymentStatus>('all');
     const [updating, setUpdating] = useState<string | null>(null);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
 
     useEffect(() => { loadOrders(); }, []);
 
@@ -209,6 +214,7 @@ export default function AccountantPage() {
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
+                                    <th className="w-8 px-2"></th>
                                     <th className="text-left px-4 py-3 font-semibold text-gray-600">№ заказа</th>
                                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Пациент</th>
                                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Статус</th>
@@ -221,50 +227,170 @@ export default function AccountantPage() {
                             <tbody className="divide-y divide-gray-50">
                                 {filtered.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-12 text-gray-400">
+                                        <td colSpan={8} className="text-center py-12 text-gray-400">
                                             Нет заказов
                                         </td>
                                     </tr>
                                 ) : filtered.map(order => {
                                     const total = calcOrderTotal(order);
                                     const payStatus = (order.payment_status ?? 'unpaid') as PaymentStatus;
-                                    const curOpt = PAYMENT_OPTIONS.find(o => o.value === payStatus) || PAYMENT_OPTIONS[0];
+                                    const isExpanded = expandedId === order.order_id;
+                                    const od = order.config.eyes.od;
+                                    const os = order.config.eyes.os;
+                                    const odQty = Number(od?.qty) || 0;
+                                    const osQty = Number(os?.qty) || 0;
+                                    const odChar = od?.characteristic as Characteristic | undefined;
+                                    const osChar = os?.characteristic as Characteristic | undefined;
+                                    const odUnitPrice = getLensPrice(odChar);
+                                    const osUnitPrice = getLensPrice(osChar);
+                                    const odSubtotal = odQty * odUnitPrice;
+                                    const osSubtotal = osQty * osUnitPrice;
+                                    const lensTotal = odSubtotal + osSubtotal;
+                                    const discountAmt = Math.round(lensTotal * DISCOUNT_PCT / 100);
+                                    const afterDiscount = lensTotal - discountAmt;
+                                    const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+
                                     return (
-                                        <tr key={order.order_id} className="hover:bg-gray-50/60 transition-colors">
-                                            <td className="px-4 py-3 font-mono font-medium text-gray-800">{order.order_id}</td>
-                                            <td className="px-4 py-3">
-                                                <div className="font-medium text-gray-900">{order.patient.name}</div>
-                                                <div className="text-xs text-gray-400">{order.patient.phone}</div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className="text-xs text-gray-600">{OrderStatusLabels[order.status]}</span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {order.is_urgent
-                                                    ? <span className="text-xs font-semibold text-amber-600 bg-amber-50 rounded-full px-2 py-0.5">Срочный</span>
-                                                    : <span className="text-xs text-gray-400">—</span>
-                                                }
-                                            </td>
-                                            <td className="px-4 py-3 text-right font-semibold text-gray-900">{total.toLocaleString('ru-RU')} ₸</td>
-                                            <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                                                {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex gap-1">
-                                                    {PAYMENT_OPTIONS.map(opt => (
-                                                        <button
-                                                            key={opt.value}
-                                                            onClick={() => updatePayment(order.order_id, opt.value)}
-                                                            disabled={updating === order.order_id}
-                                                            className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border font-medium transition-all ${payStatus === opt.value ? opt.color : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'}`}
-                                                        >
-                                                            <opt.icon className="w-3 h-3" />
-                                                            {opt.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        <React.Fragment key={order.order_id}>
+                                            <tr
+                                                onClick={() => setExpandedId(isExpanded ? null : order.order_id)}
+                                                className="hover:bg-gray-50/60 transition-colors cursor-pointer"
+                                            >
+                                                <td className="px-2 py-3 text-gray-400">
+                                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                </td>
+                                                <td className="px-4 py-3 font-mono font-medium text-gray-800">{order.order_id}</td>
+                                                <td className="px-4 py-3">
+                                                    <div className="font-medium text-gray-900">{order.patient.name}</div>
+                                                    <div className="text-xs text-gray-400">{order.patient.phone}</div>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span className="text-xs text-gray-600">{OrderStatusLabels[order.status]}</span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {order.is_urgent
+                                                        ? <span className="text-xs font-semibold text-amber-600 bg-amber-50 rounded-full px-2 py-0.5">Срочный</span>
+                                                        : <span className="text-xs text-gray-400">—</span>
+                                                    }
+                                                </td>
+                                                <td className="px-4 py-3 text-right font-semibold text-gray-900">{total.toLocaleString('ru-RU')} ₸</td>
+                                                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                                                    {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
+                                                </td>
+                                                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                                                    <div className="flex gap-1">
+                                                        {PAYMENT_OPTIONS.map(opt => (
+                                                            <button
+                                                                key={opt.value}
+                                                                onClick={() => updatePayment(order.order_id, opt.value)}
+                                                                disabled={updating === order.order_id}
+                                                                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border font-medium transition-all ${payStatus === opt.value ? opt.color : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'}`}
+                                                            >
+                                                                <opt.icon className="w-3 h-3" />
+                                                                {opt.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <AnimatePresence>
+                                                {isExpanded && (
+                                                    <tr>
+                                                        <td colSpan={8} className="p-0">
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                transition={{ duration: 0.2 }}
+                                                                className="overflow-hidden"
+                                                            >
+                                                                <div className="bg-gray-50/70 border-t border-b border-gray-100 px-6 py-5">
+                                                                    {/* Order meta info */}
+                                                                    <div className="flex flex-wrap gap-6 mb-4 text-sm text-gray-600">
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <User className="w-3.5 h-3.5 text-gray-400" />
+                                                                            <span className="font-medium">Врач:</span> {order.meta.doctor || '—'}
+                                                                        </div>
+                                                                        {order.company && (
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                                                                                <span className="font-medium">Компания:</span> {order.company}
+                                                                                {order.inn && <span className="text-gray-400 ml-1">(ИНН: {order.inn})</span>}
+                                                                            </div>
+                                                                        )}
+                                                                        {order.delivery_address && (
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                                                                                <span className="font-medium">Доставка:</span> {order.delivery_address}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Line items table */}
+                                                                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                                                        <table className="w-full text-sm">
+                                                                            <thead className="bg-gray-50">
+                                                                                <tr>
+                                                                                    <th className="text-left px-4 py-2.5 font-semibold text-gray-600 text-xs">Позиция</th>
+                                                                                    <th className="text-left px-4 py-2.5 font-semibold text-gray-600 text-xs">Характеристика</th>
+                                                                                    <th className="text-center px-4 py-2.5 font-semibold text-gray-600 text-xs">Кол-во</th>
+                                                                                    <th className="text-right px-4 py-2.5 font-semibold text-gray-600 text-xs">Цена за шт</th>
+                                                                                    <th className="text-right px-4 py-2.5 font-semibold text-gray-600 text-xs">Сумма</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody className="divide-y divide-gray-100">
+                                                                                {odQty > 0 && (
+                                                                                    <tr>
+                                                                                        <td className="px-4 py-2.5 text-gray-800">OD — Ортокератологическая линза MediLens</td>
+                                                                                        <td className="px-4 py-2.5 text-gray-600">{odChar ? (CharacteristicLabels[odChar] || odChar) : '—'}</td>
+                                                                                        <td className="px-4 py-2.5 text-center text-gray-800">{odQty}</td>
+                                                                                        <td className="px-4 py-2.5 text-right text-gray-600">{odUnitPrice.toLocaleString('ru-RU')} ₸</td>
+                                                                                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{odSubtotal.toLocaleString('ru-RU')} ₸</td>
+                                                                                    </tr>
+                                                                                )}
+                                                                                {osQty > 0 && (
+                                                                                    <tr>
+                                                                                        <td className="px-4 py-2.5 text-gray-800">OS — Ортокератологическая линза MediLens</td>
+                                                                                        <td className="px-4 py-2.5 text-gray-600">{osChar ? (CharacteristicLabels[osChar] || osChar) : '—'}</td>
+                                                                                        <td className="px-4 py-2.5 text-center text-gray-800">{osQty}</td>
+                                                                                        <td className="px-4 py-2.5 text-right text-gray-600">{osUnitPrice.toLocaleString('ru-RU')} ₸</td>
+                                                                                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{osSubtotal.toLocaleString('ru-RU')} ₸</td>
+                                                                                    </tr>
+                                                                                )}
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+
+                                                                    {/* Totals */}
+                                                                    <div className="mt-3 flex justify-end">
+                                                                        <div className="w-72 space-y-1 text-sm">
+                                                                            <div className="flex justify-between text-gray-600">
+                                                                                <span>Подитог</span>
+                                                                                <span>{lensTotal.toLocaleString('ru-RU')} ₸</span>
+                                                                            </div>
+                                                                            <div className="flex justify-between text-emerald-600">
+                                                                                <span>Скидка {DISCOUNT_PCT}%</span>
+                                                                                <span>−{discountAmt.toLocaleString('ru-RU')} ₸</span>
+                                                                            </div>
+                                                                            {order.is_urgent && (
+                                                                                <div className="flex justify-between text-amber-600">
+                                                                                    <span>Наценка срочный {URGENT_SURCHARGE_PCT}%</span>
+                                                                                    <span>+{urgentAmt.toLocaleString('ru-RU')} ₸</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200">
+                                                                                <span>Итого</span>
+                                                                                <span>{total.toLocaleString('ru-RU')} ₸</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </AnimatePresence>
+                                        </React.Fragment>
                                     );
                                 })}
                             </tbody>
