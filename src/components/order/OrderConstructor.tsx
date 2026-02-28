@@ -58,6 +58,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
     const [rgpPhotos, setRgpPhotos] = useState<{ od?: File; os?: File }>({});
+    const [orgDiscount, setOrgDiscount] = useState<number>(5);
     const subRole = session?.user?.subRole || '';
     const canSeePrices = subRole !== 'optic_doctor';
 
@@ -86,6 +87,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         if (org.name) setValue('company', org.name);
                         if (org.inn) setValue('inn', org.inn);
                         if (org.address) setValue('delivery_address', org.address);
+                        if (org.discountPercent != null) setOrgDiscount(org.discountPercent);
                     }
                 }
             } catch (e) { console.error(e); }
@@ -191,7 +193,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     };
 
     // Price calculation
-    const DISCOUNT_PCT = 5;
+    const DISCOUNT_PCT = orgDiscount;
     const URGENT_SURCHARGE_PCT = 25;
     const isUrgent = watch('is_urgent');
     const odCharacteristic = watch('config.eyes.od.characteristic');

@@ -28,6 +28,7 @@ model Organization {
   directorName     String?  // ФИО руководителя
   contactPerson    String?  // Контактное лицо
   contactPhone     String?  // Телефон контактного лица
+  discountPercent  Float    @default(5)  // Персональная скидка (%), по умолчанию 5%
 
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())

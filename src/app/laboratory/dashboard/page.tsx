@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
     Package, Clock, CheckCircle, TruckIcon, AlertTriangle,
     BarChart3, DollarSign, TrendingUp, TrendingDown,
-    Zap, Activity, Users, Download, ArrowRight, Building2, Stethoscope, Calendar, X
+    Zap, Activity, Users, Download, ArrowRight, Building2, Stethoscope, Calendar, X, Percent
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
@@ -41,6 +41,18 @@ export default function LabHeadDashboard() {
     const [counterpartyTab, setCounterpartyTab] = useState<'doctors' | 'clinics'>('doctors');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    const [orgs, setOrgs] = useState<{ id: string; name: string; discountPercent: number }[]>([]);
+    const [editingDiscount, setEditingDiscount] = useState<string | null>(null);
+    const [discountInput, setDiscountInput] = useState('');
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/organizations');
+                if (res.ok) setOrgs(await res.json());
+            } catch (e) { console.error(e); }
+        })();
+    }, []);
 
     useEffect(() => {
         (async () => {
@@ -189,6 +201,30 @@ export default function LabHeadDashboard() {
             clinics: Array.from(clinicMap.values()).sort((a, b) => b.orders - a.orders),
         };
     }, [filteredOrders]);
+
+    const getOrgDiscount = (clinicName: string) => {
+        const org = orgs.find(o => o.name === clinicName);
+        return org?.discountPercent ?? 5;
+    };
+
+    const getOrgId = (clinicName: string) => {
+        return orgs.find(o => o.name === clinicName)?.id;
+    };
+
+    const saveDiscount = async (orgId: string, value: number) => {
+        try {
+            const res = await fetch(`/api/organizations/${orgId}/discount`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discountPercent: value }),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setOrgs(prev => prev.map(o => o.id === orgId ? { ...o, discountPercent: updated.discountPercent } : o));
+            }
+        } catch (e) { console.error(e); }
+        setEditingDiscount(null);
+    };
 
     // Export all data to Excel
     const exportToExcel = () => {
@@ -499,6 +535,9 @@ export default function LabHeadDashboard() {
                                     <th className="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase">Заказов</th>
                                     <th className="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase">Выручка</th>
                                     <th className="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase">Неоплачено</th>
+                                    {counterpartyTab === 'clinics' && (
+                                        <th className="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase">Скидка %</th>
+                                    )}
                                     <th className="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase">Посл. заказ</th>
                                 </tr>
                             </thead>
@@ -529,6 +568,54 @@ export default function LabHeadDashboard() {
                                                 <span className="text-emerald-600 font-medium">—</span>
                                             )}
                                         </td>
+                                        {counterpartyTab === 'clinics' && (() => {
+                                            const orgId = getOrgId(cp.name);
+                                            const discount = getOrgDiscount(cp.name);
+                                            const isEditing = editingDiscount === orgId;
+                                            return (
+                                                <td className="py-3 px-3 text-center">
+                                                    {isEditing && orgId ? (
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                max={100}
+                                                                step={0.5}
+                                                                value={discountInput}
+                                                                onChange={e => setDiscountInput(e.target.value)}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') saveDiscount(orgId, Number(discountInput));
+                                                                    if (e.key === 'Escape') setEditingDiscount(null);
+                                                                }}
+                                                                className="w-16 text-center text-xs border border-blue-300 rounded-lg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                autoFocus
+                                                            />
+                                                            <button
+                                                                onClick={() => saveDiscount(orgId, Number(discountInput))}
+                                                                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                                                            >✓</button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (orgId && subRole === 'lab_head') {
+                                                                    setEditingDiscount(orgId);
+                                                                    setDiscountInput(String(discount));
+                                                                }
+                                                            }}
+                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${subRole === 'lab_head' && orgId
+                                                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer'
+                                                                : 'bg-gray-50 text-gray-600'
+                                                                }`}
+                                                            title={subRole === 'lab_head' ? 'Нажмите для редактирования' : ''}
+                                                        >
+                                                            <Percent className="w-3 h-3" />
+                                                            {discount}
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            );
+                                        })()}
                                         <td className="py-3 px-3 text-right text-gray-500">
                                             {cp.lastDate ? new Date(cp.lastDate).toLocaleDateString('ru-RU') : '—'}
                                         </td>
@@ -536,7 +623,7 @@ export default function LabHeadDashboard() {
                                 ))}
                                 {(counterpartyTab === 'doctors' ? counterparties.doctors : counterparties.clinics).length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="py-8 text-center text-gray-400">
+                                        <td colSpan={counterpartyTab === 'clinics' ? 6 : 5} className="py-8 text-center text-gray-400">
                                             Нет данных
                                         </td>
                                     </tr>

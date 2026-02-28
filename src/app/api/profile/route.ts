@@ -36,6 +36,7 @@ export async function GET() {
                     directorName: true,
                     contactPerson: true,
                     contactPhone: true,
+                    discountPercent: true,
                 },
             },
         },
