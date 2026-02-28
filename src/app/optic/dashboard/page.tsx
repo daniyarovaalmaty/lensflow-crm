@@ -625,12 +625,39 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                                         <EyeBlock label="OS (Левый глаз)" eye={os} />
                                                     </div>
 
+                                                    {/* Additional products */}
+                                                    {(order as any).products?.length > 0 && (
+                                                        <div className="mt-4">
+                                                            <h5 className="text-xs font-semibold text-gray-700 mb-2">Дополнительные товары</h5>
+                                                            <div className="bg-gray-50 rounded-lg divide-y divide-gray-100">
+                                                                {((order as any).products as Array<{ name: string; qty: number; price: number; category?: string }>).map((prod, idx) => (
+                                                                    <div key={idx} className="flex items-center justify-between px-3 py-2 text-sm">
+                                                                        <div>
+                                                                            <span className="text-gray-800 font-medium">{prod.name}</span>
+                                                                            <span className="text-gray-400 ml-2">× {prod.qty}</span>
+                                                                        </div>
+                                                                        {canSeePrices && (
+                                                                            <span className="text-gray-600">{((prod.price || 0) * (prod.qty || 1)).toLocaleString('ru-RU')} ₸</span>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     {canSeePrices && (
                                                         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
-                                                            <div className="text-sm text-gray-600">
-                                                                <span>OD: {Number(od.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
-                                                                <span className="mx-2">+</span>
-                                                                <span>OS: {Number(os.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                            <div className="text-sm text-gray-600 space-y-0.5">
+                                                                <div>
+                                                                    <span>OD: {Number(od.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                                    <span className="mx-2">+</span>
+                                                                    <span>OS: {Number(os.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                                </div>
+                                                                {(order as any).products?.length > 0 && (
+                                                                    <div className="text-xs text-gray-400">
+                                                                        + доп. товары: {((order as any).products as Array<{ price: number; qty: number }>).reduce((s: number, p: any) => s + (p.price || 0) * (p.qty || 1), 0).toLocaleString('ru-RU')} ₸
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <span className="text-lg font-bold text-primary-600">
                                                                 {totalPrice.toLocaleString('ru-RU')} ₸
