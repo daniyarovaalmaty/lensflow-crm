@@ -30,6 +30,7 @@ export default function OpticDashboard() {
     const { data: session } = useSession();
     const subRole = (session?.user?.subRole || 'optic_manager') as SubRole;
     const perms = getPermissions(subRole);
+    const canSeePrices = subRole !== 'optic_doctor' && session?.user?.role !== 'doctor';
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -492,7 +493,7 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                         <div className="text-right text-sm text-gray-500 ml-4 flex-shrink-0">
                                             <p>{new Date(order.meta.created_at).toLocaleDateString('ru-RU')}</p>
                                             <p className="text-base font-semibold text-gray-900 mt-1">
-                                                {totalPrice.toLocaleString('ru-RU')} ₸
+                                                {canSeePrices ? `${totalPrice.toLocaleString('ru-RU')} ₸` : ''}
                                             </p>
                                             {order.tracking_number && (
                                                 <p className="font-mono text-xs mt-1">{order.tracking_number}</p>
@@ -622,16 +623,18 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                                         <EyeBlock label="OS (Левый глаз)" eye={os} />
                                                     </div>
 
-                                                    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
-                                                        <div className="text-sm text-gray-600">
-                                                            <span>OD: {Number(od.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
-                                                            <span className="mx-2">+</span>
-                                                            <span>OS: {Number(os.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                    {canSeePrices && (
+                                                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
+                                                            <div className="text-sm text-gray-600">
+                                                                <span>OD: {Number(od.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                                <span className="mx-2">+</span>
+                                                                <span>OS: {Number(os.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                            </div>
+                                                            <span className="text-lg font-bold text-primary-600">
+                                                                {totalPrice.toLocaleString('ru-RU')} ₸
+                                                            </span>
                                                         </div>
-                                                        <span className="text-lg font-bold text-primary-600">
-                                                            {totalPrice.toLocaleString('ru-RU')} ₸
-                                                        </span>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </motion.div>
                                         )}
