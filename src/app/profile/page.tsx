@@ -102,7 +102,7 @@ export default function ProfilePage() {
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 512_000) { alert('Файл слишком большой. Максимум 500КБ.'); return; }
+        if (file.size > 2_097_152) { alert('Файл слишком большой. Максимум 2МБ.'); return; }
         const reader = new FileReader();
         reader.onload = () => {
             const result = reader.result as string;
@@ -204,7 +204,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                             <p className="text-sm text-gray-700 font-medium">Загрузите фото</p>
-                            <p className="text-xs text-gray-400 mt-1">JPG, PNG или WebP, максимум 500КБ</p>
+                            <p className="text-xs text-gray-400 mt-1">JPG, PNG или WebP, максимум 2МБ</p>
                             {avatarPreview && (
                                 <button onClick={() => { setAvatarPreview(null); setAvatarFile(null); }} className="text-xs text-red-500 hover:text-red-600 mt-2 font-medium">
                                     Удалить фото
