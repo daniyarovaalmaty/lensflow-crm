@@ -59,13 +59,18 @@ export function EyeParametersCard({
         setValue(`config.eyes.${eye}.trial`, isTrial);
     }, [dkValue, isTrial, eye, setValue]);
 
-    // Only reset color when user manually changes Dk (prev value existed and differs)
+    // Only reset color when user manually changes Dk AND the current color is not valid for the new Dk
     useEffect(() => {
         if (prevDkRef.current && prevDkRef.current !== dkValue) {
-            setValue(`config.eyes.${eye}.color`, '');
+            const currentColor = watch(`config.eyes.${eye}.color`);
+            const newAvailable = dkValue ? (ColorsByDk[dkValue] || []) : [];
+            // Only clear if the current color isn't valid for the new Dk
+            if (currentColor && !newAvailable.includes(currentColor)) {
+                setValue(`config.eyes.${eye}.color`, '');
+            }
         }
         prevDkRef.current = dkValue;
-    }, [dkValue, eye, setValue]);
+    }, [dkValue, eye, setValue, watch]);
 
     return (
         <motion.div
