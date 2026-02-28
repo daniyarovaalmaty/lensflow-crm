@@ -227,14 +227,14 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canMarkRework: false,
         canDeliver: false,
         canAddDefects: false,
-        canViewPayments: false,
+        canViewPayments: true,
         canChangePayments: false,
         canShip: false,
         canPrint: true,
         canCreateOrders: true,
         canViewOrders: true,
         canViewAllOrders: false,
-        canViewStats: false,
+        canViewStats: true,
     },
 };
 

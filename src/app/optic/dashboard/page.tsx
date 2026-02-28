@@ -30,7 +30,7 @@ export default function OpticDashboard() {
     const { data: session } = useSession();
     const subRole = (session?.user?.subRole || 'optic_manager') as SubRole;
     const perms = getPermissions(subRole);
-    const canSeePrices = subRole !== 'optic_doctor' && session?.user?.role !== 'doctor';
+    const canSeePrices = subRole !== 'optic_doctor';
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -230,8 +230,10 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Дашборд Оптики</h1>
-                            <p className="text-gray-600 mt-1">{SubRoleLabels[subRole]}</p>
+                            <h1 className="text-2xl font-bold text-gray-900">
+                                {session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Мои заказы'}
+                            </h1>
+                            <p className="text-gray-600 mt-1">{session?.user?.profile?.fullName || SubRoleLabels[subRole]}</p>
                         </div>
                         <div className="flex items-center gap-3">
                             {perms.canCreateOrders && (
