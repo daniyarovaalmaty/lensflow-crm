@@ -254,7 +254,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         <Clock className="w-5 h-5 shrink-0" />
                         <div className="text-left">
                             <div className="font-semibold">Обычный</div>
-                            <div className="text-xs opacity-70">4 часа на изменение</div>
+                            <div className="text-xs opacity-70">2 часа на изменение</div>
                         </div>
                     </button>
 
