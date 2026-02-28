@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Package, Clock, CheckCircle, TruckIcon,
     Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut
+    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users
 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
@@ -240,6 +240,15 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                 <Link href="/optic/orders/new" className="btn btn-primary gap-2">
                                     <Plus className="w-5 h-5" />
                                     Создать заказ
+                                </Link>
+                            )}
+                            {subRole === 'optic_manager' && (
+                                <Link
+                                    href="/optic/staff"
+                                    className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
+                                >
+                                    <Users className="w-4 h-4" />
+                                    Сотрудники
                                 </Link>
                             )}
                             <Link

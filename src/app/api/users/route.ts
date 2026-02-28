@@ -33,6 +33,14 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Block non-manager optic registration (only head/manager can self-register)
+        if (role === 'optic' && subRole !== 'optic_manager') {
+            return NextResponse.json(
+                { error: 'Регистрация доступна только руководителю клиники. Врачей и бухгалтеров добавляет руководитель.' },
+                { status: 403 }
+            );
+        }
+
         // Check if user already exists
         const existingUser = await findUserByEmail(email);
         if (existingUser) {

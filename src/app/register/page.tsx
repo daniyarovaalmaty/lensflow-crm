@@ -31,10 +31,13 @@ export default function RegisterPage() {
     const selectedRole = watch('role');
     const selectedSubRole = watch('subRole');
 
-    // Auto-set first sub-role when role changes
+    // Auto-set sub-role: doctor always 'doctor', optic always 'optic_manager' (only head can self-register)
     const availableSubRoles = SubRolesByRole[selectedRole] || [];
-    if (availableSubRoles.length > 0 && !availableSubRoles.includes(selectedSubRole as SubRole)) {
-        setValue('subRole', availableSubRoles[0]);
+    if (selectedRole === 'doctor' && selectedSubRole !== 'doctor') {
+        setValue('subRole', 'doctor');
+    }
+    if (selectedRole === 'optic' && selectedSubRole !== 'optic_manager') {
+        setValue('subRole', 'optic_manager');
     }
 
     const onSubmit = async (data: RegisterUserDTO) => {
@@ -192,34 +195,10 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                        {/* Sub-Role Selection */}
-                        {availableSubRoles.length > 1 && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Должность *
-                                </label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {availableSubRoles.map((sr) => (
-                                        <label
-                                            key={sr}
-                                            className={`
-                                                p-3 border-2 rounded-lg cursor-pointer transition-all text-center text-sm
-                                                ${selectedSubRole === sr
-                                                    ? 'border-primary-500 bg-primary-50 font-semibold'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                                }
-                                            `}
-                                        >
-                                            <input
-                                                type="radio"
-                                                value={sr}
-                                                {...register('subRole')}
-                                                className="sr-only"
-                                            />
-                                            {SubRoleLabels[sr]}
-                                        </label>
-                                    ))}
-                                </div>
+                        {/* Sub-Role info for optic */}
+                        {selectedRole === 'optic' && (
+                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                                Вы регистрируетесь как <strong>Руководитель клиники</strong>. После регистрации вы сможете добавить сотрудников (врач, бухгалтер) в разделе «Сотрудники».
                             </div>
                         )}
 
