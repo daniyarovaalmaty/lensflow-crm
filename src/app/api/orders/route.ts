@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Transform to match frontend expected format
-        const transformed = orders.map((order) => {
+        const transformed = orders.map((order: any) => {
             // Map status enum back to string
             const statusMap: Record<string, string> = {
                 'new_order': 'new',
