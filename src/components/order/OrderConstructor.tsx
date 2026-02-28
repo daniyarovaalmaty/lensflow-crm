@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
-import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera } from 'lucide-react';
 
 interface CatalogProduct {
     id: string;
@@ -57,6 +57,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     // Catalog
     const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
+    const [rgpPhotos, setRgpPhotos] = useState<{ od?: File; os?: File }>({});
     const subRole = session?.user?.subRole || '';
     const canSeePrices = subRole !== 'optic_doctor' && session?.user?.role !== 'doctor';
 
@@ -71,6 +72,15 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             } catch (e) { console.error(e); }
         })();
     }, []);
+
+    // Lens products from catalog (matched by description field = characteristic code)
+    const lensProducts = useMemo(() => catalog.filter(p => p.category === 'lens'), [catalog]);
+    const additionalProducts = useMemo(() => catalog.filter(p => p.category !== 'lens'), [catalog]);
+
+    // Map characteristic code → catalog product
+    const getLensProduct = (characteristic: string) => {
+        return lensProducts.find(p => p.description === characteristic);
+    };
 
     const addProduct = (product: CatalogProduct) => {
         setSelectedProducts(prev => {
@@ -162,13 +172,29 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const DISCOUNT_PCT = 5;
     const URGENT_SURCHARGE_PCT = 25;
     const isUrgent = watch('is_urgent');
+    const odCharacteristic = watch('config.eyes.od.characteristic');
+    const osCharacteristic = watch('config.eyes.os.characteristic');
+    const odQty = Number(watch('config.eyes.od.qty')) || 0;
+    const osQty = Number(watch('config.eyes.os.qty')) || 0;
 
-    const productsTotal = selectedProducts.reduce((sum, p) => sum + p.price * p.qty, 0);
-    const basePrice = productsTotal;
+    // Lens price from catalog based on characteristic
+    const odLensProduct = getLensProduct(odCharacteristic || '');
+    const osLensProduct = getLensProduct(osCharacteristic || '');
+    const odLensPrice = (odLensProduct?.price || 0) * odQty;
+    const osLensPrice = (osLensProduct?.price || 0) * osQty;
+    const lensTotal = odLensPrice + osLensPrice;
+
+    // Additional products total (solutions, accessories)
+    const additionalTotal = selectedProducts.reduce((sum, p) => sum + p.price * p.qty, 0);
+    const basePrice = lensTotal + additionalTotal;
     const discountAmt = Math.round(basePrice * DISCOUNT_PCT / 100);
     const priceAfterDiscount = basePrice - discountAmt;
     const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
     const totalPrice = priceAfterDiscount + urgentSurcharge;
+
+    const isRgpOD = odCharacteristic === 'rgp';
+    const isRgpOS = osCharacteristic === 'rgp';
+    const hasAnyRgp = isRgpOD || isRgpOS;
 
     return (
         <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="max-w-5xl mx-auto space-y-8">
@@ -374,7 +400,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </div>
             </motion.div>
 
-            {/* Lens Type */}
+            {/* Lens Type — shows lens products from catalog linked to characteristics */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -385,14 +411,38 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
                         <Package className="w-5 h-5" />
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900">Тип линз</h2>
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-900">Тип линз</h2>
+                        <p className="text-sm text-gray-500">Выберите характеристику в параметрах глаз — товар определится автоматически</p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
-                    <div className="p-4 rounded-lg border-2 border-primary-500 bg-primary-50 text-primary-700 text-center">
-                        <p className="font-semibold text-lg">MediLens</p>
-                        <p className="text-sm text-primary-500">Ортокератологическая</p>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {lensProducts.map(product => {
+                        const isSelected = odLensProduct?.id === product.id || osLensProduct?.id === product.id;
+                        const isRgp = product.description === 'rgp';
+                        return (
+                            <div
+                                key={product.id}
+                                className={`p-4 rounded-xl border-2 text-center transition-all ${isSelected
+                                    ? 'border-primary-500 bg-primary-50'
+                                    : 'border-gray-200 bg-gray-50'
+                                    }`}
+                            >
+                                <p className="font-semibold text-sm text-gray-900">{product.name}</p>
+                                {canSeePrices && (
+                                    <p className={`text-xs mt-1 ${isRgp ? 'text-amber-600 font-medium' : 'text-gray-500'}`}>
+                                        {isRgp ? 'Цена индивидуальная' : `${(product.price || 0).toLocaleString('ru-RU')} ₸/${product.unit}`}
+                                    </p>
+                                )}
+                                {isSelected && (
+                                    <span className="inline-block mt-2 text-xs font-semibold text-primary-600 bg-primary-100 px-2 py-0.5 rounded-full">
+                                        Выбрано
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             </motion.div>
 
@@ -436,6 +486,69 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 />
             </motion.div>
 
+            {/* RGP Photo Upload — shown when any eye has RGP characteristic */}
+            {hasAnyRgp && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="card border-2 border-amber-200 bg-amber-50/30"
+                >
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+                            <Camera className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900">Фото для RGP</h2>
+                            <p className="text-sm text-gray-500">Прикрепите фото/скан для индивидуального изготовления</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {isRgpOD && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">OD (Правый глаз)</label>
+                                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors">
+                                    <Camera className="w-8 h-8 text-amber-400 mb-2" />
+                                    <span className="text-sm text-amber-600 font-medium">
+                                        {rgpPhotos.od ? rgpPhotos.od.name : 'Загрузить фото'}
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) setRgpPhotos(prev => ({ ...prev, od: file }));
+                                        }}
+                                    />
+                                </label>
+                            </div>
+                        )}
+                        {isRgpOS && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">OS (Левый глаз)</label>
+                                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors">
+                                    <Camera className="w-8 h-8 text-amber-400 mb-2" />
+                                    <span className="text-sm text-amber-600 font-medium">
+                                        {rgpPhotos.os ? rgpPhotos.os.name : 'Загрузить фото'}
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) setRgpPhotos(prev => ({ ...prev, os: file }));
+                                        }}
+                                    />
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            )}
+
             {/* Notes */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -455,8 +568,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 />
             </motion.div>
 
-            {/* Product Selector */}
-            {catalog.length > 0 && (
+            {/* Additional Products (solutions, accessories only — lenses are auto-selected from characteristic) */}
+            {additionalProducts.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -468,14 +581,14 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <ShoppingCart className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Товары</h2>
-                            <p className="text-sm text-gray-500">Выберите товары для заказа</p>
+                            <h2 className="text-xl font-semibold text-gray-900">Доп. товары</h2>
+                            <p className="text-sm text-gray-500">Растворы, аксессуары и другое</p>
                         </div>
                     </div>
 
-                    {/* Category groups */}
-                    {['lens', 'solution', 'accessory'].map(cat => {
-                        const catProducts = catalog.filter(p => p.category === cat);
+                    {/* Category groups (excluding lens) */}
+                    {['solution', 'accessory'].map(cat => {
+                        const catProducts = additionalProducts.filter(p => p.category === cat);
                         if (catProducts.length === 0) return null;
                         const CatIcon = CATEGORY_ICONS[cat] || Package;
                         return (
@@ -491,8 +604,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                             <div
                                                 key={product.id}
                                                 className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${selected
-                                                        ? 'border-primary-500 bg-primary-50'
-                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    ? 'border-primary-500 bg-primary-50'
+                                                    : 'border-gray-200 hover:border-gray-300'
                                                     }`}
                                             >
                                                 <div className="flex-1 min-w-0">
@@ -502,9 +615,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                                             <span className="text-xs font-semibold text-gray-600">
                                                                 {product.price.toLocaleString('ru-RU')} ₸/{product.unit}
                                                             </span>
-                                                        )}
-                                                        {product.sku && (
-                                                            <span className="text-xs text-gray-400">#{product.sku}</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -546,7 +656,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             )}
 
             {/* Price Summary — hidden for doctors */}
-            {canSeePrices && selectedProducts.length > 0 && (
+            {canSeePrices && basePrice > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -561,6 +671,27 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     </div>
 
                     <div className="space-y-3">
+                        {/* Lens prices from characteristic */}
+                        {odLensProduct && (odLensProduct.price ?? 0) > 0 && (
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">OD: {odLensProduct.name} × {odQty}</span>
+                                <span className="font-medium text-gray-900">{odLensPrice.toLocaleString('ru-RU')} ₸</span>
+                            </div>
+                        )}
+                        {osLensProduct && (osLensProduct.price ?? 0) > 0 && (
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">OS: {osLensProduct.name} × {osQty}</span>
+                                <span className="font-medium text-gray-900">{osLensPrice.toLocaleString('ru-RU')} ₸</span>
+                            </div>
+                        )}
+                        {(isRgpOD || isRgpOS) && (
+                            <div className="flex justify-between items-center text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                                <span>RGP — цена индивидуальная</span>
+                                <span className="font-medium">по запросу</span>
+                            </div>
+                        )}
+
+                        {/* Additional products */}
                         {selectedProducts.map(sp => (
                             <div key={sp.productId} className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600">{sp.name}: {sp.qty} × {sp.price.toLocaleString('ru-RU')} ₸</span>
