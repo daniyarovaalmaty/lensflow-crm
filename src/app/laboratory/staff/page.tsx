@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Users, Plus, Key, Phone, Mail, Shield, X, Eye, EyeOff, Search, UserPlus
+    Users, Plus, Key, Phone, Mail, Shield, X, Eye, EyeOff, Search, UserPlus, Trash2
 } from 'lucide-react';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
@@ -107,6 +107,25 @@ export default function StaffPage() {
         }
     };
 
+    const handleDelete = async (member: StaffMember) => {
+        if (member.id === session?.user?.id) {
+            alert('Нельзя удалить самого себя');
+            return;
+        }
+        if (!confirm(`Удалить сотрудника ${member.fullName}?`)) return;
+        try {
+            const res = await fetch(`/api/staff/${member.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setStaff(prev => prev.filter(s => s.id !== member.id));
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Ошибка при удалении');
+            }
+        } catch {
+            alert('Ошибка сети');
+        }
+    };
+
     const filtered = staff.filter(s =>
         s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -206,13 +225,24 @@ export default function StaffPage() {
                                             {new Date(member.createdAt).toLocaleDateString('ru-RU')}
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            <button
-                                                onClick={() => { setPasswordModal(member); setNewPassword(''); setShowPassword(false); }}
-                                                className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
-                                            >
-                                                <Key className="w-3.5 h-3.5" />
-                                                Изменить пароль
-                                            </button>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => { setPasswordModal(member); setNewPassword(''); setShowPassword(false); }}
+                                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                >
+                                                    <Key className="w-3.5 h-3.5" />
+                                                    Пароль
+                                                </button>
+                                                {member.id !== session?.user?.id && (
+                                                    <button
+                                                        onClick={() => handleDelete(member)}
+                                                        className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                        Удалить
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
