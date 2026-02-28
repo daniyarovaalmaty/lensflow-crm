@@ -187,6 +187,7 @@ export const OrderSchema = z.object({
     notes: z.string().optional(),
     payment_status: PaymentStatusEnum.optional(),
     defects: z.array(DefectRecordSchema).optional(),
+    total_price: z.number().optional(),
 });
 
 // ==================== Order Edit & Production Helpers ====================

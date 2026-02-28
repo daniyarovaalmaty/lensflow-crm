@@ -108,6 +108,7 @@ export async function GET(request: NextRequest) {
                 notes: order.notes || undefined,
                 payment_status: order.paymentStatus,
                 defects: (order.defects as any[]) || [],
+                total_price: order.totalPrice || 0,
             };
         });
 
@@ -160,6 +161,38 @@ export async function POST(request: NextRequest) {
             patientId = patient.id;
         }
 
+        // ── Calculate totalPrice from catalog ──
+        const DISCOUNT_PCT = 5;
+        const URGENT_SURCHARGE_PCT = 25;
+        const config = validatedData.config as any;
+        const odChar = config?.eyes?.od?.characteristic || '';
+        const osChar = config?.eyes?.os?.characteristic || '';
+        const odQty = Number(config?.eyes?.od?.qty) || 0;
+        const osQty = Number(config?.eyes?.os?.qty) || 0;
+
+        // Lookup lens catalog prices by characteristic code stored in "description"
+        let odPrice = 0;
+        let osPrice = 0;
+        if (odChar || osChar) {
+            const lensProducts = await prisma.product.findMany({
+                where: { category: 'lens', description: { in: [odChar, osChar].filter(Boolean) } },
+                select: { description: true, price: true },
+            });
+            const priceMap = new Map(lensProducts.map(p => [p.description, p.price]));
+            odPrice = (priceMap.get(odChar) || 0) * odQty;
+            osPrice = (priceMap.get(osChar) || 0) * osQty;
+        }
+
+        // Additional products total
+        const additionalProducts = body.products as Array<{ price: number; qty: number }> | undefined;
+        const additionalTotal = (additionalProducts || []).reduce((sum: number, p) => sum + (p.price || 0) * (p.qty || 1), 0);
+
+        const basePrice = odPrice + osPrice + additionalTotal;
+        const discountAmt = Math.round(basePrice * DISCOUNT_PCT / 100);
+        const priceAfterDiscount = basePrice - discountAmt;
+        const urgentSurcharge = is_urgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+        const totalPrice = priceAfterDiscount + urgentSurcharge;
+
         // Create order in database
         const order = await prisma.order.create({
             data: {
@@ -180,6 +213,7 @@ export async function POST(request: NextRequest) {
                 editDeadline: edit_deadline,
                 notes: validatedData.notes || undefined,
                 products: body.products || undefined,
+                totalPrice,
             },
             include: {
                 patient: true,

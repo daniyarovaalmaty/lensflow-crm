@@ -14,11 +14,14 @@ import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import * as XLSX from 'xlsx';
 
-const PRICE_PER_LENS = 40_000;
+const PRICE_PER_LENS = 17_500;
 const URGENT_SURCHARGE_PCT = 25;
 const DISCOUNT_PCT = 5;
 
 function calcOrderPrice(order: Order): number {
+    // Use stored total_price if available
+    if (order.total_price && order.total_price > 0) return order.total_price;
+    // Fallback for old orders
     const od = order.config.eyes.od;
     const os = order.config.eyes.os;
     const totalLenses = (Number(od.qty) || 1) + (Number(os.qty) || 1);
@@ -425,8 +428,8 @@ export default function LabHeadDashboard() {
                                 type="button"
                                 onClick={() => setCounterpartyTab('doctors')}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${counterpartyTab === 'doctors'
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 <Stethoscope className="w-3.5 h-3.5" />
@@ -436,8 +439,8 @@ export default function LabHeadDashboard() {
                                 type="button"
                                 onClick={() => setCounterpartyTab('clinics')}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${counterpartyTab === 'clinics'
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 <Building2 className="w-3.5 h-3.5" />
@@ -465,8 +468,8 @@ export default function LabHeadDashboard() {
                                         <td className="py-3 px-3">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${counterpartyTab === 'doctors'
-                                                        ? 'bg-blue-100 text-blue-700'
-                                                        : 'bg-indigo-100 text-indigo-700'
+                                                    ? 'bg-blue-100 text-blue-700'
+                                                    : 'bg-indigo-100 text-indigo-700'
                                                     }`}>
                                                     {cp.name.charAt(0).toUpperCase()}
                                                 </div>

@@ -15,7 +15,7 @@ import type { PaymentStatus } from '@/types/order';
 import { getPermissions, SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
 
-const PRICE_PER_LENS = 40000;
+const PRICE_PER_LENS = 17500; // fallback for print/expanded details
 
 type SortOption = 'newest' | 'oldest' | 'patient_az' | 'patient_za';
 
@@ -435,7 +435,7 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                             const od = order.config.eyes.od;
                             const os = order.config.eyes.os;
                             const totalLenses = (Number(od.qty) || 0) + (Number(os.qty) || 0);
-                            const totalPrice = totalLenses * PRICE_PER_LENS;
+                            const totalPrice = order.total_price || totalLenses * PRICE_PER_LENS;
 
                             return (
                                 <motion.div

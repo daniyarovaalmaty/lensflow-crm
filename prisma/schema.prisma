@@ -145,6 +145,7 @@ model Order {
   lensConfig      Json
 
   // Payment
+  totalPrice      Int           @default(0)
   paymentStatus   PaymentStatus @default(unpaid)
 
   // Timestamps

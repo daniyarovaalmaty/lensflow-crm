@@ -9,7 +9,7 @@ import { CharacteristicLabels } from '@/types/order';
 import type { CreateOrderDTO, Order, Characteristic } from '@/types/order';
 import { CheckCircle, Download, ArrowLeft, FileText } from 'lucide-react';
 
-const PRICE_PER_LENS = 40000;
+const PRICE_PER_LENS = 17500;
 
 function generateInvoiceHTML(order: Order): string {
     const od = order.config.eyes.od;

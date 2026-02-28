@@ -11,14 +11,17 @@ import type { Order, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
 import * as XLSX from 'xlsx';
 
-const PRICE_PER_LENS = 40_000;
+const FALLBACK_PRICE_PER_LENS = 17_500;
 const DISCOUNT_PCT = 5;
 const URGENT_SURCHARGE_PCT = 25;
 
 function calcOrderTotal(order: Order): number {
+    // Use stored total_price (calculated server-side from catalog) if available
+    if (order.total_price && order.total_price > 0) return order.total_price;
+    // Fallback for old orders without stored price
     const od = order.config.eyes.od?.qty ?? 0;
     const os = order.config.eyes.os?.qty ?? 0;
-    const base = (Number(od) + Number(os)) * PRICE_PER_LENS;
+    const base = (Number(od) + Number(os)) * FALLBACK_PRICE_PER_LENS;
     const disc = Math.round(base * DISCOUNT_PCT / 100);
     const after = base - disc;
     const surcharge = order.is_urgent ? Math.round(after * URGENT_SURCHARGE_PCT / 100) : 0;
