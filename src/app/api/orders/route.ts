@@ -179,6 +179,7 @@ export async function POST(request: NextRequest) {
                 lensConfig: validatedData.config as any,
                 editDeadline: edit_deadline,
                 notes: validatedData.notes || undefined,
+                products: body.products || undefined,
             },
             include: {
                 patient: true,

@@ -1,24 +1,100 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
-import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart } from 'lucide-react';
 
-const PRICE_PER_LENS = 40000; // тенге
+interface CatalogProduct {
+    id: string;
+    name: string;
+    category: string;
+    sku: string | null;
+    description: string | null;
+    price?: number; // undefined for doctors
+    unit: string;
+}
+
+interface SelectedProduct {
+    productId: string;
+    name: string;
+    category: string;
+    qty: number;
+    price: number;
+}
+
+const CATEGORY_ICONS: Record<string, any> = {
+    lens: Package,
+    solution: Droplets,
+    accessory: Wrench,
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+    lens: 'bg-blue-100 text-blue-700',
+    solution: 'bg-emerald-100 text-emerald-700',
+    accessory: 'bg-orange-100 text-orange-700',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+    lens: 'Линзы',
+    solution: 'Растворы',
+    accessory: 'Аксессуары',
+};
 
 interface OrderConstructorProps {
     opticId: string;
-    onSubmit: (data: CreateOrderDTO) => Promise<void>;
+    onSubmit: (data: CreateOrderDTO & { products?: SelectedProduct[] }) => Promise<void>;
 }
 
 export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const { data: session } = useSession();
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Catalog
+    const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
+    const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
+    const subRole = session?.user?.subRole || '';
+    const canSeePrices = subRole !== 'optic_doctor' && session?.user?.role !== 'doctor';
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/catalog');
+                if (res.ok) {
+                    const data = await res.json();
+                    setCatalog(data);
+                }
+            } catch (e) { console.error(e); }
+        })();
+    }, []);
+
+    const addProduct = (product: CatalogProduct) => {
+        setSelectedProducts(prev => {
+            const existing = prev.find(p => p.productId === product.id);
+            if (existing) {
+                return prev.map(p => p.productId === product.id ? { ...p, qty: p.qty + 1 } : p);
+            }
+            return [...prev, { productId: product.id, name: product.name, category: product.category, qty: 1, price: product.price || 0 }];
+        });
+    };
+
+    const updateProductQty = (productId: string, delta: number) => {
+        setSelectedProducts(prev => {
+            return prev.map(p => {
+                if (p.productId !== productId) return p;
+                const newQty = p.qty + delta;
+                return newQty <= 0 ? null! : { ...p, qty: newQty };
+            }).filter(Boolean);
+        });
+    };
+
+    const removeProduct = (productId: string) => {
+        setSelectedProducts(prev => prev.filter(p => p.productId !== productId));
+    };
 
     const {
         register,
@@ -62,14 +138,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const onFormSubmit = async (data: CreateOrderDTO) => {
         setIsSubmitting(true);
         try {
-            await onSubmit(data);
+            await onSubmit({ ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined });
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const onFormError = (errs: any) => {
-        // Don't use JSON.stringify — form error objects contain circular refs (React refs)
         console.error('Form validation errors:', errs);
         const extractMessages = (obj: any, prefix = ''): string[] => {
             const msgs: string[] = [];
@@ -84,13 +159,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     };
 
     // Price calculation
-    const DISCOUNT_PCT = 5; // 5% постоянный клиент
-    const URGENT_SURCHARGE_PCT = 25; // +25% за срочность
-    const odQty = Number(watch('config.eyes.od.qty')) || 1;
-    const osQty = Number(watch('config.eyes.os.qty')) || 1;
+    const DISCOUNT_PCT = 5;
+    const URGENT_SURCHARGE_PCT = 25;
     const isUrgent = watch('is_urgent');
-    const totalLenses = odQty + osQty;
-    const basePrice = totalLenses * PRICE_PER_LENS;
+
+    const productsTotal = selectedProducts.reduce((sum, p) => sum + p.price * p.qty, 0);
+    const basePrice = productsTotal;
     const discountAmt = Math.round(basePrice * DISCOUNT_PCT / 100);
     const priceAfterDiscount = basePrice - discountAmt;
     const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
@@ -381,56 +455,144 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 />
             </motion.div>
 
-            {/* Price Summary */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 }}
-                className="card border-2 border-primary-100"
-            >
-                <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
-                        <Receipt className="w-5 h-5" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900">Стоимость заказа</h2>
-                </div>
-
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">OD (Правый глаз): {Number(odQty)} шт. × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
-                        <span className="font-medium text-gray-900">
-                            {(Number(odQty) * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">OS (Левый глаз): {Number(osQty)} шт. × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
-                        <span className="font-medium text-gray-900">
-                            {(Number(osQty) * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸
-                        </span>
-                    </div>
-
-                    {/* Discount row */}
-                    <div className="flex justify-between items-center text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
-                        <span>Скидка постоянного клиента ({DISCOUNT_PCT}%)</span>
-                        <span className="font-medium">-{discountAmt.toLocaleString('ru-RU')} ₸</span>
-                    </div>
-
-                    {/* Urgent surcharge */}
-                    {isUrgent && (
-                        <div className="flex justify-between items-center text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                            <span>Срочность (+{URGENT_SURCHARGE_PCT}%)</span>
-                            <span className="font-medium">+{urgentSurcharge.toLocaleString('ru-RU')} ₸</span>
+            {/* Product Selector */}
+            {catalog.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.32 }}
+                    className="card"
+                >
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                            <ShoppingCart className="w-5 h-5" />
                         </div>
-                    )}
-
-                    <div className="border-t border-gray-200 pt-3 mt-3 flex justify-between items-center">
-                        <span className="text-base font-semibold text-gray-900">Итого:</span>
-                        <span className="text-xl font-bold text-primary-600">
-                            {totalPrice.toLocaleString('ru-RU')} ₸
-                        </span>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900">Товары</h2>
+                            <p className="text-sm text-gray-500">Выберите товары для заказа</p>
+                        </div>
                     </div>
-                </div>
-            </motion.div>
+
+                    {/* Category groups */}
+                    {['lens', 'solution', 'accessory'].map(cat => {
+                        const catProducts = catalog.filter(p => p.category === cat);
+                        if (catProducts.length === 0) return null;
+                        const CatIcon = CATEGORY_ICONS[cat] || Package;
+                        return (
+                            <div key={cat} className="mb-4 last:mb-0">
+                                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                    <CatIcon className="w-4 h-4" />
+                                    {CATEGORY_LABELS[cat] || cat}
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {catProducts.map(product => {
+                                        const selected = selectedProducts.find(s => s.productId === product.id);
+                                        return (
+                                            <div
+                                                key={product.id}
+                                                className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${selected
+                                                        ? 'border-primary-500 bg-primary-50'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium text-sm text-gray-900 truncate">{product.name}</div>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        {canSeePrices && product.price !== undefined && (
+                                                            <span className="text-xs font-semibold text-gray-600">
+                                                                {product.price.toLocaleString('ru-RU')} ₸/{product.unit}
+                                                            </span>
+                                                        )}
+                                                        {product.sku && (
+                                                            <span className="text-xs text-gray-400">#{product.sku}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {selected ? (
+                                                    <div className="flex items-center gap-2 ml-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateProductQty(product.id, -1)}
+                                                            className="w-7 h-7 rounded-lg bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                                                        >
+                                                            <Minus className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <span className="text-sm font-bold w-6 text-center">{selected.qty}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateProductQty(product.id, 1)}
+                                                            className="w-7 h-7 rounded-lg bg-primary-500 hover:bg-primary-600 text-white flex items-center justify-center transition-colors"
+                                                        >
+                                                            <Plus className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => addProduct(product)}
+                                                        className="ml-3 w-7 h-7 rounded-lg bg-gray-100 hover:bg-primary-100 hover:text-primary-600 flex items-center justify-center transition-colors text-gray-400"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </motion.div>
+            )}
+
+            {/* Price Summary — hidden for doctors */}
+            {canSeePrices && selectedProducts.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 }}
+                    className="card border-2 border-primary-100"
+                >
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
+                            <Receipt className="w-5 h-5" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900">Стоимость заказа</h2>
+                    </div>
+
+                    <div className="space-y-3">
+                        {selectedProducts.map(sp => (
+                            <div key={sp.productId} className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">{sp.name}: {sp.qty} × {sp.price.toLocaleString('ru-RU')} ₸</span>
+                                <span className="font-medium text-gray-900">
+                                    {(sp.qty * sp.price).toLocaleString('ru-RU')} ₸
+                                </span>
+                            </div>
+                        ))}
+
+                        {/* Discount row */}
+                        <div className="flex justify-between items-center text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
+                            <span>Скидка постоянного клиента ({DISCOUNT_PCT}%)</span>
+                            <span className="font-medium">-{discountAmt.toLocaleString('ru-RU')} ₸</span>
+                        </div>
+
+                        {/* Urgent surcharge */}
+                        {isUrgent && (
+                            <div className="flex justify-between items-center text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                                <span>Срочность (+{URGENT_SURCHARGE_PCT}%)</span>
+                                <span className="font-medium">+{urgentSurcharge.toLocaleString('ru-RU')} ₸</span>
+                            </div>
+                        )}
+
+                        <div className="border-t border-gray-200 pt-3 mt-3 flex justify-between items-center">
+                            <span className="text-base font-semibold text-gray-900">Итого:</span>
+                            <span className="text-xl font-bold text-primary-600">
+                                {totalPrice.toLocaleString('ru-RU')} ₸
+                            </span>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Submit */}
             <div className="flex justify-end gap-4">

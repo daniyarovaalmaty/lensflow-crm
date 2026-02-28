@@ -97,6 +97,23 @@ model Patient {
   @@map("patients")
 }
 
+// ==================== Product Catalog ====================
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // lens, solution, accessory
+  sku         String?  @unique
+  description String?
+  price       Int      @default(0)
+  unit        String   @default("шт")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("products")
+}
+
 // ==================== Order ====================
 model Order {
   id              String      @id @default(cuid())
@@ -140,6 +157,9 @@ model Order {
   // Notes & Defects
   notes   String?
   defects Json?   // Array of defect records
+
+  // Ordered products snapshot: [{ productId, name, category, qty, price }]
+  products Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

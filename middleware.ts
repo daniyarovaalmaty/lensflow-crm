@@ -9,6 +9,7 @@ export const config = {
         '/profile/:path*',
         '/api/orders/:path*',
         '/api/profile/:path*',
+        '/api/catalog/:path*',
     ],
 };
 
@@ -45,7 +46,7 @@ export default async function middleware(request: NextRequest) {
     }
 
     // Protect API routes
-    if (pathname.startsWith('/api/orders') || pathname.startsWith('/api/profile')) {
+    if (pathname.startsWith('/api/orders') || pathname.startsWith('/api/profile') || pathname.startsWith('/api/catalog')) {
         if (!session) {
             return new NextResponse('Unauthorized', { status: 401 });
         }

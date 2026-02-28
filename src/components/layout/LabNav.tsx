@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { BarChart3, Columns3, FileText, LogOut, User } from 'lucide-react';
+import { BarChart3, Columns3, FileText, LogOut, User, Package } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
@@ -11,6 +11,7 @@ import type { SubRole } from '@/types/user';
 const navItems = [
     { href: '/laboratory/dashboard', label: 'Дашборд', icon: BarChart3, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/production', label: 'Производство', icon: Columns3, subRoles: ['lab_head', 'lab_admin', 'lab_engineer', 'lab_quality', 'lab_logistics'] },
+    { href: '/laboratory/catalog', label: 'Каталог', icon: Package, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/accountant', label: 'Финансы', icon: FileText, subRoles: ['lab_head', 'lab_admin', 'lab_accountant'] },
 ];
 
