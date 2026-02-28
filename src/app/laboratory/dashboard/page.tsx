@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
     Package, Clock, CheckCircle, TruckIcon, AlertTriangle,
     BarChart3, DollarSign, TrendingUp, TrendingDown,
-    Zap, Activity, Users, Download, ArrowRight, Building2, Stethoscope
+    Zap, Activity, Users, Download, ArrowRight, Building2, Stethoscope, Calendar, X
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
@@ -39,6 +39,8 @@ export default function LabHeadDashboard() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [counterpartyTab, setCounterpartyTab] = useState<'doctors' | 'clinics'>('doctors');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
 
     useEffect(() => {
         (async () => {
@@ -50,21 +52,36 @@ export default function LabHeadDashboard() {
         })();
     }, []);
 
+    // ─── Date-filtered orders ───
+    const filteredOrders = useMemo(() => {
+        let result = [...orders];
+        if (dateFrom) {
+            const from = new Date(dateFrom);
+            result = result.filter(o => new Date(o.meta.created_at) >= from);
+        }
+        if (dateTo) {
+            const to = new Date(dateTo);
+            to.setHours(23, 59, 59, 999);
+            result = result.filter(o => new Date(o.meta.created_at) <= to);
+        }
+        return result;
+    }, [orders, dateFrom, dateTo]);
+
     // ─── Time helpers ───
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-    const thisMonthOrders = orders.filter(o => new Date(o.meta.created_at) >= startOfMonth);
-    const lastMonthOrders = orders.filter(o => {
+    const thisMonthOrders = filteredOrders.filter(o => new Date(o.meta.created_at) >= startOfMonth);
+    const lastMonthOrders = filteredOrders.filter(o => {
         const d = new Date(o.meta.created_at);
         return d >= startOfLastMonth && d <= endOfLastMonth;
     });
 
     // ─── KPIs ───
     const kpis = useMemo(() => {
-        const totalOrders = orders.length;
+        const totalOrders = filteredOrders.length;
         const totalThisMonth = thisMonthOrders.length;
         const totalLastMonth = lastMonthOrders.length;
         const growthPct = totalLastMonth > 0
@@ -72,7 +89,7 @@ export default function LabHeadDashboard() {
             : totalThisMonth > 0 ? 100 : 0;
 
         // Revenue
-        const totalRevenue = orders.reduce((s, o) => s + calcOrderPrice(o), 0);
+        const totalRevenue = filteredOrders.reduce((s, o) => s + calcOrderPrice(o), 0);
         const revenueThisMonth = thisMonthOrders.reduce((s, o) => s + calcOrderPrice(o), 0);
         const revenueLastMonth = lastMonthOrders.reduce((s, o) => s + calcOrderPrice(o), 0);
         const revenueGrowthPct = revenueLastMonth > 0
@@ -80,26 +97,26 @@ export default function LabHeadDashboard() {
             : revenueThisMonth > 0 ? 100 : 0;
 
         // Payment stats
-        const paidOrders = orders.filter(o => (o as any).payment_status === 'paid');
-        const unpaidOrders = orders.filter(o => (o as any).payment_status !== 'paid');
+        const paidOrders = filteredOrders.filter(o => (o as any).payment_status === 'paid');
+        const unpaidOrders = filteredOrders.filter(o => (o as any).payment_status !== 'paid');
         const paidRevenue = paidOrders.reduce((s, o) => s + calcOrderPrice(o), 0);
         const unpaidRevenue = unpaidOrders.reduce((s, o) => s + calcOrderPrice(o), 0);
 
         // Status breakdown
         const statusCounts: Record<string, number> = {};
-        orders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
+        filteredOrders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
 
         // Defects
-        const totalDefects = orders.reduce((s, o) => s + (o.defects || []).reduce((d: number, def: DefectRecord) => d + def.qty, 0), 0);
-        const totalLenses = orders.reduce((s, o) => s + (Number(o.config.eyes.od.qty) || 1) + (Number(o.config.eyes.os.qty) || 1), 0);
+        const totalDefects = filteredOrders.reduce((s, o) => s + (o.defects || []).reduce((d: number, def: DefectRecord) => d + def.qty, 0), 0);
+        const totalLenses = filteredOrders.reduce((s, o) => s + (Number(o.config.eyes.od.qty) || 1) + (Number(o.config.eyes.os.qty) || 1), 0);
         const defectRate = totalLenses > 0 ? ((totalDefects / totalLenses) * 100).toFixed(1) : '0';
 
         // Urgent orders
-        const urgentOrders = orders.filter(o => o.is_urgent).length;
+        const urgentOrders = filteredOrders.filter(o => o.is_urgent).length;
         const urgentPct = totalOrders > 0 ? Math.round((urgentOrders / totalOrders) * 100) : 0;
 
         // Avg production time (for orders that have production_started_at and are at least 'ready')
-        const completedOrders = orders.filter(o =>
+        const completedOrders = filteredOrders.filter(o =>
             o.production_started_at &&
             ['ready', 'shipped', 'out_for_delivery', 'delivered'].includes(o.status)
         );
@@ -118,7 +135,7 @@ export default function LabHeadDashboard() {
         for (let i = 5; i >= 0; i--) {
             const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
             const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-            const mo = orders.filter(o => {
+            const mo = filteredOrders.filter(o => {
                 const d = new Date(o.meta.created_at);
                 return d >= mStart && d <= mEnd;
             });
@@ -139,13 +156,13 @@ export default function LabHeadDashboard() {
             avgProdHours, completedOrders: completedOrders.length,
             monthlyRevenue,
         };
-    }, [orders]);
+    }, [filteredOrders]);
 
     // ─── Counterparties ───
     const counterparties = useMemo(() => {
         // Doctors
         const doctorMap = new Map<string, { name: string; orders: number; revenue: number; unpaid: number; lastDate: string }>();
-        orders.forEach(o => {
+        filteredOrders.forEach(o => {
             const name = o.meta.doctor || 'Не указан';
             const existing = doctorMap.get(name) || { name, orders: 0, revenue: 0, unpaid: 0, lastDate: '' };
             existing.orders++;
@@ -157,7 +174,7 @@ export default function LabHeadDashboard() {
 
         // Clinics
         const clinicMap = new Map<string, { name: string; orders: number; revenue: number; unpaid: number; lastDate: string }>();
-        orders.forEach(o => {
+        filteredOrders.forEach(o => {
             const name = o.meta.optic_name || o.company || 'Не указана';
             const existing = clinicMap.get(name) || { name, orders: 0, revenue: 0, unpaid: 0, lastDate: '' };
             existing.orders++;
@@ -171,7 +188,7 @@ export default function LabHeadDashboard() {
             doctors: Array.from(doctorMap.values()).sort((a, b) => b.orders - a.orders),
             clinics: Array.from(clinicMap.values()).sort((a, b) => b.orders - a.orders),
         };
-    }, [orders]);
+    }, [filteredOrders]);
 
     // Export all data to Excel
     const exportToExcel = () => {
@@ -259,6 +276,29 @@ export default function LabHeadDashboard() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+                {/* Date Filters */}
+                <div className="flex flex-wrap items-end gap-3">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
+                        </label>
+                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
+                        </label>
+                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input" />
+                    </div>
+                    {(dateFrom || dateTo) && (
+                        <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="btn btn-secondary text-sm gap-1">
+                            <X className="w-4 h-4" /> Сбросить
+                        </button>
+                    )}
+                    <div className="ml-auto text-xs text-gray-400">
+                        Показано: {filteredOrders.length} заказов
+                    </div>
+                </div>
                 {/* ─── KPI Cards Row ─── */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Total Orders */}
