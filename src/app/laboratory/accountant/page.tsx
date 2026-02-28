@@ -10,6 +10,8 @@ import {
 import type { Order, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors, CharacteristicLabels } from '@/types/order';
 import type { Characteristic } from '@/types/order';
+import { getPermissions } from '@/types/user';
+import type { SubRole } from '@/types/user';
 import * as XLSX from 'xlsx';
 
 const FALLBACK_PRICE_PER_LENS = 17_500;
@@ -40,6 +42,8 @@ const PAYMENT_OPTIONS: { value: PaymentStatus; label: string; icon: any; color: 
 
 export default function AccountantPage() {
     const { data: session } = useSession();
+    const subRole = (session?.user?.subRole || 'lab_accountant') as SubRole;
+    const perms = getPermissions(subRole);
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -281,7 +285,7 @@ export default function AccountantPage() {
                                                 </td>
                                                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                                                     <div className="flex gap-1">
-                                                        {PAYMENT_OPTIONS.map(opt => (
+                                                        {perms.canChangePayments ? PAYMENT_OPTIONS.map(opt => (
                                                             <button
                                                                 key={opt.value}
                                                                 onClick={() => updatePayment(order.order_id, opt.value)}
@@ -291,7 +295,11 @@ export default function AccountantPage() {
                                                                 <opt.icon className="w-3 h-3" />
                                                                 {opt.label}
                                                             </button>
-                                                        ))}
+                                                        )) : (
+                                                            <span className={`text-xs px-2 py-1 rounded-lg border font-medium ${PaymentStatusColors[payStatus]}`}>
+                                                                {PaymentStatusLabels[payStatus]}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>

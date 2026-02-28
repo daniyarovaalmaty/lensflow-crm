@@ -14,6 +14,11 @@ export async function PATCH(
         const session = await auth();
         if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
+        // Only lab_accountant can change payment status
+        if (session.user.subRole !== 'lab_accountant') {
+            return NextResponse.json({ error: 'Only accountant can change payment status' }, { status: 403 });
+        }
+
         const body = await request.json();
         const { payment_status } = body;
 
