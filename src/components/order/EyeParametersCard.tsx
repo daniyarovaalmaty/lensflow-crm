@@ -72,171 +72,172 @@ export function EyeParametersCard({
         prevDkRef.current = dkValue;
     }, [dkValue, eye, setValue, watch]);
 
+    const eyeColor = eye === 'od' ? 'blue' : 'purple';
+    const borderAccent = eye === 'od' ? 'border-l-blue-400' : 'border-l-purple-400';
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="card"
+            className={`card border-l-4 ${borderAccent}`}
         >
-            <div className="flex items-center gap-3 mb-6">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${eye === 'od' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${eye === 'od' ? 'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600' : 'bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600'}`}>
                     <Eye className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">{label}</h3>
+                <div>
+                    <h3 className="text-base font-bold text-gray-900">{label}</h3>
+                    <p className="text-xs text-gray-400">Параметры ортокератологической линзы</p>
+                </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-
-                {/* Характеристика */}
-                <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Характеристика</label>
-                    <select {...register(`config.eyes.${eye}.characteristic`)} className="input">
-                        <option value="">— выберите —</option>
-                        {Object.entries(CharacteristicLabels).map(([val, lbl]) => (
-                            <option key={val} value={val}>{lbl}</option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Km — number input (0.20–55.00, step 0.01) — too many options for a dropdown */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Km</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="0.2"
-                        max="55"
-                        {...register(`config.eyes.${eye}.km`, { valueAsNumber: true })}
-                        className="input"
-                        placeholder="44.50"
-                    />
-                </div>
-
-                {/* TP — dropdown (-25.00–25.00, step 0.25) */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">TP</label>
-                    <select {...register(`config.eyes.${eye}.tp`, { valueAsNumber: true })} className="input">
-                        <option value="">—</option>
-                        {TP_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                    </select>
-                </div>
-
-                {/* DIA — dropdown (8.0–13.0, step 0.1) */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">DIA</label>
-                    <select {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })} className="input">
-                        <option value="">—</option>
-                        {DIA_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                    </select>
-                </div>
-
-                {/* E — single for spherical, double (slash) for toric/RGP */}
-                <div className={isSpherical ? '' : 'col-span-2'}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        {isSpherical ? 'E' : 'E (дробь)'}
-                    </label>
-                    {isSpherical ? (
-                        <select {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })} className="input">
-                            <option value="">—</option>
-                            {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+            {/* Row 1: Характеристика + Km + TP + DIA */}
+            <div className="space-y-5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="col-span-2 sm:col-span-1">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика</label>
+                        <select {...register(`config.eyes.${eye}.characteristic`)} className="input">
+                            <option value="">— выберите —</option>
+                            {Object.entries(CharacteristicLabels).map(([val, lbl]) => (
+                                <option key={val} value={val}>{lbl}</option>
+                            ))}
                         </select>
-                    ) : (
-                        <div className="flex items-center gap-1">
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Km</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.2"
+                            max="55"
+                            {...register(`config.eyes.${eye}.km`, { valueAsNumber: true })}
+                            className="input"
+                            placeholder="44.50"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">TP</label>
+                        <select {...register(`config.eyes.${eye}.tp`, { valueAsNumber: true })} className="input">
+                            <option value="">—</option>
+                            {TP_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">DIA</label>
+                        <select {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })} className="input">
+                            <option value="">—</option>
+                            {DIA_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Row 2: E + Тог. + Dk + Пробная + Цвет */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {/* E — single for spherical, double (slash) for toric/RGP */}
+                    <div className={isSpherical ? '' : 'col-span-2 sm:col-span-2'}>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            {isSpherical ? 'E' : 'E (дробь)'}
+                        </label>
+                        {isSpherical ? (
                             <select {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })} className="input">
                                 <option value="">—</option>
                                 {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
                             </select>
-                            <span className="text-lg font-bold text-gray-500 px-1">/</span>
-                            <select {...register(`config.eyes.${eye}.e2`, { valueAsNumber: true })} className="input">
-                                <option value="">—</option>
-                                {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                            </select>
+                        ) : (
+                            <div className="flex items-center gap-1.5">
+                                <select {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })} className="input">
+                                    <option value="">—</option>
+                                    {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                                </select>
+                                <span className="text-lg font-bold text-gray-400 flex-shrink-0">/</span>
+                                <select {...register(`config.eyes.${eye}.e2`, { valueAsNumber: true })} className="input">
+                                    <option value="">—</option>
+                                    {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Тог. — hidden for spherical */}
+                    {!isSpherical && (
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Тог.</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="6"
+                                {...register(`config.eyes.${eye}.tor`, { valueAsNumber: true })}
+                                className="input"
+                                placeholder="0.00"
+                            />
                         </div>
                     )}
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Dk</label>
+                        <select {...register(`config.eyes.${eye}.dk`)} className="input">
+                            <option value="">—</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="125">125</option>
+                            <option value="180">180</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Пробная</label>
+                        <div className={`flex items-center h-[42px] px-3 rounded-lg border transition-colors ${isTrial ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                            <input
+                                type="checkbox"
+                                {...register(`config.eyes.${eye}.trial`)}
+                                checked={isTrial}
+                                readOnly
+                                className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                            />
+                            <span className={`ml-2 text-sm font-medium ${isTrial ? 'text-green-700' : 'text-gray-400'}`}>
+                                {isTrial ? 'Да' : 'Нет'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Цвет</label>
+                        <select {...register(`config.eyes.${eye}.color`)} className="input" disabled={!dkValue}>
+                            <option value="">{dkValue ? '— выберите —' : 'Выберите Dk'}</option>
+                            {availableColors.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
                 </div>
 
-                {/* Тог. — number input (0.00–6.00, step 0.01) — hidden for spherical */}
-                {!isSpherical && (
+                {/* Row 3: Апик. клиренс + Фактор компр. + Кол-во */}
+                <div className="grid grid-cols-3 gap-3">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Тог.</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Апик. клиренс</label>
+                        <select {...register(`config.eyes.${eye}.apical_clearance`, { valueAsNumber: true })} className="input">
+                            <option value="">—</option>
+                            {APICAL_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Фактор компр.</label>
                         <input
                             type="number"
                             step="0.01"
-                            min="0"
-                            max="6"
-                            {...register(`config.eyes.${eye}.tor`, { valueAsNumber: true })}
+                            min="-4.5"
+                            max="4.5"
+                            {...register(`config.eyes.${eye}.compression_factor`, { valueAsNumber: true })}
                             className="input"
                             placeholder="0.00"
                         />
                     </div>
-                )}
-
-                {/* Dk */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Dk</label>
-                    <select {...register(`config.eyes.${eye}.dk`)} className="input">
-                        <option value="">—</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                        <option value="125">125</option>
-                        <option value="180">180</option>
-                    </select>
-                </div>
-
-                {/* Пробная — auto from Dk */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Пробная</label>
-                    <div className={`flex items-center h-[42px] px-3 rounded-lg border ${isTrial ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-200'}`}>
-                        <input
-                            type="checkbox"
-                            {...register(`config.eyes.${eye}.trial`)}
-                            checked={isTrial}
-                            readOnly
-                            className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        />
-                        <span className={`ml-2 text-sm font-medium ${isTrial ? 'text-green-700' : 'text-gray-400'}`}>
-                            {isTrial ? 'Да' : 'Нет'}
-                        </span>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Кол-во</label>
+                        <select {...register(`config.eyes.${eye}.qty`)} className="input">
+                            {QTY_OPTIONS.map(v => <option key={v} value={v}>{v === '0' ? '0 (не заказ.)' : v}</option>)}
+                        </select>
                     </div>
-                </div>
-
-                {/* Цвет — depends on Dk */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Цвет</label>
-                    <select {...register(`config.eyes.${eye}.color`)} className="input" disabled={!dkValue}>
-                        <option value="">{dkValue ? '— выберите —' : 'Выберите Dk'}</option>
-                        {availableColors.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                </div>
-
-                {/* Апикальный клиренс — dropdown (-9.0–9.0, step 0.5) */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Апик. клиренс</label>
-                    <select {...register(`config.eyes.${eye}.apical_clearance`, { valueAsNumber: true })} className="input">
-                        <option value="">—</option>
-                        {APICAL_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                    </select>
-                </div>
-
-                {/* Фактор компрессии — number input (-4.50–4.50, step 0.01) */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Фактор компр.</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        min="-4.5"
-                        max="4.5"
-                        {...register(`config.eyes.${eye}.compression_factor`, { valueAsNumber: true })}
-                        className="input"
-                        placeholder="0.00"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Кол-во</label>
-                    <select {...register(`config.eyes.${eye}.qty`)} className="input">
-                        {QTY_OPTIONS.map(v => <option key={v} value={v}>{v === '0' ? '0 (не заказ.)' : v}</option>)}
-                    </select>
                 </div>
             </div>
         </motion.div>
