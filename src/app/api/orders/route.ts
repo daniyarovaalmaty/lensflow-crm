@@ -250,14 +250,23 @@ export async function POST(request: NextRequest) {
         console.error('POST /api/orders error:', error);
 
         if (error.name === 'ZodError') {
+            const messages = error.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join('; ');
             return NextResponse.json(
-                { error: 'Validation error', details: error.errors },
+                { error: `Ошибка валидации: ${messages}`, details: error.errors },
                 { status: 400 }
             );
         }
 
+        // Prisma unique constraint
+        if (error.code === 'P2002') {
+            return NextResponse.json(
+                { error: `Дублирование записи: ${error.meta?.target || 'unknown'}` },
+                { status: 409 }
+            );
+        }
+
         return NextResponse.json(
-            { error: 'Failed to create order' },
+            { error: error.message || 'Не удалось создать заказ' },
             { status: 500 }
         );
     }

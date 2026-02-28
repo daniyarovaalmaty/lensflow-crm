@@ -177,14 +177,15 @@ export default function NewOrderPage() {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to create order');
+                const errBody = await response.json().catch(() => ({}));
+                throw new Error(errBody.error || `Ошибка ${response.status}`);
             }
 
             const order = await response.json();
             setCreatedOrder(order);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating order:', error);
-            alert('Ошибка при создании заказа');
+            alert(error.message || 'Ошибка при создании заказа');
         }
     };
 
