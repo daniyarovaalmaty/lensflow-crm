@@ -1,19 +1,14 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
-declare global {
-    var orders: any[] | undefined;
-}
-
 /**
  * POST /api/demo/seed
- * Demo orders disabled — production mode, starts with empty orders.
+ * In multi-tenant mode, demo data is managed via prisma/seed.ts
+ * This route is kept for backward compatibility with the demo page
  */
 export async function POST() {
-    // Clear any existing orders to ensure clean state
-    global.orders = [];
     return NextResponse.json({
-        message: 'Production mode: no demo orders seeded.',
+        message: 'Database-backed mode: use prisma db seed for initial data.',
         count: 0,
     });
 }

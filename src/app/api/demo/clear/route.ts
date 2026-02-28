@@ -1,22 +1,17 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
-declare global {
-    var orders: any[] | undefined;
-}
-
 /**
- * POST /api/demo/clear - Clear all orders from memory
+ * POST /api/demo/clear - No-op in database mode
+ * Kept for backward compatibility with demo page
  */
 export async function POST() {
-    global.orders = [];
-    return NextResponse.json({ message: 'All orders cleared', count: 0 });
+    return NextResponse.json({ message: 'Database mode: use prisma commands for data management.', count: 0 });
 }
 
 /**
- * GET /api/demo/clear - Clear all orders (convenient browser access)
+ * GET /api/demo/clear
  */
 export async function GET() {
-    global.orders = [];
-    return NextResponse.json({ message: '✅ All orders cleared. База очищена.', count: 0 });
+    return NextResponse.json({ message: 'Database mode: data is managed via Prisma.', count: 0 });
 }

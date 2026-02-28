@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-
-declare global {
-    var orders: any[] | undefined;
-}
+import { auth } from '@/auth';
+import prisma from '@/lib/db/prisma';
 
 /**
  * PATCH /api/orders/[id]/payment - Toggle payment status
@@ -13,36 +11,29 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
+        const session = await auth();
+        if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+
         const body = await request.json();
         const { payment_status } = body;
 
         if (!['unpaid', 'paid', 'partial'].includes(payment_status)) {
-            return NextResponse.json(
-                { error: 'Invalid payment status' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Invalid payment status' }, { status: 400 });
         }
 
-        const orders = global.orders || [];
-        const order = orders.find(o => o.order_id === id);
-
+        const order = await prisma.order.findUnique({ where: { orderNumber: params.id } });
         if (!order) {
-            return NextResponse.json(
-                { error: 'Order not found' },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
 
-        order.payment_status = payment_status;
-        order.meta.updated_at = new Date().toISOString();
+        const updated = await prisma.order.update({
+            where: { id: order.id },
+            data: { paymentStatus: payment_status },
+        });
 
-        return NextResponse.json(order);
+        return NextResponse.json({ order_id: updated.orderNumber, payment_status: updated.paymentStatus });
     } catch (error) {
         console.error('PATCH /api/orders/[id]/payment error:', error);
-        return NextResponse.json(
-            { error: 'Failed to update payment status' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to update payment status' }, { status: 500 });
     }
 }

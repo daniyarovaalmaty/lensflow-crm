@@ -168,8 +168,8 @@ export default function RegisterPage() {
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">
                                 Тип аккаунта *
                             </label>
-                            <div className="grid grid-cols-3 gap-3">
-                                {(['doctor', 'optic', 'laboratory'] as const).map((role) => (
+                            <div className="grid grid-cols-2 gap-3">
+                                {(['doctor', 'optic'] as const).map((role) => (
                                     <label
                                         key={role}
                                         className={`

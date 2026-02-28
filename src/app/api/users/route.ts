@@ -1,9 +1,15 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import { RegisterUserSchema } from '@/types/user';
-import { createUser, findUserByEmail, toPublicUser } from '@/lib/db/users';
+import { findUserByEmail, toPublicUser } from '@/lib/db/users';
+import prisma from '@/lib/db/prisma';
+import bcrypt from 'bcryptjs';
 
+/**
+ * POST /api/users - Register a new user
+ * Only clinic (optic) and doctor registration is allowed.
+ * Laboratory users are created by seed/admin only.
+ */
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
@@ -19,6 +25,14 @@ export async function POST(req: NextRequest) {
 
         const { email, password, role, subRole, profile } = parsed.data;
 
+        // Block laboratory registration via API
+        if (role === 'laboratory') {
+            return NextResponse.json(
+                { error: 'Регистрация лаборатории доступна только администратору' },
+                { status: 403 }
+            );
+        }
+
         // Check if user already exists
         const existingUser = await findUserByEmail(email);
         if (existingUser) {
@@ -31,16 +45,33 @@ export async function POST(req: NextRequest) {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        let organizationId: string | undefined;
+
+        // For optic (clinic) registration — create organization
+        if (role === 'optic' && profile.opticName) {
+            const org = await prisma.organization.create({
+                data: {
+                    name: profile.opticName,
+                    status: 'active',
+                },
+            });
+            organizationId = org.id;
+        }
+
         // Create user
-        const newUser = await createUser({
-            email,
-            password: hashedPassword,
-            role,
-            subRole,
-            profile,
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+                fullName: profile.fullName,
+                phone: profile.phone || undefined,
+                role,
+                subRole: subRole as any,
+                status: 'active',
+                organizationId,
+            },
         });
 
-        // Return public user data
         return NextResponse.json(
             {
                 message: 'Пользователь успешно зарегистрирован',

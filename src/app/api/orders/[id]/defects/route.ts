@@ -1,17 +1,8 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-
-declare global {
-    var orders: any[] | undefined;
-}
-
-const getOrders = () => {
-    if (!global.orders) {
-        global.orders = [];
-    }
-    return global.orders;
-};
+import { auth } from '@/auth';
+import prisma from '@/lib/db/prisma';
 
 const AddDefectSchema = z.object({
     qty: z.number().int().min(1, 'Количество должно быть не менее 1'),
@@ -20,29 +11,25 @@ const AddDefectSchema = z.object({
 
 /**
  * POST /api/orders/[id]/defects - Add a defect record to an order
- * Only allowed when order is in_production
  */
 export async function POST(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const orderId = params.id;
-        const body = await request.json();
+        const session = await auth();
+        if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
+        const body = await request.json();
         const validatedData = AddDefectSchema.parse(body);
 
-        const orders = getOrders();
-        const order = orders.find(o => o.order_id === orderId);
-
+        const order = await prisma.order.findUnique({ where: { orderNumber: params.id } });
         if (!order) {
-            return NextResponse.json(
-                { error: 'Order not found' },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
 
-        if (order.status !== 'in_production' && order.status !== 'ready' && order.status !== 'rework') {
+        const allowedStatuses = ['in_production', 'ready', 'rework'];
+        if (!allowedStatuses.includes(order.status)) {
             return NextResponse.json(
                 { error: 'Defects can only be added during production, ready, or rework stage' },
                 { status: 400 }
@@ -57,15 +44,15 @@ export async function POST(
             note: validatedData.note || undefined,
         };
 
-        // Initialize defects array if needed
-        if (!order.defects) {
-            order.defects = [];
-        }
+        const existingDefects = (order.defects as any[]) || [];
+        existingDefects.push(defect);
 
-        order.defects.push(defect);
-        order.meta.updated_at = new Date().toISOString();
+        const updated = await prisma.order.update({
+            where: { id: order.id },
+            data: { defects: existingDefects },
+        });
 
-        return NextResponse.json({ defect, order }, { status: 201 });
+        return NextResponse.json({ defect, order_id: updated.orderNumber }, { status: 201 });
     } catch (error: any) {
         console.error('POST /api/orders/[id]/defects error:', error);
 
@@ -76,9 +63,6 @@ export async function POST(
             );
         }
 
-        return NextResponse.json(
-            { error: 'Failed to add defect' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Failed to add defect' }, { status: 500 });
     }
 }

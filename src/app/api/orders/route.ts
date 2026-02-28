@@ -1,46 +1,117 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { CreateOrderSchema, OrderSchema } from '@/types/order';
-import { getMoySkladClient } from '@/lib/integrations/moysklad';
-
-// Mock database - in real app, use PostgreSQL/Prisma
-// Use global to persist across hot reloads in development
-declare global {
-    var orders: any[] | undefined;
-}
-
-const getOrders = () => {
-    if (!global.orders) {
-        global.orders = [];
-    }
-    return global.orders;
-};
+import { CreateOrderSchema } from '@/types/order';
+import { auth } from '@/auth';
+import prisma from '@/lib/db/prisma';
 
 /**
- * GET /api/orders - Get all orders
+ * GET /api/orders - Get orders
+ * Laboratory sees ALL orders, clinics/doctors see only their own
  */
 export async function GET(request: NextRequest) {
     try {
+        const session = await auth();
+        if (!session?.user) {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
+
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
         const opticId = searchParams.get('optic_id');
 
-        let filteredOrders = [...getOrders()];
+        // Build where clause based on role
+        const where: any = {};
+
+        if (session.user.role === 'laboratory') {
+            // Lab sees all orders
+        } else if (session.user.role === 'optic') {
+            // Clinic sees only its org orders
+            where.organizationId = session.user.organizationId;
+        } else if (session.user.role === 'doctor') {
+            // Doctor sees only their orders
+            where.createdById = session.user.id;
+        }
 
         if (status) {
-            filteredOrders = filteredOrders.filter(o => o.status === status);
+            // Map status string to enum value
+            const statusMap: Record<string, string> = {
+                'new': 'new_order',
+                'in_production': 'in_production',
+                'ready': 'ready',
+                'rework': 'rework',
+                'shipped': 'shipped',
+                'out_for_delivery': 'out_for_delivery',
+                'delivered': 'delivered',
+                'cancelled': 'cancelled',
+            };
+            where.status = statusMap[status] || status;
         }
 
         if (opticId) {
-            filteredOrders = filteredOrders.filter(o => o.meta.optic_id === opticId);
+            where.organizationId = opticId;
         }
 
-        // Sort by created_at descending
-        filteredOrders.sort((a, b) =>
-            new Date(b.meta.created_at).getTime() - new Date(a.meta.created_at).getTime()
-        );
+        const orders = await prisma.order.findMany({
+            where,
+            include: {
+                patient: true,
+                createdBy: { select: { fullName: true, email: true } },
+                organization: { select: { name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
 
-        return NextResponse.json(filteredOrders);
+        // Transform to match frontend expected format
+        const transformed = orders.map((order) => {
+            // Map status enum back to string
+            const statusMap: Record<string, string> = {
+                'new_order': 'new',
+                'in_production': 'in_production',
+                'ready': 'ready',
+                'rework': 'rework',
+                'shipped': 'shipped',
+                'out_for_delivery': 'out_for_delivery',
+                'delivered': 'delivered',
+                'cancelled': 'cancelled',
+            };
+
+            return {
+                order_id: order.orderNumber,
+                meta: {
+                    optic_id: order.organizationId || '',
+                    optic_name: order.organization?.name || order.opticName || '',
+                    doctor: order.doctorName || order.createdBy?.fullName || '',
+                    created_at: order.createdAt.toISOString(),
+                    updated_at: order.updatedAt.toISOString(),
+                },
+                patient: order.patient ? {
+                    id: order.patient.id,
+                    name: order.patient.name,
+                    phone: order.patient.phone,
+                    email: order.patient.email || undefined,
+                    notes: order.patient.notes || undefined,
+                } : { name: '', phone: '' },
+                config: order.lensConfig as any,
+                company: order.company || undefined,
+                inn: order.inn || undefined,
+                delivery_method: order.deliveryMethod || undefined,
+                delivery_address: order.deliveryAddress || undefined,
+                doctor_email: order.doctorEmail || undefined,
+                status: statusMap[order.status] || order.status,
+                is_urgent: order.isUrgent,
+                edit_deadline: order.editDeadline?.toISOString(),
+                tracking_number: order.trackingNumber || undefined,
+                production_started_at: order.productionStartedAt?.toISOString(),
+                production_completed_at: order.productionCompletedAt?.toISOString(),
+                shipped_at: order.shippedAt?.toISOString(),
+                delivered_at: order.deliveredAt?.toISOString(),
+                notes: order.notes || undefined,
+                payment_status: order.paymentStatus,
+                defects: (order.defects as any[]) || [],
+            };
+        });
+
+        return NextResponse.json(transformed);
     } catch (error) {
         console.error('GET /api/orders error:', error);
         return NextResponse.json(
@@ -55,59 +126,91 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
+        const session = await auth();
+        if (!session?.user) {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
+
         const body = await request.json();
 
         // Validate with Zod
         const validatedData = CreateOrderSchema.parse(body);
 
         // Generate order ID
-        const orderId = `LX-${Date.now().toString(36).toUpperCase()}`;
+        const orderNumber = `LX-${Date.now().toString(36).toUpperCase()}`;
 
-        // Create order object
         const now = new Date();
         const is_urgent = validatedData.is_urgent ?? false;
-        // Normal orders: 2-hour edit window. Urgent: no edit window (can start immediately)
         const edit_deadline = is_urgent
-            ? now.toISOString()
-            : new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
+            ? now
+            : new Date(now.getTime() + 2 * 60 * 60 * 1000);
 
-        const order = {
-            order_id: orderId,
-            meta: {
-                optic_id: validatedData.optic_id,
-                optic_name: `Optic ${validatedData.optic_id}`,
-                doctor: validatedData.doctor,
-                created_at: now.toISOString(),
-                updated_at: now.toISOString(),
-            },
-            patient: validatedData.patient,
-            config: validatedData.config,
-            status: 'new',
-            is_urgent,
-            edit_deadline,
-            notes: validatedData.notes,
-        };
-
-        // Validate complete order
-        const validatedOrder = OrderSchema.parse(order);
-
-        // Save to "database"
-        getOrders().push(validatedOrder);
-
-        // Create order in МойСклад (async, non-blocking)
-        try {
-            const moysklad = getMoySkladClient();
-            // Mock counterparty href - in production, fetch based on optic_id
-            const counterpartyHref = 'https://api.moysklad.ru/api/remap/1.2/entity/counterparty/MOCK_ID';
-
-            await moysklad.createCustomerOrder(validatedOrder, counterpartyHref);
-            console.log(`✅ Order ${orderId} synced to МойСклад`);
-        } catch (msError) {
-            console.error('МойСклад sync failed (non-critical):', msError);
-            // Don't fail the request if МойСклад sync fails
+        // Find or create patient
+        let patientId: string | undefined;
+        if (validatedData.patient) {
+            const patient = await prisma.patient.create({
+                data: {
+                    name: validatedData.patient.name,
+                    phone: validatedData.patient.phone,
+                    email: validatedData.patient.email || undefined,
+                    notes: validatedData.patient.notes || undefined,
+                    organizationId: session.user.organizationId || undefined,
+                },
+            });
+            patientId = patient.id;
         }
 
-        return NextResponse.json(validatedOrder, { status: 201 });
+        // Create order in database
+        const order = await prisma.order.create({
+            data: {
+                orderNumber,
+                status: 'new_order',
+                isUrgent: is_urgent,
+                organizationId: session.user.organizationId || validatedData.optic_id || undefined,
+                createdById: session.user.id,
+                patientId,
+                opticName: session.user.profile?.opticName || '',
+                doctorName: validatedData.doctor || session.user.profile?.fullName || '',
+                doctorEmail: validatedData.doctor_email || undefined,
+                company: validatedData.company || undefined,
+                inn: validatedData.inn || undefined,
+                deliveryMethod: validatedData.delivery_method || undefined,
+                deliveryAddress: validatedData.delivery_address || undefined,
+                lensConfig: validatedData.config as any,
+                editDeadline: edit_deadline,
+                notes: validatedData.notes || undefined,
+            },
+            include: {
+                patient: true,
+                organization: { select: { name: true } },
+            },
+        });
+
+        // Transform response to match frontend format
+        const response = {
+            order_id: order.orderNumber,
+            meta: {
+                optic_id: order.organizationId || '',
+                optic_name: order.organization?.name || order.opticName || '',
+                doctor: order.doctorName || '',
+                created_at: order.createdAt.toISOString(),
+                updated_at: order.updatedAt.toISOString(),
+            },
+            patient: order.patient ? {
+                id: order.patient.id,
+                name: order.patient.name,
+                phone: order.patient.phone,
+                email: order.patient.email || undefined,
+                notes: order.patient.notes || undefined,
+            } : validatedData.patient,
+            config: order.lensConfig,
+            status: 'new',
+            is_urgent: order.isUrgent,
+            edit_deadline: order.editDeadline?.toISOString(),
+            notes: order.notes || undefined,
+        };
+
+        return NextResponse.json(response, { status: 201 });
     } catch (error: any) {
         console.error('POST /api/orders error:', error);
 

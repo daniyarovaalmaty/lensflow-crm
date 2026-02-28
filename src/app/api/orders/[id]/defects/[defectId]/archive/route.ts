@@ -1,16 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-
-declare global {
-    var orders: any[] | undefined;
-}
-
-const getOrders = () => {
-    if (!global.orders) {
-        global.orders = [];
-    }
-    return global.orders;
-};
+import { auth } from '@/auth';
+import prisma from '@/lib/db/prisma';
 
 /**
  * PATCH /api/orders/[id]/defects/[defectId]/archive
@@ -21,29 +12,27 @@ export async function PATCH(
     { params }: { params: { id: string; defectId: string } }
 ) {
     try {
-        const { id: orderId, defectId } = params;
+        const session = await auth();
+        if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+
+        const { id: orderNumber, defectId } = params;
         const body = await request.json();
 
-        const orders = getOrders();
-        const order = orders.find(o => o.order_id === orderId);
+        const order = await prisma.order.findUnique({ where: { orderNumber } });
+        if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
-        if (!order) {
-            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-        }
-
-        if (!order.defects) {
-            return NextResponse.json({ error: 'No defects on this order' }, { status: 404 });
-        }
-
-        const defect = order.defects.find((d: any) => d.id === defectId);
-        if (!defect) {
-            return NextResponse.json({ error: 'Defect not found' }, { status: 404 });
-        }
+        const defects = (order.defects as any[]) || [];
+        const defect = defects.find((d: any) => d.id === defectId);
+        if (!defect) return NextResponse.json({ error: 'Defect not found' }, { status: 404 });
 
         defect.archived = body.archived ?? !defect.archived;
-        order.meta.updated_at = new Date().toISOString();
 
-        return NextResponse.json({ defect, order });
+        await prisma.order.update({
+            where: { id: order.id },
+            data: { defects },
+        });
+
+        return NextResponse.json({ defect });
     } catch (error: any) {
         console.error('PATCH archive error:', error);
         return NextResponse.json({ error: 'Failed to update defect' }, { status: 500 });

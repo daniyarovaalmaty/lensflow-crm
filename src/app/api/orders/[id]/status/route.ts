@@ -1,19 +1,8 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { UpdateOrderStatusSchema } from '@/types/order';
-import { getMoySkladClient } from '@/lib/integrations/moysklad';
-
-// In real app, import from centralized store or database
-declare global {
-    var orders: any[] | undefined;
-}
-
-const getOrders = () => {
-    if (!global.orders) {
-        global.orders = [];
-    }
-    return global.orders;
-};
+import { auth } from '@/auth';
+import prisma from '@/lib/db/prisma';
 
 /**
  * PATCH /api/orders/[id]/status - Update order status
@@ -23,63 +12,89 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const orderId = params.id;
-        const body = await request.json();
+        const session = await auth();
+        if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
-        // Validate
+        const orderNumber = params.id;
+        const body = await request.json();
         const validatedData = UpdateOrderStatusSchema.parse(body);
 
         // Find order
-        const orders = getOrders();
-        const orderIndex = orders.findIndex(o => o.order_id === orderId);
-
-        if (orderIndex === -1) {
-            return NextResponse.json(
-                { error: 'Order not found' },
-                { status: 404 }
-            );
+        const order = await prisma.order.findUnique({ where: { orderNumber } });
+        if (!order) {
+            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
 
-        const order = orders[orderIndex];
-        const now = new Date().toISOString();
+        // Map status string to enum
+        const statusMap: Record<string, string> = {
+            'new': 'new_order', 'in_production': 'in_production', 'ready': 'ready',
+            'rework': 'rework', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
+            'delivered': 'delivered', 'cancelled': 'cancelled',
+        };
 
-        // Update order
-        order.status = validatedData.status;
-        order.meta.updated_at = now;
+        const newStatus = statusMap[validatedData.status] || validatedData.status;
+        const now = new Date();
+
+        const updateData: any = { status: newStatus };
 
         // Set timestamps based on status
-        if (validatedData.status === 'in_production' && !order.production_started_at) {
-            order.production_started_at = now;
+        if (validatedData.status === 'in_production' && !order.productionStartedAt) {
+            updateData.productionStartedAt = now;
         }
-
-        if (validatedData.status === 'ready' && !order.production_completed_at) {
-            order.production_completed_at = now;
+        if (validatedData.status === 'ready' && !order.productionCompletedAt) {
+            updateData.productionCompletedAt = now;
         }
-
-        if (validatedData.status === 'shipped' && !order.shipped_at) {
-            order.shipped_at = now;
+        if (validatedData.status === 'shipped' && !order.shippedAt) {
+            updateData.shippedAt = now;
         }
-
-        if (validatedData.status === 'delivered' && !order.delivered_at) {
-            order.delivered_at = now;
+        if (validatedData.status === 'delivered' && !order.deliveredAt) {
+            updateData.deliveredAt = now;
         }
-
         if (validatedData.notes) {
-            order.notes = validatedData.notes;
+            updateData.notes = validatedData.notes;
         }
 
-        // Update МойСклад status (async, non-blocking)
-        if (order.moysklad_order_id) {
-            try {
-                const moysklad = getMoySkladClient();
-                await moysklad.updateOrderStatus(order.moysklad_order_id, validatedData.status);
-                console.log(`✅ Updated МойСклад order ${order.moysklad_order_id} to ${validatedData.status}`);
-            } catch (msError) {
-                console.error('МойСклад status update failed (non-critical):', msError);
-            }
-        }
+        const updated = await prisma.order.update({
+            where: { id: order.id },
+            data: updateData,
+            include: { patient: true, organization: { select: { name: true } } },
+        });
 
-        return NextResponse.json(order);
+        // Transform to frontend format
+        const reverseStatusMap: Record<string, string> = {
+            'new_order': 'new', 'in_production': 'in_production', 'ready': 'ready',
+            'rework': 'rework', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
+            'delivered': 'delivered', 'cancelled': 'cancelled',
+        };
+
+        const response = {
+            order_id: updated.orderNumber,
+            meta: {
+                optic_id: updated.organizationId || '',
+                optic_name: updated.organization?.name || updated.opticName || '',
+                doctor: updated.doctorName || '',
+                created_at: updated.createdAt.toISOString(),
+                updated_at: updated.updatedAt.toISOString(),
+            },
+            patient: updated.patient ? {
+                name: updated.patient.name, phone: updated.patient.phone,
+                email: updated.patient.email || undefined,
+            } : { name: '', phone: '' },
+            config: updated.lensConfig,
+            status: reverseStatusMap[updated.status] || updated.status,
+            is_urgent: updated.isUrgent,
+            edit_deadline: updated.editDeadline?.toISOString(),
+            tracking_number: updated.trackingNumber || undefined,
+            production_started_at: updated.productionStartedAt?.toISOString(),
+            production_completed_at: updated.productionCompletedAt?.toISOString(),
+            shipped_at: updated.shippedAt?.toISOString(),
+            delivered_at: updated.deliveredAt?.toISOString(),
+            notes: updated.notes || undefined,
+            payment_status: updated.paymentStatus,
+            defects: (updated.defects as any[]) || [],
+        };
+
+        return NextResponse.json(response);
     } catch (error: any) {
         console.error('PATCH /api/orders/[id]/status error:', error);
 

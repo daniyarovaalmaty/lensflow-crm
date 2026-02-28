@@ -1,0 +1,164 @@
+// Prisma Schema for LensFlow CRM — Multi-Tenant Architecture
+// One production hub (laboratory), many clinics and doctors
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== Organization (Clinic / Optic) ====================
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  inn       String?
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  status    OrgStatus @default(active)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  users    User[]
+  orders   Order[]
+  patients Patient[]
+
+  @@map("organizations")
+}
+
+enum OrgStatus {
+  pending
+  active
+  blocked
+}
+
+// ==================== User ====================
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String
+  fullName       String    @default("")
+  phone          String?
+  role           UserRole
+  subRole        SubRole
+  status         UserStatus @default(active)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  orders Order[] @relation("CreatedBy")
+
+  @@map("users")
+}
+
+enum UserRole {
+  doctor
+  optic
+  laboratory
+}
+
+enum SubRole {
+  lab_engineer
+  lab_quality
+  lab_logistics
+  lab_head
+  lab_admin
+  lab_accountant
+  optic_manager
+  optic_doctor
+  optic_accountant
+  doctor
+}
+
+enum UserStatus {
+  pending
+  active
+  blocked
+}
+
+// ==================== Patient ====================
+model Patient {
+  id             String  @id @default(cuid())
+  name           String
+  phone          String
+  email          String?
+  notes          String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime @default(now())
+
+  orders Order[]
+
+  @@map("patients")
+}
+
+// ==================== Order ====================
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  status          OrderStatus @default(new_order)
+  isUrgent        Boolean     @default(false)
+
+  // Relations
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  createdById     String?
+  createdBy       User?        @relation("CreatedBy", fields: [createdById], references: [id])
+  patientId       String?
+  patient         Patient?     @relation(fields: [patientId], references: [id])
+
+  // Meta
+  opticName       String?
+  doctorName      String?
+  doctorEmail     String?
+  company         String?
+  inn             String?
+
+  // Delivery
+  deliveryMethod  String?
+  deliveryAddress String?
+  trackingNumber  String?
+
+  // Lens Configuration (stored as JSON)
+  lensConfig      Json
+
+  // Payment
+  paymentStatus   PaymentStatus @default(unpaid)
+
+  // Timestamps
+  editDeadline          DateTime?
+  productionStartedAt   DateTime?
+  productionCompletedAt DateTime?
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
+
+  // Notes & Defects
+  notes   String?
+  defects Json?   // Array of defect records
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  new_order       @map("new")
+  in_production
+  ready
+  rework
+  shipped
+  out_for_delivery
+  delivered
+  cancelled
+}
+
+enum PaymentStatus {
+  unpaid
+  paid
+  partial
+}

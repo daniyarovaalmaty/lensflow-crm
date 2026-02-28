@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { LoginSchema } from '@/types/user';
-import { findUserByEmail, verifyPassword, toPublicUser } from '@/lib/db/users';
+import { findUserByEmail, verifyPassword, findUserWithOrg } from '@/lib/db/users';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
@@ -25,14 +25,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null;
                 }
 
+                // Check user status
+                if (user.status !== 'active') {
+                    return null;
+                }
+
                 // Verify password
                 const isValidPassword = await verifyPassword(user, password);
                 if (!isValidPassword) {
                     return null;
                 }
 
-                // Return public user data
-                return toPublicUser(user);
+                // Load org info
+                const userWithOrg = await findUserWithOrg(user.id);
+                const orgName = userWithOrg?.organization?.name;
+
+                // Return user data for JWT
+                return {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                    subRole: user.subRole,
+                    organizationId: user.organizationId,
+                    profile: {
+                        fullName: user.fullName,
+                        phone: user.phone,
+                        opticName: orgName,
+                        labName: orgName,
+                        clinic: orgName,
+                    },
+                };
             },
         }),
     ],
@@ -44,6 +66,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.email = user.email;
                 token.role = user.role;
                 token.subRole = user.subRole;
+                token.organizationId = user.organizationId;
                 token.profile = user.profile;
             }
             return token;
@@ -54,6 +77,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 session.user.id = token.id as string;
                 session.user.role = token.role as "doctor" | "optic" | "laboratory";
                 session.user.subRole = token.subRole as any;
+                session.user.organizationId = token.organizationId as string | undefined;
                 session.user.profile = token.profile as any;
             }
             return session;

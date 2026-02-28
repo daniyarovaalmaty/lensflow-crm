@@ -1,32 +1,50 @@
 import 'next-auth';
-import 'next-auth/jwt';
-import type { UserRole, UserProfile, SubRole } from '@/types/user';
 
 declare module 'next-auth' {
-    interface Session {
-        user: {
-            id: string;
-            email: string;
-            role: UserRole;
-            subRole: SubRole;
-            profile: UserProfile;
-        };
-    }
-
     interface User {
         id: string;
         email: string;
-        role: UserRole;
-        subRole: SubRole;
-        profile: UserProfile;
+        role: 'doctor' | 'optic' | 'laboratory';
+        subRole: string;
+        organizationId?: string | null;
+        profile: {
+            fullName: string;
+            phone?: string | null;
+            clinic?: string;
+            opticName?: string;
+            labName?: string;
+        };
+    }
+
+    interface Session {
+        user: User & {
+            id: string;
+            role: 'doctor' | 'optic' | 'laboratory';
+            subRole: string;
+            organizationId?: string | null;
+            profile: {
+                fullName: string;
+                phone?: string | null;
+                clinic?: string;
+                opticName?: string;
+                labName?: string;
+            };
+        };
     }
 }
 
 declare module 'next-auth/jwt' {
     interface JWT {
         id: string;
-        role: UserRole;
-        subRole: SubRole;
-        profile: UserProfile;
+        role: 'doctor' | 'optic' | 'laboratory';
+        subRole: string;
+        organizationId?: string | null;
+        profile: {
+            fullName: string;
+            phone?: string | null;
+            clinic?: string;
+            opticName?: string;
+            labName?: string;
+        };
     }
 }
