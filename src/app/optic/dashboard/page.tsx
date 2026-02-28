@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Package, Clock, CheckCircle, TruckIcon,
     Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin
+    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut
 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
@@ -232,12 +232,21 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                             <h1 className="text-2xl font-bold text-gray-900">Дашборд Оптики</h1>
                             <p className="text-gray-600 mt-1">{SubRoleLabels[subRole]}</p>
                         </div>
-                        {perms.canCreateOrders && (
-                            <Link href="/optic/orders/new" className="btn btn-primary gap-2">
-                                <Plus className="w-5 h-5" />
-                                Создать заказ
-                            </Link>
-                        )}
+                        <div className="flex items-center gap-3">
+                            {perms.canCreateOrders && (
+                                <Link href="/optic/orders/new" className="btn btn-primary gap-2">
+                                    <Plus className="w-5 h-5" />
+                                    Создать заказ
+                                </Link>
+                            )}
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-red-500 transition-colors py-2 px-3 rounded-lg hover:bg-red-50"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Выйти
+                            </button>
+                        </div>
                     </div>
 
                     {/* Stats */}
