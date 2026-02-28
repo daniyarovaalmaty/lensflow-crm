@@ -63,7 +63,7 @@ export const OrthoEyeParamsSchema = z.object({
     compression_factor: optionalBoundedNumber(-4.5, 4.5),
     qty: z.preprocess(
         (val) => (val === '' || val === null || val === undefined || Number.isNaN(Number(val)) ? 1 : Number(val)),
-        z.number().int().min(1).max(100).default(1)
+        z.number().int().min(0).max(100).default(1)
     ),
 });
 
@@ -73,7 +73,7 @@ export type OrthoEyeParams = z.infer<typeof OrthoEyeParamsSchema>;
 export const PatientSchema = z.object({
     id: z.string().optional(),
     name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
-    phone: z.string().regex(/^\+?[\d\s\-()]{10,20}$/, 'Неверный формат телефона'),
+    phone: z.string().optional(),
     email: z.string().email('Неверный email').optional(),
     notes: z.string().optional(),
 });

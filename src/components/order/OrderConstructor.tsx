@@ -73,6 +73,25 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         })();
     }, []);
 
+    // Fetch organization profile for auto-fill
+    useEffect(() => {
+        if (!session?.user?.organizationId) return;
+        (async () => {
+            try {
+                const res = await fetch('/api/profile');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.organization) {
+                        const org = data.organization;
+                        if (org.name) setValue('company', org.name);
+                        if (org.inn) setValue('inn', org.inn);
+                        if (org.address) setValue('delivery_address', org.address);
+                    }
+                }
+            } catch (e) { console.error(e); }
+        })();
+    }, [session?.user?.organizationId]);
+
     // Lens products from catalog (matched by description field = characteristic code)
     const lensProducts = useMemo(() => catalog.filter(p => p.category === 'lens'), [catalog]);
     const additionalProducts = useMemo(() => catalog.filter(p => p.category !== 'lens'), [catalog]);
@@ -138,10 +157,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         },
     });
 
-    // Mirror OD to OS
+    // Mirror OD to OS — set each field individually to trigger watchers
     const mirrorODtoOS = () => {
         const odValues = getValues('config.eyes.od');
-        setValue('config.eyes.os', { ...odValues });
+        const fields = Object.keys(odValues) as Array<keyof typeof odValues>;
+        fields.forEach(field => {
+            setValue(`config.eyes.os.${field}` as any, odValues[field], { shouldValidate: true, shouldDirty: true });
+        });
     };
 
     // Form submission
@@ -350,22 +372,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         />
                         {errors.patient?.name && (
                             <p className="mt-1 text-sm text-red-600">{errors.patient.name.message}</p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label htmlFor="patient-phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                            Телефон *
-                        </label>
-                        <input
-                            id="patient-phone"
-                            type="tel"
-                            {...register('patient.phone')}
-                            className="input"
-                            placeholder="+7 900 000 00 00"
-                        />
-                        {errors.patient?.phone && (
-                            <p className="mt-1 text-sm text-red-600">{errors.patient.phone.message}</p>
                         )}
                     </div>
 

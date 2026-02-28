@@ -19,7 +19,7 @@ export async function GET() {
             avatar: true,
             role: true,
             subRole: true,
-            organization: { select: { name: true } },
+            organization: { select: { name: true, inn: true, phone: true, address: true, city: true } },
         },
     });
 

@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
             const patient = await prisma.patient.create({
                 data: {
                     name: validatedData.patient.name,
-                    phone: validatedData.patient.phone,
+                    phone: validatedData.patient.phone || '',
                     email: validatedData.patient.email || undefined,
                     notes: validatedData.patient.notes || undefined,
                     organizationId: session.user.organizationId || undefined,

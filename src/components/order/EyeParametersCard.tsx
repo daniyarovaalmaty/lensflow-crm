@@ -22,7 +22,7 @@ const TP_OPTIONS = generateRange(-25, 25, 0.25, 2);       // 201 options
 const DIA_OPTIONS = generateRange(8.0, 13.0, 0.1, 1);      // 51 options
 const E_OPTIONS = generateRange(0, 1.0, 0.01, 2);          // 101 options
 const APICAL_OPTIONS = generateRange(-9, 9, 0.5, 1);       // 37 options
-const QTY_OPTIONS = Array.from({ length: 10 }, (_, i) => String(i + 1));
+const QTY_OPTIONS = ['0', ...Array.from({ length: 10 }, (_, i) => String(i + 1))];
 
 // ==================== Component ====================
 interface EyeParametersCardProps {
@@ -232,11 +232,10 @@ export function EyeParametersCard({
                     />
                 </div>
 
-                {/* Кол-во — dropdown (1–10) */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Кол-во</label>
                     <select {...register(`config.eyes.${eye}.qty`)} className="input">
-                        {QTY_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                        {QTY_OPTIONS.map(v => <option key={v} value={v}>{v === '0' ? '0 (не заказ.)' : v}</option>)}
                     </select>
                 </div>
             </div>
