@@ -13,11 +13,22 @@ datasource db {
 model Organization {
   id        String   @id @default(cuid())
   name      String
-  inn       String?
+  inn       String?   // БИН/ИИН
   phone     String?
   email     String?
-  address   String?
+  address   String?   // Юридический адрес
   city      String?
+
+  // Дополнительные реквизиты
+  actualAddress    String?  // Фактический адрес
+  deliveryAddress  String?  // Адрес доставки
+  bankName         String?  // Название банка
+  bik              String?  // БИК банка
+  iban             String?  // IBAN / расчётный счёт
+  directorName     String?  // ФИО руководителя
+  contactPerson    String?  // Контактное лицо
+  contactPhone     String?  // Телефон контактного лица
+
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
