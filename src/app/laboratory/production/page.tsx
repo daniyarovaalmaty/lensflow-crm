@@ -171,7 +171,7 @@ export default function ProductionHubPage() {
                     <th style="text-align:center;padding:6px 8px;border:1px solid #d1d5db;font-weight:600">Пробная</th>
                     <th style="text-align:center;padding:6px 8px;border:1px solid #d1d5db;font-weight:600">Цвет</th>
                     <th style="text-align:center;padding:6px 8px;border:1px solid #d1d5db;font-weight:600">Dk</th>
-                    <th style="text-align:center;padding:6px 8px;border:1px solid #d1d5db;font-weight:600">MyOrtho-k</th>
+
                     <th style="text-align:center;padding:6px 8px;border:1px solid #d1d5db;font-weight:600">Кол-во</th>
                 </tr>
             </thead>
@@ -188,7 +188,7 @@ export default function ProductionHubPage() {
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.trial ? 'Да' : '—'}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.color || '—'}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.dk ?? '—'}</td>
-                        <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.myorthok ? '1' : '—'}</td>
+
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center;font-weight:600">${eye.qty ?? 1}</td>
                     </tr>
                 `).join('')}
@@ -554,7 +554,7 @@ export default function ProductionHubPage() {
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Пробная</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">MyOrtho-k</th>
+
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Кол-во</th>
                                         </tr>
                                     </thead>
@@ -571,7 +571,7 @@ export default function ProductionHubPage() {
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.myorthok ? '1' : '—'}</td>
+
                                                 <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
                                             </tr>
                                         ))}
@@ -845,7 +845,7 @@ export default function ProductionHubPage() {
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Пробная</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">MyOrtho-k</th>
+
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Кол-во</th>
                                         </tr>
                                     </thead>
@@ -862,7 +862,7 @@ export default function ProductionHubPage() {
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.myorthok ? '1' : '—'}</td>
+
                                                 <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
                                             </tr>
                                         ))}
