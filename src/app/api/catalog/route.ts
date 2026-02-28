@@ -34,11 +34,10 @@ export async function GET(request: NextRequest) {
             ],
         });
 
-        // Strip prices for doctors
-        const role = session.user.role;
+        // Strip prices only for clinic doctors (optic_doctor)
         const subRole = session.user.subRole;
 
-        if (role === 'doctor' || subRole === 'optic_doctor') {
+        if (subRole === 'optic_doctor') {
             const stripped = products.map(({ price, ...rest }: any) => rest);
             return NextResponse.json(stripped);
         }

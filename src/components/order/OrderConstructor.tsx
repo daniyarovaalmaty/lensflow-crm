@@ -59,7 +59,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
     const [rgpPhotos, setRgpPhotos] = useState<{ od?: File; os?: File }>({});
     const subRole = session?.user?.subRole || '';
-    const canSeePrices = subRole !== 'optic_doctor' && session?.user?.role !== 'doctor';
+    const canSeePrices = subRole !== 'optic_doctor';
 
     useEffect(() => {
         (async () => {
@@ -661,7 +661,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </motion.div>
             )}
 
-            {/* Price Summary — hidden for doctors */}
+            {/* Price Summary — hidden only for clinic doctors (optic_doctor) */}
             {canSeePrices && basePrice > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
