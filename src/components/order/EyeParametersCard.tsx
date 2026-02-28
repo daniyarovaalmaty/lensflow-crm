@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Eye } from 'lucide-react';
 import type { UseFormRegister, UseFormWatch, UseFormSetValue, FieldErrors } from 'react-hook-form';
@@ -47,6 +47,9 @@ export function EyeParametersCard({
     const isTrial = dkValue === '50';
     const isSpherical = characteristic === 'spherical';
 
+    // Track previous Dk value to only reset color on manual Dk changes
+    const prevDkRef = useRef(dkValue);
+
     const availableColors = useMemo(() => {
         if (!dkValue) return [];
         return ColorsByDk[dkValue] || [];
@@ -56,8 +59,12 @@ export function EyeParametersCard({
         setValue(`config.eyes.${eye}.trial`, isTrial);
     }, [dkValue, isTrial, eye, setValue]);
 
+    // Only reset color when user manually changes Dk (prev value existed and differs)
     useEffect(() => {
-        setValue(`config.eyes.${eye}.color`, '');
+        if (prevDkRef.current && prevDkRef.current !== dkValue) {
+            setValue(`config.eyes.${eye}.color`, '');
+        }
+        prevDkRef.current = dkValue;
     }, [dkValue, eye, setValue]);
 
     return (
