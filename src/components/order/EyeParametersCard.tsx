@@ -223,7 +223,7 @@ export function EyeParametersCard({
                 {/* Кол-во — dropdown (1–10) */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Кол-во</label>
-                    <select {...register(`config.eyes.${eye}.qty`, { valueAsNumber: true })} className="input">
+                    <select {...register(`config.eyes.${eye}.qty`)} className="input">
                         {QTY_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
                     </select>
                 </div>

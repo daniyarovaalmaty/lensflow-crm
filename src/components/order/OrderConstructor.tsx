@@ -86,10 +86,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     // Price calculation
     const DISCOUNT_PCT = 5; // 5% постоянный клиент
     const URGENT_SURCHARGE_PCT = 25; // +25% за срочность
-    const odQty = watch('config.eyes.od.qty') || 0;
-    const osQty = watch('config.eyes.os.qty') || 0;
+    const odQty = Number(watch('config.eyes.od.qty')) || 1;
+    const osQty = Number(watch('config.eyes.os.qty')) || 1;
     const isUrgent = watch('is_urgent');
-    const totalLenses = Number(odQty) + Number(osQty);
+    const totalLenses = odQty + osQty;
     const basePrice = totalLenses * PRICE_PER_LENS;
     const discountAmt = Math.round(basePrice * DISCOUNT_PCT / 100);
     const priceAfterDiscount = basePrice - discountAmt;
