@@ -59,6 +59,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }),
     ],
     callbacks: {
+        async authorized({ request, auth: session }) {
+            const { pathname } = request.nextUrl;
+            // Protect all private routes — redirect to login if no session
+            if (
+                pathname.startsWith('/optic') ||
+                pathname.startsWith('/laboratory') ||
+                pathname.startsWith('/profile')
+            ) {
+                if (!session) return false; // redirects to pages.signIn
+            }
+            return true;
+        },
         async jwt({ token, user }) {
             // On sign in, add user data to token
             if (user) {

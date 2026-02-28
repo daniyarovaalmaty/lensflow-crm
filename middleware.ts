@@ -1,6 +1,5 @@
 import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
 export const config = {
     matcher: [
@@ -13,39 +12,28 @@ export const config = {
     ],
 };
 
-// Role-based access control middleware
-export default async function middleware(request: NextRequest) {
-    const session = await auth();
+// Use auth() as middleware — the `authorized` callback in auth.ts
+// handles redirecting unauthenticated users to /login.
+// This middleware adds extra role-based access control on top.
+export default auth((request) => {
     const { pathname } = request.nextUrl;
+    const session = request.auth;
 
-    // Protect optic routes (doctors and optics only)
+    // Role-based access for optic routes
     if (pathname.startsWith('/optic')) {
-        if (!session) {
-            return NextResponse.redirect(new URL('/login', request.url));
-        }
-        if (session.user.role !== 'doctor' && session.user.role !== 'optic') {
+        if (session && session.user.role !== 'doctor' && session.user.role !== 'optic') {
             return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
     }
 
-    // Protect laboratory routes (laboratory only)
+    // Role-based access for laboratory routes
     if (pathname.startsWith('/laboratory')) {
-        if (!session) {
-            return NextResponse.redirect(new URL('/login', request.url));
-        }
-        if (session.user.role !== 'laboratory') {
+        if (session && session.user.role !== 'laboratory') {
             return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
     }
 
-    // Protect profile page (any authenticated user)
-    if (pathname.startsWith('/profile')) {
-        if (!session) {
-            return NextResponse.redirect(new URL('/login', request.url));
-        }
-    }
-
-    // Protect API routes
+    // Protect API routes (extra check — auth callback already handles pages)
     if (pathname.startsWith('/api/orders') || pathname.startsWith('/api/profile') || pathname.startsWith('/api/catalog')) {
         if (!session) {
             return new NextResponse('Unauthorized', { status: 401 });
@@ -53,4 +41,4 @@ export default async function middleware(request: NextRequest) {
     }
 
     return NextResponse.next();
-}
+});
