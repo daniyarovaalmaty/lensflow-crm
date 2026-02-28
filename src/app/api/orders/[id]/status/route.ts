@@ -35,6 +35,18 @@ export async function PATCH(
         const newStatus = statusMap[validatedData.status] || validatedData.status;
         const now = new Date();
 
+        // lab_admin can only change shipped → out_for_delivery
+        const sub = session.user.subRole;
+        if (sub === 'lab_admin') {
+            const currentStatus = Object.entries(statusMap).find(([, v]) => v === order.status)?.[0] || order.status;
+            if (!(currentStatus === 'shipped' && validatedData.status === 'out_for_delivery')) {
+                return NextResponse.json(
+                    { error: 'Администратор может только отправить заказ в доставку (из статуса "Отгружено")' },
+                    { status: 403 }
+                );
+            }
+        }
+
         const updateData: any = { status: newStatus };
 
         // Set timestamps based on status

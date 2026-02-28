@@ -142,14 +142,14 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     },
     lab_admin: {
         canViewKanban: true,
-        canChangeStatus: true,
-        canMarkReady: true,
-        canMarkRework: true,
-        canDeliver: true,
-        canAddDefects: true,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: true,         // shipped → out_for_delivery
+        canAddDefects: true,      // архивирование браков
         canViewPayments: true,
         canChangePayments: false,
-        canShip: true,
+        canShip: false,
         canPrint: true,
         canCreateOrders: false,
         canViewOrders: true,
