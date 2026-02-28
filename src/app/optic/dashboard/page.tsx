@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Package, Clock, CheckCircle, TruckIcon,
     Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users
+    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2
 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
@@ -97,7 +97,8 @@ export default function OpticDashboard() {
             result = result.filter(o =>
                 o.order_id.toLowerCase().includes(q) ||
                 o.patient.name.toLowerCase().includes(q) ||
-                (o.meta.doctor || '').toLowerCase().includes(q)
+                (o.meta.doctor || '').toLowerCase().includes(q) ||
+                (o.company || '').toLowerCase().includes(q)
             );
         }
 
@@ -326,73 +327,29 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                             <option key={k} value={k}>{v}</option>
                         ))}
                     </select>
-
-                    {/* Toggle advanced filters */}
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'} gap-2 whitespace-nowrap`}
-                    >
-                        <SlidersHorizontal className="w-4 h-4" />
-                        Фильтры
-                    </button>
                 </div>
 
-                {/* Advanced Filters Panel */}
-                <AnimatePresence>
-                    {showFilters && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden mb-6"
-                        >
-                            <div className="card bg-blue-50/50 border border-blue-100">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    {/* Date From */}
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                                            <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                                            Дата от
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={dateFrom}
-                                            onChange={e => setDateFrom(e.target.value)}
-                                            className="input w-full"
-                                        />
-                                    </div>
-
-                                    {/* Date To */}
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                                            <Calendar className="w-3.5 h-3.5 inline mr-1" />
-                                            Дата до
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={dateTo}
-                                            onChange={e => setDateTo(e.target.value)}
-                                            className="input w-full"
-                                        />
-                                    </div>
-
-                                    {/* Clear filters */}
-                                    <div className="flex items-end">
-                                        {hasActiveFilters && (
-                                            <button
-                                                onClick={clearFilters}
-                                                className="btn btn-secondary text-sm gap-1 w-full"
-                                            >
-                                                <X className="w-4 h-4" />
-                                                Сбросить всё
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
+                {/* Date Filters — always visible */}
+                <div className="flex flex-wrap items-end gap-3 mb-6">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
+                        </label>
+                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input" />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
+                        </label>
+                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input" />
+                    </div>
+                    {hasActiveFilters && (
+                        <button onClick={clearFilters} className="btn btn-secondary text-sm gap-1">
+                            <X className="w-4 h-4" /> Сбросить
+                        </button>
                     )}
-                </AnimatePresence>
+                </div>
+
 
                 {/* Status Tabs */}
                 <div className="flex gap-2 mb-6 overflow-x-auto">
@@ -492,6 +449,12 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                                     <span className="flex items-center gap-1">
                                                         <User className="w-3.5 h-3.5" />
                                                         {order.meta.doctor}
+                                                    </span>
+                                                )}
+                                                {order.company && (
+                                                    <span className="flex items-center gap-1">
+                                                        <Building2 className="w-3.5 h-3.5" />
+                                                        {order.company}
                                                     </span>
                                                 )}
                                                 <span>Тип: MediLens</span>

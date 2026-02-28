@@ -115,6 +115,7 @@ export default function AccountantPage() {
         const rows = filtered.map(o => ({
             '№': o.order_id,
             'Пациент': o.patient.name,
+            'Компания': o.company || '',
             'Телефон': o.patient.phone,
             'Статус заказа': OrderStatusLabels[o.status],
             'Статус оплаты': PaymentStatusLabels[o.payment_status ?? 'unpaid'],
@@ -221,6 +222,7 @@ export default function AccountantPage() {
                                     <th className="w-8 px-2"></th>
                                     <th className="text-left px-4 py-3 font-semibold text-gray-600">№ заказа</th>
                                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Пациент</th>
+                                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Компания</th>
                                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Статус</th>
                                     <th className="text-left px-4 py-3 font-semibold text-gray-600">Срочный</th>
                                     <th className="text-right px-4 py-3 font-semibold text-gray-600">Сумма</th>
@@ -231,7 +233,7 @@ export default function AccountantPage() {
                             <tbody className="divide-y divide-gray-50">
                                 {filtered.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="text-center py-12 text-gray-400">
+                                        <td colSpan={9} className="text-center py-12 text-gray-400">
                                             Нет заказов
                                         </td>
                                     </tr>
@@ -270,6 +272,9 @@ export default function AccountantPage() {
                                                     <div className="font-medium text-gray-900">{order.patient.name}</div>
                                                     <div className="text-xs text-gray-400">{order.patient.phone}</div>
                                                 </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600">
+                                                    {order.company || '—'}
+                                                </td>
                                                 <td className="px-4 py-3">
                                                     <span className="text-xs text-gray-600">{OrderStatusLabels[order.status]}</span>
                                                 </td>
@@ -306,7 +311,7 @@ export default function AccountantPage() {
                                             <AnimatePresence>
                                                 {isExpanded && (
                                                     <tr>
-                                                        <td colSpan={8} className="p-0">
+                                                        <td colSpan={9} className="p-0">
                                                             <motion.div
                                                                 initial={{ height: 0, opacity: 0 }}
                                                                 animate={{ height: 'auto', opacity: 1 }}
