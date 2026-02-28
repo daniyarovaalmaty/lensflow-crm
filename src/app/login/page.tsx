@@ -144,15 +144,8 @@ function LoginContent() {
                         </button>
                     </form>
 
-                    {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900 mb-2">Демо-аккаунты:</p>
-                        <ul className="text-xs text-blue-700 space-y-1">
-                            <li><strong>Врач:</strong> doctor@lensflow.ru / password123</li>
-                            <li><strong>Оптика:</strong> optic@lensflow.ru / password123</li>
-                            <li><strong>Лаборатория:</strong> lab@lensflow.ru / password123</li>
-                        </ul>
-                    </div>
+
+
 
                     {/* Register Link */}
                     <div className="mt-6 text-center">
