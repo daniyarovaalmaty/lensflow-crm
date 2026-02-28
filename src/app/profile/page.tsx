@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Camera, Save, ArrowLeft, User, Mail, Phone, Building2, Shield, Check } from 'lucide-react';
+import PhoneInput from '@/components/ui/PhoneInput';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
 
@@ -226,13 +227,7 @@ export default function ProfilePage() {
                                 <Phone className="w-4 h-4 text-gray-400" />
                                 Телефон
                             </label>
-                            <input
-                                type="tel"
-                                value={phone}
-                                onChange={e => setPhone(e.target.value)}
-                                placeholder="+7 (___) ___-__-__"
-                                className="input w-full"
-                            />
+                            <PhoneInput value={phone} onChange={setPhone} />
                         </div>
                         <div>
                             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
