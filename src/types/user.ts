@@ -94,7 +94,7 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     },
     lab_quality: {
         canViewKanban: true,
-        canChangeStatus: true,
+        canChangeStatus: false,
         canMarkReady: false,
         canMarkRework: true,
         canDeliver: false,
