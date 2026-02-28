@@ -40,6 +40,24 @@ export default function RegisterPage() {
         setValue('subRole', 'optic_manager');
     }
 
+    // Phone mask: +7 XXX XXX XX XX
+    const formatPhone = (value: string) => {
+        const digits = value.replace(/\D/g, '');
+        // Ensure starts with 7
+        const d = digits.startsWith('7') ? digits.slice(1) : (digits.startsWith('8') ? digits.slice(1) : digits);
+        let result = '+7';
+        if (d.length > 0) result += ' ' + d.slice(0, 3);
+        if (d.length > 3) result += ' ' + d.slice(3, 6);
+        if (d.length > 6) result += ' ' + d.slice(6, 8);
+        if (d.length > 8) result += ' ' + d.slice(8, 10);
+        return result;
+    };
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formatted = formatPhone(e.target.value);
+        setValue('profile.phone', formatted, { shouldValidate: true });
+    };
+
     const onSubmit = async (data: RegisterUserDTO) => {
         setIsLoading(true);
         setError('');
@@ -233,8 +251,11 @@ export default function RegisterPage() {
                                         id="phone"
                                         type="tel"
                                         {...register('profile.phone')}
+                                        onChange={handlePhoneChange}
                                         className="input pl-10"
-                                        placeholder="+7 900 000 00 00"
+                                        placeholder="+7 777 123 45 67"
+                                        defaultValue="+7"
+                                        onFocus={e => { if (!e.target.value) setValue('profile.phone', '+7'); }}
                                     />
                                 </div>
                                 {errors.profile?.phone && (
