@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import { OrderConstructor } from '@/components/order/OrderConstructor';
 import { CharacteristicLabels } from '@/types/order';
@@ -157,7 +158,11 @@ function generateInvoiceHTML(order: Order): string {
 
 export default function NewOrderPage() {
     const router = useRouter();
+    const { data: session } = useSession();
     const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+
+    const subRole = session?.user?.subRole || '';
+    const isDoctor = subRole === 'optic_doctor' || session?.user?.role === 'doctor';
 
     const opticId = 'OPT-001';
 
@@ -231,37 +236,49 @@ export default function NewOrderPage() {
                         <p className="text-gray-600 mb-1">Номер заказа:</p>
                         <p className="text-lg font-semibold text-primary-600 mb-4">{createdOrder.order_id}</p>
 
-                        <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-1">
-                            <div className="flex justify-between">
-                                <span>Линз OD:</span>
-                                <span>{odQty} шт. — {(odQty * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Линз OS:</span>
-                                <span>{osQty} шт. — {(osQty * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
-                            </div>
-                            <div className="flex justify-between font-semibold border-t border-gray-200 pt-2 mt-2 text-gray-900">
-                                <span>Итого:</span>
-                                <span>{totalPrice.toLocaleString('ru-RU')} ₸</span>
-                            </div>
-                        </div>
+                        {/* Price + Invoice — only visible to clinic managers, NOT doctors */}
+                        {!isDoctor && (
+                            <>
+                                <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-1">
+                                    <div className="flex justify-between">
+                                        <span>Линз OD:</span>
+                                        <span>{odQty} шт. — {(odQty * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Линз OS:</span>
+                                        <span>{osQty} шт. — {(osQty * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
+                                    </div>
+                                    <div className="flex justify-between font-semibold border-t border-gray-200 pt-2 mt-2 text-gray-900">
+                                        <span>Итого:</span>
+                                        <span>{totalPrice.toLocaleString('ru-RU')} ₸</span>
+                                    </div>
+                                </div>
 
-                        <div className="space-y-3 mb-6">
-                            <button
-                                onClick={handleDownloadInvoice}
-                                className="btn btn-primary w-full gap-2"
-                            >
-                                <Download className="w-4 h-4" />
-                                Скачать счёт на оплату
-                            </button>
-                            <button
-                                onClick={handlePrintInvoice}
-                                className="btn btn-secondary w-full gap-2"
-                            >
-                                <FileText className="w-4 h-4" />
-                                Открыть для печати
-                            </button>
-                        </div>
+                                <div className="space-y-3 mb-6">
+                                    <button
+                                        onClick={handleDownloadInvoice}
+                                        className="btn btn-primary w-full gap-2"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Скачать счёт на оплату
+                                    </button>
+                                    <button
+                                        onClick={handlePrintInvoice}
+                                        className="btn btn-secondary w-full gap-2"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        Открыть для печати
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Doctor sees a simple success message */}
+                        {isDoctor && (
+                            <p className="text-sm text-gray-500 mb-6">
+                                Заказ передан в лабораторию. Вы можете отслеживать статус на дашборде.
+                            </p>
+                        )}
 
                         <button
                             onClick={() => router.push('/optic/dashboard')}
