@@ -1,6 +1,19 @@
+import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
 import Link from 'next/link';
 
-export default function HomePage() {
+export default async function HomePage() {
+    // If user is logged in, redirect to their dashboard
+    const session = await auth();
+    if (session?.user) {
+        const role = session.user.role;
+        if (role === 'laboratory') {
+            redirect('/laboratory/production');
+        } else if (role === 'optic' || role === 'doctor') {
+            redirect('/optic/dashboard');
+        }
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-surface to-primary-50">
             <div className="max-w-4xl mx-auto px-6 py-12 text-center">
@@ -45,26 +58,20 @@ export default function HomePage() {
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
                     <Link
-                        href="/login?role=optic"
+                        href="/login"
                         className="btn btn-primary text-base px-8 py-3 w-full sm:w-auto"
                     >
-                        🏪 Вход для Оптики
+                        🔑 Войти
                     </Link>
-                    <Link
-                        href="/login?role=laboratory"
-                        className="btn text-base px-8 py-3 w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-colors"
-                    >
-                        🏭 Вход для Лаборатории
-                    </Link>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <Link
                         href="/register"
                         className="btn btn-secondary text-base px-8 py-3 w-full sm:w-auto"
                     >
                         📝 Регистрация
                     </Link>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <Link
                         href="/demo"
                         className="btn text-base px-8 py-3 w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors"

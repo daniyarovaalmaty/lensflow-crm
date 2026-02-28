@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,9 +46,22 @@ function LoginContent() {
                 return;
             }
 
-            // Redirect based on callback URL or default to home
-            const callbackUrl = searchParams.get('callbackUrl') || '/';
-            router.push(callbackUrl);
+            // Fetch session to get user role for proper redirect
+            const sessionRes = await fetch('/api/auth/session');
+            const session = await sessionRes.json();
+            const role = session?.user?.role;
+
+            // Redirect based on callback URL or user role
+            const callbackUrl = searchParams.get('callbackUrl');
+            if (callbackUrl) {
+                router.push(callbackUrl);
+            } else if (role === 'laboratory') {
+                router.push('/laboratory/production');
+            } else if (role === 'optic' || role === 'doctor') {
+                router.push('/optic/dashboard');
+            } else {
+                router.push('/');
+            }
             router.refresh();
         } catch (err) {
             setError('Произошла ошибка при входе');
