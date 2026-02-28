@@ -297,19 +297,19 @@ export default function ClinicStaffPage() {
                                 <h3 className="text-lg font-bold text-gray-900">Новый сотрудник</h3>
                                 <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
                             </div>
-                            <form onSubmit={handleCreate} className="space-y-4">
+                            <form onSubmit={handleCreate} className="space-y-4" autoComplete="off">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">ФИО *</label>
                                     <input type="text" required value={createForm.fullName} onChange={e => setCreateForm(f => ({ ...f, fullName: e.target.value }))} className="input" placeholder="Иванов Иван" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email (логин) *</label>
-                                    <input type="email" required value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} className="input" placeholder="doctor@clinic.kz" />
+                                    <input type="email" required value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} className="input" placeholder="doctor@clinic.kz" autoComplete="off" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Пароль *</label>
                                     <div className="relative">
-                                        <input type={showPassword ? 'text' : 'password'} required minLength={4} value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} className="input pr-10" placeholder="Минимум 4 символа" />
+                                        <input type={showPassword ? 'text' : 'password'} required minLength={4} value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} className="input pr-10" placeholder="Минимум 4 символа" autoComplete="new-password" />
                                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
