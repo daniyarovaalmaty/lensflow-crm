@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Users, Plus, Key, Phone, Mail, Shield, X, Eye, EyeOff, Search, UserPlus, Trash2
+    Users, Plus, Key, Phone, Mail, Shield, X, Eye, EyeOff, Search, UserPlus, Trash2, Pencil
 } from 'lucide-react';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
@@ -47,6 +47,12 @@ export default function StaffPage() {
     const [newPassword, setNewPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [changingPassword, setChangingPassword] = useState(false);
+
+    // Edit profile modal
+    const [editModal, setEditModal] = useState<StaffMember | null>(null);
+    const [editForm, setEditForm] = useState({ fullName: '', phone: '', subRole: 'lab_engineer' as SubRole });
+    const [saving, setSaving] = useState(false);
+    const [editError, setEditError] = useState('');
 
     useEffect(() => { loadStaff(); }, []);
 
@@ -123,6 +129,38 @@ export default function StaffPage() {
             }
         } catch {
             alert('Ошибка сети');
+        }
+    };
+
+    const openEditModal = (member: StaffMember) => {
+        setEditModal(member);
+        setEditForm({ fullName: member.fullName, phone: member.phone || '', subRole: member.subRole });
+        setEditError('');
+    };
+
+    const handleEditProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editModal) return;
+        setSaving(true);
+        setEditError('');
+        try {
+            const res = await fetch(`/api/staff/${editModal.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm),
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setStaff(prev => prev.map(s => s.id === updated.id ? updated : s));
+                setEditModal(null);
+            } else {
+                const data = await res.json();
+                setEditError(data.error || 'Ошибка при сохранении');
+            }
+        } catch {
+            setEditError('Ошибка сети');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -227,6 +265,13 @@ export default function StaffPage() {
                                         <td className="px-4 py-3 text-center">
                                             <div className="flex items-center justify-center gap-2">
                                                 <button
+                                                    onClick={() => openEditModal(member)}
+                                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                >
+                                                    <Pencil className="w-3.5 h-3.5" />
+                                                    Ред.
+                                                </button>
+                                                <button
                                                     onClick={() => { setPasswordModal(member); setNewPassword(''); setShowPassword(false); }}
                                                     className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
                                                 >
@@ -239,7 +284,7 @@ export default function StaffPage() {
                                                         className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
                                                     >
                                                         <Trash2 className="w-3.5 h-3.5" />
-                                                        Удалить
+                                                        Удал.
                                                     </button>
                                                 )}
                                             </div>
@@ -403,6 +448,75 @@ export default function StaffPage() {
                                     {changingPassword ? 'Сохранение...' : 'Сохранить'}
                                 </button>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Edit Profile Modal */}
+            <AnimatePresence>
+                {editModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6"
+                        >
+                            <div className="flex items-center justify-between mb-5">
+                                <h3 className="text-lg font-bold text-gray-900">Редактировать профиль</h3>
+                                <button onClick={() => setEditModal(null)} className="text-gray-400 hover:text-gray-600">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <p className="text-sm text-gray-400 mb-4">{editModal.email}</p>
+                            <form onSubmit={handleEditProfile} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">ФИО</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editForm.fullName}
+                                        onChange={e => setEditForm(f => ({ ...f, fullName: e.target.value }))}
+                                        className="input"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+                                    <input
+                                        type="tel"
+                                        value={editForm.phone}
+                                        onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                                        className="input"
+                                        placeholder="+7 777 123 45 67"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Роль</label>
+                                    <select
+                                        value={editForm.subRole}
+                                        onChange={e => setEditForm(f => ({ ...f, subRole: e.target.value as SubRole }))}
+                                        className="input"
+                                    >
+                                        {LAB_SUB_ROLES.map(r => (
+                                            <option key={r.value} value={r.value}>{r.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {editError && (
+                                    <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{editError}</div>
+                                )}
+
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <button type="button" onClick={() => setEditModal(null)} className="btn btn-secondary">
+                                        Отмена
+                                    </button>
+                                    <button type="submit" disabled={saving} className="btn btn-primary">
+                                        {saving ? 'Сохранение...' : 'Сохранить'}
+                                    </button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}
