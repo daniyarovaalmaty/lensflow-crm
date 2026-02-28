@@ -184,8 +184,22 @@ export async function POST(request: NextRequest) {
             osPrice = (priceMap.get(osChar) || 0) * osQty;
         }
 
-        // Additional products total
-        const additionalProducts = body.products as Array<{ price: number; qty: number }> | undefined;
+        // Additional products — look up real prices from catalog (client may not have them)
+        let additionalProducts = body.products as Array<{ productId?: string; name: string; qty: number; price: number; category?: string }> | undefined;
+        if (additionalProducts && additionalProducts.length > 0) {
+            const productIds = additionalProducts.map(p => p.productId).filter(Boolean) as string[];
+            if (productIds.length > 0) {
+                const dbProducts = await prisma.product.findMany({
+                    where: { id: { in: productIds } },
+                    select: { id: true, price: true },
+                });
+                const priceMap = new Map(dbProducts.map(p => [p.id, p.price]));
+                additionalProducts = additionalProducts.map(p => ({
+                    ...p,
+                    price: p.productId ? (priceMap.get(p.productId) ?? p.price) : p.price,
+                }));
+            }
+        }
         const additionalTotal = (additionalProducts || []).reduce((sum: number, p) => sum + (p.price || 0) * (p.qty || 1), 0);
 
         const basePrice = odPrice + osPrice + additionalTotal;
@@ -213,7 +227,7 @@ export async function POST(request: NextRequest) {
                 lensConfig: validatedData.config as any,
                 editDeadline: edit_deadline,
                 notes: validatedData.notes || undefined,
-                products: body.products || undefined,
+                products: additionalProducts || undefined,
                 totalPrice,
             },
             include: {
