@@ -9,19 +9,30 @@ import { CharacteristicLabels } from '@/types/order';
 import type { CreateOrderDTO, Order, Characteristic } from '@/types/order';
 import { CheckCircle, Download, ArrowLeft, FileText } from 'lucide-react';
 
-const PRICE_PER_LENS = 17500;
+const PRICE_PER_LENS = 17500; // fallback
 
 function generateInvoiceHTML(order: Order): string {
     const od = order.config.eyes.od;
     const os = order.config.eyes.os;
     const odQty = Number(od.qty) || 0;
     const osQty = Number(os.qty) || 0;
-    const totalLenses = odQty + osQty;
-    const totalPrice = totalLenses * PRICE_PER_LENS;
+    const additionalProducts = order.products || [];
     const date = new Date(order.meta.created_at);
     const dateStr = date.toLocaleDateString('ru-RU');
 
-    const renderEyeRow = (label: string, eye: any, qty: number) => `
+    const DISCOUNT_PCT = 5;
+    const URGENT_SURCHARGE_PCT = 25;
+
+    // Calculate totals
+    const lensSubtotal = (odQty + osQty) * PRICE_PER_LENS;
+    const additionalSubtotal = additionalProducts.reduce((sum, p) => sum + (p.price || 0) * (p.qty || 1), 0);
+    const subtotal = lensSubtotal + additionalSubtotal;
+    const discountAmt = Math.round(subtotal * DISCOUNT_PCT / 100);
+    const afterDiscount = subtotal - discountAmt;
+    const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+    const grandTotal = order.total_price || (afterDiscount + urgentAmt);
+
+    const renderEyeRow = (label: string, eye: any, qty: number) => qty > 0 ? `
         <tr>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;">MediLens — ${label}</td>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">
@@ -33,6 +44,16 @@ function generateInvoiceHTML(order: Order): string {
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${qty}</td>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</td>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${(qty * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</td>
+        </tr>
+    ` : '';
+
+    const renderProductRow = (prod: { name: string; qty: number; price: number }) => `
+        <tr>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;">${prod.name}</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">—</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${prod.qty}</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${(prod.price || 0).toLocaleString('ru-RU')} ₸</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${((prod.price || 0) * (prod.qty || 1)).toLocaleString('ru-RU')} ₸</td>
         </tr>
     `;
 
@@ -59,6 +80,8 @@ function generateInvoiceHTML(order: Order): string {
         th { background: #f3f4f6; padding: 10px 14px; border: 1px solid #e5e7eb; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #374151; text-align: left; }
         .totals { text-align: right; margin-bottom: 30px; }
         .totals .line { display: flex; justify-content: flex-end; gap: 40px; padding: 6px 0; font-size: 14px; }
+        .totals .discount { color: #059669; }
+        .totals .surcharge { color: #d97706; }
         .totals .total-line { font-size: 18px; font-weight: 700; color: #111; border-top: 2px solid #e5e7eb; padding-top: 10px; margin-top: 6px; }
         .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
         .footer-note { font-size: 12px; color: #9ca3af; line-height: 1.6; }
@@ -119,17 +142,27 @@ function generateInvoiceHTML(order: Order): string {
         <tbody>
             ${renderEyeRow('OD (Правый глаз)', od, odQty)}
             ${renderEyeRow('OS (Левый глаз)', os, osQty)}
+            ${additionalProducts.map(p => renderProductRow(p)).join('')}
         </tbody>
     </table>
 
     <div class="totals">
         <div class="line">
-            <span>Всего линз:</span>
-            <span>${totalLenses} шт.</span>
+            <span>Подитог:</span>
+            <span>${subtotal.toLocaleString('ru-RU')} ₸</span>
         </div>
+        <div class="line discount">
+            <span>Скидка ${DISCOUNT_PCT}%:</span>
+            <span>−${discountAmt.toLocaleString('ru-RU')} ₸</span>
+        </div>
+        ${order.is_urgent ? `
+        <div class="line surcharge">
+            <span>Наценка срочный ${URGENT_SURCHARGE_PCT}%:</span>
+            <span>+${urgentAmt.toLocaleString('ru-RU')} ₸</span>
+        </div>` : ''}
         <div class="line total-line">
             <span>Итого к оплате:</span>
-            <span>${totalPrice.toLocaleString('ru-RU')} ₸</span>
+            <span>${grandTotal.toLocaleString('ru-RU')} ₸</span>
         </div>
     </div>
 

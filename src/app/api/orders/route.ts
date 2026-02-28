@@ -109,6 +109,7 @@ export async function GET(request: NextRequest) {
                 payment_status: order.paymentStatus,
                 defects: (order.defects as any[]) || [],
                 total_price: order.totalPrice || 0,
+                products: (order.products as any[]) || [],
             };
         });
 

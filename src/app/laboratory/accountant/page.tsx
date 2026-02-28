@@ -245,7 +245,9 @@ export default function AccountantPage() {
                                     const osUnitPrice = getLensPrice(osChar);
                                     const odSubtotal = odQty * odUnitPrice;
                                     const osSubtotal = osQty * osUnitPrice;
-                                    const lensTotal = odSubtotal + osSubtotal;
+                                    const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number; category?: string }> || [];
+                                    const additionalTotal = additionalProducts.reduce((sum, p) => sum + (p.price || 0) * (p.qty || 1), 0);
+                                    const lensTotal = odSubtotal + osSubtotal + additionalTotal;
                                     const discountAmt = Math.round(lensTotal * DISCOUNT_PCT / 100);
                                     const afterDiscount = lensTotal - discountAmt;
                                     const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
@@ -357,6 +359,16 @@ export default function AccountantPage() {
                                                                                         <td className="px-4 py-2.5 text-right font-medium text-gray-900">{osSubtotal.toLocaleString('ru-RU')} ₸</td>
                                                                                     </tr>
                                                                                 )}
+                                                                                {/* Additional products */}
+                                                                                {additionalProducts.map((prod, idx) => (
+                                                                                    <tr key={`prod-${idx}`}>
+                                                                                        <td className="px-4 py-2.5 text-gray-800">{prod.name}</td>
+                                                                                        <td className="px-4 py-2.5 text-gray-600">{prod.category === 'solution' ? 'Раствор' : prod.category === 'accessory' ? 'Аксессуар' : prod.category || '—'}</td>
+                                                                                        <td className="px-4 py-2.5 text-center text-gray-800">{prod.qty}</td>
+                                                                                        <td className="px-4 py-2.5 text-right text-gray-600">{(prod.price || 0).toLocaleString('ru-RU')} ₸</td>
+                                                                                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{((prod.price || 0) * (prod.qty || 1)).toLocaleString('ru-RU')} ₸</td>
+                                                                                    </tr>
+                                                                                ))}
                                                                             </tbody>
                                                                         </table>
                                                                     </div>
