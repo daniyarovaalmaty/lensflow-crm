@@ -99,7 +99,8 @@ export async function PATCH(
     if (order.status !== 'new_order') {
         return NextResponse.json({ error: 'Order is no longer editable' }, { status: 403 });
     }
-    if (order.editDeadline && new Date() >= order.editDeadline) {
+    // Only urgent orders have an edit deadline
+    if (order.isUrgent && order.editDeadline && new Date() >= order.editDeadline) {
         return NextResponse.json({ error: 'Edit window has expired' }, { status: 403 });
     }
 

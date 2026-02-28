@@ -32,6 +32,22 @@ const CharacteristicLabels: Record<string, string> = {
     'rgp': 'ЖКЛ',
 };
 
+const CharacteristicOptions = [
+    { value: 'standard', label: 'Стандарт' },
+    { value: 'toric', label: 'Торик' },
+    { value: 'multifocal', label: 'Мультифокал' },
+    { value: 'scleral', label: 'Склеральная' },
+    { value: 'ortho-k', label: 'Орто-К' },
+    { value: 'rgp', label: 'ЖКЛ (RGP)' },
+];
+
+const ColorOptions = [
+    '', 'Голубой', 'Зелёный', 'Светло-голубой', 'Тёмно-синий',
+    'Серый', 'Коричневый', 'Фиолетовый',
+];
+
+const DkOptions = [50, 75, 100, 125];
+
 export default function EditOrderPage() {
     const params = useParams();
     const router = useRouter();
@@ -83,7 +99,8 @@ export default function EditOrderPage() {
                 if (data.status !== 'new') {
                     setError('Заказ уже нельзя редактировать — он в обработке');
                 }
-                if (data.edit_deadline && new Date() >= new Date(data.edit_deadline)) {
+                // For urgent orders, check the edit deadline
+                if (data.is_urgent && data.edit_deadline && new Date() >= new Date(data.edit_deadline)) {
                     setError('Время редактирования истекло');
                 }
             } catch {
@@ -154,7 +171,11 @@ export default function EditOrderPage() {
         );
     }
 
-    const isEditable = order.status === 'new' && (!order.edit_deadline || new Date() < new Date(order.edit_deadline));
+    // Non-urgent orders: always editable while status is 'new'
+    // Urgent orders: editable only within the edit deadline
+    const isEditable = order.status === 'new' && (
+        !order.is_urgent || !order.edit_deadline || new Date() < new Date(order.edit_deadline)
+    );
 
     const renderEyeEditor = (eye: 'od' | 'os', label: string) => {
         const eyeData = config?.eyes?.[eye];
@@ -166,6 +187,7 @@ export default function EditOrderPage() {
                     <Eye className="w-4 h-4" /> {label}
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {/* Qty */}
                     <div>
                         <label className="block text-xs text-gray-500 mb-1">Кол-во</label>
                         <input
@@ -178,18 +200,141 @@ export default function EditOrderPage() {
                             disabled={!isEditable}
                         />
                     </div>
-                    {eyeData.characteristic && (
-                        <div>
-                            <label className="block text-xs text-gray-500 mb-1">Тип</label>
-                            <input
-                                type="text"
-                                value={CharacteristicLabels[eyeData.characteristic] || eyeData.characteristic}
-                                className="input text-sm bg-gray-100"
-                                disabled
-                            />
-                        </div>
-                    )}
-                    {['km', 'dia', 'dk', 'sph', 'cyl', 'ax', 'add', 'bc'].map(field => {
+
+                    {/* Characteristic (type) - now editable as dropdown */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">Тип</label>
+                        <select
+                            value={eyeData.characteristic || ''}
+                            onChange={e => updateEyeField(eye, 'characteristic', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        >
+                            <option value="">—</option>
+                            {CharacteristicOptions.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* KM */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">KM</label>
+                        <input
+                            type="text"
+                            value={eyeData.km ?? ''}
+                            onChange={e => updateEyeField(eye, 'km', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        />
+                    </div>
+
+                    {/* TP */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">TP</label>
+                        <input
+                            type="text"
+                            value={eyeData.tp ?? ''}
+                            onChange={e => updateEyeField(eye, 'tp', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        />
+                    </div>
+
+                    {/* DIA */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">DIA</label>
+                        <input
+                            type="text"
+                            value={eyeData.dia ?? ''}
+                            onChange={e => updateEyeField(eye, 'dia', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        />
+                    </div>
+
+                    {/* E1 / E2 */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">E1</label>
+                        <input
+                            type="text"
+                            value={eyeData.e1 ?? ''}
+                            onChange={e => updateEyeField(eye, 'e1', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">E2</label>
+                        <input
+                            type="text"
+                            value={eyeData.e2 ?? ''}
+                            onChange={e => updateEyeField(eye, 'e2', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        />
+                    </div>
+
+                    {/* Tor */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">Тор.</label>
+                        <input
+                            type="text"
+                            value={eyeData.tor ?? ''}
+                            onChange={e => updateEyeField(eye, 'tor', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        />
+                    </div>
+
+                    {/* Trial */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">Пробная</label>
+                        <select
+                            value={eyeData.trial ? 'yes' : 'no'}
+                            onChange={e => updateEyeField(eye, 'trial', e.target.value === 'yes')}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        >
+                            <option value="no">Нет</option>
+                            <option value="yes">Да</option>
+                        </select>
+                    </div>
+
+                    {/* Color */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">Цвет</label>
+                        <select
+                            value={eyeData.color || ''}
+                            onChange={e => updateEyeField(eye, 'color', e.target.value)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        >
+                            <option value="">—</option>
+                            {ColorOptions.filter(Boolean).map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Dk */}
+                    <div>
+                        <label className="block text-xs text-gray-500 mb-1">Dk</label>
+                        <select
+                            value={eyeData.dk ?? ''}
+                            onChange={e => updateEyeField(eye, 'dk', e.target.value ? Number(e.target.value) : undefined)}
+                            className="input text-sm"
+                            disabled={!isEditable}
+                        >
+                            <option value="">—</option>
+                            {DkOptions.map(d => (
+                                <option key={d} value={d}>{d}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Additional fields: sph, cyl, ax, add, bc */}
+                    {['sph', 'cyl', 'ax', 'add', 'bc'].map(field => {
                         if (eyeData[field] === undefined && eyeData[field] !== '') return null;
                         return (
                             <div key={field}>
