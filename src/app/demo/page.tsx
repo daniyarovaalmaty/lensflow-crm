@@ -70,10 +70,10 @@ const DEMO_GROUPS = [
             {
                 key: 'lab_head',
                 label: 'Руководитель',
-                description: 'Полный доступ, статистика',
+                description: 'Панель руководителя, KPI',
                 email: 'head@lensflow.ru',
                 password: 'password123',
-                redirect: '/laboratory/production',
+                redirect: '/laboratory/dashboard',
                 icon: Shield,
             },
         ],
