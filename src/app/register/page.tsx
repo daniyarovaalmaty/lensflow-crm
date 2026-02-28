@@ -122,7 +122,7 @@ export default function RegisterPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
                         {/* Email */}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -133,6 +133,7 @@ export default function RegisterPage() {
                                 <input
                                     id="email"
                                     type="email"
+                                    autoComplete="off"
                                     {...register('email')}
                                     className="input pl-10"
                                     placeholder="your@email.com"
@@ -154,6 +155,7 @@ export default function RegisterPage() {
                                     <input
                                         id="password"
                                         type="password"
+                                        autoComplete="new-password"
                                         {...register('password')}
                                         className="input pl-10"
                                         placeholder="••••••••"
@@ -173,6 +175,7 @@ export default function RegisterPage() {
                                     <input
                                         id="confirmPassword"
                                         type="password"
+                                        autoComplete="new-password"
                                         {...register('confirmPassword')}
                                         className="input pl-10"
                                         placeholder="••••••••"

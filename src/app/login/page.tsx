@@ -105,7 +105,7 @@ function LoginContent() {
                                     {...register('email')}
                                     className="input pl-10"
                                     placeholder="doctor@lensflow.ru"
-                                    autoComplete="email"
+                                    autoComplete="off"
                                 />
                             </div>
                             {errors.email && (
@@ -126,7 +126,7 @@ function LoginContent() {
                                     {...register('password')}
                                     className="input pl-10"
                                     placeholder="••••••••"
-                                    autoComplete="current-password"
+                                    autoComplete="off"
                                 />
                             </div>
                             {errors.password && (
