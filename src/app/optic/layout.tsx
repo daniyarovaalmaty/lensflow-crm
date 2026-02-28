@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import LabNav from '@/components/layout/LabNav';
 
 // Force dynamic rendering so auth runs on every request
 export const dynamic = 'force-dynamic';
 
-export default async function LaboratoryLayout({ children }: { children: React.ReactNode }) {
+export default async function OpticLayout({ children }: { children: React.ReactNode }) {
     const session = await auth();
 
     // Redirect to login if not authenticated
@@ -13,15 +12,10 @@ export default async function LaboratoryLayout({ children }: { children: React.R
         redirect('/login');
     }
 
-    // Redirect if not a lab user
-    if (session.user.role !== 'laboratory') {
+    // Redirect if not a doctor/optic user
+    if (session.user.role !== 'doctor' && session.user.role !== 'optic') {
         redirect('/unauthorized');
     }
 
-    return (
-        <>
-            <LabNav />
-            {children}
-        </>
-    );
+    return <>{children}</>;
 }
