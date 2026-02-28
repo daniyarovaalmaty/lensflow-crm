@@ -15,7 +15,6 @@ import type { SubRole } from '@/types/user';
 import * as XLSX from 'xlsx';
 
 const FALLBACK_PRICE_PER_LENS = 17_500;
-const DISCOUNT_PCT = 5;
 const URGENT_SURCHARGE_PCT = 25;
 
 function calcOrderTotal(order: Order): number {
@@ -23,7 +22,8 @@ function calcOrderTotal(order: Order): number {
     const od = order.config.eyes.od?.qty ?? 0;
     const os = order.config.eyes.os?.qty ?? 0;
     const base = (Number(od) + Number(os)) * FALLBACK_PRICE_PER_LENS;
-    const disc = Math.round(base * DISCOUNT_PCT / 100);
+    const pct = (order as any).discount_percent ?? 5;
+    const disc = Math.round(base * pct / 100);
     const after = base - disc;
     const surcharge = order.is_urgent ? Math.round(after * URGENT_SURCHARGE_PCT / 100) : 0;
     return after + surcharge;
@@ -254,7 +254,8 @@ export default function AccountantPage() {
                                     const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number; category?: string }> || [];
                                     const additionalTotal = additionalProducts.reduce((sum, p) => sum + (p.price || 0) * (p.qty || 1), 0);
                                     const lensTotal = odSubtotal + osSubtotal + additionalTotal;
-                                    const discountAmt = Math.round(lensTotal * DISCOUNT_PCT / 100);
+                                    const orderDiscountPct = (order as any).discount_percent ?? 5;
+                                    const discountAmt = Math.round(lensTotal * orderDiscountPct / 100);
                                     const afterDiscount = lensTotal - discountAmt;
                                     const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
 
@@ -394,7 +395,7 @@ export default function AccountantPage() {
                                                                                 <span>{lensTotal.toLocaleString('ru-RU')} ₸</span>
                                                                             </div>
                                                                             <div className="flex justify-between text-emerald-600">
-                                                                                <span>Скидка {DISCOUNT_PCT}%</span>
+                                                                                <span>Скидка {orderDiscountPct}%</span>
                                                                                 <span>−{discountAmt.toLocaleString('ru-RU')} ₸</span>
                                                                             </div>
                                                                             {order.is_urgent && (

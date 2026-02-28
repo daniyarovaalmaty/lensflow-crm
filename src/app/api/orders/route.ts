@@ -109,6 +109,7 @@ export async function GET(request: NextRequest) {
                 payment_status: order.paymentStatus,
                 defects: (order.defects as any[]) || [],
                 total_price: order.totalPrice || 0,
+                discount_percent: order.discountPercent ?? 5,
                 products: (order.products as any[]) || [],
             };
         });
@@ -163,7 +164,22 @@ export async function POST(request: NextRequest) {
         }
 
         // ── Calculate totalPrice from catalog ──
-        const DISCOUNT_PCT = 5;
+        // Get org discount (or user personal discount for independent doctors)
+        let DISCOUNT_PCT = 5;
+        if (session.user.organizationId) {
+            const org = await prisma.organization.findUnique({
+                where: { id: session.user.organizationId },
+                select: { discountPercent: true },
+            });
+            if (org) DISCOUNT_PCT = org.discountPercent;
+        } else {
+            // Independent doctor — check personal discount
+            const user = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { discountPercent: true },
+            });
+            if (user?.discountPercent != null) DISCOUNT_PCT = user.discountPercent;
+        }
         const URGENT_SURCHARGE_PCT = 25;
         const config = validatedData.config as any;
         const odChar = config?.eyes?.od?.characteristic || '';
@@ -229,6 +245,7 @@ export async function POST(request: NextRequest) {
                 notes: validatedData.notes || undefined,
                 products: additionalProducts || undefined,
                 totalPrice,
+                discountPercent: DISCOUNT_PCT,
             },
             include: {
                 patient: true,
@@ -258,6 +275,9 @@ export async function POST(request: NextRequest) {
             is_urgent: order.isUrgent,
             edit_deadline: order.editDeadline?.toISOString(),
             notes: order.notes || undefined,
+            total_price: order.totalPrice,
+            discount_percent: order.discountPercent,
+            products: (order as any).products || [],
         };
 
         return NextResponse.json(response, { status: 201 });

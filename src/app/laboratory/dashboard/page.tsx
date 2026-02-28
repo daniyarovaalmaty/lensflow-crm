@@ -16,7 +16,6 @@ import * as XLSX from 'xlsx';
 
 const PRICE_PER_LENS = 17_500;
 const URGENT_SURCHARGE_PCT = 25;
-const DISCOUNT_PCT = 5;
 
 function calcOrderPrice(order: Order): number {
     // Use stored total_price if available
@@ -26,7 +25,8 @@ function calcOrderPrice(order: Order): number {
     const os = order.config.eyes.os;
     const totalLenses = (Number(od.qty) || 1) + (Number(os.qty) || 1);
     const base = totalLenses * PRICE_PER_LENS;
-    const discountAmt = Math.round(base * DISCOUNT_PCT / 100);
+    const pct = (order as any).discount_percent ?? 5;
+    const discountAmt = Math.round(base * pct / 100);
     const afterDiscount = base - discountAmt;
     const urgentCharge = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
     return afterDiscount + urgentCharge;

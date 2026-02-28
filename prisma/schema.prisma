@@ -159,6 +159,7 @@ model Order {
 
   // Payment
   totalPrice      Int           @default(0)
+  discountPercent Float         @default(5)  // Скидка, применённая к заказу
   paymentStatus   PaymentStatus @default(unpaid)
 
   // Timestamps

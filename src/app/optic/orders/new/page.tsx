@@ -20,7 +20,7 @@ function generateInvoiceHTML(order: Order): string {
     const date = new Date(order.meta.created_at);
     const dateStr = date.toLocaleDateString('ru-RU');
 
-    const DISCOUNT_PCT = 5;
+    const DISCOUNT_PCT = (order as any).discount_percent ?? 5;
     const URGENT_SURCHARGE_PCT = 25;
 
     // Calculate totals
