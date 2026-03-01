@@ -333,13 +333,19 @@ export default function RegisterPage() {
                     </form>
 
                     {/* Login Link */}
-                    <div className="mt-6 text-center">
+                    <div className="mt-6 text-center space-y-3">
                         <p className="text-sm text-gray-600">
                             Уже есть аккаунт?{' '}
                             <a href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
                                 Войти
                             </a>
                         </p>
+                        <a
+                            href="/"
+                            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 transition-colors font-medium"
+                        >
+                            ← На главную
+                        </a>
                     </div>
                 </div>
             </div>

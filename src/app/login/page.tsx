@@ -148,13 +148,19 @@ function LoginContent() {
 
 
                     {/* Register Link */}
-                    <div className="mt-6 text-center">
+                    <div className="mt-6 text-center space-y-3">
                         <p className="text-sm text-gray-600">
                             Нет аккаунта?{' '}
                             <a href="/register" className="text-primary-600 hover:text-primary-700 font-medium">
                                 Зарегистрироваться
                             </a>
                         </p>
+                        <a
+                            href="/"
+                            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 transition-colors font-medium"
+                        >
+                            ← На главную
+                        </a>
                     </div>
                 </div>
             </div>
