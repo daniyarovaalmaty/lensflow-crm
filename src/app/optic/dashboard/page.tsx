@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Package, Clock, CheckCircle, TruckIcon,
     Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2
+    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu
 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
@@ -41,6 +41,7 @@ export default function OpticDashboard() {
     const [dateTo, setDateTo] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     // tick every 30s to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
@@ -228,15 +229,17 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
         <div className="min-h-screen bg-surface">
             {/* Header */}
             <div className="bg-surface-elevated border-b border-border">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">
+                        <div className="min-w-0">
+                            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                                 {session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Мои заказы'}
                             </h1>
-                            <p className="text-gray-600 mt-1">{session?.user?.profile?.fullName || SubRoleLabels[subRole]}</p>
+                            <p className="text-sm sm:text-base text-gray-600 mt-0.5 sm:mt-1 truncate">{session?.user?.profile?.fullName || SubRoleLabels[subRole]}</p>
                         </div>
-                        <div className="flex items-center gap-3">
+
+                        {/* Desktop nav */}
+                        <div className="hidden md:flex items-center gap-3">
                             {perms.canCreateOrders && (
                                 <Link href="/optic/orders/new" className="btn btn-primary gap-2">
                                     <Plus className="w-5 h-5" />
@@ -267,11 +270,58 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                 Выйти
                             </button>
                         </div>
+
+                        {/* Mobile: create + hamburger */}
+                        <div className="flex md:hidden items-center gap-2">
+                            {perms.canCreateOrders && (
+                                <Link href="/optic/orders/new" className="btn btn-primary gap-1.5 text-sm px-3 py-2">
+                                    <Plus className="w-4 h-4" />
+                                    <span className="hidden xs:inline">Заказ</span>
+                                </Link>
+                            )}
+                            <button
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Mobile dropdown menu */}
+                    {mobileMenuOpen && (
+                        <div className="md:hidden border-t border-gray-100 mt-3 pt-3 space-y-1">
+                            {subRole === 'optic_manager' && (
+                                <Link
+                                    href="/optic/staff"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    <Users className="w-4 h-4" />
+                                    Сотрудники
+                                </Link>
+                            )}
+                            <Link
+                                href="/profile"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                            >
+                                <User className="w-4 h-4" />
+                                Профиль
+                            </Link>
+                            <button
+                                onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/login' }); }}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 w-full text-left"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Выйти
+                            </button>
+                        </div>
+                    )}
 
                     {/* Stats */}
                     {perms.canViewStats && (
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mt-4 sm:mt-6">
                             {[
                                 { label: 'Всего', value: stats.total, icon: Package, bg: 'bg-gray-100', text: 'text-gray-600' },
                                 { label: 'Новые', value: stats.new, icon: Clock, bg: 'bg-blue-100', text: 'text-blue-600' },
@@ -279,14 +329,14 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                 { label: 'Готовы', value: stats.ready, icon: CheckCircle, bg: 'bg-green-100', text: 'text-green-600' },
                                 { label: 'Отгружены', value: stats.shipped, icon: TruckIcon, bg: 'bg-purple-100', text: 'text-purple-600' },
                             ].map(s => (
-                                <div key={s.label} className="card">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-lg ${s.bg} ${s.text} flex items-center justify-center`}>
-                                            <s.icon className="w-5 h-5" />
+                                <div key={s.label} className="card !p-3 sm:!p-4">
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${s.bg} ${s.text} flex items-center justify-center`}>
+                                            <s.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-600">{s.label}</p>
-                                            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                                            <p className="text-xs sm:text-sm text-gray-600">{s.label}</p>
+                                            <p className="text-lg sm:text-2xl font-bold text-gray-900">{s.value}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -297,9 +347,9 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
             </div>
 
             {/* Filters & Orders */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
                 {/* Search + Filter Controls */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
                     {/* Search */}
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -321,7 +371,7 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                     <select
                         value={sortBy}
                         onChange={e => setSortBy(e.target.value as SortOption)}
-                        className="input w-auto min-w-[180px]"
+                        className="input w-full sm:w-auto sm:min-w-[180px]"
                     >
                         {Object.entries(SortLabels).map(([k, v]) => (
                             <option key={k} value={k}>{v}</option>
@@ -330,18 +380,18 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                 </div>
 
                 {/* Date Filters — always visible */}
-                <div className="flex flex-wrap items-end gap-3 mb-6">
-                    <div>
+                <div className="flex flex-wrap items-end gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <div className="flex-1 min-w-[130px]">
                         <label className="block text-xs font-medium text-gray-500 mb-1">
                             <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
                         </label>
-                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input" />
+                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input w-full" />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-[130px]">
                         <label className="block text-xs font-medium text-gray-500 mb-1">
                             <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
                         </label>
-                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input" />
+                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
                     </div>
                     {hasActiveFilters && (
                         <button onClick={clearFilters} className="btn btn-secondary text-sm gap-1">
@@ -352,20 +402,20 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
 
 
                 {/* Status Tabs */}
-                <div className="flex gap-2 mb-6 overflow-x-auto">
+                <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
                     {(['all', 'new', 'in_production', 'ready', 'shipped'] as const).map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
                             className={`
-                                px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all
+                                px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0
                                 ${filter === status
                                     ? 'bg-primary-500 text-white shadow-sm'
                                     : 'bg-surface-elevated text-gray-700 hover:bg-surface-secondary'}
                             `}
                         >
                             {status === 'all' ? 'Все' : OrderStatusLabels[status]}
-                            <span className="ml-1.5 text-xs opacity-70">
+                            <span className="ml-1 sm:ml-1.5 text-xs opacity-70">
                                 {status === 'all' ? orders.length : orders.filter(o => o.status === status).length}
                             </span>
                         </button>
@@ -413,10 +463,10 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                     animate={{ opacity: 1, y: 0 }}
                                     className="card card-hover"
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-semibold text-gray-900">{order.order_id}</h3>
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{order.order_id}</h3>
                                                 {/* Hide internal 'rework' status from optic — show as "В производстве" */}
                                                 {(() => {
                                                     const displayStatus = order.status === 'rework' ? 'in_production' : order.status;
@@ -464,9 +514,9 @@ ${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
                                                 <span>OS: Km {os.km} | DIA {os.dia} | Dk {os.dk}</span>
                                             </div>
                                         </div>
-                                        <div className="text-right text-sm text-gray-500 ml-4 flex-shrink-0">
+                                        <div className="text-left sm:text-right text-sm text-gray-500 sm:ml-4 flex-shrink-0 flex sm:block items-center gap-3">
                                             <p>{new Date(order.meta.created_at).toLocaleDateString('ru-RU')}</p>
-                                            <p className="text-base font-semibold text-gray-900 mt-1">
+                                            <p className="text-base font-semibold text-gray-900 sm:mt-1">
                                                 {canSeePrices ? `${totalPrice.toLocaleString('ru-RU')} ₸` : ''}
                                             </p>
                                             {order.tracking_number && (
