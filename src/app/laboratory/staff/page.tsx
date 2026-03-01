@@ -173,20 +173,20 @@ export default function StaffPage() {
         <div className="min-h-screen bg-surface">
             {/* Header */}
             <div className="bg-surface-elevated border-b border-border">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-                    <div className="flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
                                 <Users className="w-5 h-5" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Сотрудники</h1>
+                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Сотрудники</h1>
                                 <p className="text-gray-500 text-sm">{staff.length} сотрудников</p>
                             </div>
                         </div>
                         <button
                             onClick={() => setShowCreate(true)}
-                            className="btn btn-primary flex items-center gap-2"
+                            className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
                         >
                             <UserPlus className="w-4 h-4" />
                             Добавить сотрудника
@@ -195,105 +195,156 @@ export default function StaffPage() {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
                 {/* Search */}
-                <div className="relative mb-6">
+                <div className="relative mb-4 sm:mb-6">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Поиск по имени или email..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="input pl-10"
+                        className="input pl-10 w-full"
                     />
                 </div>
 
-                {/* Staff table */}
+                {/* Staff list */}
                 {isLoading ? (
                     <div className="text-center py-16 text-gray-400">Загрузка...</div>
+                ) : filtered.length === 0 ? (
+                    <div className="text-center py-16 text-gray-400">Сотрудники не найдены</div>
                 ) : (
-                    <div className="card overflow-hidden p-0">
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50 border-b border-gray-100">
-                                <tr>
-                                    <th className="text-left px-4 py-3 font-semibold text-gray-600">ФИО</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Email (логин)</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Телефон</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Роль</th>
-                                    <th className="text-left px-4 py-3 font-semibold text-gray-600">Дата создания</th>
-                                    <th className="text-center px-4 py-3 font-semibold text-gray-600">Действия</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {filtered.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="text-center py-12 text-gray-400">
-                                            Сотрудники не найдены
-                                        </td>
-                                    </tr>
-                                ) : filtered.map(member => (
-                                    <tr key={member.id} className="hover:bg-gray-50/60 transition-colors">
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs">
-                                                    {member.fullName.charAt(0).toUpperCase()}
-                                                </div>
-                                                <span className="font-medium text-gray-900">{member.fullName}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-1.5 text-gray-600">
-                                                <Mail className="w-3.5 h-3.5 text-gray-400" />
-                                                {member.email}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-1.5 text-gray-600">
-                                                <Phone className="w-3.5 h-3.5 text-gray-400" />
-                                                {member.phone || '—'}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className="inline-flex items-center gap-1 text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
-                                                <Shield className="w-3 h-3" />
-                                                {SubRoleLabels[member.subRole] || member.subRole}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-500 text-xs">
-                                            {new Date(member.createdAt).toLocaleDateString('ru-RU')}
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button
-                                                    onClick={() => openEditModal(member)}
-                                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
-                                                >
-                                                    <Pencil className="w-3.5 h-3.5" />
-                                                    Ред.
-                                                </button>
-                                                <button
-                                                    onClick={() => { setPasswordModal(member); setNewPassword(''); setShowPassword(false); }}
-                                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
-                                                >
-                                                    <Key className="w-3.5 h-3.5" />
-                                                    Пароль
-                                                </button>
-                                                {member.id !== session?.user?.id && (
-                                                    <button
-                                                        onClick={() => handleDelete(member)}
-                                                        className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                        Удал.
-                                                    </button>
+                    <>
+                        {/* Mobile card layout */}
+                        <div className="md:hidden space-y-3">
+                            {filtered.map(member => (
+                                <div key={member.id} className="card">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0">
+                                            {member.fullName.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-gray-900 truncate">{member.fullName}</h3>
+                                            <p className="text-sm text-gray-500 truncate">{member.email}</p>
+                                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                <span className="inline-flex items-center gap-1 text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                                                    <Shield className="w-3 h-3" />
+                                                    {SubRoleLabels[member.subRole] || member.subRole}
+                                                </span>
+                                                {member.phone && (
+                                                    <span className="text-xs text-gray-400">{member.phone}</span>
                                                 )}
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                                        <button
+                                            onClick={() => openEditModal(member)}
+                                            className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
+                                        >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                            Ред.
+                                        </button>
+                                        <button
+                                            onClick={() => { setPasswordModal(member); setNewPassword(''); setShowPassword(false); }}
+                                            className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 px-3 py-2 rounded-lg transition-colors"
+                                        >
+                                            <Key className="w-3.5 h-3.5" />
+                                            Пароль
+                                        </button>
+                                        {member.id !== session?.user?.id && (
+                                            <button
+                                                onClick={() => handleDelete(member)}
+                                                className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop table */}
+                        <div className="hidden md:block card overflow-hidden p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm min-w-[700px]">
+                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                        <tr>
+                                            <th className="text-left px-4 py-3 font-semibold text-gray-600">ФИО</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-gray-600">Email (логин)</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-gray-600">Телефон</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-gray-600">Роль</th>
+                                            <th className="text-left px-4 py-3 font-semibold text-gray-600">Дата создания</th>
+                                            <th className="text-center px-4 py-3 font-semibold text-gray-600">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {filtered.map(member => (
+                                            <tr key={member.id} className="hover:bg-gray-50/60 transition-colors">
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs">
+                                                            {member.fullName.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <span className="font-medium text-gray-900">{member.fullName}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-1.5 text-gray-600">
+                                                        <Mail className="w-3.5 h-3.5 text-gray-400" />
+                                                        {member.email}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-1.5 text-gray-600">
+                                                        <Phone className="w-3.5 h-3.5 text-gray-400" />
+                                                        {member.phone || '—'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                                                        <Shield className="w-3 h-3" />
+                                                        {SubRoleLabels[member.subRole] || member.subRole}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-500 text-xs">
+                                                    {new Date(member.createdAt).toLocaleDateString('ru-RU')}
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => openEditModal(member)}
+                                                            className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                        >
+                                                            <Pencil className="w-3.5 h-3.5" />
+                                                            Ред.
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setPasswordModal(member); setNewPassword(''); setShowPassword(false); }}
+                                                            className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                        >
+                                                            <Key className="w-3.5 h-3.5" />
+                                                            Пароль
+                                                        </button>
+                                                        {member.id !== session?.user?.id && (
+                                                            <button
+                                                                onClick={() => handleDelete(member)}
+                                                                className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                Удал.
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
 
