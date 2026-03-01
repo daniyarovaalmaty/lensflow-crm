@@ -228,24 +228,33 @@ export default function LabHeadDashboard() {
 
     // Export all data to Excel
     const exportToExcel = () => {
-        const rows = orders.map(o => ({
-            '№ заказа': o.order_id,
-            'Пациент': o.patient.name,
-            'Телефон': o.patient.phone,
-            'Статус': OrderStatusLabels[o.status],
-            'Оплата': (o as any).payment_status === 'paid' ? 'Оплачен' : (o as any).payment_status === 'partial' ? 'Частично' : 'Не оплачен',
-            'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
-            'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
-            'Врач': o.meta.doctor || '—',
-            'Оптика': o.meta.optic_name || '—',
-            'OD Qty': Number(o.config.eyes.od.qty) || 1,
-            'OS Qty': Number(o.config.eyes.os.qty) || 1,
-            'Стоимость': calcOrderPrice(o),
-        }));
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Заказы');
-        XLSX.writeFile(wb, `LensFlow_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        try {
+            const rows = orders.map(o => ({
+                '№ заказа': o.order_id,
+                'Пациент': o.patient.name,
+                'Телефон': o.patient.phone,
+                'Статус': OrderStatusLabels[o.status],
+                'Оплата': (o as any).payment_status === 'paid' ? 'Оплачен' : (o as any).payment_status === 'partial' ? 'Частично' : 'Не оплачен',
+                'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
+                'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
+                'Врач': o.meta.doctor || '—',
+                'Оптика': o.meta.optic_name || '—',
+                'OD Qty': Number(o.config.eyes.od.qty) || 1,
+                'OS Qty': Number(o.config.eyes.os.qty) || 1,
+                'Стоимость': calcOrderPrice(o),
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const colWidths = Object.keys(rows[0] || {}).map(key => ({
+                wch: Math.max(key.length, ...rows.map(r => String((r as any)[key] || '').length)) + 2,
+            }));
+            ws['!cols'] = colWidths;
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Заказы');
+            XLSX.writeFile(wb, `LensFlow_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (err: any) {
+            console.error('Export error:', err);
+            alert('Ошибка экспорта: ' + (err.message || err));
+        }
     };
 
     const fmt = (n: number) => n.toLocaleString('ru-RU');

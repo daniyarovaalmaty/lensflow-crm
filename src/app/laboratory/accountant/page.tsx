@@ -112,21 +112,30 @@ export default function AccountantPage() {
     }, [orders]);
 
     const exportExcel = () => {
-        const rows = filtered.map(o => ({
-            '№': o.order_id,
-            'Пациент': o.patient.name,
-            'Компания': o.company || '',
-            'Телефон': o.patient.phone,
-            'Статус заказа': OrderStatusLabels[o.status],
-            'Статус оплаты': PaymentStatusLabels[o.payment_status ?? 'unpaid'],
-            'Срочный': o.is_urgent ? 'Да' : 'Нет',
-            'Сумма (₸)': calcOrderTotal(o),
-            'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
-        }));
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Платежи');
-        XLSX.writeFile(wb, `LensFlow_Payments_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        try {
+            const rows = filtered.map(o => ({
+                '№': o.order_id,
+                'Пациент': o.patient.name,
+                'Компания': o.company || '',
+                'Телефон': o.patient.phone,
+                'Статус заказа': OrderStatusLabels[o.status],
+                'Статус оплаты': PaymentStatusLabels[o.payment_status ?? 'unpaid'],
+                'Срочный': o.is_urgent ? 'Да' : 'Нет',
+                'Сумма (₸)': calcOrderTotal(o),
+                'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const colWidths = Object.keys(rows[0] || {}).map(key => ({
+                wch: Math.max(key.length, ...rows.map(r => String((r as any)[key] || '').length)) + 2,
+            }));
+            ws['!cols'] = colWidths;
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Платежи');
+            XLSX.writeFile(wb, `LensFlow_Payments_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (err: any) {
+            console.error('Export error:', err);
+            alert('Ошибка экспорта: ' + (err.message || err));
+        }
     };
 
     return (

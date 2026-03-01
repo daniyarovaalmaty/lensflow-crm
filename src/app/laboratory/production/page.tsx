@@ -126,20 +126,41 @@ export default function ProductionHubPage() {
     };
 
     const exportToExcel = () => {
-        const rows = filteredOrders.map(o => ({
-            '№ заказа': o.order_id,
-            'Пациент': o.patient.name,
-            'Телефон': o.patient.phone,
-            'Статус': OrderStatusLabels[o.status],
-            'Оплата': o.payment_status === 'paid' ? 'Оплачен' : o.payment_status === 'partial' ? 'Частично' : 'Не оплачен',
-            'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
-            'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
-            'Ответственный': o.meta.doctor || o.meta.optic_name || '—',
-        }));
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Заказы');
-        XLSX.writeFile(wb, `LensFlow_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        try {
+            const rows = filteredOrders.map(o => ({
+                '№ заказа': o.order_id,
+                'Пациент': o.patient.name,
+                'Телефон': o.patient.phone,
+                'Компания': o.company || '—',
+                'Статус': OrderStatusLabels[o.status],
+                'Оплата': o.payment_status === 'paid' ? 'Оплачен' : o.payment_status === 'partial' ? 'Частично' : 'Не оплачен',
+                'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
+                'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
+                'Врач': o.meta.doctor || '—',
+                'Оптика': o.meta.optic_name || '—',
+                'OD Km': o.config.eyes.od.km || '',
+                'OD DIA': o.config.eyes.od.dia || '',
+                'OD Dk': o.config.eyes.od.dk || '',
+                'OD Qty': o.config.eyes.od.qty || 1,
+                'OS Km': o.config.eyes.os.km || '',
+                'OS DIA': o.config.eyes.os.dia || '',
+                'OS Dk': o.config.eyes.os.dk || '',
+                'OS Qty': o.config.eyes.os.qty || 1,
+                'Сумма (₸)': o.total_price || 0,
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            // Auto-size columns
+            const colWidths = Object.keys(rows[0] || {}).map(key => ({
+                wch: Math.max(key.length, ...rows.map(r => String((r as any)[key] || '').length)) + 2,
+            }));
+            ws['!cols'] = colWidths;
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Заказы');
+            XLSX.writeFile(wb, `LensFlow_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (err: any) {
+            console.error('Export error:', err);
+            alert('Ошибка экспорта: ' + (err.message || err));
+        }
     };
 
     const toggleDefectArchive = async (orderId: string, defectId: string, archived: boolean) => {
