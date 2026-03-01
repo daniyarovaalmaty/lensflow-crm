@@ -411,7 +411,7 @@ export default function ProductionHubPage() {
     const Column = ({ title, icon: Icon, orders: colOrders, color }: {
         title: string; icon: any; orders: Order[]; color: string;
     }) => (
-        <div className="flex-1 min-w-[260px]">
+        <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[240px]">
             <div className={`card mb-4 ${color}`}>
                 <div className="flex items-center gap-2">
                     <Icon className="w-5 h-5" />
@@ -443,7 +443,7 @@ export default function ProductionHubPage() {
 
         return (
             <div
-                className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[5vh] overflow-y-auto"
+                className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 pt-[2vh] sm:pt-[5vh] overflow-y-auto"
                 onClick={() => setSelectedOrderId(null)}
             >
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -452,10 +452,10 @@ export default function ProductionHubPage() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     onClick={e => e.stopPropagation()}
-                    className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mb-[5vh]"
+                    className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mb-[5vh] max-h-[90vh] sm:max-h-none overflow-y-auto"
                 >
                     {/* Header */}
-                    <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 rounded-t-2xl flex items-center justify-between z-10">
+                    <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 rounded-t-2xl flex items-center justify-between z-10">
                         <div>
                             <h2 className="text-lg font-bold text-gray-900">Заказ {order.order_id}</h2>
                             <p className="text-sm text-gray-500">
@@ -470,9 +470,9 @@ export default function ProductionHubPage() {
                         </button>
                     </div>
 
-                    <div className="px-6 py-4 space-y-5">
+                    <div className="px-4 sm:px-6 py-4 space-y-5">
                         {/* Patient & meta info */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <h4 className="text-xs font-semibold text-gray-400 uppercase">Пациент</h4>
                                 <p className="text-sm font-medium text-gray-900">{order.patient.name}</p>
@@ -919,10 +919,10 @@ export default function ProductionHubPage() {
             {/* Header */}
             <div className="bg-surface-elevated border-b border-border">
                 <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-6">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Производственный хаб</h1>
-                            <p className="text-gray-600 mt-1">Управление очередью заказов</p>
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Производственный хаб</h1>
+                            <p className="text-sm text-gray-600 mt-0.5">Управление очередью заказов</p>
                         </div>
                         <div className="text-sm text-gray-500">
                             Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
@@ -930,8 +930,8 @@ export default function ProductionHubPage() {
                     </div>
 
                     {/* Search + filters */}
-                    <div className="flex gap-3 items-center">
-                        <div className="relative flex-1 max-w-md">
+                    <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+                        <div className="relative flex-1 min-w-[180px] max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
@@ -1024,20 +1024,20 @@ export default function ProductionHubPage() {
                                 const ps = (order as any).payment_status || 'unpaid';
                                 return (
                                     <div key={order.order_id} className="card hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedOrderId(order.order_id)}>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div>
-                                                    <h4 className="font-semibold text-gray-900">{order.order_id}</h4>
-                                                    <p className="text-sm text-gray-500">{order.patient.name}</p>
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="min-w-0">
+                                                    <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{order.order_id}</h4>
+                                                    <p className="text-xs sm:text-sm text-gray-500 truncate">{order.patient.name}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className={`text-sm px-3 py-1 rounded-lg ${OrderStatusLabels[order.status] ? 'bg-gray-100 text-gray-700' : ''}`}>
+                                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                                <span className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-lg ${OrderStatusLabels[order.status] ? 'bg-gray-100 text-gray-700' : ''}`}>
                                                     {OrderStatusLabels[order.status]}
                                                 </span>
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className={`w-2.5 h-2.5 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-300'}`} />
-                                                    <span className={`text-sm font-medium ${ps === 'paid' ? 'text-emerald-600' : ps === 'partial' ? 'text-amber-600' : 'text-gray-400'}`}>
+                                                    <span className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-300'}`} />
+                                                    <span className={`text-xs sm:text-sm font-medium ${ps === 'paid' ? 'text-emerald-600' : ps === 'partial' ? 'text-amber-600' : 'text-gray-400'}`}>
                                                         {PaymentStatusLabels[ps as PaymentStatus]}
                                                     </span>
                                                 </div>
@@ -1051,8 +1051,8 @@ export default function ProductionHubPage() {
                 </div>
             ) : (
                 /* Kanban Board */
-                <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-8">
-                    <div className="flex gap-5 overflow-x-auto pb-4">
+                <div className="max-w-[1800px] mx-auto px-3 sm:px-6 py-4 sm:py-8">
+                    <div className="flex gap-3 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
                         <Column title="Новые" icon={Package} orders={ordersByStatus.new} color="bg-blue-50 text-blue-700" />
                         <Column title="В производстве" icon={Clock} orders={ordersByStatus.in_production} color="bg-yellow-50 text-yellow-700" />
                         <Column title="Готово" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
@@ -1062,7 +1062,7 @@ export default function ProductionHubPage() {
                         <Column title="Доставлено" icon={CheckCircle} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
 
                         {/* Defects Column */}
-                        <div className="flex-1 min-w-[260px]">
+                        <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[240px]">
                             <div className="card mb-4 bg-red-50 text-red-700">
                                 <div className="flex items-center gap-2">
                                     <AlertTriangle className="w-5 h-5" />

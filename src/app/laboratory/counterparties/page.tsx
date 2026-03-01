@@ -188,7 +188,7 @@ export default function CounterpartiesPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
                             <Users className="w-6 h-6 text-blue-600" />
                             Контрагенты
                         </h1>
@@ -241,7 +241,7 @@ export default function CounterpartiesPage() {
                 {tab === 'clinics' && (
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[700px]">
                                 <thead>
                                     <tr className="border-b border-gray-200 bg-gray-50/50">
                                         <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase cursor-pointer hover:text-gray-700"
@@ -366,7 +366,7 @@ export default function CounterpartiesPage() {
                 {tab === 'doctors' && (
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-[750px]">
                                 <thead>
                                     <tr className="border-b border-gray-200 bg-gray-50/50">
                                         <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase cursor-pointer hover:text-gray-700"
@@ -520,7 +520,7 @@ export default function CounterpartiesPage() {
                     </div>
                     <div className="bg-white rounded-xl border border-gray-200 p-4">
                         <p className="text-xs text-gray-500 font-medium">Общая выручка</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{fmt(clinics.reduce((s, c) => s + c.revenue, 0))} ₸</p>
+                        <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-1">{fmt(clinics.reduce((s, c) => s + c.revenue, 0))} ₸</p>
                     </div>
                     <div className="bg-white rounded-xl border border-gray-200 p-4">
                         <p className="text-xs text-gray-500 font-medium">Неоплачено</p>

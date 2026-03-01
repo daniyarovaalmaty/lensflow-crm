@@ -286,24 +286,24 @@ export default function LabHeadDashboard() {
             {/* Header */}
             <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold">Панель руководителя</h1>
-                            <p className="text-gray-400 mt-1">{SubRoleLabels[subRole]} • Ключевые показатели лаборатории</p>
+                            <h1 className="text-xl sm:text-2xl font-bold">Панель руководителя</h1>
+                            <p className="text-sm text-gray-400 mt-0.5">{SubRoleLabels[subRole]} • Ключевые показатели лаборатории</p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
                             <button
                                 onClick={exportToExcel}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition-colors"
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition-colors"
                             >
                                 <Download className="w-4 h-4" />
-                                Экспорт XLS
+                                <span className="hidden sm:inline">Экспорт</span> XLS
                             </button>
                             <Link
                                 href="/laboratory/production"
-                                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition-colors"
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition-colors"
                             >
-                                Канбан-доска
+                                Канбан
                                 <ArrowRight className="w-4 h-4" />
                             </Link>
                         </div>
@@ -396,7 +396,7 @@ export default function LabHeadDashboard() {
                             <BarChart3 className="w-5 h-5 text-blue-600" />
                             Выручка по месяцам
                         </h3>
-                        <div className="flex items-end gap-3 h-40">
+                        <div className="flex items-end gap-2 sm:gap-3 h-40 overflow-x-auto">
                             {kpis.monthlyRevenue.map((m, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                                     <span className="text-[10px] font-semibold text-gray-500">{fmt(m.revenue / 1000)}к</span>
