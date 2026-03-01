@@ -1,14 +1,17 @@
-import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import Link from 'next/link';
 
 export default async function HomePage() {
     const session = await auth();
+
+    // Determine dashboard URL for logged-in users (no redirect — user can always see landing)
+    let dashboardUrl = '';
     if (session?.user) {
         const role = session.user.role;
-        if (role === 'laboratory') redirect('/laboratory/production');
-        else if (role === 'optic' || role === 'doctor') redirect('/optic/dashboard');
+        if (role === 'laboratory') dashboardUrl = '/laboratory/production';
+        else if (role === 'optic' || role === 'doctor') dashboardUrl = '/optic/dashboard';
     }
+    const isLoggedIn = !!session?.user;
 
     const features = [
         {
@@ -70,12 +73,20 @@ export default async function HomePage() {
                         Lens<span className="text-blue-400">Flow</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link href="/login" className="px-5 py-2.5 text-sm font-medium text-gray-300 hover:text-white transition-colors">
-                            Войти
-                        </Link>
-                        <Link href="/register" className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
-                            Регистрация
-                        </Link>
+                        {isLoggedIn ? (
+                            <Link href={dashboardUrl} className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
+                                Перейти в систему →
+                            </Link>
+                        ) : (
+                            <>
+                                <Link href="/login" className="px-5 py-2.5 text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                                    Войти
+                                </Link>
+                                <Link href="/register" className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
+                                    Регистрация
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </nav>
