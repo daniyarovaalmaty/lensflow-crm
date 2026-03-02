@@ -251,28 +251,15 @@ ${isUrgent ? `<div class="surcharge"><span class="label">\u0421\u0440\u043e\u044
 </div>
 </body></html>`;
 
-        // Generate PDF using html2pdf.js
-        const container = document.createElement('div');
-        container.innerHTML = html;
-        container.style.position = 'fixed';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.width = '800px';
-        container.style.opacity = '0';
-        container.style.pointerEvents = 'none';
-        container.style.zIndex = '-1';
-        document.body.appendChild(container);
-
+        // Generate PDF using html2pdf.js — pass HTML string directly
         import('html2pdf.js').then(({ default: html2pdf }) => {
             html2pdf().set({
                 margin: [10, 10, 10, 10],
                 filename: `Счёт_${order.order_id}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from((container.firstElementChild || container) as HTMLElement).save().then(() => {
-                document.body.removeChild(container);
-            });
+            }).from(html, 'string').save();
         });
     };
 
