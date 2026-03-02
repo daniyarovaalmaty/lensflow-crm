@@ -10,12 +10,12 @@ import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
 
 const navItems = [
-    { href: '/laboratory/dashboard', label: 'Дашборд', icon: BarChart3, subRoles: ['lab_head', 'lab_admin'] },
+    { href: '/laboratory/dashboard', label: 'Дашборд', icon: BarChart3, subRoles: ['lab_head'] },
     { href: '/laboratory/production', label: 'Производство', icon: Columns3, subRoles: ['lab_head', 'lab_admin', 'lab_engineer', 'lab_quality', 'lab_logistics'] },
-    { href: '/laboratory/catalog', label: 'Каталог', icon: Package, subRoles: ['lab_head', 'lab_admin'] },
+    { href: '/laboratory/catalog', label: 'Каталог', icon: Package, subRoles: ['lab_head'] },
     { href: '/laboratory/accountant', label: 'Финансы', icon: FileText, subRoles: ['lab_head', 'lab_admin', 'lab_accountant'] },
     { href: '/laboratory/counterparties', label: 'Контрагенты', icon: Building2, subRoles: ['lab_head', 'lab_admin'] },
-    { href: '/laboratory/staff', label: 'Сотрудники', icon: Users, subRoles: ['lab_head', 'lab_admin'] },
+    { href: '/laboratory/staff', label: 'Сотрудники', icon: Users, subRoles: ['lab_head'] },
 ];
 
 export default function LabNav() {
