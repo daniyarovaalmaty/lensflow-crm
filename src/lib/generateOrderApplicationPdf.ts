@@ -132,7 +132,7 @@ export function generateOrderApplicationPdf(order: OrderData): void {
         head: [lensHead],
         body: lensBody,
         styles: { fontSize: 9, cellPadding: 3, font: 'Roboto', lineColor: [229, 231, 235], lineWidth: 0.3 },
-        headStyles: { fillColor: [243, 244, 246], textColor: [55, 65, 81], fontSize: 8, font: 'Roboto' },
+        headStyles: { fillColor: [243, 244, 246], textColor: [55, 65, 81], fontSize: 8, font: 'Roboto', fontStyle: 'normal' },
         columnStyles: {
             0: { cellWidth: 12, halign: 'center' },
             1: { cellWidth: 'auto' },
@@ -171,7 +171,7 @@ export function generateOrderApplicationPdf(order: OrderData): void {
             head: [toricHead],
             body: toricBody,
             styles: { fontSize: 9, cellPadding: 3, font: 'Roboto', lineColor: [229, 231, 235], lineWidth: 0.3 },
-            headStyles: { fillColor: [243, 244, 246], textColor: [55, 65, 81], fontSize: 8, font: 'Roboto' },
+            headStyles: { fillColor: [243, 244, 246], textColor: [55, 65, 81], fontSize: 8, font: 'Roboto', fontStyle: 'normal' },
             theme: 'grid',
         });
 
