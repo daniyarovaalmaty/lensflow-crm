@@ -116,6 +116,8 @@ model Product {
   name        String
   category    String   // lens, solution, accessory
   sku         String?  @unique
+  name1c      String?  // Наименование в 1С
+  code        String?  // Код товара
   description String?
   price       Int      @default(0)
   unit        String   @default("шт")

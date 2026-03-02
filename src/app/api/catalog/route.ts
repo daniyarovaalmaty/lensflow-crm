@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         const subRole = session.user.subRole;
 
         if (subRole === 'optic_doctor') {
-            const stripped = products.map(({ price, ...rest }: any) => rest);
+            const stripped = products.map(({ price, name1c, code, ...rest }: any) => rest);
             return NextResponse.json(stripped);
         }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, category, sku, description, price, unit, sortOrder } = body;
+        const { name, category, sku, name1c, code, description, price, unit, sortOrder } = body;
 
         if (!name || !category) {
             return NextResponse.json({ error: 'name and category are required' }, { status: 400 });
@@ -77,6 +77,8 @@ export async function POST(request: NextRequest) {
                 name,
                 category,
                 sku: sku || undefined,
+                name1c: name1c || undefined,
+                code: code || undefined,
                 description: description || undefined,
                 price: Number(price) || 0,
                 unit: unit || 'шт',

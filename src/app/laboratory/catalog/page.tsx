@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Pencil, Trash2, X, Save, Package, Droplets, Wrench,
-    Search, DollarSign, Tag, Hash
+    Search, DollarSign, Tag, Hash, FileText, Barcode
 } from 'lucide-react';
 import type { SubRole } from '@/types/user';
 
@@ -14,6 +14,8 @@ interface Product {
     name: string;
     category: string;
     sku: string | null;
+    name1c: string | null;
+    code: string | null;
     description: string | null;
     price: number;
     unit: string;
@@ -53,6 +55,8 @@ export default function CatalogPage() {
     const [formCategory, setFormCategory] = useState('lens');
     const [formSku, setFormSku] = useState('');
     const [formDescription, setFormDescription] = useState('');
+    const [formName1c, setFormName1c] = useState('');
+    const [formCode, setFormCode] = useState('');
     const [formPrice, setFormPrice] = useState('');
     const [formUnit, setFormUnit] = useState('шт');
     const [formSortOrder, setFormSortOrder] = useState('0');
@@ -79,6 +83,8 @@ export default function CatalogPage() {
         setFormName('');
         setFormCategory('lens');
         setFormSku('');
+        setFormName1c('');
+        setFormCode('');
         setFormDescription('');
         setFormPrice('');
         setFormUnit('шт');
@@ -91,6 +97,8 @@ export default function CatalogPage() {
         setFormName(product.name);
         setFormCategory(product.category);
         setFormSku(product.sku || '');
+        setFormName1c(product.name1c || '');
+        setFormCode(product.code || '');
         setFormDescription(product.description || '');
         setFormPrice(String(product.price));
         setFormUnit(product.unit);
@@ -106,6 +114,8 @@ export default function CatalogPage() {
             name: formName.trim(),
             category: formCategory,
             sku: formSku.trim() || null,
+            name1c: formName1c.trim() || null,
+            code: formCode.trim() || null,
             description: formDescription.trim() || null,
             price: Number(formPrice) || 0,
             unit: formUnit,
@@ -292,6 +302,22 @@ export default function CatalogPage() {
                                         <span className="text-xs text-gray-400 font-mono">#{product.sku}</span>
                                     )}
                                 </div>
+                                {canEdit && (product.name1c || product.code) && (
+                                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100">
+                                        {product.name1c && (
+                                            <span className="text-xs text-gray-400 flex items-center gap-1" title="Наименование в 1С">
+                                                <FileText className="w-3 h-3" />
+                                                {product.name1c}
+                                            </span>
+                                        )}
+                                        {product.code && (
+                                            <span className="text-xs text-gray-400 font-mono flex items-center gap-1" title="Код товара">
+                                                <Barcode className="w-3 h-3" />
+                                                {product.code}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </motion.div>
                         ))}
                     </div>
@@ -389,6 +415,36 @@ export default function CatalogPage() {
                                         />
                                     </div>
                                 </div>
+                                {canEdit && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
+                                                <FileText className="w-4 h-4 text-gray-400" />
+                                                Наименование в 1С
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formName1c}
+                                                onChange={e => setFormName1c(e.target.value)}
+                                                placeholder="Линза контактная ортокератологическая"
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
+                                                <Barcode className="w-4 h-4 text-gray-400" />
+                                                Код
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formCode}
+                                                onChange={e => setFormCode(e.target.value)}
+                                                placeholder="001-ML-OKL"
+                                                className="input w-full"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 <div>
                                     <label className="text-sm font-medium text-gray-700 mb-1.5 block">Описание</label>
                                     <textarea

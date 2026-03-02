@@ -23,12 +23,14 @@ export async function PUT(
 
         const { id } = await params;
         const body = await request.json();
-        const { name, category, sku, description, price, unit, isActive, sortOrder } = body;
+        const { name, category, sku, name1c, code, description, price, unit, isActive, sortOrder } = body;
 
         const updateData: any = {};
         if (typeof name === 'string') updateData.name = name;
         if (typeof category === 'string') updateData.category = category;
         if (typeof sku === 'string') updateData.sku = sku || null;
+        if (typeof name1c === 'string') updateData.name1c = name1c || null;
+        if (typeof code === 'string') updateData.code = code || null;
         if (typeof description === 'string') updateData.description = description || null;
         if (price !== undefined) updateData.price = Number(price);
         if (typeof unit === 'string') updateData.unit = unit;
