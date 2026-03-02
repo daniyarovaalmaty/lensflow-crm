@@ -1024,18 +1024,63 @@ export default function ProductionHubPage() {
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                             >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
-                                        </label>
-                                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input w-full" />
+                                <div className="space-y-3 mt-3 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                    {/* Quick presets */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {([
+                                            { label: 'Вчера', key: 'yesterday' },
+                                            { label: 'Сегодня', key: 'today' },
+                                            { label: 'Неделя', key: 'week' },
+                                            { label: 'Месяц', key: 'month' },
+                                            { label: 'Полугодие', key: 'half_year' },
+                                            { label: 'Год', key: 'year' },
+                                            { label: 'Все время', key: 'all' },
+                                        ] as const).map(({ label, key }) => {
+                                            const getRange = (k: string): [string, string] => {
+                                                const today = new Date();
+                                                const toStr = (d: Date) => d.toISOString().split('T')[0];
+                                                const t = toStr(today);
+                                                switch (k) {
+                                                    case 'yesterday': { const y = new Date(today); y.setDate(y.getDate() - 1); return [toStr(y), toStr(y)]; }
+                                                    case 'today': return [t, t];
+                                                    case 'week': { const w = new Date(today); w.setDate(w.getDate() - 7); return [toStr(w), t]; }
+                                                    case 'month': { const m = new Date(today); m.setMonth(m.getMonth() - 1); return [toStr(m), t]; }
+                                                    case 'half_year': { const h = new Date(today); h.setMonth(h.getMonth() - 6); return [toStr(h), t]; }
+                                                    case 'year': { const yr = new Date(today); yr.setFullYear(yr.getFullYear() - 1); return [toStr(yr), t]; }
+                                                    case 'all': return ['', ''];
+                                                    default: return ['', ''];
+                                                }
+                                            };
+                                            const [from, to] = getRange(key);
+                                            const isActive = key === 'all' ? (!dateFrom && !dateTo) : (dateFrom === from && dateTo === to);
+                                            return (
+                                                <button
+                                                    key={key}
+                                                    onClick={() => { setDateFrom(from); setDateTo(to); }}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
+                                                            ? 'bg-blue-600 text-white shadow-sm'
+                                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                        }`}
+                                                >
+                                                    {label}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
-                                        </label>
-                                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
+                                    {/* Custom date range */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                                                <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
+                                            </label>
+                                            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                                                <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
+                                            </label>
+                                            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
