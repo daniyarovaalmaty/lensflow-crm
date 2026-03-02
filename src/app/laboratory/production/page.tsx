@@ -511,7 +511,7 @@ export default function ProductionHubPage() {
                                         const res = await fetch('/api/catalog');
                                         const catalog = res.ok ? await res.json() : [];
                                         const { generateZ2Excel } = await import('@/lib/generateZ2Pdf');
-                                        generateZ2Excel([order], catalog);
+                                        await generateZ2Excel([order], catalog);
                                     }}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
                                 >
