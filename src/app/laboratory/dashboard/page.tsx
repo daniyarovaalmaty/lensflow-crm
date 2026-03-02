@@ -297,7 +297,7 @@ export default function LabHeadDashboard() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-xl sm:text-2xl font-bold">Панель руководителя</h1>
+                            <h1 className="text-xl sm:text-2xl font-bold">Панель {subRole === 'lab_admin' ? 'администратора' : subRole === 'lab_accountant' ? 'бухгалтера' : 'руководителя'}</h1>
                             <p className="text-sm text-gray-400 mt-0.5">{SubRoleLabels[subRole]} • Ключевые показатели лаборатории</p>
                         </div>
                         <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -371,8 +371,8 @@ export default function LabHeadDashboard() {
                                     key={key}
                                     onClick={() => { setDateFrom(from); setDateTo(to); }}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
-                                            ? 'bg-blue-600 text-white shadow-sm'
-                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                         }`}
                                 >
                                     {label}
