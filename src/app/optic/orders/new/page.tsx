@@ -225,15 +225,23 @@ export default function NewOrderPage() {
     const handleDownloadInvoice = () => {
         if (!createdOrder) return;
         const html = generateInvoiceHTML(createdOrder);
-        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Счёт_${createdOrder.order_id}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        document.body.appendChild(container);
+
+        import('html2pdf.js').then(({ default: html2pdf }) => {
+            html2pdf().set({
+                margin: [10, 10, 10, 10],
+                filename: `Счёт_${createdOrder.order_id}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from((container.firstElementChild || container) as HTMLElement).save().then(() => {
+                document.body.removeChild(container);
+            });
+        });
     };
 
     const handlePrintInvoice = () => {

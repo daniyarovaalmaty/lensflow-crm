@@ -251,8 +251,24 @@ ${isUrgent ? `<div class="surcharge"><span class="label">\u0421\u0440\u043e\u044
 </div>
 </body></html>`;
 
-        const w = window.open('', '_blank');
-        if (w) { w.document.write(html); w.document.close(); w.focus(); w.print(); }
+        // Generate PDF using html2pdf.js
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        document.body.appendChild(container);
+
+        import('html2pdf.js').then(({ default: html2pdf }) => {
+            html2pdf().set({
+                margin: [10, 10, 10, 10],
+                filename: `Счёт_${order.order_id}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from((container.firstElementChild || container) as HTMLElement).save().then(() => {
+                document.body.removeChild(container);
+            });
+        });
     };
 
     const ParamRow = ({ label, value }: { label: string; value: any }) => (
