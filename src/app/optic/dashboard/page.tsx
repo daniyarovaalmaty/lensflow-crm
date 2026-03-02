@@ -165,16 +165,16 @@ export default function OpticDashboard() {
         const odQty = Number(od.qty) || 0;
         const osQty = Number(os.qty) || 0;
         const totalLenses = odQty + osQty;
-        const totalPrice = totalLenses * PRICE_PER_LENS;
+        const totalPrice = order.total_price || totalLenses * PRICE_PER_LENS;
         const dateStr = new Date(order.meta.created_at).toLocaleDateString('ru-RU');
 
-        const renderEyeRow = (label: string, eye: any, qty: number) => `
+        const renderEyeRow = (label: string, eye: any, qty: number, docName?: string) => `
             <tr>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;">MediLens — ${label}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;">${docName || 'MediLens — ' + label}</td>
                 <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">Km ${eye.km || '—'}, DIA ${eye.dia || '—'}, Dk ${eye.dk || '—'}</td>
                 <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${qty}</td>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</td>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${(qty * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">—</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">—</td>
             </tr>`;
 
         const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Счёт ${order.order_id}</title>
@@ -188,7 +188,7 @@ table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#f3f4f6;pa
 <div class="header"><div><div class="logo">LensFlow</div></div><div><div class="invoice-num">Счёт №${order.order_id}</div><div class="invoice-date">от ${dateStr}</div></div></div>
 <p><strong>Пациент:</strong> ${order.patient.name} | <strong>Врач:</strong> ${order.meta.doctor || '—'}${order.company ? ' | <strong>Компания:</strong> ' + order.company : ''}</p>
 <table><thead><tr><th>Наименование</th><th style="text-align:center">Параметры</th><th style="text-align:center">Кол-во</th><th style="text-align:right">Цена</th><th style="text-align:right">Сумма</th></tr></thead><tbody>
-${renderEyeRow('OD', od, odQty)}${renderEyeRow('OS', os, osQty)}
+${renderEyeRow('OD', od, odQty, (order as any).document_name_od)}${renderEyeRow('OS', os, osQty, (order as any).document_name_os)}
 </tbody></table>
 <div class="total">Итого: ${totalPrice.toLocaleString('ru-RU')} ₸</div>
 </body></html>`;

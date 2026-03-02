@@ -32,9 +32,9 @@ function generateInvoiceHTML(order: Order): string {
     const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
     const grandTotal = order.total_price || (afterDiscount + urgentAmt);
 
-    const renderEyeRow = (label: string, eye: any, qty: number) => qty > 0 ? `
+    const renderEyeRow = (label: string, eye: any, qty: number, docName?: string) => qty > 0 ? `
         <tr>
-            <td style="padding:10px 14px;border:1px solid #e5e7eb;">MediLens — ${label}</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;">${docName || 'MediLens — ' + label}</td>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">
                 ${eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : '—'},
                 Km ${eye.km || '—'}, DIA ${eye.dia || '—'}, Dk ${eye.dk || '—'}
@@ -42,8 +42,8 @@ function generateInvoiceHTML(order: Order): string {
                 ${eye.tor != null ? ', Тог. ' + eye.tor : ''}
             </td>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${qty}</td>
-            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</td>
-            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${(qty * PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">—</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">—</td>
         </tr>
     ` : '';
 
@@ -140,8 +140,8 @@ function generateInvoiceHTML(order: Order): string {
             </tr>
         </thead>
         <tbody>
-            ${renderEyeRow('OD (Правый глаз)', od, odQty)}
-            ${renderEyeRow('OS (Левый глаз)', os, osQty)}
+            ${renderEyeRow('OD (Правый глаз)', od, odQty, (order as any).document_name_od)}
+            ${renderEyeRow('OS (Левый глаз)', os, osQty, (order as any).document_name_os)}
             ${additionalProducts.map(p => renderProductRow(p)).join('')}
         </tbody>
     </table>
