@@ -476,19 +476,50 @@ export default function ProductionHubPage() {
                     className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mb-[5vh] max-h-[90vh] sm:max-h-none overflow-y-auto"
                 >
                     {/* Header */}
-                    <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 rounded-t-2xl flex items-center justify-between z-10">
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900">Заказ {order.order_id}</h2>
-                            <p className="text-sm text-gray-500">
-                                {OrderStatusLabels[order.status]} • {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
-                            </p>
+                    <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 rounded-t-2xl z-10">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">Заказ {order.order_id}</h2>
+                                <p className="text-sm text-gray-500">
+                                    {OrderStatusLabels[order.status]} • {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedOrderId(null)}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-500" />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setSelectedOrderId(null)}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                            <X className="w-5 h-5 text-gray-500" />
-                        </button>
+                        {/* Document actions bar for shipped orders */}
+                        {order.status === 'shipped' && (
+                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                                <span className="text-xs text-gray-400 font-medium mr-1">Документы:</span>
+                                <button
+                                    onClick={() => {
+                                        import('@/lib/generateM11Pdf').then(({ generateM11Pdf }) => {
+                                            generateM11Pdf([order]);
+                                        });
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
+                                >
+                                    <FileText className="w-3.5 h-3.5" />
+                                    М-11 Требование
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        const res = await fetch('/api/catalog');
+                                        const catalog = res.ok ? await res.json() : [];
+                                        const { generateZ2Pdf } = await import('@/lib/generateZ2Pdf');
+                                        generateZ2Pdf([order], catalog);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                >
+                                    <FileText className="w-3.5 h-3.5" />
+                                    З-2 Накладная
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="px-4 sm:px-6 py-4 space-y-5">
@@ -774,34 +805,7 @@ export default function ProductionHubPage() {
                                 </button>
                             )}
 
-                            {/* Shipping documents for lab team */}
-                            {order.status === 'shipped' && (
-                                <div className="flex gap-2 w-full pt-2 border-t border-gray-100">
-                                    <button
-                                        onClick={() => {
-                                            import('@/lib/generateM11Pdf').then(({ generateM11Pdf }) => {
-                                                generateM11Pdf([order]);
-                                            });
-                                        }}
-                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5 flex-1"
-                                    >
-                                        <FileText className="w-3.5 h-3.5" />
-                                        М-11 Требование
-                                    </button>
-                                    <button
-                                        onClick={async () => {
-                                            const res = await fetch('/api/catalog');
-                                            const catalog = res.ok ? await res.json() : [];
-                                            const { generateZ2Pdf } = await import('@/lib/generateZ2Pdf');
-                                            generateZ2Pdf([order], catalog);
-                                        }}
-                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5 flex-1"
-                                    >
-                                        <FileText className="w-3.5 h-3.5" />
-                                        З-2 Накладная
-                                    </button>
-                                </div>
-                            )}
+
 
                             {/* Delivered: show confirmation pending */}
                             {order.status === 'out_for_delivery' && (
