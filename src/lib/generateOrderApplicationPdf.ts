@@ -22,9 +22,10 @@ interface OrderData {
 export function generateOrderApplicationPdf(order: OrderData): void {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // Register Cyrillic font
+    // Register Cyrillic font — both normal and bold
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
     doc.setFont('Roboto', 'normal');
 
     const pageWidth = doc.internal.pageSize.getWidth();

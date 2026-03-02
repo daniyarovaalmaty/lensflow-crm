@@ -25,9 +25,11 @@ const PRICE_PER_LENS = 17500; // fallback
 export function generateInvoicePdf(order: InvoiceOrder): void {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // Register Cyrillic font
+    // Register Cyrillic font — register as both normal AND bold
+    // so autoTable can never fall back to Helvetica for bold text
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
     doc.setFont('Roboto', 'normal');
 
     const pageWidth = doc.internal.pageSize.getWidth();
