@@ -34,7 +34,7 @@ export default function OpticDashboard() {
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+    const [filter, setFilter] = useState<OrderStatus | 'all' | 'unpaid'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     const [dateFrom, setDateFrom] = useState('');
@@ -88,7 +88,9 @@ export default function OpticDashboard() {
         let result = [...orders];
 
         // Status filter
-        if (filter !== 'all') {
+        if (filter === 'unpaid') {
+            result = result.filter(o => (o as any).payment_status !== 'paid');
+        } else if (filter !== 'all') {
             result = result.filter(o => o.status === filter);
         }
 
@@ -403,6 +405,20 @@ export default function OpticDashboard() {
                             </span>
                         </button>
                     ))}
+                    <button
+                        onClick={() => setFilter('unpaid')}
+                        className={`
+                            px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0
+                            ${filter === 'unpaid'
+                                ? 'bg-red-500 text-white shadow-sm'
+                                : 'bg-red-50 text-red-600 hover:bg-red-100'}
+                        `}
+                    >
+                        Неоплаченные
+                        <span className="ml-1 sm:ml-1.5 text-xs opacity-70">
+                            {orders.filter(o => (o as any).payment_status !== 'paid').length}
+                        </span>
+                    </button>
                 </div>
 
                 {/* Results count */}
