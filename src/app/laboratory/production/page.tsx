@@ -670,6 +670,30 @@ export default function ProductionHubPage() {
                                     Печать
                                 </button>
                             )}
+                            <button
+                                onClick={() => {
+                                    import('@/lib/generateOrderApplicationPdf').then(({ generateOrderApplicationPdf }) => {
+                                        generateOrderApplicationPdf({
+                                            order_id: order.order_id,
+                                            patient: order.patient,
+                                            meta: order.meta,
+                                            company: order.company,
+                                            inn: order.inn,
+                                            config: order.config,
+                                            is_urgent: order.is_urgent,
+                                            document_name_od: (order as any).document_name_od,
+                                            document_name_os: (order as any).document_name_os,
+                                            delivery_method: order.delivery_method,
+                                            delivery_address: order.delivery_address,
+                                            notes: order.notes,
+                                        });
+                                    });
+                                }}
+                                className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                                Скачать PDF
+                            </button>
 
                             {perms.canChangeStatus && order.status === 'new' && (() => {
                                 const canStart = canStartProduction(order);
