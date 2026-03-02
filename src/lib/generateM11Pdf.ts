@@ -1,16 +1,7 @@
 'use client';
 
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { RobotoRegular } from './fonts/roboto-regular';
+import * as XLSX from 'xlsx';
 
-/*
- * Map Russian color names → English material names by DK
- * DK 50  → Contraperm F2Mid (пробная)
- * DK 100 → Optimum extra
- * DK 125 → Optimum extreme
- * DK 180 → Optimum infinite
- */
 const DK_BRAND: Record<string, string> = {
     '50': 'Contraperm F2Mid',
     '100': 'Optimum extra',
@@ -49,28 +40,17 @@ interface OrderForM11 {
 }
 
 interface BlankEntry {
-    material: string;    // e.g. "Optimum extra green"
-    doc_name: string;    // 1C document name
+    material: string;
+    doc_name: string;
     qty: number;
 }
 
-export function generateM11Pdf(orders: OrderForM11[], docNumber?: string): void {
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-
-    // Register Cyrillic font
-    doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
-    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-    doc.setFont('Roboto', 'normal');
-
-    const pageW = doc.internal.pageSize.getWidth();
-    const margin = 12;
+export function generateM11Excel(orders: OrderForM11[], docNumber?: string): void {
     const dateStr = new Date().toLocaleDateString('ru-RU');
 
     // ── Aggregate blanks ──
     const blankMap = new Map<string, BlankEntry>();
-    const defectMap = new Map<string, BlankEntry>();
     let totalBlanks = 0;
-    let isKit = false;
 
     for (const order of orders) {
         for (const side of ['od', 'os'] as const) {
@@ -94,101 +74,118 @@ export function generateM11Pdf(orders: OrderForM11[], docNumber?: string): void 
             }
             totalBlanks += qty;
         }
-
-        // Defects
-        if (order.defects) {
-            for (const d of order.defects) {
-                const dQty = Number(d.qty) || 1;
-                // For defects, add to defect map
-                // We don't always know which specific blank it was, so count generically
-                const defKey = 'defect-general';
-                const existing = defectMap.get(defKey);
-                if (existing) {
-                    existing.qty += dQty;
-                } else {
-                    defectMap.set(defKey, { material: 'БРАК (общий)', doc_name: '', qty: dQty });
-                }
-            }
-        }
     }
 
-    // ── HEADER ──
-    doc.setFontSize(12);
-    doc.text('ТРЕБОВАНИЕ-НАКЛАДНАЯ', pageW / 2, 14, { align: 'center' });
-    doc.setFontSize(9);
-    doc.text(`№ ${docNumber || '______'}`, pageW / 2, 19, { align: 'center' });
+    // Build worksheet data
+    const data: any[][] = [];
 
-    doc.setFontSize(8);
-    doc.text('ТОО "Medinn Vision Lab"', margin, 26);
-    doc.text(`Дата составления: ${dateStr}`, pageW - margin, 26, { align: 'right' });
-    doc.text('Отправитель: Основной склад', margin, 31);
-    doc.text('Получатель: Основное подразделение', margin, 35);
+    // Header rows
+    data.push(['', 'ТРЕБОВАНИЕ-НАКЛАДНАЯ №', docNumber || '', '', '', '', '', '', '', '', '', '', '', 'Коды']);
+    data.push(['', 'ТОО "Medinn Vision Lab"', '', '', '', '', '', '', '', '', '', 'ОКПО', '']);
+    data.push([]);
+    data.push([
+        '', 'Дата составления', 'Код вида операции',
+        'Отправитель', '', '', '', 'Получатель', '', '', '',
+        'Корреспондирующий счет', '', 'Учетная единица'
+    ]);
+    data.push([
+        '', '', '',
+        'структурное подразделение', '', 'вид деятельности', '',
+        'структурное подразделение', '', 'вид деятельности', '',
+        'счет, субсчет', 'код аналит. учета', ''
+    ]);
+    data.push([
+        '', dateStr, '',
+        'Основной склад', '', '', '',
+        'Основное подразделение', '', '', '',
+        '8110', '', ''
+    ]);
+    data.push([]);
+    data.push(['', 'Через кого __________________________________________________________']);
+    data.push(['', 'Затребовал ______________________________', '', '', '', '', '', 'Разрешил ______________________________']);
+    data.push([]);
 
-    // ── TABLE ──
-    const head = [['Счёт', 'Наименование материала', 'Наименование (1С)', 'Ед.', 'Затребовано', 'Отпущено']];
-    const body: string[][] = [];
-    let rowNum = 0;
+    // Table header
+    data.push([
+        'Корреспондирующий счет', '', '',
+        'Материальные ценности', '', '', '',
+        'Единица измерения', '',
+        'Количество', '',
+        'Цена', 'Сумма без учета НДС',
+        'Порядковый номер'
+    ]);
+    data.push([
+        'счет, субсчет', 'код аналит. учета', '',
+        'наименование', '', '', 'номенкл. номер',
+        'код', 'наименование',
+        'затребовано', 'отпущено',
+        '', '', ''
+    ]);
+    data.push(['1', '2', '', '3', '', '', '4', '5', '6', '7', '8', '9', '10', '11']);
 
-    // Blanks
+    // Blank rows
     for (const [, entry] of blankMap) {
-        rowNum++;
-        body.push(['1310', entry.material, entry.doc_name, 'шт', String(entry.qty), 'ШТ']);
+        data.push([
+            '1310', '', '',
+            entry.material, '', '', entry.doc_name,
+            '796', 'шт',
+            entry.qty, 'ШТ',
+            '', '', ''
+        ]);
     }
 
     // Consumables
-    const totalLenses = totalBlanks;
     const consumables = [
-        { name: 'блистер двойной (1 линза)', qty: totalLenses },
-        { name: 'блистер односторонний (1 линза для диагност. набора)', qty: isKit ? totalLenses : 0 },
-        { name: 'бочонки для набора (126)', qty: 0 },
-        { name: 'этикетка с рулона (1 линза)', qty: totalLenses },
-        { name: 'этикетка/наклейка для набора', qty: 0 },
-        { name: 'воск', qty: Math.round(totalLenses * 0.05 * 100) / 100, unit: 'МЛГ' },
-        { name: 'контропол', qty: Math.round(totalLenses * 0.05 * 100) / 100, unit: 'МЛГ' },
-        { name: 'Коробка большая (126)', qty: 0 },
-        { name: 'Коробка маленькая (14шт)', qty: 0 },
-        { name: 'Коробка маленькая (28шт)', qty: 0 },
+        { name: 'блистер двойной (1 линза)', qty: totalBlanks, unit: 'шт' },
+        { name: 'блистер односторонний (1 линза для диагност. набора)', qty: 0, unit: 'шт' },
+        { name: 'бочонки для набора (126)', qty: 0, unit: 'шт' },
+        { name: 'этикетка с рулона (1 линза)', qty: totalBlanks, unit: 'шт' },
+        { name: 'этикетка/наклейка для набора', qty: 0, unit: 'шт' },
+        { name: 'воск', qty: Math.round(totalBlanks * 0.05 * 100) / 100, unit: 'МЛГ' },
+        { name: 'контропол', qty: Math.round(totalBlanks * 0.05 * 100) / 100, unit: 'МЛГ' },
+        { name: 'Коробка большая (126)', qty: 0, unit: 'шт' },
+        { name: 'Коробка маленькая (14шт)', qty: 0, unit: 'шт' },
+        { name: 'Коробка маленькая (28шт)', qty: 0, unit: 'шт' },
     ];
 
     for (const c of consumables) {
-        body.push(['1310', c.name, '', (c as any).unit || 'шт', String(c.qty), '']);
+        data.push(['1310', '', '', c.name, '', '', '', '796', c.unit, c.qty, '', '', '', '']);
     }
 
-    // Defects (same blanks + БРАК)
+    // Defect rows (same blanks + "(БРАК)")
     for (const [, entry] of blankMap) {
-        body.push(['1310', `${entry.material} (БРАК)`, entry.doc_name, 'шт', '', '']);
+        data.push(['1310', '', '', `${entry.material} (БРАК)`, '', '', entry.doc_name, '796', 'шт', '', '', '', '', '']);
     }
-
-    autoTable(doc, {
-        startY: 39,
-        margin: { left: margin, right: margin },
-        head,
-        body,
-        styles: { fontSize: 7.5, cellPadding: 2, font: 'Roboto', lineColor: [180, 180, 180], lineWidth: 0.3 },
-        headStyles: { fillColor: [240, 240, 240], textColor: [30, 30, 30], fontSize: 7, fontStyle: 'normal', font: 'Roboto' },
-        columnStyles: {
-            0: { cellWidth: 16, halign: 'center' },
-            1: { cellWidth: 70 },
-            2: { cellWidth: 'auto' },
-            3: { cellWidth: 14, halign: 'center' },
-            4: { cellWidth: 22, halign: 'center' },
-            5: { cellWidth: 22, halign: 'center' },
-        },
-        theme: 'grid',
-    });
-
-    // @ts-ignore
-    let y = (doc as any).lastAutoTable.finalY + 10;
 
     // Signatures
-    doc.setFontSize(8);
-    doc.text('Через кого ___________________________________________', margin, y);
-    y += 6;
-    doc.text('Затребовал ________________________', margin, y);
-    doc.text('Разрешил ________________________', pageW / 2, y);
-    y += 6;
-    doc.text('Отпустил ________________________', margin, y);
-    doc.text('Получил ________________________', pageW / 2, y);
+    data.push([]);
+    data.push(['', 'Через кого ____________________________________________________________']);
+    data.push(['', 'Затребовал ________________________', '', '', '', '', '', 'Разрешил ________________________']);
+    data.push(['', 'Отпустил ________________________', '', '', '', '', '', 'Получил ________________________']);
 
-    doc.save(`М-11_Требование_накладная_${dateStr.replace(/\./g, '-')}.pdf`);
+    // Create workbook
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Column widths
+    ws['!cols'] = [
+        { wch: 12 }, // A - счет
+        { wch: 14 }, // B
+        { wch: 6 },  // C
+        { wch: 45 }, // D - наименование
+        { wch: 4 },  // E
+        { wch: 8 },  // F
+        { wch: 55 }, // G - наименование 1С
+        { wch: 6 },  // H - код
+        { wch: 8 },  // I - ед.
+        { wch: 12 }, // J - затребовано
+        { wch: 10 }, // K - отпущено
+        { wch: 10 }, // L - цена
+        { wch: 14 }, // M - сумма
+        { wch: 12 }, // N - порядковый
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'М-11');
+
+    XLSX.writeFile(wb, `М-11_Требование_накладная_${dateStr.replace(/\./g, '-')}.xlsx`);
 }
