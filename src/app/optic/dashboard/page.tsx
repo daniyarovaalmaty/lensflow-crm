@@ -171,9 +171,9 @@ export default function OpticDashboard() {
         const dateStr = new Date(order.meta.created_at).toLocaleDateString('ru-RU');
         const fmt = (n: number) => n.toLocaleString('ru-RU');
 
-        // Per-eye prices from catalog (stored on order or fallback)
-        const odUnitPrice = odQty > 0 ? PRICE_PER_LENS : 0;
-        const osUnitPrice = osQty > 0 ? PRICE_PER_LENS : 0;
+        // Per-eye prices from order data (with fallback to PRICE_PER_LENS for old orders)
+        const odUnitPrice = (order as any).price_od || (odQty > 0 ? PRICE_PER_LENS : 0);
+        const osUnitPrice = (order as any).price_os || (osQty > 0 ? PRICE_PER_LENS : 0);
 
         // Build rows
         let rows = '';

@@ -113,6 +113,8 @@ export async function GET(request: NextRequest) {
                 products: (order.products as any[]) || [],
                 document_name_od: order.documentNameOd || undefined,
                 document_name_os: order.documentNameOs || undefined,
+                price_od: order.priceOd || undefined,
+                price_os: order.priceOs || undefined,
             };
         });
 
@@ -193,21 +195,37 @@ export async function POST(request: NextRequest) {
         const odTrial = config?.eyes?.od?.trial || false;
         const osTrial = config?.eyes?.os?.trial || false;
 
-        // Lookup lens catalog prices and name1c by characteristic code stored in "description"
+        // Lookup lens catalog prices (with DK-specific pricing) and name1c
         let odPrice = 0;
         let osPrice = 0;
+        let odUnitPrice = 0;
+        let osUnitPrice = 0;
         let documentNameOd: string | undefined;
         let documentNameOs: string | undefined;
 
         if (odChar || osChar) {
             const lensProducts = await prisma.product.findMany({
                 where: { category: 'lens', description: { in: [odChar, osChar].filter(Boolean) } },
-                select: { description: true, price: true, name1c: true },
+                select: { description: true, price: true, priceByDk: true, name1c: true },
             });
-            const priceMap = new Map(lensProducts.map(p => [p.description, p.price]));
-            const name1cMap = new Map(lensProducts.map(p => [p.description, p.name1c]));
-            odPrice = (priceMap.get(odChar) || 0) * odQty;
-            osPrice = (priceMap.get(osChar) || 0) * osQty;
+
+            // Get price for a lens based on DK value
+            const getLensPrice = (product: any, dk: string): number => {
+                if (product.priceByDk && typeof product.priceByDk === 'object') {
+                    const dkPrice = (product.priceByDk as Record<string, number>)[dk];
+                    if (dkPrice != null) return dkPrice;
+                }
+                return product.price || 0;
+            };
+
+            const productMap = new Map(lensProducts.map(p => [p.description, p]));
+            const odProduct = productMap.get(odChar);
+            const osProduct = productMap.get(osChar);
+
+            odUnitPrice = odProduct ? getLensPrice(odProduct, odDk) : 0;
+            osUnitPrice = osProduct ? getLensPrice(osProduct, osDk) : 0;
+            odPrice = odUnitPrice * odQty;
+            osPrice = osUnitPrice * osQty;
 
             // Construct 1C document names: name1c already contains type (торическая/сферическая)
             // If DK=50, it's always "пробная" — replace the type word in name1c
@@ -223,10 +241,10 @@ export async function POST(request: NextRequest) {
             };
 
             if (odChar && odQty > 0) {
-                documentNameOd = buildDocName(name1cMap.get(odChar) || null, odDk);
+                documentNameOd = buildDocName(odProduct?.name1c || null, odDk);
             }
             if (osChar && osQty > 0) {
-                documentNameOs = buildDocName(name1cMap.get(osChar) || null, osDk);
+                documentNameOs = buildDocName(osProduct?.name1c || null, osDk);
             }
         }
 
@@ -273,6 +291,8 @@ export async function POST(request: NextRequest) {
                 lensConfig: validatedData.config as any,
                 documentNameOd: documentNameOd || undefined,
                 documentNameOs: documentNameOs || undefined,
+                priceOd: odUnitPrice || undefined,
+                priceOs: osUnitPrice || undefined,
                 editDeadline: edit_deadline,
                 notes: validatedData.notes || undefined,
                 products: additionalProducts || undefined,

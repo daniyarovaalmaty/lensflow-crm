@@ -120,6 +120,7 @@ model Product {
   code        String?  // Код товара
   description String?
   price       Int      @default(0)
+  priceByDk   Json?    // { "50": 7600, "100": 18500, ... } DK-specific prices for lenses
   unit        String   @default("шт")
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
@@ -162,6 +163,8 @@ model Order {
   // 1C Document names (auto-constructed from catalog name1c + характеристика + DK)
   documentNameOd  String?  // Наименование в 1С для OD
   documentNameOs  String?  // Наименование в 1С для OS
+  priceOd         Int?     // Цена за единицу OD (из каталога по DK)
+  priceOs         Int?     // Цена за единицу OS (из каталога по DK)
 
   // Payment
   totalPrice      Int           @default(0)
