@@ -496,10 +496,9 @@ export default function ProductionHubPage() {
                             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                                 <span className="text-xs text-gray-400 font-medium mr-1">Документы:</span>
                                 <button
-                                    onClick={() => {
-                                        import('@/lib/generateM11Pdf').then(({ generateM11Excel }) => {
-                                            generateM11Excel([order]);
-                                        });
+                                    onClick={async () => {
+                                        const { generateM11Excel } = await import('@/lib/generateM11Pdf');
+                                        await generateM11Excel([order]);
                                     }}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
                                 >
