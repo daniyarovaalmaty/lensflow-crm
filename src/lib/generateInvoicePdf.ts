@@ -136,7 +136,6 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
         headStyles: {
             fillColor: [243, 244, 246],
             textColor: [55, 65, 81],
-            fontStyle: 'bold',
             fontSize: 8,
             font: 'Roboto',
         },
@@ -146,7 +145,7 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
             2: { cellWidth: 35, halign: 'center', fontSize: 8 },
             3: { cellWidth: 15, halign: 'center' },
             4: { cellWidth: 25, halign: 'right' },
-            5: { cellWidth: 25, halign: 'right', fontStyle: 'bold' },
+            5: { cellWidth: 25, halign: 'right' },
         },
         theme: 'grid',
     });
