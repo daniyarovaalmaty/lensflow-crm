@@ -209,12 +209,17 @@ export async function POST(request: NextRequest) {
             odPrice = (priceMap.get(odChar) || 0) * odQty;
             osPrice = (priceMap.get(osChar) || 0) * osQty;
 
-            // Construct 1C document names: name1c already contains type (торическая/сферическая/пробная)
-            // We only append DK value
+            // Construct 1C document names: name1c already contains type (торическая/сферическая)
+            // If DK=50, it's always "пробная" — replace the type word in name1c
             const buildDocName = (baseName1c: string | null, dk: string): string | undefined => {
                 if (!baseName1c) return undefined;
+                let name = baseName1c;
+                if (dk === '50') {
+                    // Replace торическая/сферическая with пробная for DK 50
+                    name = name.replace(/торическая|сферическая/i, 'пробная');
+                }
                 const dkPart = dk ? `DK ${dk}` : '';
-                return dkPart ? `${baseName1c}. ${dkPart}` : baseName1c;
+                return dkPart ? `${name}. ${dkPart}` : name;
             };
 
             if (odChar && odQty > 0) {
