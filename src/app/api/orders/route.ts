@@ -111,6 +111,8 @@ export async function GET(request: NextRequest) {
                 total_price: order.totalPrice || 0,
                 discount_percent: order.discountPercent ?? 5,
                 products: (order.products as any[]) || [],
+                document_name_od: order.documentNameOd || undefined,
+                document_name_os: order.documentNameOs || undefined,
             };
         });
 
@@ -186,18 +188,47 @@ export async function POST(request: NextRequest) {
         const osChar = config?.eyes?.os?.characteristic || '';
         const odQty = Number(config?.eyes?.od?.qty) || 0;
         const osQty = Number(config?.eyes?.os?.qty) || 0;
+        const odDk = config?.eyes?.od?.dk || '';
+        const osDk = config?.eyes?.os?.dk || '';
+        const odTrial = config?.eyes?.od?.trial || false;
+        const osTrial = config?.eyes?.os?.trial || false;
 
-        // Lookup lens catalog prices by characteristic code stored in "description"
+        // Lookup lens catalog prices and name1c by characteristic code stored in "description"
         let odPrice = 0;
         let osPrice = 0;
+        let documentNameOd: string | undefined;
+        let documentNameOs: string | undefined;
+
         if (odChar || osChar) {
             const lensProducts = await prisma.product.findMany({
                 where: { category: 'lens', description: { in: [odChar, osChar].filter(Boolean) } },
-                select: { description: true, price: true },
+                select: { description: true, price: true, name1c: true },
             });
             const priceMap = new Map(lensProducts.map(p => [p.description, p.price]));
+            const name1cMap = new Map(lensProducts.map(p => [p.description, p.name1c]));
             odPrice = (priceMap.get(odChar) || 0) * odQty;
             osPrice = (priceMap.get(osChar) || 0) * osQty;
+
+            // Construct 1C document names: name1c + тип + DK
+            const charLabels: Record<string, string> = {
+                toric: 'торическая',
+                spherical: 'сферическая',
+                rgp: 'RGP',
+            };
+
+            const buildDocName = (baseName1c: string | null, char: string, dk: string, isTrial: boolean): string | undefined => {
+                if (!baseName1c) return undefined;
+                const typePart = isTrial ? 'пробная' : (charLabels[char] || char);
+                const dkPart = dk ? `DK ${dk}` : '';
+                return `${baseName1c} ${typePart}${dkPart ? '. ' + dkPart : ''}`.trim();
+            };
+
+            if (odChar && odQty > 0) {
+                documentNameOd = buildDocName(name1cMap.get(odChar) || null, odChar, odDk, odTrial);
+            }
+            if (osChar && osQty > 0) {
+                documentNameOs = buildDocName(name1cMap.get(osChar) || null, osChar, osDk, osTrial);
+            }
         }
 
         // Additional products — look up real prices from catalog (client may not have them)
@@ -241,6 +272,8 @@ export async function POST(request: NextRequest) {
                 deliveryMethod: validatedData.delivery_method || undefined,
                 deliveryAddress: validatedData.delivery_address || undefined,
                 lensConfig: validatedData.config as any,
+                documentNameOd: documentNameOd || undefined,
+                documentNameOs: documentNameOs || undefined,
                 editDeadline: edit_deadline,
                 notes: validatedData.notes || undefined,
                 products: additionalProducts || undefined,
