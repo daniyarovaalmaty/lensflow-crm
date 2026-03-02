@@ -224,15 +224,22 @@ export default function NewOrderPage() {
 
     const handleDownloadInvoice = () => {
         if (!createdOrder) return;
-        const html = generateInvoiceHTML(createdOrder);
-        import('html2pdf.js').then(({ default: html2pdf }) => {
-            html2pdf().set({
-                margin: [10, 10, 10, 10],
-                filename: `Счёт_${createdOrder.order_id}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(html, 'string').save();
+        import('@/lib/generateInvoicePdf').then(({ generateInvoicePdf }) => {
+            generateInvoicePdf({
+                order_id: createdOrder.order_id,
+                patient: createdOrder.patient,
+                meta: createdOrder.meta,
+                company: createdOrder.company,
+                config: createdOrder.config,
+                is_urgent: createdOrder.is_urgent,
+                total_price: createdOrder.total_price,
+                discount_percent: (createdOrder as any).discount_percent,
+                document_name_od: (createdOrder as any).document_name_od,
+                document_name_os: (createdOrder as any).document_name_os,
+                price_od: (createdOrder as any).price_od,
+                price_os: (createdOrder as any).price_os,
+                products: (createdOrder as any).products,
+            });
         });
     };
 
