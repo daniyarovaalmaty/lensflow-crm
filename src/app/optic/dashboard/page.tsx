@@ -164,33 +164,91 @@ export default function OpticDashboard() {
         const os = order.config.eyes.os;
         const odQty = Number(od.qty) || 0;
         const osQty = Number(os.qty) || 0;
-        const totalLenses = odQty + osQty;
-        const totalPrice = order.total_price || totalLenses * PRICE_PER_LENS;
+        const additionalProducts = (order as any).products || [];
+        const discountPct = (order as any).discount_percent ?? 5;
+        const isUrgent = order.is_urgent;
+        const URGENT_PCT = 25;
         const dateStr = new Date(order.meta.created_at).toLocaleDateString('ru-RU');
+        const fmt = (n: number) => n.toLocaleString('ru-RU');
 
-        const renderEyeRow = (label: string, eye: any, qty: number, docName?: string) => `
-            <tr>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;">${docName || 'MediLens — ' + label}</td>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">Km ${eye.km || '—'}, DIA ${eye.dia || '—'}, Dk ${eye.dk || '—'}</td>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${qty}</td>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">—</td>
-                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">—</td>
+        // Per-eye prices from catalog (stored on order or fallback)
+        const odUnitPrice = odQty > 0 ? PRICE_PER_LENS : 0;
+        const osUnitPrice = osQty > 0 ? PRICE_PER_LENS : 0;
+
+        // Build rows
+        let rows = '';
+        let rowNum = 1;
+        let subtotal = 0;
+
+        if (odQty > 0) {
+            const lineTotal = odQty * odUnitPrice;
+            subtotal += lineTotal;
+            rows += `<tr>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${rowNum++}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;">${(order as any).document_name_od || 'MediLens \u2014 OD'}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;font-size:12px;">Km ${od.km || '\u2014'}, DIA ${od.dia || '\u2014'}, Dk ${od.dk || '\u2014'}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${odQty}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${fmt(odUnitPrice)} \u20b8</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${fmt(lineTotal)} \u20b8</td>
             </tr>`;
+        }
+        if (osQty > 0) {
+            const lineTotal = osQty * osUnitPrice;
+            subtotal += lineTotal;
+            rows += `<tr>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${rowNum++}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;">${(order as any).document_name_os || 'MediLens \u2014 OS'}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;font-size:12px;">Km ${os.km || '\u2014'}, DIA ${os.dia || '\u2014'}, Dk ${os.dk || '\u2014'}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${osQty}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${fmt(osUnitPrice)} \u20b8</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${fmt(lineTotal)} \u20b8</td>
+            </tr>`;
+        }
 
-        const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Счёт ${order.order_id}</title>
-<style>body{font-family:'Segoe UI',Arial,sans-serif;max-width:750px;margin:0 auto;padding:30px;color:#111}
+        // Additional products (accessories, solutions)
+        for (const prod of additionalProducts) {
+            const pPrice = prod.price || 0;
+            const pQty = prod.qty || 1;
+            const lineTotal = pPrice * pQty;
+            subtotal += lineTotal;
+            rows += `<tr>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${rowNum++}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;">${prod.name}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">\u2014</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${pQty}</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${fmt(pPrice)} \u20b8</td>
+                <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${fmt(lineTotal)} \u20b8</td>
+            </tr>`;
+        }
+
+        // Discount & totals
+        const discountAmt = Math.round(subtotal * discountPct / 100);
+        const afterDiscount = subtotal - discountAmt;
+        const urgentAmt = isUrgent ? Math.round(afterDiscount * URGENT_PCT / 100) : 0;
+        const grandTotal = order.total_price || (afterDiscount + urgentAmt);
+
+        const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>\u0421\u0447\u0451\u0442 ${order.order_id}</title>
+<style>body{font-family:'Segoe UI',Arial,sans-serif;max-width:800px;margin:0 auto;padding:30px;color:#111}
 .header{display:flex;justify-content:space-between;border-bottom:3px solid #2563eb;padding-bottom:16px;margin-bottom:24px}
 .logo{font-size:22px;font-weight:700;color:#2563eb}.invoice-num{font-size:18px;font-weight:700;text-align:right}
 .invoice-date{font-size:13px;color:#6b7280;text-align:right;margin-top:4px}
-table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#f3f4f6;padding:10px 14px;border:1px solid #e5e7eb;font-size:12px;text-transform:uppercase}
-.total{text-align:right;font-size:18px;font-weight:700;margin:12px 0}
+table{width:100%;border-collapse:collapse;margin:20px 0}th{background:#f3f4f6;padding:10px 14px;border:1px solid #e5e7eb;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+.totals{text-align:right;margin:16px 0;font-size:14px;line-height:2}
+.totals .label{color:#6b7280;margin-right:20px}.totals .discount{color:#059669}
+.totals .surcharge{color:#d97706}
+.totals .grand{font-size:20px;font-weight:700;border-top:2px solid #e5e7eb;padding-top:8px;margin-top:8px}
 @media print{body{padding:0}}</style></head><body>
-<div class="header"><div><div class="logo">LensFlow</div></div><div><div class="invoice-num">Счёт №${order.order_id}</div><div class="invoice-date">от ${dateStr}</div></div></div>
-<p><strong>Пациент:</strong> ${order.patient.name} | <strong>Врач:</strong> ${order.meta.doctor || '—'}${order.company ? ' | <strong>Компания:</strong> ' + order.company : ''}</p>
-<table><thead><tr><th>Наименование</th><th style="text-align:center">Параметры</th><th style="text-align:center">Кол-во</th><th style="text-align:right">Цена</th><th style="text-align:right">Сумма</th></tr></thead><tbody>
-${renderEyeRow('OD', od, odQty, (order as any).document_name_od)}${renderEyeRow('OS', os, osQty, (order as any).document_name_os)}
+<div class="header"><div><div class="logo">LensFlow</div></div><div><div class="invoice-num">\u0421\u0447\u0451\u0442 \u2116${order.order_id}</div><div class="invoice-date">\u043e\u0442 ${dateStr}</div></div></div>
+<p><strong>\u041f\u0430\u0446\u0438\u0435\u043d\u0442:</strong> ${order.patient.name} | <strong>\u0412\u0440\u0430\u0447:</strong> ${order.meta.doctor || '\u2014'}${order.company ? ' | <strong>\u041a\u043e\u043c\u043f\u0430\u043d\u0438\u044f:</strong> ' + order.company : ''}</p>
+<table><thead><tr><th style="width:30px">\u2116</th><th>\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435</th><th style="text-align:center">\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b</th><th style="text-align:center">\u041a\u043e\u043b-\u0432\u043e</th><th style="text-align:right">\u0426\u0435\u043d\u0430</th><th style="text-align:right">\u0421\u0443\u043c\u043c\u0430</th></tr></thead><tbody>
+${rows}
 </tbody></table>
-<div class="total">Итого: ${totalPrice.toLocaleString('ru-RU')} ₸</div>
+<div class="totals">
+<div><span class="label">\u0421\u0443\u043c\u043c\u0430 \u0431\u0435\u0437 \u0441\u043a\u0438\u0434\u043a\u0438:</span> ${fmt(subtotal)} \u20b8</div>
+<div class="discount"><span class="label">\u0421\u043a\u0438\u0434\u043a\u0430 ${discountPct}%:</span> -${fmt(discountAmt)} \u20b8</div>
+${isUrgent ? `<div class="surcharge"><span class="label">\u0421\u0440\u043e\u0447\u043d\u043e\u0441\u0442\u044c +${URGENT_PCT}%:</span> +${fmt(urgentAmt)} \u20b8</div>` : ''}
+<div class="grand"><span class="label">\u0418\u0442\u043e\u0433\u043e:</span> ${fmt(grandTotal)} \u20b8</div>
+</div>
 </body></html>`;
 
         const w = window.open('', '_blank');
