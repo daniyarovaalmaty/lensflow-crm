@@ -2,6 +2,7 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { RobotoRegular } from './fonts/roboto-regular';
 
 interface InvoiceOrder {
     order_id: string;
@@ -23,6 +24,12 @@ const PRICE_PER_LENS = 17500; // fallback
 
 export function generateInvoicePdf(order: InvoiceOrder): void {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    // Register Cyrillic font
+    doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto', 'normal');
+
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
     const contentWidth = pageWidth - margin * 2;
@@ -124,6 +131,7 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
             cellPadding: 3,
             lineColor: [229, 231, 235],
             lineWidth: 0.3,
+            font: 'Roboto',
         },
         headStyles: {
             fillColor: [243, 244, 246],
