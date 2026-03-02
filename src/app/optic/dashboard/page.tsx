@@ -254,8 +254,13 @@ ${isUrgent ? `<div class="surcharge"><span class="label">\u0421\u0440\u043e\u044
         // Generate PDF using html2pdf.js
         const container = document.createElement('div');
         container.innerHTML = html;
-        container.style.position = 'absolute';
-        container.style.left = '-9999px';
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '800px';
+        container.style.opacity = '0';
+        container.style.pointerEvents = 'none';
+        container.style.zIndex = '-1';
         document.body.appendChild(container);
 
         import('html2pdf.js').then(({ default: html2pdf }) => {
