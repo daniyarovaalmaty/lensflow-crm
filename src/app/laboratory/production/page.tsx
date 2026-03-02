@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
-    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download
+    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs } from '@/types/order';
@@ -774,6 +774,35 @@ export default function ProductionHubPage() {
                                 </button>
                             )}
 
+                            {/* Shipping documents for lab team */}
+                            {order.status === 'shipped' && (
+                                <div className="flex gap-2 w-full pt-2 border-t border-gray-100">
+                                    <button
+                                        onClick={() => {
+                                            import('@/lib/generateM11Pdf').then(({ generateM11Pdf }) => {
+                                                generateM11Pdf([order]);
+                                            });
+                                        }}
+                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5 flex-1"
+                                    >
+                                        <FileText className="w-3.5 h-3.5" />
+                                        М-11 Требование
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            const res = await fetch('/api/catalog');
+                                            const catalog = res.ok ? await res.json() : [];
+                                            const { generateZ2Pdf } = await import('@/lib/generateZ2Pdf');
+                                            generateZ2Pdf([order], catalog);
+                                        }}
+                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5 flex-1"
+                                    >
+                                        <FileText className="w-3.5 h-3.5" />
+                                        З-2 Накладная
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Delivered: show confirmation pending */}
                             {order.status === 'out_for_delivery' && (
                                 <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
@@ -1058,8 +1087,8 @@ export default function ProductionHubPage() {
                                                     key={key}
                                                     onClick={() => { setDateFrom(from); setDateTo(to); }}
                                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
-                                                            ? 'bg-blue-600 text-white shadow-sm'
-                                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                        ? 'bg-blue-600 text-white shadow-sm'
+                                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                                         }`}
                                                 >
                                                     {label}
