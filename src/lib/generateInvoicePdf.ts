@@ -138,6 +138,7 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
             textColor: [55, 65, 81],
             fontStyle: 'bold',
             fontSize: 8,
+            font: 'Roboto',
         },
         columnStyles: {
             0: { cellWidth: 10, halign: 'center' },
