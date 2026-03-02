@@ -214,7 +214,7 @@ export default function CounterpartyDetailPage() {
                                         {orders.map((order: any) => (
                                             <tr key={order.order_id} className="border-b border-gray-50 hover:bg-gray-50/50">
                                                 <td className="py-3 px-4">
-                                                    <Link href={`/laboratory/production`} className="text-blue-600 hover:underline font-medium text-xs">
+                                                    <Link href={`/laboratory/orders/${order.order_id}`} className="text-blue-600 hover:underline font-medium text-xs">
                                                         {order.order_id}
                                                     </Link>
                                                     {order.is_urgent && (
