@@ -209,25 +209,19 @@ export async function POST(request: NextRequest) {
             odPrice = (priceMap.get(odChar) || 0) * odQty;
             osPrice = (priceMap.get(osChar) || 0) * osQty;
 
-            // Construct 1C document names: name1c + тип + DK
-            const charLabels: Record<string, string> = {
-                toric: 'торическая',
-                spherical: 'сферическая',
-                rgp: 'RGP',
-            };
-
-            const buildDocName = (baseName1c: string | null, char: string, dk: string, isTrial: boolean): string | undefined => {
+            // Construct 1C document names: name1c already contains type (торическая/сферическая/пробная)
+            // We only append DK value
+            const buildDocName = (baseName1c: string | null, dk: string): string | undefined => {
                 if (!baseName1c) return undefined;
-                const typePart = isTrial ? 'пробная' : (charLabels[char] || char);
                 const dkPart = dk ? `DK ${dk}` : '';
-                return `${baseName1c} ${typePart}${dkPart ? '. ' + dkPart : ''}`.trim();
+                return dkPart ? `${baseName1c}. ${dkPart}` : baseName1c;
             };
 
             if (odChar && odQty > 0) {
-                documentNameOd = buildDocName(name1cMap.get(odChar) || null, odChar, odDk, odTrial);
+                documentNameOd = buildDocName(name1cMap.get(odChar) || null, odDk);
             }
             if (osChar && osQty > 0) {
-                documentNameOs = buildDocName(name1cMap.get(osChar) || null, osChar, osDk, osTrial);
+                documentNameOs = buildDocName(name1cMap.get(osChar) || null, osDk);
             }
         }
 
