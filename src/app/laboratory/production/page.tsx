@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
-    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip
+    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip,
+    CheckSquare, Square
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
@@ -36,6 +37,9 @@ export default function ProductionHubPage() {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    // Bulk selection state
+    const [bulkMode, setBulkMode] = useState(false);
+    const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<string>>(new Set());
     // Tick every minute to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
@@ -143,6 +147,38 @@ export default function ProductionHubPage() {
         } catch (error) {
             console.error('Failed to update status:', error);
         }
+    };
+
+    // Bulk status update
+    const bulkUpdateStatus = async (newStatus: OrderStatus) => {
+        const ids = Array.from(bulkSelectedIds);
+        if (ids.length === 0) return;
+        const confirmed = confirm(`Изменить статус для ${ids.length} заказ(ов) на «${OrderStatusLabels[newStatus]}»?`);
+        if (!confirmed) return;
+        try {
+            await Promise.all(ids.map(id =>
+                fetch(`/api/orders/${id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus }),
+                })
+            ));
+            setBulkSelectedIds(new Set());
+            setBulkMode(false);
+            await loadOrders();
+        } catch (error) {
+            console.error('Bulk update error:', error);
+            alert('Ошибка при массовом обновлении');
+        }
+    };
+
+    const toggleBulkSelect = (orderId: string) => {
+        setBulkSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(orderId)) next.delete(orderId);
+            else next.add(orderId);
+            return next;
+        });
     };
 
     const generateTracking = async (orderId: string) => {
@@ -452,16 +488,35 @@ export default function ProductionHubPage() {
 
         return (
             <div
-                onClick={() => { setSelectedOrderId(order.order_id); setShowDefectForm(false); }}
-                className="card cursor-pointer hover:shadow-md hover:border-blue-200 transition-all group"
+                onClick={() => {
+                    if (bulkMode) {
+                        toggleBulkSelect(order.order_id);
+                    } else {
+                        setSelectedOrderId(order.order_id); setShowDefectForm(false);
+                    }
+                }}
+                className={`card cursor-pointer hover:shadow-md transition-all group ${bulkMode && bulkSelectedIds.has(order.order_id)
+                    ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-300'
+                    : 'hover:border-blue-200'
+                    }`}
             >
                 <div className="space-y-2">
                     <div className="flex items-start justify-between">
-                        <div>
-                            <h4 className="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">
-                                {order.order_id}
-                            </h4>
-                            <p className="text-xs text-gray-600">{order.patient.name}</p>
+                        <div className="flex items-start gap-2">
+                            {bulkMode && (
+                                <div className="mt-0.5">
+                                    {bulkSelectedIds.has(order.order_id)
+                                        ? <CheckSquare className="w-4 h-4 text-blue-600" />
+                                        : <Square className="w-4 h-4 text-gray-400" />
+                                    }
+                                </div>
+                            )}
+                            <div>
+                                <h4 className="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">
+                                    {order.order_id}
+                                </h4>
+                                <p className="text-xs text-gray-600">{order.patient.name}</p>
+                            </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                             <span className="text-xs text-gray-400">
@@ -1209,6 +1264,13 @@ return (
                             Расходные мат.
                         </button>
                     )}
+                    <button
+                        onClick={() => { setBulkMode(!bulkMode); setBulkSelectedIds(new Set()); }}
+                        className={`btn gap-2 whitespace-nowrap ${bulkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-secondary'}`}
+                    >
+                        <CheckSquare className="w-4 h-4" />
+                        {bulkMode ? 'Отмена' : 'Выбрать'}
+                    </button>
                 </div>
 
                 <AnimatePresence>
@@ -1406,6 +1468,38 @@ return (
                 </div>
             </div>
         )}
+
+        {/* Bulk action floating bar */}
+        <AnimatePresence>
+            {bulkMode && bulkSelectedIds.size > 0 && (
+                <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-200 shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-3 flex-wrap max-w-[95vw]"
+                >
+                    <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                        Выбрано: {bulkSelectedIds.size}
+                    </span>
+                    <div className="w-px h-6 bg-gray-200" />
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <button onClick={() => bulkUpdateStatus('in_production')} className="btn text-xs py-1.5 px-3 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg">В работу</button>
+                        <button onClick={() => bulkUpdateStatus('ready')} className="btn text-xs py-1.5 px-3 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg">Готово</button>
+                        <button onClick={() => bulkUpdateStatus('shipped')} className="btn text-xs py-1.5 px-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg">Отгрузить</button>
+                        <button onClick={() => bulkUpdateStatus('rework')} className="btn text-xs py-1.5 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg">На доработку</button>
+                        <button onClick={() => bulkUpdateStatus('accountant_review')} className="btn text-xs py-1.5 px-3 bg-cyan-100 text-cyan-700 hover:bg-cyan-200 rounded-lg">Бухгалтеру</button>
+                        <button onClick={() => bulkUpdateStatus('out_for_delivery')} className="btn text-xs py-1.5 px-3 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg">В доставку</button>
+                        <button onClick={() => bulkUpdateStatus('cancelled')} className="btn text-xs py-1.5 px-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg">Отменить</button>
+                    </div>
+                    <button
+                        onClick={() => { setBulkSelectedIds(new Set()); setBulkMode(false); }}
+                        className="ml-2 p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </motion.div>
+            )}
+        </AnimatePresence>
 
         {/* Modals — called as functions, NOT as <Component/>, to avoid
                 React treating them as new component types each render which
