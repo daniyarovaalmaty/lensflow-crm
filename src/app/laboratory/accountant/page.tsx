@@ -35,6 +35,80 @@ function getLensPrice(char: string | undefined): number {
     return 17_500;
 }
 
+function generateInvoice(order: Order) {
+    const wb = XLSX.utils.book_new();
+    const od = order.config.eyes.od;
+    const os = order.config.eyes.os;
+    const odQty = Number(od?.qty) || 0;
+    const osQty = Number(os?.qty) || 0;
+    const odChar = od?.characteristic as string | undefined;
+    const osChar = os?.characteristic as string | undefined;
+    const odPrice = getLensPrice(odChar);
+    const osPrice = getLensPrice(osChar);
+    const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number }> || [];
+    const discountPct = (order as any).discount_percent ?? 5;
+    const date = new Date(order.meta.created_at);
+    const dateStr = date.toLocaleDateString('ru-RU');
+
+    // Build invoice rows
+    const rows: any[][] = [
+        ['', '', '', '', ''],
+        ['', `СЧЁТ НА ОПЛАТУ № ${order.order_id}`, '', '', ''],
+        ['', `от ${dateStr}`, '', '', ''],
+        ['', '', '', '', ''],
+        ['', 'Поставщик:', 'ТОО "MedInVision"', '', ''],
+        ['', 'Покупатель:', order.company || order.patient.name, '', ''],
+        ['', 'Врач:', order.meta.doctor || '—', '', ''],
+        ['', '', '', '', ''],
+        ['№', 'Наименование', 'Кол-во', 'Цена, ₸', 'Сумма, ₸'],
+    ];
+
+    let lineNo = 1;
+    if (odQty > 0) {
+        const charLabel = odChar ? (CharacteristicLabels[odChar as Characteristic] || odChar) : 'Стандарт';
+        rows.push([lineNo++, `OD — Ортокератологическая линза MediLens (${charLabel})`, odQty, odPrice, odQty * odPrice]);
+    }
+    if (osQty > 0) {
+        const charLabel = osChar ? (CharacteristicLabels[osChar as Characteristic] || osChar) : 'Стандарт';
+        rows.push([lineNo++, `OS — Ортокератологическая линза MediLens (${charLabel})`, osQty, osPrice, osQty * osPrice]);
+    }
+    additionalProducts.forEach(p => {
+        rows.push([lineNo++, p.name, p.qty || 1, p.price || 0, (p.price || 0) * (p.qty || 1)]);
+    });
+
+    const subtotal = (odQty * odPrice) + (osQty * osPrice) + additionalProducts.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
+    const discountAmt = Math.round(subtotal * discountPct / 100);
+    const afterDiscount = subtotal - discountAmt;
+    const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+    const total = afterDiscount + urgentAmt;
+
+    rows.push(['', '', '', '', '']);
+    rows.push(['', '', '', 'Подитог:', subtotal]);
+    if (discountPct > 0) rows.push(['', '', '', `Скидка ${discountPct}%:`, -discountAmt]);
+    if (order.is_urgent) rows.push(['', '', '', `Срочность ${URGENT_SURCHARGE_PCT}%:`, urgentAmt]);
+    rows.push(['', '', '', 'ИТОГО:', total]);
+    rows.push(['', '', '', '', '']);
+    rows.push(['', '', '', '', '']);
+    rows.push(['', 'Пациент:', order.patient.name, '', '']);
+    rows.push(['', 'Телефон:', order.patient.phone, '', '']);
+    if (order.delivery_address) rows.push(['', 'Адрес доставки:', order.delivery_address, '', '']);
+    if (order.is_urgent) rows.push(['', 'Тип:', 'СРОЧНЫЙ', '', '']);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // Column widths
+    ws['!cols'] = [
+        { wch: 5 },   // №
+        { wch: 50 },  // Наименование
+        { wch: 10 },  // Кол-во
+        { wch: 15 },  // Цена
+        { wch: 15 },  // Сумма
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Счёт');
+    XLSX.writeFile(wb, `Счёт_${order.order_id}_${dateStr.replace(/\./g, '-')}.xlsx`);
+}
+
 const PAYMENT_OPTIONS: { value: PaymentStatus; label: string; icon: any; color: string }[] = [
     { value: 'unpaid', label: 'Не оплачен', icon: XCircle, color: 'text-red-600 bg-red-50 border-red-200' },
     { value: 'partial', label: 'Частично', icon: Clock, color: 'text-amber-600 bg-amber-50 border-amber-200' },
@@ -522,6 +596,18 @@ export default function AccountantPage() {
                                                                                     )}
                                                                                 </div>
                                                                             </div>
+                                                                        </div>
+
+                                                                        {/* Download invoice button */}
+                                                                        <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                                                                            <span className="text-sm font-semibold text-gray-700">Счёт на оплату</span>
+                                                                            <button
+                                                                                onClick={() => generateInvoice(order)}
+                                                                                className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-lg transition-colors"
+                                                                            >
+                                                                                <Download className="w-3.5 h-3.5" />
+                                                                                Скачать счёт (Excel)
+                                                                            </button>
                                                                         </div>
                                                                     </div>
                                                                 </motion.div>
