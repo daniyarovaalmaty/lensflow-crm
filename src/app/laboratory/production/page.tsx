@@ -900,32 +900,34 @@ export default function ProductionHubPage() {
                                 </button>
                             )}
                             {perms.canSendToAccountant && order.status === 'docs_ready' && (
-                                <>
-                                    {/* Show closing documents for admin */}
-                                    <div className="w-full mb-3">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Paperclip className="w-3.5 h-3.5 text-gray-500" />
-                                            <span className="text-xs font-semibold text-gray-700">Закрывающие документы</span>
+                                <div className="w-full space-y-3">
+                                    {/* Closing documents card */}
+                                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Paperclip className="w-4 h-4 text-gray-500" />
+                                            <span className="text-sm font-semibold text-gray-700">Закрывающие документы</span>
                                         </div>
                                         {(() => {
                                             const docs = closingDocs[order.order_id];
-                                            if (!docs) return <p className="text-[10px] text-gray-400">Загрузка...</p>;
-                                            if (docs.length === 0) return <p className="text-[10px] text-gray-400">Нет документов</p>;
+                                            if (!docs) return <p className="text-xs text-gray-400">Загрузка...</p>;
+                                            if (docs.length === 0) return <p className="text-xs text-gray-400">Нет документов</p>;
                                             return (
-                                                <div className="space-y-1">
+                                                <div className="space-y-2">
                                                     {docs.map((doc, i) => (
-                                                        <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded px-2 py-1.5">
-                                                            <Paperclip className="w-3 h-3 text-gray-400 shrink-0" />
+                                                        <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2.5">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                                                                <FileText className="w-4 h-4 text-blue-500" />
+                                                            </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <p className="text-[11px] font-medium text-gray-800 truncate">{doc.name}</p>
-                                                                <p className="text-[9px] text-gray-400">{(doc.size / 1024).toFixed(1)} KB</p>
+                                                                <p className="text-xs font-medium text-gray-800 truncate">{doc.name}</p>
+                                                                <p className="text-[10px] text-gray-400">{(doc.size / 1024).toFixed(1)} KB</p>
                                                             </div>
                                                             <button
                                                                 onClick={() => downloadClosingDoc(order.order_id, doc.index, doc.name)}
-                                                                className="text-primary-600 hover:text-primary-700 p-0.5"
+                                                                className="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 flex items-center justify-center transition-colors shrink-0"
                                                                 title="Скачать"
                                                             >
-                                                                <Download className="w-3.5 h-3.5" />
+                                                                <Download className="w-4 h-4 text-primary-600" />
                                                             </button>
                                                         </div>
                                                     ))}
@@ -933,14 +935,15 @@ export default function ProductionHubPage() {
                                             );
                                         })()}
                                     </div>
+                                    {/* Delivery button */}
                                     <button
                                         onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
-                                        className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
+                                        className="btn btn-primary text-xs py-2.5 px-6 gap-2 w-full"
                                     >
-                                        <Truck className="w-3.5 h-3.5" />
+                                        <Truck className="w-4 h-4" />
                                         В доставку
                                     </button>
-                                </>
+                                </div>
                             )}
                             {perms.canChangeStatus && order.status === 'rework' && (
                                 <button
