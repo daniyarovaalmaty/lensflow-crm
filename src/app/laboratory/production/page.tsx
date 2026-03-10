@@ -666,6 +666,45 @@ export default function ProductionHubPage() {
                             </div>
                         )}
 
+                        {/* Closing documents — shown at top for docs_ready / out_for_delivery / delivered */}
+                        {['docs_ready', 'out_for_delivery', 'delivered'].includes(order.status) && (() => {
+                            const docs = closingDocs[order.order_id];
+                            return (
+                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Paperclip className="w-4 h-4 text-gray-500" />
+                                        <span className="text-sm font-semibold text-gray-700">Закрывающие документы</span>
+                                    </div>
+                                    {!docs ? (
+                                        <p className="text-xs text-gray-400">Загрузка...</p>
+                                    ) : docs.length === 0 ? (
+                                        <p className="text-xs text-gray-400">Нет документов</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {docs.map((doc, i) => (
+                                                <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2.5">
+                                                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                                                        <FileText className="w-4 h-4 text-blue-500" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs font-medium text-gray-800 truncate">{doc.name}</p>
+                                                        <p className="text-[10px] text-gray-400">{(doc.size / 1024).toFixed(1)} KB</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => downloadClosingDoc(order.order_id, doc.index, doc.name)}
+                                                        className="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 flex items-center justify-center transition-colors shrink-0"
+                                                        title="Скачать"
+                                                    >
+                                                        <Download className="w-4 h-4 text-primary-600" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
                         {/* Production timer */}
                         {order.status === 'in_production' && order.production_started_at && (
                             <ProductionTimer startTime={order.production_started_at} />
@@ -787,631 +826,590 @@ export default function ProductionHubPage() {
                         )}
 
                         {/* Status actions — gated by permissions */}
-                        <div className="pt-2 border-t border-gray-100 space-y-3">
-                            {/* Closing documents section - shown for docs_ready */}
-                            {perms.canSendToAccountant && order.status === 'docs_ready' && (
-                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Paperclip className="w-4 h-4 text-gray-500" />
-                                        <span className="text-sm font-semibold text-gray-700">Закрывающие документы</span>
-                                    </div>
-                                    {(() => {
-                                        const docs = closingDocs[order.order_id];
-                                        if (!docs) return <p className="text-xs text-gray-400">Загрузка...</p>;
-                                        if (docs.length === 0) return <p className="text-xs text-gray-400">Нет документов</p>;
-                                        return (
-                                            <div className="space-y-2">
-                                                {docs.map((doc, i) => (
-                                                    <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2.5">
-                                                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                                                            <FileText className="w-4 h-4 text-blue-500" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-xs font-medium text-gray-800 truncate">{doc.name}</p>
-                                                            <p className="text-[10px] text-gray-400">{(doc.size / 1024).toFixed(1)} KB</p>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => downloadClosingDoc(order.order_id, doc.index, doc.name)}
-                                                            className="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 flex items-center justify-center transition-colors shrink-0"
-                                                            title="Скачать"
-                                                        >
-                                                            <Download className="w-4 h-4 text-primary-600" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                            )}
-
-                            {/* Action buttons row */}
-                            <div className="flex gap-2 flex-wrap">
-                                {perms.canPrint && (
-                                    <button
-                                        onClick={() => handlePrint(order)}
-                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
-                                    >
-                                        <Printer className="w-3.5 h-3.5" />
-                                        Печать
-                                    </button>
-                                )}
+                        <div className="flex gap-2 flex-wrap pt-2 border-t border-gray-100">
+                            {perms.canPrint && (
                                 <button
-                                    onClick={() => {
-                                        import('@/lib/generateOrderApplicationPdf').then(({ generateOrderApplicationPdf }) => {
-                                            generateOrderApplicationPdf({
-                                                order_id: order.order_id,
-                                                patient: order.patient,
-                                                meta: order.meta,
-                                                company: order.company,
-                                                inn: order.inn,
-                                                config: order.config,
-                                                is_urgent: order.is_urgent,
-                                                document_name_od: (order as any).document_name_od,
-                                                document_name_os: (order as any).document_name_os,
-                                                delivery_method: order.delivery_method,
-                                                delivery_address: order.delivery_address,
-                                                notes: order.notes,
-                                            });
-                                        });
-                                    }}
+                                    onClick={() => handlePrint(order)}
                                     className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
                                 >
-                                    <Download className="w-3.5 h-3.5" />
-                                    Скачать PDF
+                                    <Printer className="w-3.5 h-3.5" />
+                                    Печать
                                 </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    import('@/lib/generateOrderApplicationPdf').then(({ generateOrderApplicationPdf }) => {
+                                        generateOrderApplicationPdf({
+                                            order_id: order.order_id,
+                                            patient: order.patient,
+                                            meta: order.meta,
+                                            company: order.company,
+                                            inn: order.inn,
+                                            config: order.config,
+                                            is_urgent: order.is_urgent,
+                                            document_name_od: (order as any).document_name_od,
+                                            document_name_os: (order as any).document_name_os,
+                                            delivery_method: order.delivery_method,
+                                            delivery_address: order.delivery_address,
+                                            notes: order.notes,
+                                        });
+                                    });
+                                }}
+                                className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                                Скачать PDF
+                            </button>
 
-                                {perms.canChangeStatus && order.status === 'new' && (() => {
-                                    const canStart = canStartProduction(order);
-                                    const remainMs = editWindowRemainingMs(order);
-                                    const h = Math.floor(remainMs / 3600_000);
-                                    const m = Math.floor((remainMs % 3600_000) / 60_000);
-                                    const countdownStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;
-                                    return (
-                                        <div className="flex-1">
-                                            {!canStart && (
-                                                <div className="text-xs text-amber-600 flex items-center gap-1 mb-1.5">
-                                                    <Clock className="w-3.5 h-3.5" />
-                                                    Доступно через {countdownStr} — врач редактирует
-                                                </div>
-                                            )}
-                                            <button
-                                                onClick={() => { if (canStart) { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); } }}
-                                                disabled={!canStart}
-                                                title={!canStart ? `Заказ можно взять в работу через ${countdownStr}` : undefined}
-                                                className={`btn text-xs py-2 px-4 w-full ${canStart ? 'btn-primary' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                                            >
-                                                {canStart ? 'В работу' : `Заблокировано (${countdownStr})`}
-                                            </button>
-                                        </div>
-                                    );
-                                })()}
-
-                                {perms.canMarkReady && order.status === 'in_production' && (
-                                    <button
-                                        onClick={() => { updateOrderStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
-                                        className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                    >
-                                        Готово
-                                    </button>
-                                )}
-                                {order.status === 'ready' && (
-                                    <>
-                                        {perms.canMarkRework && (
-                                            <button
-                                                onClick={() => { updateOrderStatus(order.order_id, 'rework'); setSelectedOrderId(null); }}
-                                                className="btn text-xs py-2 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors gap-1.5"
-                                            >
-                                                <RotateCcw className="w-3.5 h-3.5" />
-                                                На доработку
-                                            </button>
+                            {perms.canChangeStatus && order.status === 'new' && (() => {
+                                const canStart = canStartProduction(order);
+                                const remainMs = editWindowRemainingMs(order);
+                                const h = Math.floor(remainMs / 3600_000);
+                                const m = Math.floor((remainMs % 3600_000) / 60_000);
+                                const countdownStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;
+                                return (
+                                    <div className="flex-1">
+                                        {!canStart && (
+                                            <div className="text-xs text-amber-600 flex items-center gap-1 mb-1.5">
+                                                <Clock className="w-3.5 h-3.5" />
+                                                Доступно через {countdownStr} — врач редактирует
+                                            </div>
                                         )}
-                                        {perms.canShip && (
-                                            <button
-                                                onClick={async () => {
-                                                    await generateTracking(order.order_id);
-                                                    await updateOrderStatus(order.order_id, 'shipped');
-                                                    setSelectedOrderId(null);
-                                                }}
-                                                className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                            >
-                                                Отгрузить
-                                            </button>
-                                        )}
-                                    </>
-                                )}
+                                        <button
+                                            onClick={() => { if (canStart) { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); } }}
+                                            disabled={!canStart}
+                                            title={!canStart ? `Заказ можно взять в работу через ${countdownStr}` : undefined}
+                                            className={`btn text-xs py-2 px-4 w-full ${canStart ? 'btn-primary' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                        >
+                                            {canStart ? 'В работу' : `Заблокировано (${countdownStr})`}
+                                        </button>
+                                    </div>
+                                );
+                            })()}
 
-                                {/* Accountant workflow: shipped → accountant → docs_ready → out_for_delivery */}
-                                {perms.canSendToAccountant && order.status === 'shipped' && (
-                                    <button
-                                        onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
-                                        className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
-                                    >
-                                        Отправить бухгалтеру
-                                    </button>
-                                )}
-                                {perms.canProcessDocs && order.status === 'accountant_review' && (
-                                    <button
-                                        onClick={() => { updateOrderStatus(order.order_id, 'docs_ready'); setSelectedOrderId(null); }}
-                                        className="btn text-xs py-2 px-4 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
-                                    >
-                                        Документы готовы
-                                    </button>
-                                )}
-                                {perms.canChangeStatus && order.status === 'rework' && (
-                                    <button
-                                        onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
-                                        className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                    >
-                                        Вернуть в работу
-                                    </button>
-                                )}
-                            </div>
+                            {perms.canMarkReady && order.status === 'in_production' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
+                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                >
+                                    Готово
+                                </button>
+                            )}
+                            {order.status === 'ready' && (
+                                <>
+                                    {perms.canMarkRework && (
+                                        <button
+                                            onClick={() => { updateOrderStatus(order.order_id, 'rework'); setSelectedOrderId(null); }}
+                                            className="btn text-xs py-2 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors gap-1.5"
+                                        >
+                                            <RotateCcw className="w-3.5 h-3.5" />
+                                            На доработку
+                                        </button>
+                                    )}
+                                    {perms.canShip && (
+                                        <button
+                                            onClick={async () => {
+                                                await generateTracking(order.order_id);
+                                                await updateOrderStatus(order.order_id, 'shipped');
+                                                setSelectedOrderId(null);
+                                            }}
+                                            className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                        >
+                                            Отгрузить
+                                        </button>
+                                    )}
+                                </>
+                            )}
 
-                            {/* Delivery button — full width, separate from other buttons */}
+                            {/* Accountant workflow: shipped → accountant → docs_ready → out_for_delivery */}
+                            {perms.canSendToAccountant && order.status === 'shipped' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
+                                    className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
+                                >
+                                    Отправить бухгалтеру
+                                </button>
+                            )}
+                            {perms.canProcessDocs && order.status === 'accountant_review' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'docs_ready'); setSelectedOrderId(null); }}
+                                    className="btn text-xs py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg gap-1.5"
+                                >
+                                    Документы готовы
+                                </button>
+                            )}
                             {perms.canSendToAccountant && order.status === 'docs_ready' && (
                                 <button
                                     onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-sm py-2.5 w-full gap-2"
+                                    className="btn text-xs py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg gap-1.5"
                                 >
-                                    <Truck className="w-4 h-4" />
+                                    <Truck className="w-3.5 h-3.5" />
                                     В доставку
                                 </button>
                             )}
-
-
-
-
-                            {/* Delivered: show confirmation pending */}
-                            {order.status === 'out_for_delivery' && (
-                                <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
-                                    <MapPin className="w-3.5 h-3.5" />
-                                    Ждём подтверждения от врача
-                                </div>
-                            )}
-
-                            {order.status === 'delivered' && (
-                                <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
-                                    <CheckCircle className="w-3.5 h-3.5" />
-                                    Получение подтверждено
-                                    {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-        );
-    };
-
-    // ==================== DEFECT DETAIL MODAL ====================
-    const DefectModal = () => {
-        if (!selectedDefect) return null;
-        const { order, defect } = selectedDefect;
-
-        return (
-            <div
-                className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] overflow-y-auto"
-                onClick={() => setSelectedDefectId(null)}
-            >
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    onClick={e => e.stopPropagation()}
-                    className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mb-[5vh]"
-                >
-                    <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 rounded-t-2xl flex items-center justify-between z-10">
-                        <div>
-                            <h2 className="text-lg font-bold text-red-700 flex items-center gap-2">
-                                <AlertTriangle className="w-5 h-5" />
-                                Акт брака
-                            </h2>
-                            <p className="text-sm text-gray-500">{defect.id}</p>
-                        </div>
-                        <button onClick={() => setSelectedDefectId(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <X className="w-5 h-5 text-gray-500" />
-                        </button>
-                    </div>
-
-                    <div className="px-6 py-4 space-y-4">
-                        {/* Defect info */}
-                        <div className="bg-red-50 rounded-xl p-4 space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Количество</span>
-                                <span className="font-bold text-red-700">{defect.qty} шт.</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Дата</span>
-                                <span className="font-medium">{new Date(defect.date).toLocaleString('ru-RU')}</span>
-                            </div>
-                            {defect.note && (
-                                <div className="text-sm">
-                                    <span className="text-gray-600">Причина: </span>
-                                    <span className="font-medium">{defect.note}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Order info */}
-                        <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                            <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Данные заказа</h4>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Заказ</span>
-                                <span className="font-semibold">{order.order_id}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Пациент</span>
-                                <span className="font-medium">{order.patient.name}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Телефон</span>
-                                <span className="font-medium">{order.patient.phone}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Врач</span>
-                                <span className="font-medium">{order.meta.doctor || '—'}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Оптика</span>
-                                <span className="font-medium">{order.meta.optic_name || '—'}</span>
-                            </div>
-                        </div>
-
-                        {/* Lens params — table format */}
-                        <div className="border border-gray-200 rounded-xl overflow-hidden">
-                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                                <span className="text-xs font-semibold text-gray-700">Параметры линз</span>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-xs">
-                                    <thead>
-                                        <tr className="bg-gray-50 border-b border-gray-200">
-                                            <th className="text-left px-3 py-2 font-semibold text-gray-600">Глаз</th>
-                                            <th className="text-left px-3 py-2 font-semibold text-gray-600 whitespace-nowrap">Характеристика</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Km</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">TP</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">DIA</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">E</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Тор.</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Пробная</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>
-
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Кол-во</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {[{ label: 'OD', eye: order.config.eyes.od }, { label: 'OS', eye: order.config.eyes.os }].map(({ label, eye }) => (
-                                            <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
-                                                <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
-                                                <td className="px-3 py-2 text-gray-700">{eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.tor ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>
-
-                                                <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Archive checkbox */}
-                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${defect.archived ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
-                            }`}>
-                            <input
-                                type="checkbox"
-                                checked={defect.archived || false}
-                                onChange={(e) => toggleDefectArchive(order.order_id, defect.id, e.target.checked)}
-                                className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                            />
-                            <span className={`text-sm font-medium ${defect.archived ? 'text-green-700' : 'text-gray-600'}`}>
-                                {defect.archived ? '✅ Принято в архив' : 'Принято в архив'}
-                            </span>
-                        </label>
-
-                        {/* Actions */}
-                        <div className="flex gap-2 pt-2 border-t border-gray-100">
-                            <button
-                                onClick={() => printDefect(order, defect)}
-                                className="btn btn-secondary text-xs py-2 px-4 flex-1 gap-1.5"
-                            >
-                                <Printer className="w-3.5 h-3.5" />
-                                Печать акта брака
-                            </button>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-        );
-    };
-
-    // ==================== LOADING STATE ====================
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-surface flex items-center justify-center">
-                <div className="text-center">
-                    <div className="skeleton w-12 h-12 rounded-full mx-auto mb-4" />
-                    <p className="text-gray-600">Загрузка...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // ==================== RENDER ====================
-    return (
-        <div className="min-h-screen bg-surface">
-            {/* Header */}
-            <div className="bg-surface-elevated border-b border-border">
-                <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-                        <div>
-                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Производственный хаб</h1>
-                            <p className="text-sm text-gray-600 mt-0.5">Управление очередью заказов</p>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                            Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
-                        </div>
-                    </div>
-
-                    {/* Search + filters */}
-                    <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
-                        <div className="relative flex-1 min-w-[180px] max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Поиск по номеру, пациенту, врачу..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                className="input pl-10 w-full"
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                            {perms.canChangeStatus && order.status === 'rework' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
+                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                >
+                                    Вернуть в работу
                                 </button>
                             )}
                         </div>
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'} gap-2 whitespace-nowrap`}
-                        >
-                            <SlidersHorizontal className="w-4 h-4" />
-                            Фильтры
-                        </button>
-                        {hasActiveFilters && (
-                            <button
-                                onClick={() => { setSearchQuery(''); setDateFrom(''); setDateTo(''); }}
-                                className="btn btn-secondary gap-1 text-red-500 whitespace-nowrap"
-                            >
-                                <X className="w-4 h-4" />
-                                Сбросить
-                            </button>
-                        )}
-                        <button
-                            onClick={exportToExcel}
-                            className="btn btn-secondary gap-2 whitespace-nowrap"
-                        >
-                            <Download className="w-4 h-4" />
-                            Экспорт XLS
-                        </button>
-                        <button
-                            onClick={exportMaterials}
-                            className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
-                        >
-                            <Download className="w-4 h-4" />
-                            Расходные мат.
-                        </button>
-                    </div>
 
-                    <AnimatePresence>
-                        {showFilters && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden"
-                            >
-                                <div className="space-y-3 mt-3 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                    {/* Quick presets */}
-                                    <div className="flex flex-wrap gap-2">
-                                        {([
-                                            { label: 'Вчера', key: 'yesterday' },
-                                            { label: 'Сегодня', key: 'today' },
-                                            { label: 'Неделя', key: 'week' },
-                                            { label: 'Месяц', key: 'month' },
-                                            { label: 'Полугодие', key: 'half_year' },
-                                            { label: 'Год', key: 'year' },
-                                            { label: 'Все время', key: 'all' },
-                                        ] as const).map(({ label, key }) => {
-                                            const getRange = (k: string): [string, string] => {
-                                                const today = new Date();
-                                                const toStr = (d: Date) => d.toISOString().split('T')[0];
-                                                const t = toStr(today);
-                                                switch (k) {
-                                                    case 'yesterday': { const y = new Date(today); y.setDate(y.getDate() - 1); return [toStr(y), toStr(y)]; }
-                                                    case 'today': return [t, t];
-                                                    case 'week': { const w = new Date(today); w.setDate(w.getDate() - 7); return [toStr(w), t]; }
-                                                    case 'month': { const m = new Date(today); m.setMonth(m.getMonth() - 1); return [toStr(m), t]; }
-                                                    case 'half_year': { const h = new Date(today); h.setMonth(h.getMonth() - 6); return [toStr(h), t]; }
-                                                    case 'year': { const yr = new Date(today); yr.setFullYear(yr.getFullYear() - 1); return [toStr(yr), t]; }
-                                                    case 'all': return ['', ''];
-                                                    default: return ['', ''];
-                                                }
-                                            };
-                                            const [from, to] = getRange(key);
-                                            const isActive = key === 'all' ? (!dateFrom && !dateTo) : (dateFrom === from && dateTo === to);
-                                            return (
-                                                <button
-                                                    key={key}
-                                                    onClick={() => { setDateFrom(from); setDateTo(to); }}
-                                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
-                                                        ? 'bg-blue-600 text-white shadow-sm'
-                                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    {label}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    {/* Custom date range */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                                                <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
-                                            </label>
-                                            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input w-full" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                                                <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
-                                            </label>
-                                            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
+
+
+
+                        {/* Delivered: show confirmation pending */}
+                        {order.status === 'out_for_delivery' && (
+                            <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+                                <MapPin className="w-3.5 h-3.5" />
+                                Ждём подтверждения от врача
+                            </div>
                         )}
-                    </AnimatePresence>
-                </div>
+
+                        {order.status === 'delivered' && (
+                            <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                Получение подтверждено
+                                {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
+                            </div>
+                        )}
+                    </div>
             </div>
+                </motion.div >
+            </div >
+        );
+};
 
-            {/* Main Content — Kanban for most roles, Payments list for lab_accountant */}
-            {!perms.canViewKanban ? (
-                /* Accountant view: simple payments list */
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-                    <div className="card mb-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                                <DollarSign className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-900">Статусы оплат</h2>
-                                <p className="text-sm text-gray-500">{SubRoleLabels[subRole]}</p>
-                            </div>
-                        </div>
+// ==================== DEFECT DETAIL MODAL ====================
+const DefectModal = () => {
+    if (!selectedDefect) return null;
+    const { order, defect } = selectedDefect;
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] overflow-y-auto"
+            onClick={() => setSelectedDefectId(null)}
+        >
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={e => e.stopPropagation()}
+                className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mb-[5vh]"
+            >
+                <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 rounded-t-2xl flex items-center justify-between z-10">
+                    <div>
+                        <h2 className="text-lg font-bold text-red-700 flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5" />
+                            Акт брака
+                        </h2>
+                        <p className="text-sm text-gray-500">{defect.id}</p>
                     </div>
-                    <div className="space-y-3">
-                        {filteredOrders.length === 0 ? (
-                            <div className="card text-center py-12 text-gray-400">
-                                <p>Нет заказов для отображения</p>
+                    <button onClick={() => setSelectedDefectId(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                </div>
+
+                <div className="px-6 py-4 space-y-4">
+                    {/* Defect info */}
+                    <div className="bg-red-50 rounded-xl p-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Количество</span>
+                            <span className="font-bold text-red-700">{defect.qty} шт.</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Дата</span>
+                            <span className="font-medium">{new Date(defect.date).toLocaleString('ru-RU')}</span>
+                        </div>
+                        {defect.note && (
+                            <div className="text-sm">
+                                <span className="text-gray-600">Причина: </span>
+                                <span className="font-medium">{defect.note}</span>
                             </div>
-                        ) : (
-                            filteredOrders.map(order => {
-                                const ps = (order as any).payment_status || 'unpaid';
-                                return (
-                                    <div key={order.order_id} className="card hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedOrderId(order.order_id)}>
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                            <div className="flex items-center gap-3">
-                                                <div className="min-w-0">
-                                                    <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{order.order_id}</h4>
-                                                    <p className="text-xs sm:text-sm text-gray-500 truncate">{order.patient.name}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                                <span className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-lg ${OrderStatusLabels[order.status] ? 'bg-gray-100 text-gray-700' : ''}`}>
-                                                    {OrderStatusLabels[order.status]}
-                                                </span>
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-300'}`} />
-                                                    <span className={`text-xs sm:text-sm font-medium ${ps === 'paid' ? 'text-emerald-600' : ps === 'partial' ? 'text-amber-600' : 'text-gray-400'}`}>
-                                                        {PaymentStatusLabels[ps as PaymentStatus]}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })
                         )}
                     </div>
-                </div>
-            ) : (
-                /* Kanban Board */
-                <div className="max-w-[1800px] mx-auto px-3 sm:px-6 py-4 sm:py-8">
-                    <div className="flex gap-3 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
-                        <Column title="Новые" icon={Package} orders={ordersByStatus.new} color="bg-blue-50 text-blue-700" />
-                        <Column title="В производстве" icon={Clock} orders={ordersByStatus.in_production} color="bg-yellow-50 text-yellow-700" />
-                        <Column title="Готово" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
-                        <Column title="На доработку" icon={RotateCcw} orders={ordersByStatus.rework} color="bg-orange-50 text-orange-700" />
-                        <Column title="Отгружено" icon={TruckIcon} orders={ordersByStatus.shipped} color="bg-gray-50 text-gray-700" />
-                        <Column title="У бухгалтера" icon={DollarSign} orders={ordersByStatus.accountant_review} color="bg-cyan-50 text-cyan-700" />
-                        <Column title="Док. готовы" icon={CheckCircle} orders={ordersByStatus.docs_ready} color="bg-emerald-50 text-emerald-700" />
-                        <Column title="В доставке" icon={Truck} orders={ordersByStatus.out_for_delivery} color="bg-purple-50 text-purple-700" />
-                        <Column title="Доставлено" icon={CheckCircle} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
 
-                        {/* Defects Column */}
-                        <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[240px]">
-                            <div className="card mb-4 bg-red-50 text-red-700">
-                                <div className="flex items-center gap-2">
-                                    <AlertTriangle className="w-5 h-5" />
-                                    <h3 className="font-semibold">Браки</h3>
-                                    <span className="ml-auto bg-white/50 rounded-full px-2 py-0.5 text-sm font-medium">
-                                        {allDefects.length}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                {allDefects.length === 0 ? (
-                                    <div className="card text-center py-8 text-gray-400">
-                                        <p className="text-sm">Нет браков</p>
-                                    </div>
-                                ) : (
-                                    allDefects.map(({ order, defect }) => (
-                                        <div
-                                            key={defect.id}
-                                            onClick={() => setSelectedDefectId({ orderId: order.order_id, defectId: defect.id })}
-                                            className={`card cursor-pointer hover:shadow-md transition-all border-l-4 ${defect.archived
-                                                ? 'border-l-green-400 bg-green-50/30'
-                                                : 'border-l-red-400 bg-red-50/50'
-                                                }`}
-                                        >
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <h4 className="font-semibold text-gray-900 text-sm">{order.order_id}</h4>
-                                                        <p className="text-xs text-gray-600">{order.patient.name}</p>
-                                                    </div>
-                                                    <span className="text-xs text-gray-500">
-                                                        {new Date(defect.date).toLocaleDateString('ru-RU')}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 text-red-700 text-xs font-semibold">
-                                                        <Ban className="w-3 h-3" />
-                                                        {defect.qty} шт.
-                                                    </span>
-                                                    {defect.archived && (
-                                                        <span className="text-xs text-green-600 font-medium">✅ Архив</span>
-                                                    )}
-                                                </div>
-                                                {defect.note && (
-                                                    <p className="text-xs text-gray-500 truncate">{defect.note}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                    {/* Order info */}
+                    <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Данные заказа</h4>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Заказ</span>
+                            <span className="font-semibold">{order.order_id}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Пациент</span>
+                            <span className="font-medium">{order.patient.name}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Телефон</span>
+                            <span className="font-medium">{order.patient.phone}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Врач</span>
+                            <span className="font-medium">{order.meta.doctor || '—'}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Оптика</span>
+                            <span className="font-medium">{order.meta.optic_name || '—'}</span>
                         </div>
                     </div>
-                </div>
-            )}
 
-            {/* Modals — called as functions, NOT as <Component/>, to avoid
-                React treating them as new component types each render which
-                causes unmount/remount (= the "jump") on every keystroke */}
-            {selectedOrder && OrderModal()}
-            {selectedDefect && DefectModal()}
+                    {/* Lens params — table format */}
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                            <span className="text-xs font-semibold text-gray-700">Параметры линз</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                                <thead>
+                                    <tr className="bg-gray-50 border-b border-gray-200">
+                                        <th className="text-left px-3 py-2 font-semibold text-gray-600">Глаз</th>
+                                        <th className="text-left px-3 py-2 font-semibold text-gray-600 whitespace-nowrap">Характеристика</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">Km</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">TP</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">DIA</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">E</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">Тор.</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">Пробная</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>
+
+                                        <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Кол-во</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[{ label: 'OD', eye: order.config.eyes.od }, { label: 'OS', eye: order.config.eyes.os }].map(({ label, eye }) => (
+                                        <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
+                                            <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
+                                            <td className="px-3 py-2 text-gray-700">{eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.tor ?? '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>
+                                            <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>
+
+                                            <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Archive checkbox */}
+                    <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${defect.archived ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                        }`}>
+                        <input
+                            type="checkbox"
+                            checked={defect.archived || false}
+                            onChange={(e) => toggleDefectArchive(order.order_id, defect.id, e.target.checked)}
+                            className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <span className={`text-sm font-medium ${defect.archived ? 'text-green-700' : 'text-gray-600'}`}>
+                            {defect.archived ? '✅ Принято в архив' : 'Принято в архив'}
+                        </span>
+                    </label>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-2 border-t border-gray-100">
+                        <button
+                            onClick={() => printDefect(order, defect)}
+                            className="btn btn-secondary text-xs py-2 px-4 flex-1 gap-1.5"
+                        >
+                            <Printer className="w-3.5 h-3.5" />
+                            Печать акта брака
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
+};
+
+// ==================== LOADING STATE ====================
+if (isLoading) {
+    return (
+        <div className="min-h-screen bg-surface flex items-center justify-center">
+            <div className="text-center">
+                <div className="skeleton w-12 h-12 rounded-full mx-auto mb-4" />
+                <p className="text-gray-600">Загрузка...</p>
+            </div>
+        </div>
+    );
+}
+
+// ==================== RENDER ====================
+return (
+    <div className="min-h-screen bg-surface">
+        {/* Header */}
+        <div className="bg-surface-elevated border-b border-border">
+            <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Производственный хаб</h1>
+                        <p className="text-sm text-gray-600 mt-0.5">Управление очередью заказов</p>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                        Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
+                    </div>
+                </div>
+
+                {/* Search + filters */}
+                <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+                    <div className="relative flex-1 min-w-[180px] max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Поиск по номеру, пациенту, врачу..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="input pl-10 w-full"
+                        />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                            </button>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'} gap-2 whitespace-nowrap`}
+                    >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        Фильтры
+                    </button>
+                    {hasActiveFilters && (
+                        <button
+                            onClick={() => { setSearchQuery(''); setDateFrom(''); setDateTo(''); }}
+                            className="btn btn-secondary gap-1 text-red-500 whitespace-nowrap"
+                        >
+                            <X className="w-4 h-4" />
+                            Сбросить
+                        </button>
+                    )}
+                    <button
+                        onClick={exportToExcel}
+                        className="btn btn-secondary gap-2 whitespace-nowrap"
+                    >
+                        <Download className="w-4 h-4" />
+                        Экспорт XLS
+                    </button>
+                    <button
+                        onClick={exportMaterials}
+                        className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
+                    >
+                        <Download className="w-4 h-4" />
+                        Расходные мат.
+                    </button>
+                </div>
+
+                <AnimatePresence>
+                    {showFilters && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="space-y-3 mt-3 p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                {/* Quick presets */}
+                                <div className="flex flex-wrap gap-2">
+                                    {([
+                                        { label: 'Вчера', key: 'yesterday' },
+                                        { label: 'Сегодня', key: 'today' },
+                                        { label: 'Неделя', key: 'week' },
+                                        { label: 'Месяц', key: 'month' },
+                                        { label: 'Полугодие', key: 'half_year' },
+                                        { label: 'Год', key: 'year' },
+                                        { label: 'Все время', key: 'all' },
+                                    ] as const).map(({ label, key }) => {
+                                        const getRange = (k: string): [string, string] => {
+                                            const today = new Date();
+                                            const toStr = (d: Date) => d.toISOString().split('T')[0];
+                                            const t = toStr(today);
+                                            switch (k) {
+                                                case 'yesterday': { const y = new Date(today); y.setDate(y.getDate() - 1); return [toStr(y), toStr(y)]; }
+                                                case 'today': return [t, t];
+                                                case 'week': { const w = new Date(today); w.setDate(w.getDate() - 7); return [toStr(w), t]; }
+                                                case 'month': { const m = new Date(today); m.setMonth(m.getMonth() - 1); return [toStr(m), t]; }
+                                                case 'half_year': { const h = new Date(today); h.setMonth(h.getMonth() - 6); return [toStr(h), t]; }
+                                                case 'year': { const yr = new Date(today); yr.setFullYear(yr.getFullYear() - 1); return [toStr(yr), t]; }
+                                                case 'all': return ['', ''];
+                                                default: return ['', ''];
+                                            }
+                                        };
+                                        const [from, to] = getRange(key);
+                                        const isActive = key === 'all' ? (!dateFrom && !dateTo) : (dateFrom === from && dateTo === to);
+                                        return (
+                                            <button
+                                                key={key}
+                                                onClick={() => { setDateFrom(from); setDateTo(to); }}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
+                                                    ? 'bg-blue-600 text-white shadow-sm'
+                                                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                {label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {/* Custom date range */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
+                                        </label>
+                                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input w-full" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
+                                        </label>
+                                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </div>
+
+        {/* Main Content — Kanban for most roles, Payments list for lab_accountant */}
+        {!perms.canViewKanban ? (
+            /* Accountant view: simple payments list */
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+                <div className="card mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <DollarSign className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">Статусы оплат</h2>
+                            <p className="text-sm text-gray-500">{SubRoleLabels[subRole]}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="space-y-3">
+                    {filteredOrders.length === 0 ? (
+                        <div className="card text-center py-12 text-gray-400">
+                            <p>Нет заказов для отображения</p>
+                        </div>
+                    ) : (
+                        filteredOrders.map(order => {
+                            const ps = (order as any).payment_status || 'unpaid';
+                            return (
+                                <div key={order.order_id} className="card hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedOrderId(order.order_id)}>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="min-w-0">
+                                                <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{order.order_id}</h4>
+                                                <p className="text-xs sm:text-sm text-gray-500 truncate">{order.patient.name}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                            <span className={`text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-lg ${OrderStatusLabels[order.status] ? 'bg-gray-100 text-gray-700' : ''}`}>
+                                                {OrderStatusLabels[order.status]}
+                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-300'}`} />
+                                                <span className={`text-xs sm:text-sm font-medium ${ps === 'paid' ? 'text-emerald-600' : ps === 'partial' ? 'text-amber-600' : 'text-gray-400'}`}>
+                                                    {PaymentStatusLabels[ps as PaymentStatus]}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        ) : (
+            /* Kanban Board */
+            <div className="max-w-[1800px] mx-auto px-3 sm:px-6 py-4 sm:py-8">
+                <div className="flex gap-3 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <Column title="Новые" icon={Package} orders={ordersByStatus.new} color="bg-blue-50 text-blue-700" />
+                    <Column title="В производстве" icon={Clock} orders={ordersByStatus.in_production} color="bg-yellow-50 text-yellow-700" />
+                    <Column title="Готово" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
+                    <Column title="На доработку" icon={RotateCcw} orders={ordersByStatus.rework} color="bg-orange-50 text-orange-700" />
+                    <Column title="Отгружено" icon={TruckIcon} orders={ordersByStatus.shipped} color="bg-gray-50 text-gray-700" />
+                    <Column title="У бухгалтера" icon={DollarSign} orders={ordersByStatus.accountant_review} color="bg-cyan-50 text-cyan-700" />
+                    <Column title="Док. готовы" icon={CheckCircle} orders={ordersByStatus.docs_ready} color="bg-emerald-50 text-emerald-700" />
+                    <Column title="В доставке" icon={Truck} orders={ordersByStatus.out_for_delivery} color="bg-purple-50 text-purple-700" />
+                    <Column title="Доставлено" icon={CheckCircle} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
+
+                    {/* Defects Column */}
+                    <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[240px]">
+                        <div className="card mb-4 bg-red-50 text-red-700">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-5 h-5" />
+                                <h3 className="font-semibold">Браки</h3>
+                                <span className="ml-auto bg-white/50 rounded-full px-2 py-0.5 text-sm font-medium">
+                                    {allDefects.length}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {allDefects.length === 0 ? (
+                                <div className="card text-center py-8 text-gray-400">
+                                    <p className="text-sm">Нет браков</p>
+                                </div>
+                            ) : (
+                                allDefects.map(({ order, defect }) => (
+                                    <div
+                                        key={defect.id}
+                                        onClick={() => setSelectedDefectId({ orderId: order.order_id, defectId: defect.id })}
+                                        className={`card cursor-pointer hover:shadow-md transition-all border-l-4 ${defect.archived
+                                            ? 'border-l-green-400 bg-green-50/30'
+                                            : 'border-l-red-400 bg-red-50/50'
+                                            }`}
+                                    >
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <h4 className="font-semibold text-gray-900 text-sm">{order.order_id}</h4>
+                                                    <p className="text-xs text-gray-600">{order.patient.name}</p>
+                                                </div>
+                                                <span className="text-xs text-gray-500">
+                                                    {new Date(defect.date).toLocaleDateString('ru-RU')}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-100 text-red-700 text-xs font-semibold">
+                                                    <Ban className="w-3 h-3" />
+                                                    {defect.qty} шт.
+                                                </span>
+                                                {defect.archived && (
+                                                    <span className="text-xs text-green-600 font-medium">✅ Архив</span>
+                                                )}
+                                            </div>
+                                            {defect.note && (
+                                                <p className="text-xs text-gray-500 truncate">{defect.note}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Modals — called as functions, NOT as <Component/>, to avoid
+                React treating them as new component types each render which
+                causes unmount/remount (= the "jump") on every keystroke */}
+        {selectedOrder && OrderModal()}
+        {selectedDefect && DefectModal()}
+    </div>
+);
 }
