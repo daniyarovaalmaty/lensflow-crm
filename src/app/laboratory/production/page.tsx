@@ -817,99 +817,99 @@ export default function ProductionHubPage() {
                                             На доработку
                                         </button>
                                     )}
-                                    {perms.canShip && order.status === 'ready' && (
-                                        <>
-                                            {perms.canSendToAccountant ? (
-                                                <button
-                                                    onClick={() => { updateOrderStatus(order.order_id, 'docs_prep'); setSelectedOrderId(null); }}
-                                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
-                                                >
-                                                    <FileText className="w-3.5 h-3.5" />
-                                                    Подготовить док.
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={async () => {
-                                                        await generateTracking(order.order_id);
-                                                        await updateOrderStatus(order.order_id, 'shipped');
-                                                        setSelectedOrderId(null);
-                                                    }}
-                                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                                >
-                                                    Отгрузить
-                                                </button>
-                                            )}
-                                        </>
+                                    {perms.canShip && (
+                                        perms.canSendToAccountant ? (
+                                            <button
+                                                onClick={() => { updateOrderStatus(order.order_id, 'docs_prep'); setSelectedOrderId(null); }}
+                                                className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
+                                            >
+                                                <FileText className="w-3.5 h-3.5" />
+                                                Подготовить док.
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={async () => {
+                                                    await generateTracking(order.order_id);
+                                                    await updateOrderStatus(order.order_id, 'shipped');
+                                                    setSelectedOrderId(null);
+                                                }}
+                                                className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                            >
+                                                Отгрузить
+                                            </button>
+                                        )
                                     )}
+                                </>
+                            )}
 
-                                    {/* Accountant workflow transitions */}
-                                    {perms.canSendToAccountant && order.status === 'docs_prep' && (
-                                        <button
-                                            onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
-                                            className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
-                                        >
-                                            Отправить бухгалтеру
-                                        </button>
-                                    )}
-                                    {perms.canProcessDocs && order.status === 'accountant_review' && (
-                                        <button
-                                            onClick={() => { updateOrderStatus(order.order_id, 'docs_ready'); setSelectedOrderId(null); }}
-                                            className="btn text-xs py-2 px-4 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
-                                        >
-                                            Документы готовы
-                                        </button>
-                                    )}
-                                    {perms.canSendToAccountant && order.status === 'docs_ready' && (
-                                        <button
-                                            onClick={async () => {
-                                                await generateTracking(order.order_id);
-                                                await updateOrderStatus(order.order_id, 'shipped');
-                                                setSelectedOrderId(null);
-                                            }}
-                                            className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                        >
-                                            Отгрузить
-                                        </button>
-                                    )}
-                                    {perms.canChangeStatus && order.status === 'rework' && (
-                                        <button
-                                            onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
-                                            className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                        >
-                                            Вернуть в работу
-                                        </button>
-                                    )}
+                            {/* Accountant workflow transitions */}
+                            {perms.canSendToAccountant && order.status === 'docs_prep' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
+                                    className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
+                                >
+                                    Отправить бухгалтеру
+                                </button>
+                            )}
+                            {perms.canProcessDocs && order.status === 'accountant_review' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'docs_ready'); setSelectedOrderId(null); }}
+                                    className="btn text-xs py-2 px-4 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+                                >
+                                    Документы готовы
+                                </button>
+                            )}
+                            {perms.canSendToAccountant && order.status === 'docs_ready' && (
+                                <button
+                                    onClick={async () => {
+                                        await generateTracking(order.order_id);
+                                        await updateOrderStatus(order.order_id, 'shipped');
+                                        setSelectedOrderId(null);
+                                    }}
+                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                >
+                                    Отгрузить
+                                </button>
+                            )}
+                            {perms.canChangeStatus && order.status === 'rework' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
+                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                >
+                                    Вернуть в работу
+                                </button>
+                            )}
 
-                                    {/* Logistician: take shipped order out for delivery */}
-                                    {perms.canDeliver && order.status === 'shipped' && (
-                                        <button
-                                            onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
-                                            className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
-                                        >
-                                            <Truck className="w-3.5 h-3.5" />
-                                            Передать в доставку
-                                        </button>
-                                    )}
+                            {/* Logistician: take shipped order out for delivery */}
+                            {perms.canDeliver && order.status === 'shipped' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
+                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
+                                >
+                                    <Truck className="w-3.5 h-3.5" />
+                                    Передать в доставку
+                                </button>
+                            )}
 
 
 
-                                    {/* Delivered: show confirmation pending */}
-                                    {order.status === 'out_for_delivery' && (
-                                        <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
-                                            <MapPin className="w-3.5 h-3.5" />
-                                            Ждём подтверждения от врача
-                                        </div>
-                                    )}
-
-                                    {order.status === 'delivered' && (
-                                        <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
-                                            <CheckCircle className="w-3.5 h-3.5" />
-                                            Получение подтверждено
-                                            {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
-                                        </div>
-                                    )}
+                            {/* Delivered: show confirmation pending */}
+                            {order.status === 'out_for_delivery' && (
+                                <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    Ждём подтверждения от врача
                                 </div>
+                            )}
+
+                            {order.status === 'delivered' && (
+                                <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                    Получение подтверждено
+                                    {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
+                                </div>
+                            )}
                         </div>
+                    </div>
                 </motion.div>
             </div>
         );
