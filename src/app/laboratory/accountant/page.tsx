@@ -212,8 +212,8 @@ export default function AccountantPage() {
                                 key={tab.value}
                                 onClick={() => setDocFilter(tab.value)}
                                 className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${docFilter === tab.value
-                                        ? tab.color || 'bg-primary-600 text-white border-primary-600'
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
+                                    ? tab.color || 'bg-primary-600 text-white border-primary-600'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300'
                                     }`}
                             >
                                 {tab.label}
@@ -311,13 +311,12 @@ export default function AccountantPage() {
                                         <th className="text-right px-4 py-3 font-semibold text-gray-600">Сумма</th>
                                         <th className="text-left px-4 py-3 font-semibold text-gray-600">Дата</th>
                                         <th className="text-center px-4 py-3 font-semibold text-gray-600">Документы</th>
-                                        <th className="text-left px-4 py-3 font-semibold text-gray-600">Оплата</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     {filtered.length === 0 ? (
                                         <tr>
-                                            <td colSpan={10} className="text-center py-12 text-gray-400">
+                                            <td colSpan={9} className="text-center py-12 text-gray-400">
                                                 Нет заказов
                                             </td>
                                         </tr>
@@ -397,30 +396,12 @@ export default function AccountantPage() {
                                                             <span className="text-xs text-gray-300">—</span>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                                                        <div className="flex gap-1">
-                                                            {perms.canChangePayments ? PAYMENT_OPTIONS.map(opt => (
-                                                                <button
-                                                                    key={opt.value}
-                                                                    onClick={() => updatePayment(order.order_id, opt.value)}
-                                                                    disabled={updating === order.order_id}
-                                                                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border font-medium transition-all ${payStatus === opt.value ? opt.color : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'}`}
-                                                                >
-                                                                    <opt.icon className="w-3 h-3" />
-                                                                    {opt.label}
-                                                                </button>
-                                                            )) : (
-                                                                <span className={`text-xs px-2 py-1 rounded-lg border font-medium ${PaymentStatusColors[payStatus]}`}>
-                                                                    {PaymentStatusLabels[payStatus]}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
+
                                                 </tr>
                                                 <AnimatePresence>
                                                     {isExpanded && (
                                                         <tr>
-                                                            <td colSpan={10} className="p-0">
+                                                            <td colSpan={9} className="p-0">
                                                                 <motion.div
                                                                     initial={{ height: 0, opacity: 0 }}
                                                                     animate={{ height: 'auto', opacity: 1 }}
@@ -515,6 +496,30 @@ export default function AccountantPage() {
                                                                                 <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200">
                                                                                     <span>Итого</span>
                                                                                     <span>{total.toLocaleString('ru-RU')} ₸</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Payment status controls */}
+                                                                        <div className="mt-4 pt-4 border-t border-gray-200">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <span className="text-sm font-semibold text-gray-700">Статус оплаты</span>
+                                                                                <div className="flex gap-2">
+                                                                                    {perms.canChangePayments ? PAYMENT_OPTIONS.map(opt => (
+                                                                                        <button
+                                                                                            key={opt.value}
+                                                                                            onClick={() => updatePayment(order.order_id, opt.value)}
+                                                                                            disabled={updating === order.order_id}
+                                                                                            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${payStatus === opt.value ? opt.color : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'}`}
+                                                                                        >
+                                                                                            <opt.icon className="w-3.5 h-3.5" />
+                                                                                            {opt.label}
+                                                                                        </button>
+                                                                                    )) : (
+                                                                                        <span className={`text-xs px-3 py-1.5 rounded-lg border font-medium ${PaymentStatusColors[payStatus]}`}>
+                                                                                            {PaymentStatusLabels[payStatus]}
+                                                                                        </span>
+                                                                                    )}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
