@@ -153,8 +153,7 @@ export default function ProductionHubPage() {
     const bulkUpdateStatus = async (newStatus: OrderStatus) => {
         const ids = Array.from(bulkSelectedIds);
         if (ids.length === 0) return;
-        const confirmed = confirm(`Изменить статус для ${ids.length} заказ(ов) на «${OrderStatusLabels[newStatus]}»?`);
-        if (!confirmed) return;
+        if (!confirm(`Изменить статус для ${ids.length} заказ(ов) на «${OrderStatusLabels[newStatus]}»?`)) return;
         try {
             await Promise.all(ids.map(id =>
                 fetch(`/api/orders/${id}/status`, {
@@ -495,10 +494,7 @@ export default function ProductionHubPage() {
                         setSelectedOrderId(order.order_id); setShowDefectForm(false);
                     }
                 }}
-                className={`card cursor-pointer hover:shadow-md transition-all group ${bulkMode && bulkSelectedIds.has(order.order_id)
-                    ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-300'
-                    : 'hover:border-blue-200'
-                    }`}
+                className={`card cursor-pointer hover:shadow-md transition-all group ${bulkMode && bulkSelectedIds.has(order.order_id) ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-300' : 'hover:border-blue-200'}`}
             >
                 <div className="space-y-2">
                     <div className="flex items-start justify-between">
@@ -721,7 +717,7 @@ export default function ProductionHubPage() {
                             </div>
                         )}
 
-                        {/* Closing documents — shown at top for docs_ready / out_for_delivery / delivered */}
+                        {/* Closing documents — at top for docs_ready / out_for_delivery / delivered */}
                         {['docs_ready', 'out_for_delivery', 'delivered'].includes(order.status) && (() => {
                             const docs = closingDocs[order.order_id];
                             return (
@@ -945,7 +941,7 @@ export default function ProductionHubPage() {
                             {perms.canMarkReady && order.status === 'in_production' && (
                                 <button
                                     onClick={() => { updateOrderStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                    className="btn btn-primary text-xs py-2 px-3"
                                 >
                                     Готово
                                 </button>
@@ -968,7 +964,7 @@ export default function ProductionHubPage() {
                                                 await updateOrderStatus(order.order_id, 'shipped');
                                                 setSelectedOrderId(null);
                                             }}
-                                            className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                            className="btn btn-primary text-xs py-2 px-3"
                                         >
                                             Отгрузить
                                         </button>
@@ -976,13 +972,12 @@ export default function ProductionHubPage() {
                                 </>
                             )}
 
-                            {/* Accountant workflow: shipped → accountant → docs_ready → out_for_delivery */}
                             {perms.canSendToAccountant && order.status === 'shipped' && (
                                 <button
                                     onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
-                                    className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
+                                    className="btn text-xs py-2 px-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg gap-1.5"
                                 >
-                                    Отправить бухгалтеру
+                                    Бухгалтеру
                                 </button>
                             )}
                             {perms.canProcessDocs && order.status === 'accountant_review' && (
@@ -1005,7 +1000,7 @@ export default function ProductionHubPage() {
                             {perms.canChangeStatus && order.status === 'rework' && (
                                 <button
                                     onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                    className="btn btn-primary text-xs py-2 px-3"
                                 >
                                     Вернуть в работу
                                 </button>
@@ -1489,7 +1484,6 @@ return (
                         <button onClick={() => bulkUpdateStatus('rework')} className="btn text-xs py-1.5 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg">На доработку</button>
                         <button onClick={() => bulkUpdateStatus('accountant_review')} className="btn text-xs py-1.5 px-3 bg-cyan-100 text-cyan-700 hover:bg-cyan-200 rounded-lg">Бухгалтеру</button>
                         <button onClick={() => bulkUpdateStatus('out_for_delivery')} className="btn text-xs py-1.5 px-3 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg">В доставку</button>
-                        <button onClick={() => bulkUpdateStatus('cancelled')} className="btn text-xs py-1.5 px-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg">Отменить</button>
                     </div>
                     <button
                         onClick={() => { setBulkSelectedIds(new Set()); setBulkMode(false); }}
@@ -1501,9 +1495,7 @@ return (
             )}
         </AnimatePresence>
 
-        {/* Modals — called as functions, NOT as <Component/>, to avoid
-                React treating them as new component types each render which
-                causes unmount/remount (= the "jump") on every keystroke */}
+        {/* Modals */}
         {selectedOrder && OrderModal()}
         {selectedDefect && DefectModal()}
     </div>
