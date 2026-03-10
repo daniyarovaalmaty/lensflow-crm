@@ -107,7 +107,7 @@ export async function POST(
 
         await prisma.order.update({
             where: { id: order.id },
-            data: { closingDocuments: [...existing, newDoc] },
+            data: { closingDocuments: [...existing, newDoc] as any },
         });
 
         return NextResponse.json({ success: true, count: existing.length + 1 });
@@ -148,7 +148,7 @@ export async function DELETE(
         existing.splice(index, 1);
         await prisma.order.update({
             where: { id: order.id },
-            data: { closingDocuments: existing },
+            data: { closingDocuments: existing as any },
         });
 
         return NextResponse.json({ success: true, count: existing.length });
