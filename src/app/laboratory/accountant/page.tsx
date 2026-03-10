@@ -71,13 +71,15 @@ async function generateInvoice(order: Order) {
         { width: 16 },  // G: Сумма
     ];
 
-    const thinBorder: Partial<ExcelJS.Borders> = {
-        top: { style: 'thin' }, bottom: { style: 'thin' },
-        left: { style: 'thin' }, right: { style: 'thin' },
+    const thinBorder = {
+        top: { style: 'thin' as const },
+        bottom: { style: 'thin' as const },
+        left: { style: 'thin' as const },
+        right: { style: 'thin' as const },
     };
-    const boldFont: Partial<ExcelJS.Font> = { bold: true, size: 11 };
-    const titleFont: Partial<ExcelJS.Font> = { bold: true, size: 14 };
-    const headerFont: Partial<ExcelJS.Font> = { bold: true, size: 10 };
+    const boldFont = { bold: true, size: 11 };
+    const titleFont = { bold: true, size: 14 };
+    const headerFont = { bold: true, size: 10 };
     const headerFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E8E8' } };
 
     // Row 1: empty
@@ -100,7 +102,9 @@ async function generateInvoice(order: Order) {
     const infoStyle = (row: ExcelJS.Row) => {
         row.getCell(2).font = { bold: true, size: 10 };
         row.getCell(4).font = { size: 10 };
-        [2, 3, 4, 5, 6, 7].forEach(c => { row.getCell(c).border = thinBorder; });
+        for (let c = 2; c <= 7; c++) {
+            row.getCell(c).border = thinBorder;
+        }
     };
 
     let r = ws.addRow(['', 'Поставщик:', '', 'ТОО «MedInVision»', '', '', '']);
@@ -142,19 +146,23 @@ async function generateInvoice(order: Order) {
     // Table header
     const hdrRow = ws.addRow(['№', 'Наименование товара / услуги', '', 'Ед.', 'Кол-во', 'Цена, ₸', 'Сумма, ₸']);
     ws.mergeCells(hdrRow.number, 2, hdrRow.number, 3);
-    hdrRow.eachCell((cell) => {
+    for (let c = 1; c <= 7; c++) {
+        const cell = hdrRow.getCell(c);
         cell.font = headerFont;
         cell.fill = headerFill;
         cell.border = thinBorder;
         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-    });
+    }
 
     // Line items
     let lineNo = 1;
     const addItem = (name: string, unit: string, qty: number, price: number, sum: number) => {
         const row = ws.addRow([lineNo++, name, '', unit, qty, fmt(price), fmt(sum)]);
         ws.mergeCells(row.number, 2, row.number, 3);
-        row.eachCell((cell) => { cell.border = thinBorder; cell.font = { size: 10 }; });
+        for (let c = 1; c <= 7; c++) {
+            row.getCell(c).border = thinBorder;
+            row.getCell(c).font = { size: 10 };
+        }
         row.getCell(5).alignment = { horizontal: 'center' };
         row.getCell(6).alignment = { horizontal: 'right' };
         row.getCell(7).alignment = { horizontal: 'right' };
