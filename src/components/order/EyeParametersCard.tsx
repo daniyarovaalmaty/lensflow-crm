@@ -96,7 +96,7 @@ export function EyeParametersCard({
             <div className="space-y-5">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="col-span-2 sm:col-span-1">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика <span className="text-red-500">*</span></label>
                         <select {...register(`config.eyes.${eye}.characteristic`)} className="input">
                             <option value="">— выберите —</option>
                             {Object.entries(CharacteristicLabels).map(([val, lbl]) => (
@@ -105,7 +105,7 @@ export function EyeParametersCard({
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Km</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Km <span className="text-red-500">*</span></label>
                         <input
                             type="number"
                             step="0.01"
@@ -124,7 +124,7 @@ export function EyeParametersCard({
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">DIA</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">DIA <span className="text-red-500">*</span></label>
                         <select {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })} className="input">
                             <option value="">—</option>
                             {DIA_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
@@ -176,7 +176,7 @@ export function EyeParametersCard({
                     )}
 
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Dk</label>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Dk <span className="text-red-500">*</span></label>
                         <select {...register(`config.eyes.${eye}.dk`)} className="input">
                             <option value="">—</option>
                             <option value="50">50</option>

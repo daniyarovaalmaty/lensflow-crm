@@ -170,6 +170,44 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
     // Form submission
     const onFormSubmit = async (data: CreateOrderDTO) => {
+        // Custom validation: ensure key fields are filled
+        const validationErrors: string[] = [];
+
+        // Patient name is required
+        if (!data.patient?.name || data.patient.name.trim().length < 2) {
+            validationErrors.push('Укажите имя пациента (минимум 2 символа)');
+        }
+
+        // At least one eye must have qty > 0
+        const odQtyVal = Number(data.config?.eyes?.od?.qty) || 0;
+        const osQtyVal = Number(data.config?.eyes?.os?.qty) || 0;
+        if (odQtyVal === 0 && osQtyVal === 0) {
+            validationErrors.push('Укажите количество хотя бы для одного глаза (OD или OS)');
+        }
+
+        // Validate OD eye parameters if qty > 0
+        if (odQtyVal > 0) {
+            const od = data.config?.eyes?.od;
+            if (!od?.characteristic) validationErrors.push('OD: выберите характеристику (тип линзы)');
+            if (od?.km == null) validationErrors.push('OD: укажите Km');
+            if (od?.dia == null) validationErrors.push('OD: укажите DIA');
+            if (!od?.dk) validationErrors.push('OD: выберите Dk');
+        }
+
+        // Validate OS eye parameters if qty > 0
+        if (osQtyVal > 0) {
+            const os = data.config?.eyes?.os;
+            if (!os?.characteristic) validationErrors.push('OS: выберите характеристику (тип линзы)');
+            if (os?.km == null) validationErrors.push('OS: укажите Km');
+            if (os?.dia == null) validationErrors.push('OS: укажите DIA');
+            if (!os?.dk) validationErrors.push('OS: выберите Dk');
+        }
+
+        if (validationErrors.length > 0) {
+            alert('Заполните все обязательные поля:\n\n• ' + validationErrors.join('\n• '));
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             await onSubmit({ ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined });
