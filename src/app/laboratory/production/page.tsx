@@ -1480,12 +1480,24 @@ export default function ProductionHubPage() {
                         </span>
                         <div className="w-px h-6 bg-gray-200" />
                         <div className="flex items-center gap-2 flex-wrap">
-                            <button onClick={() => bulkUpdateStatus('in_production')} className="btn text-xs py-1.5 px-3 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg">В работу</button>
-                            <button onClick={() => bulkUpdateStatus('ready')} className="btn text-xs py-1.5 px-3 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg">Готово</button>
-                            <button onClick={() => bulkUpdateStatus('shipped')} className="btn text-xs py-1.5 px-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg">Отгрузить</button>
-                            <button onClick={() => bulkUpdateStatus('rework')} className="btn text-xs py-1.5 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg">На доработку</button>
-                            <button onClick={() => bulkUpdateStatus('accountant_review')} className="btn text-xs py-1.5 px-3 bg-cyan-100 text-cyan-700 hover:bg-cyan-200 rounded-lg">Бухгалтеру</button>
-                            <button onClick={() => bulkUpdateStatus('out_for_delivery')} className="btn text-xs py-1.5 px-3 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg">В доставку</button>
+                            {perms.canChangeStatus && (
+                                <button onClick={() => bulkUpdateStatus('in_production')} className="btn text-xs py-1.5 px-3 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-lg">В работу</button>
+                            )}
+                            {perms.canMarkReady && (
+                                <button onClick={() => bulkUpdateStatus('ready')} className="btn text-xs py-1.5 px-3 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg">Готово</button>
+                            )}
+                            {perms.canShip && (
+                                <button onClick={() => bulkUpdateStatus('shipped')} className="btn text-xs py-1.5 px-3 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg">Отгрузить</button>
+                            )}
+                            {perms.canMarkRework && (
+                                <button onClick={() => bulkUpdateStatus('rework')} className="btn text-xs py-1.5 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg">На доработку</button>
+                            )}
+                            {perms.canSendToAccountant && (
+                                <button onClick={() => bulkUpdateStatus('accountant_review')} className="btn text-xs py-1.5 px-3 bg-cyan-100 text-cyan-700 hover:bg-cyan-200 rounded-lg">Бухгалтеру</button>
+                            )}
+                            {(perms.canSendToAccountant || perms.canDeliver) && (
+                                <button onClick={() => bulkUpdateStatus('out_for_delivery')} className="btn text-xs py-1.5 px-3 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg">В доставку</button>
+                            )}
                         </div>
                         <button
                             onClick={() => { setBulkSelectedIds(new Set<string>()); setBulkMode(false); }}
