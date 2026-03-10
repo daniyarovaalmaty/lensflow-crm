@@ -325,10 +325,9 @@ export default function ProductionHubPage() {
         in_production: filteredOrders.filter(o => o.status === 'in_production'),
         ready: filteredOrders.filter(o => o.status === 'ready'),
         rework: filteredOrders.filter(o => o.status === 'rework'),
-        docs_prep: filteredOrders.filter(o => o.status === 'docs_prep'),
+        shipped: filteredOrders.filter(o => o.status === 'shipped'),
         accountant_review: filteredOrders.filter(o => o.status === 'accountant_review'),
         docs_ready: filteredOrders.filter(o => o.status === 'docs_ready'),
-        shipped: filteredOrders.filter(o => o.status === 'shipped'),
         out_for_delivery: filteredOrders.filter(o => o.status === 'out_for_delivery'),
         delivered: filteredOrders.filter(o => o.status === 'delivered'),
     };
@@ -818,32 +817,22 @@ export default function ProductionHubPage() {
                                         </button>
                                     )}
                                     {perms.canShip && (
-                                        perms.canSendToAccountant ? (
-                                            <button
-                                                onClick={() => { updateOrderStatus(order.order_id, 'docs_prep'); setSelectedOrderId(null); }}
-                                                className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
-                                            >
-                                                <FileText className="w-3.5 h-3.5" />
-                                                Подготовить док.
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={async () => {
-                                                    await generateTracking(order.order_id);
-                                                    await updateOrderStatus(order.order_id, 'shipped');
-                                                    setSelectedOrderId(null);
-                                                }}
-                                                className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                            >
-                                                Отгрузить
-                                            </button>
-                                        )
+                                        <button
+                                            onClick={async () => {
+                                                await generateTracking(order.order_id);
+                                                await updateOrderStatus(order.order_id, 'shipped');
+                                                setSelectedOrderId(null);
+                                            }}
+                                            className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                        >
+                                            Отгрузить
+                                        </button>
                                     )}
                                 </>
                             )}
 
-                            {/* Accountant workflow transitions */}
-                            {perms.canSendToAccountant && order.status === 'docs_prep' && (
+                            {/* Accountant workflow: shipped → accountant → docs_ready → out_for_delivery */}
+                            {perms.canSendToAccountant && order.status === 'shipped' && (
                                 <button
                                     onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
                                     className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
@@ -861,14 +850,11 @@ export default function ProductionHubPage() {
                             )}
                             {perms.canSendToAccountant && order.status === 'docs_ready' && (
                                 <button
-                                    onClick={async () => {
-                                        await generateTracking(order.order_id);
-                                        await updateOrderStatus(order.order_id, 'shipped');
-                                        setSelectedOrderId(null);
-                                    }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                    onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
+                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
                                 >
-                                    Отгрузить
+                                    <Truck className="w-3.5 h-3.5" />
+                                    В доставку
                                 </button>
                             )}
                             {perms.canChangeStatus && order.status === 'rework' && (
@@ -880,16 +866,6 @@ export default function ProductionHubPage() {
                                 </button>
                             )}
 
-                            {/* Logistician: take shipped order out for delivery */}
-                            {perms.canDeliver && order.status === 'shipped' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
-                                >
-                                    <Truck className="w-3.5 h-3.5" />
-                                    Передать в доставку
-                                </button>
-                            )}
 
 
 
@@ -1273,10 +1249,9 @@ export default function ProductionHubPage() {
                         <Column title="В производстве" icon={Clock} orders={ordersByStatus.in_production} color="bg-yellow-50 text-yellow-700" />
                         <Column title="Готово" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
                         <Column title="На доработку" icon={RotateCcw} orders={ordersByStatus.rework} color="bg-orange-50 text-orange-700" />
-                        <Column title="Подгот. док." icon={FileText} orders={ordersByStatus.docs_prep} color="bg-violet-50 text-violet-700" />
+                        <Column title="Отгружено" icon={TruckIcon} orders={ordersByStatus.shipped} color="bg-gray-50 text-gray-700" />
                         <Column title="У бухгалтера" icon={DollarSign} orders={ordersByStatus.accountant_review} color="bg-cyan-50 text-cyan-700" />
                         <Column title="Док. готовы" icon={CheckCircle} orders={ordersByStatus.docs_ready} color="bg-emerald-50 text-emerald-700" />
-                        <Column title="Отгружено" icon={TruckIcon} orders={ordersByStatus.shipped} color="bg-gray-50 text-gray-700" />
                         <Column title="В доставке" icon={Truck} orders={ordersByStatus.out_for_delivery} color="bg-purple-50 text-purple-700" />
                         <Column title="Доставлено" icon={CheckCircle} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
 
