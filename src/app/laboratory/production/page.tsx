@@ -178,6 +178,21 @@ export default function ProductionHubPage() {
         });
     };
 
+    // Check if the current user can do anything with an order in this status
+    const canBulkSelectOrder = (status: OrderStatus): boolean => {
+        switch (status) {
+            case 'new': return perms.canChangeStatus; // → in_production
+            case 'in_production': return perms.canMarkReady;   // → ready
+            case 'ready': return perms.canShip || perms.canMarkRework || perms.canSendToAccountant;
+            case 'rework': return perms.canChangeStatus; // → in_production
+            case 'shipped': return perms.canDeliver || perms.canSendToAccountant;
+            case 'accountant_review': return perms.canProcessDocs;
+            case 'docs_ready': return perms.canSendToAccountant;
+            case 'out_for_delivery': return perms.canSendToAccountant;
+            default: return false;
+        }
+    };
+
     const generateTracking = async (orderId: string) => {
         const trackingNumber = `TRK-${Date.now().toString(36).toUpperCase()}`;
         await fetch(`/api/orders/${orderId}/status`, {
@@ -487,12 +502,14 @@ export default function ProductionHubPage() {
             <div
                 onClick={() => {
                     if (bulkMode) {
-                        toggleBulkSelect(order.order_id);
+                        if (canBulkSelectOrder(order.status as OrderStatus)) {
+                            toggleBulkSelect(order.order_id);
+                        }
                     } else {
                         setSelectedOrderId(order.order_id); setShowDefectForm(false);
                     }
                 }}
-                className={`card cursor-pointer hover:shadow-md transition-all group ${bulkMode && bulkSelectedIds.has(order.order_id) ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-300' : 'hover:border-blue-200'}`}
+                className={`card cursor-pointer hover:shadow-md transition-all group ${bulkMode && bulkSelectedIds.has(order.order_id) ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-300' : 'hover:border-blue-200'} ${bulkMode && !canBulkSelectOrder(order.status as OrderStatus) ? 'opacity-40 cursor-not-allowed' : ''}`}
             >
                 <div className="space-y-2">
                     <div className="flex items-start justify-between">
