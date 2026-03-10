@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText, Download, DollarSign, CheckCircle, Clock, XCircle,
     Search, Calendar, TrendingUp, Package, ChevronDown, ChevronUp, User, Building2, MapPin,
-    Bell, ArrowRight, AlertCircle
+    Bell, ArrowRight, AlertCircle, Upload, Trash2, Paperclip
 } from 'lucide-react';
 import type { Order, PaymentStatus } from '@/types/order';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors, CharacteristicLabels } from '@/types/order';
@@ -128,6 +128,8 @@ export default function AccountantPage() {
     const [updating, setUpdating] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [docFilter, setDocFilter] = useState<'all' | 'accountant_review' | 'docs_ready'>('all');
+    const [orderDocs, setOrderDocs] = useState<Record<string, Array<{ index: number; name: string; mimeType: string; size: number; uploadedAt: string; uploadedBy: string }>>>({});
+    const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
     useEffect(() => { loadOrders(); }, []);
 
@@ -165,6 +167,72 @@ export default function AccountantPage() {
             if (res.ok) await loadOrders();
         } finally {
             setUpdating(null);
+        }
+    };
+
+    const loadDocs = async (orderId: string) => {
+        try {
+            const res = await fetch(`/api/orders/${orderId}/documents`);
+            if (res.ok) {
+                const docs = await res.json();
+                setOrderDocs(prev => ({ ...prev, [orderId]: docs }));
+            }
+        } catch (e) {
+            console.error('Load docs error:', e);
+        }
+    };
+
+    const handleFileUpload = async (orderId: string, files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        setUploadingDoc(orderId);
+        try {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const base64 = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve((reader.result as string).split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                await fetch(`/api/orders/${orderId}/documents`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: file.name,
+                        data: base64,
+                        mimeType: file.type,
+                        size: file.size,
+                    }),
+                });
+            }
+            await loadDocs(orderId);
+        } finally {
+            setUploadingDoc(null);
+        }
+    };
+
+    const deleteDoc = async (orderId: string, index: number) => {
+        await fetch(`/api/orders/${orderId}/documents`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ index }),
+        });
+        await loadDocs(orderId);
+    };
+
+    const downloadDoc = async (orderId: string, index: number, fileName: string) => {
+        try {
+            const res = await fetch(`/api/orders/${orderId}/documents?download=${index}`);
+            if (!res.ok) return;
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error('Download error:', e);
         }
     };
 
@@ -608,6 +676,64 @@ export default function AccountantPage() {
                                                                                 <Download className="w-3.5 h-3.5" />
                                                                                 Скачать счёт (Excel)
                                                                             </button>
+                                                                        </div>
+
+                                                                        {/* Closing documents upload */}
+                                                                        <div className="mt-4 pt-4 border-t border-gray-200">
+                                                                            <div className="flex items-center justify-between mb-3">
+                                                                                <span className="text-sm font-semibold text-gray-700">Закрывающие документы</span>
+                                                                                <label className="flex items-center gap-2 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer">
+                                                                                    <Upload className="w-3.5 h-3.5" />
+                                                                                    {uploadingDoc === order.order_id ? 'Загрузка...' : 'Загрузить файл'}
+                                                                                    <input
+                                                                                        type="file"
+                                                                                        multiple
+                                                                                        className="hidden"
+                                                                                        disabled={uploadingDoc === order.order_id}
+                                                                                        onChange={e => handleFileUpload(order.order_id, e.target.files)}
+                                                                                    />
+                                                                                </label>
+                                                                            </div>
+                                                                            {/* Document list */}
+                                                                            {(() => {
+                                                                                const docs = orderDocs[order.order_id];
+                                                                                if (docs === undefined) {
+                                                                                    loadDocs(order.order_id);
+                                                                                    return <p className="text-xs text-gray-400">Загрузка...</p>;
+                                                                                }
+                                                                                if (docs.length === 0) {
+                                                                                    return <p className="text-xs text-gray-400">Нет загруженных документов</p>;
+                                                                                }
+                                                                                return (
+                                                                                    <div className="space-y-2">
+                                                                                        {docs.map((doc, i) => (
+                                                                                            <div key={i} className="flex items-center gap-3 bg-white rounded-lg border border-gray-200 px-3 py-2">
+                                                                                                <Paperclip className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                                                                                <div className="flex-1 min-w-0">
+                                                                                                    <p className="text-xs font-medium text-gray-800 truncate">{doc.name}</p>
+                                                                                                    <p className="text-[10px] text-gray-400">
+                                                                                                        {(doc.size / 1024).toFixed(1)} KB · {new Date(doc.uploadedAt).toLocaleString('ru-RU')}
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                                <button
+                                                                                                    onClick={() => downloadDoc(order.order_id, doc.index, doc.name)}
+                                                                                                    className="text-primary-600 hover:text-primary-700 p-1"
+                                                                                                    title="Скачать"
+                                                                                                >
+                                                                                                    <Download className="w-3.5 h-3.5" />
+                                                                                                </button>
+                                                                                                <button
+                                                                                                    onClick={() => deleteDoc(order.order_id, doc.index)}
+                                                                                                    className="text-red-400 hover:text-red-600 p-1"
+                                                                                                    title="Удалить"
+                                                                                                >
+                                                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
                                                                         </div>
                                                                     </div>
                                                                 </motion.div>

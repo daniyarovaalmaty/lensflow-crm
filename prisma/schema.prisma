@@ -198,6 +198,9 @@ model Order {
   // Ordered products snapshot: [{ productId, name, category, qty, price }]
   products Json?
 
+  // Closing documents uploaded by accountant: [{ name, data (base64), mimeType, size, uploadedAt, uploadedBy }]
+  closingDocuments Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
