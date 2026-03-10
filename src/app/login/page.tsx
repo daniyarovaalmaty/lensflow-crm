@@ -56,7 +56,12 @@ function LoginContent() {
             if (callbackUrl) {
                 router.push(callbackUrl);
             } else if (role === 'laboratory') {
-                router.push('/laboratory/production');
+                const subRole = session?.user?.subRole;
+                if (subRole === 'lab_accountant') {
+                    router.push('/laboratory/accountant');
+                } else {
+                    router.push('/laboratory/production');
+                }
             } else if (role === 'optic' || role === 'doctor') {
                 router.push('/optic/dashboard');
             } else {
