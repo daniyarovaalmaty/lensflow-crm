@@ -1200,13 +1200,15 @@ return (
                         <Download className="w-4 h-4" />
                         Экспорт XLS
                     </button>
-                    <button
-                        onClick={exportMaterials}
-                        className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
-                    >
-                        <Download className="w-4 h-4" />
-                        Расходные мат.
-                    </button>
+                    {(subRole === 'lab_admin' || subRole === 'lab_head') && (
+                        <button
+                            onClick={exportMaterials}
+                            className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
+                        >
+                            <Download className="w-4 h-4" />
+                            Расходные мат.
+                        </button>
+                    )}
                 </div>
 
                 <AnimatePresence>
