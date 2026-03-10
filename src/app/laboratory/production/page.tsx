@@ -787,170 +787,175 @@ export default function ProductionHubPage() {
                         )}
 
                         {/* Status actions — gated by permissions */}
-                        <div className="flex gap-2 pt-2 border-t border-gray-100">
-                            {perms.canPrint && (
-                                <button
-                                    onClick={() => handlePrint(order)}
-                                    className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
-                                >
-                                    <Printer className="w-3.5 h-3.5" />
-                                    Печать
-                                </button>
-                            )}
-                            <button
-                                onClick={() => {
-                                    import('@/lib/generateOrderApplicationPdf').then(({ generateOrderApplicationPdf }) => {
-                                        generateOrderApplicationPdf({
-                                            order_id: order.order_id,
-                                            patient: order.patient,
-                                            meta: order.meta,
-                                            company: order.company,
-                                            inn: order.inn,
-                                            config: order.config,
-                                            is_urgent: order.is_urgent,
-                                            document_name_od: (order as any).document_name_od,
-                                            document_name_os: (order as any).document_name_os,
-                                            delivery_method: order.delivery_method,
-                                            delivery_address: order.delivery_address,
-                                            notes: order.notes,
-                                        });
-                                    });
-                                }}
-                                className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
-                            >
-                                <Download className="w-3.5 h-3.5" />
-                                Скачать PDF
-                            </button>
-
-                            {perms.canChangeStatus && order.status === 'new' && (() => {
-                                const canStart = canStartProduction(order);
-                                const remainMs = editWindowRemainingMs(order);
-                                const h = Math.floor(remainMs / 3600_000);
-                                const m = Math.floor((remainMs % 3600_000) / 60_000);
-                                const countdownStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;
-                                return (
-                                    <div className="flex-1">
-                                        {!canStart && (
-                                            <div className="text-xs text-amber-600 flex items-center gap-1 mb-1.5">
-                                                <Clock className="w-3.5 h-3.5" />
-                                                Доступно через {countdownStr} — врач редактирует
-                                            </div>
-                                        )}
-                                        <button
-                                            onClick={() => { if (canStart) { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); } }}
-                                            disabled={!canStart}
-                                            title={!canStart ? `Заказ можно взять в работу через ${countdownStr}` : undefined}
-                                            className={`btn text-xs py-2 px-4 w-full ${canStart ? 'btn-primary' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                                        >
-                                            {canStart ? 'В работу' : `Заблокировано (${countdownStr})`}
-                                        </button>
-                                    </div>
-                                );
-                            })()}
-
-                            {perms.canMarkReady && order.status === 'in_production' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                >
-                                    Готово
-                                </button>
-                            )}
-                            {order.status === 'ready' && (
-                                <>
-                                    {perms.canMarkRework && (
-                                        <button
-                                            onClick={() => { updateOrderStatus(order.order_id, 'rework'); setSelectedOrderId(null); }}
-                                            className="btn text-xs py-2 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors gap-1.5"
-                                        >
-                                            <RotateCcw className="w-3.5 h-3.5" />
-                                            На доработку
-                                        </button>
-                                    )}
-                                    {perms.canShip && (
-                                        <button
-                                            onClick={async () => {
-                                                await generateTracking(order.order_id);
-                                                await updateOrderStatus(order.order_id, 'shipped');
-                                                setSelectedOrderId(null);
-                                            }}
-                                            className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                        >
-                                            Отгрузить
-                                        </button>
-                                    )}
-                                </>
-                            )}
-
-                            {/* Accountant workflow: shipped → accountant → docs_ready → out_for_delivery */}
-                            {perms.canSendToAccountant && order.status === 'shipped' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
-                                    className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
-                                >
-                                    Отправить бухгалтеру
-                                </button>
-                            )}
-                            {perms.canProcessDocs && order.status === 'accountant_review' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'docs_ready'); setSelectedOrderId(null); }}
-                                    className="btn text-xs py-2 px-4 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
-                                >
-                                    Документы готовы
-                                </button>
-                            )}
+                        <div className="pt-2 border-t border-gray-100 space-y-3">
+                            {/* Closing documents section - shown for docs_ready */}
                             {perms.canSendToAccountant && order.status === 'docs_ready' && (
-                                <div className="w-full space-y-3">
-                                    {/* Closing documents card */}
-                                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Paperclip className="w-4 h-4 text-gray-500" />
-                                            <span className="text-sm font-semibold text-gray-700">Закрывающие документы</span>
-                                        </div>
-                                        {(() => {
-                                            const docs = closingDocs[order.order_id];
-                                            if (!docs) return <p className="text-xs text-gray-400">Загрузка...</p>;
-                                            if (docs.length === 0) return <p className="text-xs text-gray-400">Нет документов</p>;
-                                            return (
-                                                <div className="space-y-2">
-                                                    {docs.map((doc, i) => (
-                                                        <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2.5">
-                                                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                                                                <FileText className="w-4 h-4 text-blue-500" />
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-xs font-medium text-gray-800 truncate">{doc.name}</p>
-                                                                <p className="text-[10px] text-gray-400">{(doc.size / 1024).toFixed(1)} KB</p>
-                                                            </div>
-                                                            <button
-                                                                onClick={() => downloadClosingDoc(order.order_id, doc.index, doc.name)}
-                                                                className="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 flex items-center justify-center transition-colors shrink-0"
-                                                                title="Скачать"
-                                                            >
-                                                                <Download className="w-4 h-4 text-primary-600" />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            );
-                                        })()}
+                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Paperclip className="w-4 h-4 text-gray-500" />
+                                        <span className="text-sm font-semibold text-gray-700">Закрывающие документы</span>
                                     </div>
-                                    {/* Delivery button */}
-                                    <button
-                                        onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
-                                        className="btn btn-primary text-xs py-2.5 px-6 gap-2 w-full"
-                                    >
-                                        <Truck className="w-4 h-4" />
-                                        В доставку
-                                    </button>
+                                    {(() => {
+                                        const docs = closingDocs[order.order_id];
+                                        if (!docs) return <p className="text-xs text-gray-400">Загрузка...</p>;
+                                        if (docs.length === 0) return <p className="text-xs text-gray-400">Нет документов</p>;
+                                        return (
+                                            <div className="space-y-2">
+                                                {docs.map((doc, i) => (
+                                                    <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2.5">
+                                                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                                                            <FileText className="w-4 h-4 text-blue-500" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-medium text-gray-800 truncate">{doc.name}</p>
+                                                            <p className="text-[10px] text-gray-400">{(doc.size / 1024).toFixed(1)} KB</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => downloadClosingDoc(order.order_id, doc.index, doc.name)}
+                                                            className="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 flex items-center justify-center transition-colors shrink-0"
+                                                            title="Скачать"
+                                                        >
+                                                            <Download className="w-4 h-4 text-primary-600" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             )}
-                            {perms.canChangeStatus && order.status === 'rework' && (
+
+                            {/* Action buttons row */}
+                            <div className="flex gap-2 flex-wrap">
+                                {perms.canPrint && (
+                                    <button
+                                        onClick={() => handlePrint(order)}
+                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
+                                    >
+                                        <Printer className="w-3.5 h-3.5" />
+                                        Печать
+                                    </button>
+                                )}
                                 <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                    onClick={() => {
+                                        import('@/lib/generateOrderApplicationPdf').then(({ generateOrderApplicationPdf }) => {
+                                            generateOrderApplicationPdf({
+                                                order_id: order.order_id,
+                                                patient: order.patient,
+                                                meta: order.meta,
+                                                company: order.company,
+                                                inn: order.inn,
+                                                config: order.config,
+                                                is_urgent: order.is_urgent,
+                                                document_name_od: (order as any).document_name_od,
+                                                document_name_os: (order as any).document_name_os,
+                                                delivery_method: order.delivery_method,
+                                                delivery_address: order.delivery_address,
+                                                notes: order.notes,
+                                            });
+                                        });
+                                    }}
+                                    className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
                                 >
-                                    Вернуть в работу
+                                    <Download className="w-3.5 h-3.5" />
+                                    Скачать PDF
+                                </button>
+
+                                {perms.canChangeStatus && order.status === 'new' && (() => {
+                                    const canStart = canStartProduction(order);
+                                    const remainMs = editWindowRemainingMs(order);
+                                    const h = Math.floor(remainMs / 3600_000);
+                                    const m = Math.floor((remainMs % 3600_000) / 60_000);
+                                    const countdownStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;
+                                    return (
+                                        <div className="flex-1">
+                                            {!canStart && (
+                                                <div className="text-xs text-amber-600 flex items-center gap-1 mb-1.5">
+                                                    <Clock className="w-3.5 h-3.5" />
+                                                    Доступно через {countdownStr} — врач редактирует
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={() => { if (canStart) { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); } }}
+                                                disabled={!canStart}
+                                                title={!canStart ? `Заказ можно взять в работу через ${countdownStr}` : undefined}
+                                                className={`btn text-xs py-2 px-4 w-full ${canStart ? 'btn-primary' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                            >
+                                                {canStart ? 'В работу' : `Заблокировано (${countdownStr})`}
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
+
+                                {perms.canMarkReady && order.status === 'in_production' && (
+                                    <button
+                                        onClick={() => { updateOrderStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
+                                        className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                    >
+                                        Готово
+                                    </button>
+                                )}
+                                {order.status === 'ready' && (
+                                    <>
+                                        {perms.canMarkRework && (
+                                            <button
+                                                onClick={() => { updateOrderStatus(order.order_id, 'rework'); setSelectedOrderId(null); }}
+                                                className="btn text-xs py-2 px-3 bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors gap-1.5"
+                                            >
+                                                <RotateCcw className="w-3.5 h-3.5" />
+                                                На доработку
+                                            </button>
+                                        )}
+                                        {perms.canShip && (
+                                            <button
+                                                onClick={async () => {
+                                                    await generateTracking(order.order_id);
+                                                    await updateOrderStatus(order.order_id, 'shipped');
+                                                    setSelectedOrderId(null);
+                                                }}
+                                                className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                            >
+                                                Отгрузить
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Accountant workflow: shipped → accountant → docs_ready → out_for_delivery */}
+                                {perms.canSendToAccountant && order.status === 'shipped' && (
+                                    <button
+                                        onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
+                                        className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
+                                    >
+                                        Отправить бухгалтеру
+                                    </button>
+                                )}
+                                {perms.canProcessDocs && order.status === 'accountant_review' && (
+                                    <button
+                                        onClick={() => { updateOrderStatus(order.order_id, 'docs_ready'); setSelectedOrderId(null); }}
+                                        className="btn text-xs py-2 px-4 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+                                    >
+                                        Документы готовы
+                                    </button>
+                                )}
+                                {perms.canChangeStatus && order.status === 'rework' && (
+                                    <button
+                                        onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
+                                        className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                    >
+                                        Вернуть в работу
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Delivery button — full width, separate from other buttons */}
+                            {perms.canSendToAccountant && order.status === 'docs_ready' && (
+                                <button
+                                    onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
+                                    className="btn btn-primary text-sm py-2.5 w-full gap-2"
+                                >
+                                    <Truck className="w-4 h-4" />
+                                    В доставку
                                 </button>
                             )}
 
