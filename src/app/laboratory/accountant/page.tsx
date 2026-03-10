@@ -188,6 +188,13 @@ export default function AccountantPage() {
 
     useEffect(() => { loadOrders(); }, []);
 
+    // Load documents when an order is expanded
+    useEffect(() => {
+        if (expandedId && !orderDocs[expandedId]) {
+            loadDocs(expandedId);
+        }
+    }, [expandedId]);
+
     const loadOrders = async () => {
         try {
             const res = await fetch('/api/orders');
@@ -752,8 +759,7 @@ export default function AccountantPage() {
                                                                             {/* Document list */}
                                                                             {(() => {
                                                                                 const docs = orderDocs[order.order_id];
-                                                                                if (docs === undefined) {
-                                                                                    loadDocs(order.order_id);
+                                                                                if (!docs) {
                                                                                     return <p className="text-xs text-gray-400">Загрузка...</p>;
                                                                                 }
                                                                                 if (docs.length === 0) {
