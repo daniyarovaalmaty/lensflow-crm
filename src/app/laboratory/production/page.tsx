@@ -8,7 +8,7 @@ import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
     RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip,
-    CheckSquare, Square
+    CheckSquare, Square, Tag
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
@@ -928,7 +928,23 @@ export default function ProductionHubPage() {
                                     <Download className="w-3.5 h-3.5" />
                                     Скачать PDF
                                 </button>
-
+                                <button
+                                    onClick={() => {
+                                        import('@/lib/generateLabelPdf').then(({ generateLabelPdf }) => {
+                                            generateLabelPdf({
+                                                order_id: order.order_id,
+                                                patient: order.patient,
+                                                meta: order.meta,
+                                                company: order.company,
+                                                config: order.config,
+                                            });
+                                        });
+                                    }}
+                                    className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
+                                >
+                                    <Tag className="w-3.5 h-3.5" />
+                                    Этикетка
+                                </button>
                                 {perms.canChangeStatus && order.status === 'new' && (() => {
                                     const canStart = canStartProduction(order);
                                     const remainMs = editWindowRemainingMs(order);
