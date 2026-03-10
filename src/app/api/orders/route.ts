@@ -255,9 +255,9 @@ export async function POST(request: NextRequest) {
                 return product.price || 0;
             };
 
-            const productMap = new Map(lensProducts.map(p => [p.description, p]));
-            const odProduct = productMap.get(odChar);
-            const osProduct = productMap.get(osChar);
+            const productMap = new Map(lensProducts.map((p: any) => [p.description, p]));
+            const odProduct: any = productMap.get(odChar);
+            const osProduct: any = productMap.get(osChar);
 
             odUnitPrice = odProduct ? getLensPrice(odProduct, odDk) : 0;
             osUnitPrice = osProduct ? getLensPrice(osProduct, osDk) : 0;
@@ -288,14 +288,14 @@ export async function POST(request: NextRequest) {
         // Additional products — look up real prices from catalog (client may not have them)
         let additionalProducts = body.products as Array<{ productId?: string; name: string; qty: number; price: number; category?: string }> | undefined;
         if (additionalProducts && additionalProducts.length > 0) {
-            const productIds = additionalProducts.map(p => p.productId).filter(Boolean) as string[];
+            const productIds = additionalProducts.map((p: any) => p.productId).filter(Boolean) as string[];
             if (productIds.length > 0) {
                 const dbProducts = await prisma.product.findMany({
                     where: { id: { in: productIds } },
                     select: { id: true, price: true },
                 });
-                const priceMap = new Map(dbProducts.map(p => [p.id, p.price]));
-                additionalProducts = additionalProducts.map(p => ({
+                const priceMap = new Map(dbProducts.map((p: any) => [p.id, p.price]));
+                additionalProducts = additionalProducts.map((p: any) => ({
                     ...p,
                     price: p.productId ? (priceMap.get(p.productId) ?? p.price) : p.price,
                 }));

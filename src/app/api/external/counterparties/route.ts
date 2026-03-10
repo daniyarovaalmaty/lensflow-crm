@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
             orderBy: { name: 'asc' },
         });
 
-        const result = orgs.map(o => ({
+        const result = orgs.map((o: any) => ({
             id: o.id,
             name: o.name,
             city: o.city,

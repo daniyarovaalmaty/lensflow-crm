@@ -72,7 +72,7 @@ export async function GET() {
             lastDate: string;
         }>();
 
-        orders.forEach(order => {
+        orders.forEach((order: any) => {
             const doctorName = order.doctorName || order.createdBy?.fullName || 'Не указан';
             const doctorId = order.createdBy?.id || doctorName;
             const existing = doctorMap.get(doctorId) || {
@@ -98,7 +98,7 @@ export async function GET() {
 
         // Build clinic data from orders for revenue
         const clinicOrderData = new Map<string, { revenue: number; unpaid: number; orderCount: number; lastDate: string }>();
-        orders.forEach(order => {
+        orders.forEach((order: any) => {
             const orgId = order.organizationId;
             if (!orgId) return;
             const existing = clinicOrderData.get(orgId) || { revenue: 0, unpaid: 0, orderCount: 0, lastDate: '' };
@@ -110,7 +110,7 @@ export async function GET() {
             clinicOrderData.set(orgId, existing);
         });
 
-        const clinics = organizations.map(org => {
+        const clinics = organizations.map((org: any) => {
             const orderData = clinicOrderData.get(org.id) || { revenue: 0, unpaid: 0, orderCount: 0, lastDate: '' };
             return {
                 id: org.id,
@@ -131,7 +131,7 @@ export async function GET() {
 
         return NextResponse.json({
             doctors: Array.from(doctorMap.values()).sort((a, b) => b.orders - a.orders),
-            clinics: clinics.sort((a, b) => b.orders - a.orders),
+            clinics: clinics.sort((a: any, b: any) => b.orders - a.orders),
         });
     } catch (error) {
         console.error('GET /api/counterparties error:', error);

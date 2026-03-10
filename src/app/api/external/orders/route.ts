@@ -93,9 +93,9 @@ export async function POST(request: NextRequest) {
                 where: { category: 'lens', description: { in: [odChar, osChar].filter(Boolean) } },
                 select: { description: true, price: true },
             });
-            const priceMap = new Map(lensProducts.map(p => [p.description, p.price]));
-            odPrice = (priceMap.get(odChar) || 0) * odQty;
-            osPrice = (priceMap.get(osChar) || 0) * osQty;
+            const priceMap = new Map(lensProducts.map((p: any) => [p.description, p.price]));
+            odPrice = Number(priceMap.get(odChar) || 0) * odQty;
+            osPrice = Number(priceMap.get(osChar) || 0) * osQty;
         }
 
         const basePrice = odPrice + osPrice;
@@ -213,7 +213,7 @@ export async function GET(request: NextRequest) {
             'cancelled': 'cancelled',
         };
 
-        const result = orders.map(o => ({
+        const result = orders.map((o: any) => ({
             lensflow_order_id: o.orderNumber,
             medmundus_order_id: (o as any).externalId || null,
             status: statusMap[o.status] || o.status,

@@ -76,7 +76,7 @@ export async function GET(
             return NextResponse.json({
                 type: 'clinic',
                 data: org,
-                orders: orders.map(o => ({
+                orders: orders.map((o: any) => ({
                     order_id: o.orderNumber,
                     doctor: o.doctorName,
                     patient: o.patient?.name || '',
@@ -130,7 +130,7 @@ export async function GET(
             return NextResponse.json({
                 type: 'doctor',
                 data: user || { id: params.id, fullName: 'Не найден' },
-                orders: orders.map(o => ({
+                orders: orders.map((o: any) => ({
                     order_id: o.orderNumber,
                     doctor: o.doctorName,
                     patient: o.patient?.name || '',
