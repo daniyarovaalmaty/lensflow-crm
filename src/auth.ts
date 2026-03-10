@@ -69,6 +69,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             ) {
                 if (!session) return false; // redirects to pages.signIn
             }
+
+            // Redirect lab_accountant from production to accountant page
+            if (pathname === '/laboratory/production' && session?.user?.subRole === 'lab_accountant') {
+                return Response.redirect(new URL('/laboratory/accountant', request.url));
+            }
+
             return true;
         },
         async jwt({ token, user }) {
