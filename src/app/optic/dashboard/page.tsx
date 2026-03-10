@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,9 +29,24 @@ const SortLabels: Record<SortOption, string> = {
 
 export default function OpticDashboard() {
     const { data: session } = useSession();
+    const router = useRouter();
     const subRole = (session?.user?.subRole || 'optic_manager') as SubRole;
     const perms = getPermissions(subRole);
     const canSeePrices = subRole !== 'optic_doctor';
+
+    // Redirect laboratory roles to their proper pages
+    useEffect(() => {
+        if (!session?.user) return;
+        const role = session.user.role;
+        if (role === 'laboratory') {
+            const sr = session.user.subRole;
+            if (sr === 'lab_accountant') {
+                router.replace('/laboratory/accountant');
+            } else {
+                router.replace('/laboratory/production');
+            }
+        }
+    }, [session, router]);
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
