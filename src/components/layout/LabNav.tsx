@@ -16,7 +16,7 @@ const navItems = [
     { href: '/laboratory/accountant', label: 'Финансы', icon: FileText, subRoles: ['lab_head', 'lab_admin', 'lab_accountant'] },
     { href: '/laboratory/counterparties', label: 'Контрагенты', icon: Building2, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/staff', label: 'Сотрудники', icon: Users, subRoles: ['lab_head'] },
-    { href: '/laboratory/settings', label: 'Настройки', icon: Settings, subRoles: ['lab_head', 'lab_admin'] },
+    { href: '/laboratory/settings', label: 'Настройки', icon: Settings, subRoles: ['lab_head'] },
 ];
 
 export default function LabNav() {
