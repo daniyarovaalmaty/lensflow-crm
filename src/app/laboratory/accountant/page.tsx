@@ -14,6 +14,7 @@ import type { Characteristic } from '@/types/order';
 import { getPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 const FALLBACK_PRICE_PER_LENS = 17_500;
 const URGENT_SURCHARGE_PCT = 25;
@@ -35,8 +36,7 @@ function getLensPrice(char: string | undefined): number {
     return 17_500;
 }
 
-function generateInvoice(order: Order) {
-    const wb = XLSX.utils.book_new();
+async function generateInvoice(order: Order) {
     const od = order.config.eyes.od;
     const os = order.config.eyes.os;
     const odQty = Number(od?.qty) || 0;
@@ -51,117 +51,173 @@ function generateInvoice(order: Order) {
     const dateStr = date.toLocaleDateString('ru-RU');
     const fmt = (n: number) => n.toLocaleString('ru-RU');
 
-    // Calculate totals
     const subtotal = (odQty * odPrice) + (osQty * osPrice) + additionalProducts.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
     const discountAmt = Math.round(subtotal * discountPct / 100);
     const afterDiscount = subtotal - discountAmt;
     const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
     const total = afterDiscount + urgentAmt;
 
-    // Build rows (7 columns: A-G)
-    const rows: any[][] = [];
-    const r = (a = '', b = '', c = '', d = '', e = '', f = '', g = '') => rows.push([a, b, c, d, e, f, g]);
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Счёт на оплату');
 
-    // Header
-    r();                                                                          // 1
-    r('', '', `СЧЁТ НА ОПЛАТУ № ${order.order_id}`);                             // 2
-    r('', '', `от ${dateStr} г.`);                                                // 3
-    r();                                                                          // 4
+    // Column widths
+    ws.columns = [
+        { width: 5 },   // A: №
+        { width: 20 },  // B: Label
+        { width: 35 },  // C: Name part 2
+        { width: 8 },   // D: Ед.
+        { width: 10 },  // E: Кол-во
+        { width: 16 },  // F: Цена
+        { width: 16 },  // G: Сумма
+    ];
 
-    // Supplier & buyer info
-    r('', 'Поставщик:', '', 'ТОО «MedInVision»');                                // 5
-    r('', 'БИН:', '', '240640050498');                                            // 6
-    r('', 'Адрес:', '', 'г. Алматы, пр. Сейфуллина 510а');                       // 7
-    r();                                                                          // 8
-    r('', 'Покупатель:', '', order.company || order.patient.name);                // 9
-    if (order.inn) r('', 'БИН/ИИН:', '', order.inn);                             // 10
-    r('', 'Врач:', '', order.meta.doctor || '—');                                // 11
-    if (order.delivery_address) r('', 'Адрес доставки:', '', order.delivery_address);
-    r();
+    const thinBorder: Partial<ExcelJS.Borders> = {
+        top: { style: 'thin' }, bottom: { style: 'thin' },
+        left: { style: 'thin' }, right: { style: 'thin' },
+    };
+    const boldFont: Partial<ExcelJS.Font> = { bold: true, size: 11 };
+    const titleFont: Partial<ExcelJS.Font> = { bold: true, size: 14 };
+    const headerFont: Partial<ExcelJS.Font> = { bold: true, size: 10 };
+    const headerFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8E8E8' } };
+
+    // Row 1: empty
+    ws.addRow([]);
+
+    // Row 2: Title
+    const titleRow = ws.addRow(['', '', `СЧЁТ НА ОПЛАТУ № ${order.order_id}`, '', '', '', '']);
+    ws.mergeCells(titleRow.number, 3, titleRow.number, 7);
+    titleRow.getCell(3).font = titleFont;
+
+    // Row 3: Date
+    const dateRow = ws.addRow(['', '', `от ${dateStr} г.`, '', '', '', '']);
+    ws.mergeCells(dateRow.number, 3, dateRow.number, 7);
+    dateRow.getCell(3).font = { size: 11 };
+
+    // Row 4: empty
+    ws.addRow([]);
+
+    // Supplier info with borders
+    const infoStyle = (row: ExcelJS.Row) => {
+        row.getCell(2).font = { bold: true, size: 10 };
+        row.getCell(4).font = { size: 10 };
+        [2, 3, 4, 5, 6, 7].forEach(c => { row.getCell(c).border = thinBorder; });
+    };
+
+    let r = ws.addRow(['', 'Поставщик:', '', 'ТОО «MedInVision»', '', '', '']);
+    ws.mergeCells(r.number, 4, r.number, 7);
+    infoStyle(r);
+
+    r = ws.addRow(['', 'БИН:', '', '240640050498', '', '', '']);
+    ws.mergeCells(r.number, 4, r.number, 7);
+    infoStyle(r);
+
+    r = ws.addRow(['', 'Адрес:', '', 'г. Алматы, пр. Сейфуллина 510а', '', '', '']);
+    ws.mergeCells(r.number, 4, r.number, 7);
+    infoStyle(r);
+
+    ws.addRow([]);
+
+    r = ws.addRow(['', 'Покупатель:', '', order.company || order.patient.name, '', '', '']);
+    ws.mergeCells(r.number, 4, r.number, 7);
+    infoStyle(r);
+
+    if (order.inn) {
+        r = ws.addRow(['', 'БИН/ИИН:', '', order.inn, '', '', '']);
+        ws.mergeCells(r.number, 4, r.number, 7);
+        infoStyle(r);
+    }
+
+    r = ws.addRow(['', 'Врач:', '', order.meta.doctor || '—', '', '', '']);
+    ws.mergeCells(r.number, 4, r.number, 7);
+    infoStyle(r);
+
+    if (order.delivery_address) {
+        r = ws.addRow(['', 'Адрес доставки:', '', order.delivery_address, '', '', '']);
+        ws.mergeCells(r.number, 4, r.number, 7);
+        infoStyle(r);
+    }
+
+    ws.addRow([]);
 
     // Table header
-    const headerRow = rows.length;
-    r('№', 'Наименование товара / услуги', '', 'Ед.', 'Кол-во', 'Цена, ₸', 'Сумма, ₸');
+    const hdrRow = ws.addRow(['№', 'Наименование товара / услуги', '', 'Ед.', 'Кол-во', 'Цена, ₸', 'Сумма, ₸']);
+    ws.mergeCells(hdrRow.number, 2, hdrRow.number, 3);
+    hdrRow.eachCell((cell) => {
+        cell.font = headerFont;
+        cell.fill = headerFill;
+        cell.border = thinBorder;
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
 
     // Line items
     let lineNo = 1;
+    const addItem = (name: string, unit: string, qty: number, price: number, sum: number) => {
+        const row = ws.addRow([lineNo++, name, '', unit, qty, fmt(price), fmt(sum)]);
+        ws.mergeCells(row.number, 2, row.number, 3);
+        row.eachCell((cell) => { cell.border = thinBorder; cell.font = { size: 10 }; });
+        row.getCell(5).alignment = { horizontal: 'center' };
+        row.getCell(6).alignment = { horizontal: 'right' };
+        row.getCell(7).alignment = { horizontal: 'right' };
+    };
+
     if (odQty > 0) {
         const charLabel = odChar ? (CharacteristicLabels[odChar as Characteristic] || odChar) : 'Стандарт';
-        r(String(lineNo++), `Ортокератологическая линза MediLens OD (${charLabel})`, '', 'шт', String(odQty), fmt(odPrice), fmt(odQty * odPrice));
+        addItem(`Ортокератологическая линза MediLens OD (${charLabel})`, 'шт', odQty, odPrice, odQty * odPrice);
     }
     if (osQty > 0) {
         const charLabel = osChar ? (CharacteristicLabels[osChar as Characteristic] || osChar) : 'Стандарт';
-        r(String(lineNo++), `Ортокератологическая линза MediLens OS (${charLabel})`, '', 'шт', String(osQty), fmt(osPrice), fmt(osQty * osPrice));
+        addItem(`Ортокератологическая линза MediLens OS (${charLabel})`, 'шт', osQty, osPrice, osQty * osPrice);
     }
     additionalProducts.forEach(p => {
-        r(String(lineNo++), p.name, '', 'шт', String(p.qty || 1), fmt(p.price || 0), fmt((p.price || 0) * (p.qty || 1)));
+        addItem(p.name, 'шт', p.qty || 1, p.price || 0, (p.price || 0) * (p.qty || 1));
     });
 
-    // Totals section
-    r();
-    r('', '', '', '', '', 'Подитог:', fmt(subtotal));
-    if (discountPct > 0) {
-        r('', '', '', '', '', `Скидка ${discountPct}%:`, `−${fmt(discountAmt)}`);
-    }
-    if (order.is_urgent) {
-        r('', '', '', '', '', `Наценка за срочность ${URGENT_SURCHARGE_PCT}%:`, `+${fmt(urgentAmt)}`);
-    }
-    const totalRow = rows.length;
-    r('', '', '', '', '', 'ИТОГО к оплате:', `${fmt(total)} ₸`);
+    // Totals
+    ws.addRow([]);
+    const addTotalRow = (label: string, value: string, bold = false) => {
+        const row = ws.addRow(['', '', '', '', '', label, value]);
+        row.getCell(6).font = { size: 10, bold };
+        row.getCell(7).font = { size: 10, bold };
+        row.getCell(6).alignment = { horizontal: 'right' };
+        row.getCell(7).alignment = { horizontal: 'right' };
+        row.getCell(6).border = thinBorder;
+        row.getCell(7).border = thinBorder;
+    };
 
-    r();
-    r();
+    addTotalRow('Подитог:', fmt(subtotal));
+    if (discountPct > 0) addTotalRow(`Скидка ${discountPct}%:`, `−${fmt(discountAmt)}`);
+    if (order.is_urgent) addTotalRow(`Срочность ${URGENT_SURCHARGE_PCT}%:`, `+${fmt(urgentAmt)}`);
+    addTotalRow('ИТОГО к оплате:', `${fmt(total)} ₸`, true);
+
+    ws.addRow([]);
+    ws.addRow([]);
 
     // Patient info
-    r('', 'Пациент:', '', order.patient.name);
-    r('', 'Телефон:', '', order.patient.phone || '—');
-    if (order.is_urgent) r('', 'Тип заказа:', '', '⚡ СРОЧНЫЙ');
-
-    r();
-    r();
-
-    // Signatures
-    r('', 'Руководитель ______________ / __________________ /', '', '', '', 'Бухгалтер ______________ / __________________ /');
-
-    // Create worksheet
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-
-    // Column widths
-    ws['!cols'] = [
-        { wch: 5 },   // A: №
-        { wch: 18 },  // B: Label
-        { wch: 40 },  // C: Наименование (part 2)
-        { wch: 28 },  // D: Value / Ед.
-        { wch: 10 },  // E: Кол-во
-        { wch: 22 },  // F: Цена
-        { wch: 18 },  // G: Сумма
-    ];
-
-    // Merge cells for title
-    ws['!merges'] = [
-        { s: { r: 1, c: 2 }, e: { r: 1, c: 6 } },  // Title row
-        { s: { r: 2, c: 2 }, e: { r: 2, c: 6 } },  // Date row
-    ];
-
-    // Merge B+C for table header "Наименование"
-    ws['!merges'].push({ s: { r: headerRow, c: 1 }, e: { r: headerRow, c: 2 } });
-
-    // Merge B+C for each line item description
-    for (let i = headerRow + 1; i < rows.length; i++) {
-        const row = rows[i];
-        // Only merge if it's a line item row (starts with a number in column A)
-        if (row[0] && !isNaN(Number(row[0]))) {
-            ws['!merges'].push({ s: { r: i, c: 1 }, e: { r: i, c: 2 } });
-        }
+    r = ws.addRow(['', 'Пациент:', '', order.patient.name]);
+    r.getCell(2).font = { bold: true, size: 10 };
+    r = ws.addRow(['', 'Телефон:', '', order.patient.phone || '—']);
+    r.getCell(2).font = { bold: true, size: 10 };
+    if (order.is_urgent) {
+        r = ws.addRow(['', 'Тип заказа:', '', '⚡ СРОЧНЫЙ']);
+        r.getCell(2).font = { bold: true, size: 10 };
+        r.getCell(4).font = { bold: true, size: 10, color: { argb: 'FFFF0000' } };
     }
 
-    // Merge D onwards for info rows (Поставщик, Покупатель, etc.)
-    [4, 5, 6, 8].forEach(rowIdx => {
-        if (rows[rowIdx]) ws['!merges']!.push({ s: { r: rowIdx, c: 3 }, e: { r: rowIdx, c: 6 } });
-    });
+    ws.addRow([]);
+    ws.addRow([]);
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Счёт на оплату');
-    XLSX.writeFile(wb, `Счет_${order.order_id}_${dateStr.replace(/\./g, '-')}.xlsx`);
+    // Signatures
+    r = ws.addRow(['', 'Руководитель ______________ / ________________ /', '', '', '', 'Бухгалтер ______________ / ________________ /']);
+
+    // Generate file
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Счет_${order.order_id}_${dateStr.replace(/\./g, '-')}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 const PAYMENT_OPTIONS: { value: PaymentStatus; label: string; icon: any; color: string }[] = [
@@ -238,9 +294,13 @@ export default function AccountantPage() {
             if (res.ok) {
                 const docs = await res.json();
                 setOrderDocs(prev => ({ ...prev, [orderId]: docs }));
+            } else {
+                // Set empty on error so UI doesn't show forever loading
+                setOrderDocs(prev => ({ ...prev, [orderId]: [] }));
             }
         } catch (e) {
             console.error('Load docs error:', e);
+            setOrderDocs(prev => ({ ...prev, [orderId]: [] }));
         }
     };
 
@@ -250,13 +310,17 @@ export default function AccountantPage() {
         try {
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`Файл "${file.name}" превышает 5 МБ. Пропущен.`);
+                    continue;
+                }
                 const base64 = await new Promise<string>((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve((reader.result as string).split(',')[1]);
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 });
-                await fetch(`/api/orders/${orderId}/documents`, {
+                const res = await fetch(`/api/orders/${orderId}/documents`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -266,8 +330,15 @@ export default function AccountantPage() {
                         size: file.size,
                     }),
                 });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+                    alert(`Ошибка загрузки "${file.name}": ${err.error || res.statusText}`);
+                }
             }
             await loadDocs(orderId);
+        } catch (e) {
+            alert('Ошибка при загрузке файла');
+            console.error('Upload error:', e);
         } finally {
             setUploadingDoc(null);
         }
