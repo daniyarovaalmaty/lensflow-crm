@@ -49,64 +49,119 @@ function generateInvoice(order: Order) {
     const discountPct = (order as any).discount_percent ?? 5;
     const date = new Date(order.meta.created_at);
     const dateStr = date.toLocaleDateString('ru-RU');
+    const fmt = (n: number) => n.toLocaleString('ru-RU');
 
-    // Build invoice rows
-    const rows: any[][] = [
-        ['', '', '', '', ''],
-        ['', `СЧЁТ НА ОПЛАТУ № ${order.order_id}`, '', '', ''],
-        ['', `от ${dateStr}`, '', '', ''],
-        ['', '', '', '', ''],
-        ['', 'Поставщик:', 'ТОО "MedInVision"', '', ''],
-        ['', 'Покупатель:', order.company || order.patient.name, '', ''],
-        ['', 'Врач:', order.meta.doctor || '—', '', ''],
-        ['', '', '', '', ''],
-        ['№', 'Наименование', 'Кол-во', 'Цена, ₸', 'Сумма, ₸'],
-    ];
-
-    let lineNo = 1;
-    if (odQty > 0) {
-        const charLabel = odChar ? (CharacteristicLabels[odChar as Characteristic] || odChar) : 'Стандарт';
-        rows.push([lineNo++, `OD — Ортокератологическая линза MediLens (${charLabel})`, odQty, odPrice, odQty * odPrice]);
-    }
-    if (osQty > 0) {
-        const charLabel = osChar ? (CharacteristicLabels[osChar as Characteristic] || osChar) : 'Стандарт';
-        rows.push([lineNo++, `OS — Ортокератологическая линза MediLens (${charLabel})`, osQty, osPrice, osQty * osPrice]);
-    }
-    additionalProducts.forEach(p => {
-        rows.push([lineNo++, p.name, p.qty || 1, p.price || 0, (p.price || 0) * (p.qty || 1)]);
-    });
-
+    // Calculate totals
     const subtotal = (odQty * odPrice) + (osQty * osPrice) + additionalProducts.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
     const discountAmt = Math.round(subtotal * discountPct / 100);
     const afterDiscount = subtotal - discountAmt;
     const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
     const total = afterDiscount + urgentAmt;
 
-    rows.push(['', '', '', '', '']);
-    rows.push(['', '', '', 'Подитог:', subtotal]);
-    if (discountPct > 0) rows.push(['', '', '', `Скидка ${discountPct}%:`, -discountAmt]);
-    if (order.is_urgent) rows.push(['', '', '', `Срочность ${URGENT_SURCHARGE_PCT}%:`, urgentAmt]);
-    rows.push(['', '', '', 'ИТОГО:', total]);
-    rows.push(['', '', '', '', '']);
-    rows.push(['', '', '', '', '']);
-    rows.push(['', 'Пациент:', order.patient.name, '', '']);
-    rows.push(['', 'Телефон:', order.patient.phone, '', '']);
-    if (order.delivery_address) rows.push(['', 'Адрес доставки:', order.delivery_address, '', '']);
-    if (order.is_urgent) rows.push(['', 'Тип:', 'СРОЧНЫЙ', '', '']);
+    // Build rows (7 columns: A-G)
+    const rows: any[][] = [];
+    const r = (a = '', b = '', c = '', d = '', e = '', f = '', g = '') => rows.push([a, b, c, d, e, f, g]);
 
+    // Header
+    r();                                                                          // 1
+    r('', '', `СЧЁТ НА ОПЛАТУ № ${order.order_id}`);                             // 2
+    r('', '', `от ${dateStr} г.`);                                                // 3
+    r();                                                                          // 4
+
+    // Supplier & buyer info
+    r('', 'Поставщик:', '', 'ТОО «MedInVision»');                                // 5
+    r('', 'БИН:', '', '240640050498');                                            // 6
+    r('', 'Адрес:', '', 'г. Алматы, пр. Сейфуллина 510а');                       // 7
+    r();                                                                          // 8
+    r('', 'Покупатель:', '', order.company || order.patient.name);                // 9
+    if (order.inn) r('', 'БИН/ИИН:', '', order.inn);                             // 10
+    r('', 'Врач:', '', order.meta.doctor || '—');                                // 11
+    if (order.delivery_address) r('', 'Адрес доставки:', '', order.delivery_address);
+    r();
+
+    // Table header
+    const headerRow = rows.length;
+    r('№', 'Наименование товара / услуги', '', 'Ед.', 'Кол-во', 'Цена, ₸', 'Сумма, ₸');
+
+    // Line items
+    let lineNo = 1;
+    if (odQty > 0) {
+        const charLabel = odChar ? (CharacteristicLabels[odChar as Characteristic] || odChar) : 'Стандарт';
+        r(String(lineNo++), `Ортокератологическая линза MediLens OD (${charLabel})`, '', 'шт', String(odQty), fmt(odPrice), fmt(odQty * odPrice));
+    }
+    if (osQty > 0) {
+        const charLabel = osChar ? (CharacteristicLabels[osChar as Characteristic] || osChar) : 'Стандарт';
+        r(String(lineNo++), `Ортокератологическая линза MediLens OS (${charLabel})`, '', 'шт', String(osQty), fmt(osPrice), fmt(osQty * osPrice));
+    }
+    additionalProducts.forEach(p => {
+        r(String(lineNo++), p.name, '', 'шт', String(p.qty || 1), fmt(p.price || 0), fmt((p.price || 0) * (p.qty || 1)));
+    });
+
+    // Totals section
+    r();
+    r('', '', '', '', '', 'Подитог:', fmt(subtotal));
+    if (discountPct > 0) {
+        r('', '', '', '', '', `Скидка ${discountPct}%:`, `−${fmt(discountAmt)}`);
+    }
+    if (order.is_urgent) {
+        r('', '', '', '', '', `Наценка за срочность ${URGENT_SURCHARGE_PCT}%:`, `+${fmt(urgentAmt)}`);
+    }
+    const totalRow = rows.length;
+    r('', '', '', '', '', 'ИТОГО к оплате:', `${fmt(total)} ₸`);
+
+    r();
+    r();
+
+    // Patient info
+    r('', 'Пациент:', '', order.patient.name);
+    r('', 'Телефон:', '', order.patient.phone || '—');
+    if (order.is_urgent) r('', 'Тип заказа:', '', '⚡ СРОЧНЫЙ');
+
+    r();
+    r();
+
+    // Signatures
+    r('', 'Руководитель ______________ / __________________ /', '', '', '', 'Бухгалтер ______________ / __________________ /');
+
+    // Create worksheet
     const ws = XLSX.utils.aoa_to_sheet(rows);
 
     // Column widths
     ws['!cols'] = [
-        { wch: 5 },   // №
-        { wch: 50 },  // Наименование
-        { wch: 10 },  // Кол-во
-        { wch: 15 },  // Цена
-        { wch: 15 },  // Сумма
+        { wch: 5 },   // A: №
+        { wch: 18 },  // B: Label
+        { wch: 40 },  // C: Наименование (part 2)
+        { wch: 28 },  // D: Value / Ед.
+        { wch: 10 },  // E: Кол-во
+        { wch: 22 },  // F: Цена
+        { wch: 18 },  // G: Сумма
     ];
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Счёт');
-    XLSX.writeFile(wb, `Счёт_${order.order_id}_${dateStr.replace(/\./g, '-')}.xlsx`);
+    // Merge cells for title
+    ws['!merges'] = [
+        { s: { r: 1, c: 2 }, e: { r: 1, c: 6 } },  // Title row
+        { s: { r: 2, c: 2 }, e: { r: 2, c: 6 } },  // Date row
+    ];
+
+    // Merge B+C for table header "Наименование"
+    ws['!merges'].push({ s: { r: headerRow, c: 1 }, e: { r: headerRow, c: 2 } });
+
+    // Merge B+C for each line item description
+    for (let i = headerRow + 1; i < rows.length; i++) {
+        const row = rows[i];
+        // Only merge if it's a line item row (starts with a number in column A)
+        if (row[0] && !isNaN(Number(row[0]))) {
+            ws['!merges'].push({ s: { r: i, c: 1 }, e: { r: i, c: 2 } });
+        }
+    }
+
+    // Merge D onwards for info rows (Поставщик, Покупатель, etc.)
+    [4, 5, 6, 8].forEach(rowIdx => {
+        if (rows[rowIdx]) ws['!merges']!.push({ s: { r: rowIdx, c: 3 }, e: { r: rowIdx, c: 6 } });
+    });
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Счёт на оплату');
+    XLSX.writeFile(wb, `Счет_${order.order_id}_${dateStr.replace(/\./g, '-')}.xlsx`);
 }
 
 const PAYMENT_OPTIONS: { value: PaymentStatus; label: string; icon: any; color: string }[] = [
