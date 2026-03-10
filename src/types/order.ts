@@ -86,6 +86,9 @@ export const OrderStatusEnum = z.enum([
     'in_production',
     'ready',
     'rework',
+    'docs_prep',
+    'accountant_review',
+    'docs_ready',
     'shipped',
     'out_for_delivery',
     'delivered',
@@ -99,6 +102,9 @@ export const OrderStatusLabels: Record<OrderStatus, string> = {
     in_production: 'В производстве',
     ready: 'Готов',
     rework: 'На доработку',
+    docs_prep: 'Подготовка док.',
+    accountant_review: 'У бухгалтера',
+    docs_ready: 'Документы готовы',
     shipped: 'Отгружен',
     out_for_delivery: 'В доставке',
     delivered: 'Доставлен',
@@ -110,6 +116,9 @@ export const OrderStatusColors: Record<OrderStatus, string> = {
     in_production: 'bg-yellow-100 text-yellow-700',
     ready: 'bg-green-100 text-green-700',
     rework: 'bg-orange-100 text-orange-700',
+    docs_prep: 'bg-violet-100 text-violet-700',
+    accountant_review: 'bg-cyan-100 text-cyan-700',
+    docs_ready: 'bg-emerald-100 text-emerald-700',
     shipped: 'bg-gray-100 text-gray-700',
     out_for_delivery: 'bg-purple-100 text-purple-700',
     delivered: 'bg-teal-100 text-teal-700',
@@ -155,11 +164,21 @@ export const OrderMetaSchema = z.object({
 export type OrderMeta = z.infer<typeof OrderMetaSchema>;
 
 // ==================== Defect Record ====================
+export const EyeSideEnum = z.enum(['od', 'os', 'both']);
+export type EyeSide = z.infer<typeof EyeSideEnum>;
+
+export const EyeSideLabels: Record<EyeSide, string> = {
+    od: 'OD (правый)',
+    os: 'OS (левый)',
+    both: 'Оба глаза',
+};
+
 export const DefectRecordSchema = z.object({
     id: z.string(),
     qty: z.number().int().min(1),
     date: z.string().datetime(),
     note: z.string().optional(),
+    eye_side: EyeSideEnum.optional(),
     archived: z.boolean().optional(),
 });
 

@@ -7,6 +7,7 @@ import prisma from '@/lib/db/prisma';
 const AddDefectSchema = z.object({
     qty: z.number().int().min(1, 'Количество должно быть не менее 1'),
     note: z.string().optional(),
+    eye_side: z.enum(['od', 'os', 'both']).optional(),
 });
 
 /**
@@ -42,6 +43,7 @@ export async function POST(
             qty: validatedData.qty,
             date: new Date().toISOString(),
             note: validatedData.note || undefined,
+            eye_side: validatedData.eye_side || undefined,
         };
 
         const existingDefects = (order.defects as any[]) || [];

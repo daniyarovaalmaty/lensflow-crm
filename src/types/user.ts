@@ -73,6 +73,8 @@ export interface PermissionSet {
     canViewOrders: boolean;
     canViewAllOrders: boolean;
     canViewStats: boolean;
+    canSendToAccountant: boolean;  // admin: ready → docs_prep → accountant_review
+    canProcessDocs: boolean;       // accountant: accountant_review → docs_ready
 }
 
 export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
@@ -91,6 +93,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: true,
         canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
     },
     lab_quality: {
         canViewKanban: true,
@@ -107,6 +111,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: true,
         canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
     },
     lab_logistics: {
         canViewKanban: true,
@@ -123,6 +129,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: true,
         canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
     },
     lab_head: {
         canViewKanban: true,
@@ -139,6 +147,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: true,
         canViewStats: true,
+        canSendToAccountant: true,
+        canProcessDocs: false,
     },
     lab_admin: {
         canViewKanban: true,
@@ -155,6 +165,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: true,
         canViewStats: true,
+        canSendToAccountant: true,
+        canProcessDocs: false,
     },
     lab_accountant: {
         canViewKanban: false,
@@ -171,6 +183,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: false,
         canViewAllOrders: false,
         canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: true,
     },
     optic_manager: {
         canViewKanban: false,
@@ -187,6 +201,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: true,
         canViewStats: true,
+        canSendToAccountant: false,
+        canProcessDocs: false,
     },
     optic_doctor: {
         canViewKanban: false,
@@ -203,6 +219,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: false,
         canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
     },
     optic_accountant: {
         canViewKanban: false,
@@ -219,6 +237,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: false,
         canViewAllOrders: false,
         canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
     },
     doctor: {
         canViewKanban: false,
@@ -235,6 +255,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: false,
         canViewStats: true,
+        canSendToAccountant: false,
+        canProcessDocs: false,
     },
 };
 

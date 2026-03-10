@@ -28,7 +28,8 @@ export async function PATCH(
         // Map status string to enum
         const statusMap: Record<string, string> = {
             'new': 'new_order', 'in_production': 'in_production', 'ready': 'ready',
-            'rework': 'rework', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
+            'rework': 'rework', 'docs_prep': 'docs_prep', 'accountant_review': 'accountant_review',
+            'docs_ready': 'docs_ready', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
             'delivered': 'delivered', 'cancelled': 'cancelled',
         };
 
@@ -39,9 +40,16 @@ export async function PATCH(
         const sub = session.user.subRole;
         if (sub === 'lab_admin') {
             const currentStatus = Object.entries(statusMap).find(([, v]) => v === order.status)?.[0] || order.status;
-            if (!(currentStatus === 'shipped' && validatedData.status === 'out_for_delivery')) {
+            const allowedTransitions: Record<string, string[]> = {
+                'shipped': ['out_for_delivery'],
+                'ready': ['docs_prep'],
+                'docs_prep': ['accountant_review'],
+                'docs_ready': ['shipped'],
+            };
+            const allowed = allowedTransitions[currentStatus] || [];
+            if (!allowed.includes(validatedData.status)) {
                 return NextResponse.json(
-                    { error: 'Администратор может только отправить заказ в доставку (из статуса "Отгружено")' },
+                    { error: 'Недостаточно прав для этого перехода' },
                     { status: 403 }
                 );
             }
@@ -75,7 +83,8 @@ export async function PATCH(
         // Transform to frontend format
         const reverseStatusMap: Record<string, string> = {
             'new_order': 'new', 'in_production': 'in_production', 'ready': 'ready',
-            'rework': 'rework', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
+            'rework': 'rework', 'docs_prep': 'docs_prep', 'accountant_review': 'accountant_review',
+            'docs_ready': 'docs_ready', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
             'delivered': 'delivered', 'cancelled': 'cancelled',
         };
 

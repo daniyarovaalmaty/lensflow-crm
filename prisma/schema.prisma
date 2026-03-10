@@ -41,6 +41,16 @@ model Organization {
   @@map("organizations")
 }
 
+// ==================== Lab Settings (singleton) ====================
+model LabSettings {
+  id                      String @id @default("default")
+  urgentSurchargePercent   Int    @default(25)
+  urgentDiscountPercent    Int    @default(0)
+  updatedAt               DateTime @updatedAt
+
+  @@map("lab_settings")
+}
+
 enum OrgStatus {
   pending
   active
@@ -182,6 +192,9 @@ model Order {
   notes   String?
   defects Json?   // Array of defect records
 
+  // Delivery confirmation
+  deliveryConfirmed  Boolean?
+
   // Ordered products snapshot: [{ productId, name, category, qty, price }]
   products Json?
 
@@ -200,6 +213,9 @@ enum OrderStatus {
   in_production
   ready
   rework
+  docs_prep
+  accountant_review
+  docs_ready
   shipped
   out_for_delivery
   delivered

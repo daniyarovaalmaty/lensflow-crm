@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
                 'in_production': 'in_production',
                 'ready': 'ready',
                 'rework': 'rework',
+                'docs_prep': 'docs_prep',
+                'accountant_review': 'accountant_review',
+                'docs_ready': 'docs_ready',
                 'shipped': 'shipped',
                 'out_for_delivery': 'out_for_delivery',
                 'delivered': 'delivered',
@@ -69,6 +72,9 @@ export async function GET(request: NextRequest) {
                 'in_production': 'in_production',
                 'ready': 'ready',
                 'rework': 'rework',
+                'docs_prep': 'docs_prep',
+                'accountant_review': 'accountant_review',
+                'docs_ready': 'docs_ready',
                 'shipped': 'shipped',
                 'out_for_delivery': 'out_for_delivery',
                 'delivered': 'delivered',
@@ -115,6 +121,7 @@ export async function GET(request: NextRequest) {
                 document_name_os: order.documentNameOs || undefined,
                 price_od: order.priceOd || undefined,
                 price_os: order.priceOs || undefined,
+                delivery_confirmed: (order as any).deliveryConfirmed ?? undefined,
             };
         });
 
@@ -143,8 +150,31 @@ export async function POST(request: NextRequest) {
         // Validate with Zod
         const validatedData = CreateOrderSchema.parse(body);
 
-        // Generate order ID
-        const orderNumber = `LX-${Date.now().toString(36).toUpperCase()}`;
+        // Generate order ID in AB01 sequential format
+        const generateOrderNumber = async (): Promise<string> => {
+            const lastOrder = await prisma.order.findFirst({
+                where: { orderNumber: { not: { startsWith: 'LX-' } } },
+                orderBy: { createdAt: 'desc' },
+                select: { orderNumber: true },
+            });
+            if (!lastOrder) return 'AB01';
+            const prev = lastOrder.orderNumber;
+            const match = prev.match(/^([A-Z]{2})(\d{2})$/);
+            if (!match) return 'AB01';
+            let [, letters, numStr] = match;
+            let num = parseInt(numStr, 10) + 1;
+            if (num > 99) {
+                num = 1;
+                let c1 = letters.charCodeAt(0);
+                let c2 = letters.charCodeAt(1);
+                c2++;
+                if (c2 > 90) { c2 = 65; c1++; }
+                if (c1 > 90) { c1 = 65; c2 = 65; }
+                letters = String.fromCharCode(c1, c2);
+            }
+            return `${letters}${num.toString().padStart(2, '0')}`;
+        };
+        const orderNumber = await generateOrderNumber();
 
         const now = new Date();
         const is_urgent = validatedData.is_urgent ?? false;
@@ -184,7 +214,14 @@ export async function POST(request: NextRequest) {
             });
             if (user?.discountPercent != null) DISCOUNT_PCT = user.discountPercent;
         }
-        const URGENT_SURCHARGE_PCT = 25;
+        // Read surcharge from LabSettings
+        const labSettings = await prisma.labSettings.upsert({
+            where: { id: 'default' },
+            create: { id: 'default' },
+            update: {},
+        });
+        const URGENT_SURCHARGE_PCT = labSettings.urgentSurchargePercent;
+        const URGENT_DISCOUNT_PCT = labSettings.urgentDiscountPercent;
         const config = validatedData.config as any;
         const odChar = config?.eyes?.od?.characteristic || '';
         const osChar = config?.eyes?.os?.characteristic || '';

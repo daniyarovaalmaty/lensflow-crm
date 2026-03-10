@@ -8,8 +8,8 @@ import {
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
     RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText
 } from 'lucide-react';
-import type { Order, OrderStatus, DefectRecord, PaymentStatus } from '@/types/order';
-import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs } from '@/types/order';
+import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
+import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
 import type { Characteristic } from '@/types/order';
 import { getPermissions, SubRoleLabels } from '@/types/user';
@@ -55,6 +55,7 @@ export default function ProductionHubPage() {
     const [defectNote, setDefectNote] = useState('');
     const [showDefectForm, setShowDefectForm] = useState(false);
     const [addingDefect, setAddingDefect] = useState(false);
+    const [defectEyeSide, setDefectEyeSide] = useState<EyeSide>('both');
 
     useEffect(() => {
         loadOrders();
@@ -110,13 +111,14 @@ export default function ProductionHubPage() {
             const response = await fetch(`/api/orders/${orderId}/defects`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ qty, note: defectNote || undefined }),
+                body: JSON.stringify({ qty, note: defectNote || undefined, eye_side: defectEyeSide }),
             });
             if (response.ok) {
                 await loadOrders();
                 setShowDefectForm(false);
                 setDefectQty('1');
                 setDefectNote('');
+                setDefectEyeSide('both');
             }
         } catch (error) {
             console.error('Failed to add defect:', error);
@@ -159,6 +161,36 @@ export default function ProductionHubPage() {
             XLSX.writeFile(wb, `LensFlow_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
         } catch (err: any) {
             console.error('Export error:', err);
+            alert('Ошибка экспорта: ' + (err.message || err));
+        }
+    };
+
+    // ==================== MATERIALS EXPORT ====================
+    const exportMaterials = () => {
+        try {
+            const materialMap: Record<string, { type: string; dk: string; qty: number }> = {};
+            filteredOrders.forEach(o => {
+                ['od', 'os'].forEach(side => {
+                    const eye = (o.config.eyes as any)[side];
+                    if (!eye?.characteristic || !eye?.qty) return;
+                    const char = CharacteristicLabels[eye.characteristic as keyof typeof CharacteristicLabels] || eye.characteristic;
+                    const dk = eye.dk || '—';
+                    const key = `${char}_${dk}`;
+                    if (!materialMap[key]) materialMap[key] = { type: char, dk, qty: 0 };
+                    materialMap[key].qty += eye.qty || 1;
+                });
+            });
+            const rows = Object.values(materialMap).map(m => ({
+                'Тип линзы': m.type,
+                'Dk': m.dk,
+                'Количество': m.qty,
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Расходные материалы');
+            XLSX.writeFile(wb, `LensFlow_Materials_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (err: any) {
+            console.error('Materials export error:', err);
             alert('Ошибка экспорта: ' + (err.message || err));
         }
     };
@@ -293,6 +325,9 @@ export default function ProductionHubPage() {
         in_production: filteredOrders.filter(o => o.status === 'in_production'),
         ready: filteredOrders.filter(o => o.status === 'ready'),
         rework: filteredOrders.filter(o => o.status === 'rework'),
+        docs_prep: filteredOrders.filter(o => o.status === 'docs_prep'),
+        accountant_review: filteredOrders.filter(o => o.status === 'accountant_review'),
+        docs_ready: filteredOrders.filter(o => o.status === 'docs_ready'),
         shipped: filteredOrders.filter(o => o.status === 'shipped'),
         out_for_delivery: filteredOrders.filter(o => o.status === 'out_for_delivery'),
         delivered: filteredOrders.filter(o => o.status === 'delivered'),
@@ -641,7 +676,7 @@ export default function ProductionHubPage() {
                                 <div className="space-y-1.5">
                                     {order.defects.map((d: DefectRecord) => (
                                         <div key={d.id} className="flex items-center justify-between text-xs text-red-600 bg-white rounded-lg px-3 py-2">
-                                            <span>{new Date(d.date).toLocaleDateString('ru-RU')} — {d.qty} шт.</span>
+                                            <span>{new Date(d.date).toLocaleDateString('ru-RU')} — {d.qty} шт. {d.eye_side ? `[${EyeSideLabels[d.eye_side]}]` : ''}</span>
                                             {d.note && <span className="text-red-400 ml-2">({d.note})</span>}
                                             {d.archived && <span className="text-green-600 ml-auto">✅ Архив</span>}
                                         </div>
@@ -667,6 +702,18 @@ export default function ProductionHubPage() {
                                             onChange={e => setDefectQty(e.target.value)}
                                             className="input w-24 text-sm"
                                         />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-600 mb-1">Линза</label>
+                                        <select
+                                            value={defectEyeSide}
+                                            onChange={e => setDefectEyeSide(e.target.value as EyeSide)}
+                                            className="input w-full text-sm"
+                                        >
+                                            <option value="od">OD (правый)</option>
+                                            <option value="os">OS (левый)</option>
+                                            <option value="both">Оба</option>
+                                        </select>
                                     </div>
                                     <div className="flex-1">
                                         <label className="block text-xs text-gray-600 mb-1">Причина (необяз.)</label>
@@ -770,7 +817,49 @@ export default function ProductionHubPage() {
                                             На доработку
                                         </button>
                                     )}
-                                    {perms.canShip && (
+                                    {perms.canShip && order.status === 'ready' && (
+                                        <>
+                                            {perms.canSendToAccountant ? (
+                                                <button
+                                                    onClick={() => { updateOrderStatus(order.order_id, 'docs_prep'); setSelectedOrderId(null); }}
+                                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
+                                                >
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                    Подготовить док.
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={async () => {
+                                                        await generateTracking(order.order_id);
+                                                        await updateOrderStatus(order.order_id, 'shipped');
+                                                        setSelectedOrderId(null);
+                                                    }}
+                                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                                >
+                                                    Отгрузить
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {/* Accountant workflow transitions */}
+                                    {perms.canSendToAccountant && order.status === 'docs_prep' && (
+                                        <button
+                                            onClick={() => { updateOrderStatus(order.order_id, 'accountant_review'); setSelectedOrderId(null); }}
+                                            className="btn text-xs py-2 px-4 flex-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg"
+                                        >
+                                            Отправить бухгалтеру
+                                        </button>
+                                    )}
+                                    {perms.canProcessDocs && order.status === 'accountant_review' && (
+                                        <button
+                                            onClick={() => { updateOrderStatus(order.order_id, 'docs_ready'); setSelectedOrderId(null); }}
+                                            className="btn text-xs py-2 px-4 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+                                        >
+                                            Документы готовы
+                                        </button>
+                                    )}
+                                    {perms.canSendToAccountant && order.status === 'docs_ready' && (
                                         <button
                                             onClick={async () => {
                                                 await generateTracking(order.order_id);
@@ -782,47 +871,45 @@ export default function ProductionHubPage() {
                                             Отгрузить
                                         </button>
                                     )}
-                                </>
-                            )}
-                            {perms.canChangeStatus && order.status === 'rework' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1"
-                                >
-                                    Вернуть в работу
-                                </button>
-                            )}
+                                    {perms.canChangeStatus && order.status === 'rework' && (
+                                        <button
+                                            onClick={() => { updateOrderStatus(order.order_id, 'in_production'); setSelectedOrderId(null); }}
+                                            className="btn btn-primary text-xs py-2 px-4 flex-1"
+                                        >
+                                            Вернуть в работу
+                                        </button>
+                                    )}
 
-                            {/* Logistician: take shipped order out for delivery */}
-                            {perms.canDeliver && order.status === 'shipped' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
-                                >
-                                    <Truck className="w-3.5 h-3.5" />
-                                    Передать в доставку
-                                </button>
-                            )}
+                                    {/* Logistician: take shipped order out for delivery */}
+                                    {perms.canDeliver && order.status === 'shipped' && (
+                                        <button
+                                            onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
+                                            className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
+                                        >
+                                            <Truck className="w-3.5 h-3.5" />
+                                            Передать в доставку
+                                        </button>
+                                    )}
 
 
 
-                            {/* Delivered: show confirmation pending */}
-                            {order.status === 'out_for_delivery' && (
-                                <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
-                                    <MapPin className="w-3.5 h-3.5" />
-                                    Ждём подтверждения от врача
+                                    {/* Delivered: show confirmation pending */}
+                                    {order.status === 'out_for_delivery' && (
+                                        <div className="flex-1 flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2">
+                                            <MapPin className="w-3.5 h-3.5" />
+                                            Ждём подтверждения от врача
+                                        </div>
+                                    )}
+
+                                    {order.status === 'delivered' && (
+                                        <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
+                                            <CheckCircle className="w-3.5 h-3.5" />
+                                            Получение подтверждено
+                                            {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-
-                            {order.status === 'delivered' && (
-                                <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
-                                    <CheckCircle className="w-3.5 h-3.5" />
-                                    Получение подтверждено
-                                    {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
-                                </div>
-                            )}
                         </div>
-                    </div>
                 </motion.div>
             </div>
         );
@@ -1041,10 +1128,17 @@ export default function ProductionHubPage() {
                         )}
                         <button
                             onClick={exportToExcel}
-                            className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
+                            className="btn btn-secondary gap-2 whitespace-nowrap"
                         >
                             <Download className="w-4 h-4" />
                             Экспорт XLS
+                        </button>
+                        <button
+                            onClick={exportMaterials}
+                            className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
+                        >
+                            <Download className="w-4 h-4" />
+                            Расходные мат.
                         </button>
                     </div>
 
@@ -1179,6 +1273,9 @@ export default function ProductionHubPage() {
                         <Column title="В производстве" icon={Clock} orders={ordersByStatus.in_production} color="bg-yellow-50 text-yellow-700" />
                         <Column title="Готово" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
                         <Column title="На доработку" icon={RotateCcw} orders={ordersByStatus.rework} color="bg-orange-50 text-orange-700" />
+                        <Column title="Подгот. док." icon={FileText} orders={ordersByStatus.docs_prep} color="bg-violet-50 text-violet-700" />
+                        <Column title="У бухгалтера" icon={DollarSign} orders={ordersByStatus.accountant_review} color="bg-cyan-50 text-cyan-700" />
+                        <Column title="Док. готовы" icon={CheckCircle} orders={ordersByStatus.docs_ready} color="bg-emerald-50 text-emerald-700" />
                         <Column title="Отгружено" icon={TruckIcon} orders={ordersByStatus.shipped} color="bg-gray-50 text-gray-700" />
                         <Column title="В доставке" icon={Truck} orders={ordersByStatus.out_for_delivery} color="bg-purple-50 text-purple-700" />
                         <Column title="Доставлено" icon={CheckCircle} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
