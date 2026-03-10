@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
-    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText
+    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
@@ -40,6 +40,39 @@ export default function ProductionHubPage() {
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
 
+    // Closing documents state for admin view
+    const [closingDocs, setClosingDocs] = useState<Record<string, Array<{ index: number; name: string; size: number; uploadedAt: string }>>>({});
+
+    const loadClosingDocs = async (orderId: string) => {
+        try {
+            const res = await fetch(`/api/orders/${orderId}/documents`);
+            if (res.ok) {
+                const data = await res.json();
+                setClosingDocs(prev => ({ ...prev, [orderId]: data }));
+            } else {
+                setClosingDocs(prev => ({ ...prev, [orderId]: [] }));
+            }
+        } catch {
+            setClosingDocs(prev => ({ ...prev, [orderId]: [] }));
+        }
+    };
+
+    const downloadClosingDoc = async (orderId: string, index: number, fileName: string) => {
+        try {
+            const res = await fetch(`/api/orders/${orderId}/documents?download=${index}`);
+            if (!res.ok) return;
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error('Download error:', e);
+        }
+    };
+
     // Modal state
     // Modal state - store IDs only to avoid sync issues
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -49,6 +82,15 @@ export default function ProductionHubPage() {
         orders.find(o => o.order_id === selectedOrderId) || null,
         [orders, selectedOrderId]
     );
+
+    // Load closing docs when an order is selected
+    useEffect(() => {
+        if (selectedOrderId && ['docs_ready', 'out_for_delivery', 'delivered'].includes(selectedOrder?.status || '')) {
+            if (!closingDocs[selectedOrderId]) {
+                loadClosingDocs(selectedOrderId);
+            }
+        }
+    }, [selectedOrderId]);
 
     const selectedDefect = useMemo(() => {
         if (!selectedDefectId) return null;
@@ -858,13 +900,47 @@ export default function ProductionHubPage() {
                                 </button>
                             )}
                             {perms.canSendToAccountant && order.status === 'docs_ready' && (
-                                <button
-                                    onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
-                                    className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
-                                >
-                                    <Truck className="w-3.5 h-3.5" />
-                                    В доставку
-                                </button>
+                                <>
+                                    {/* Show closing documents for admin */}
+                                    <div className="w-full mb-3">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Paperclip className="w-3.5 h-3.5 text-gray-500" />
+                                            <span className="text-xs font-semibold text-gray-700">Закрывающие документы</span>
+                                        </div>
+                                        {(() => {
+                                            const docs = closingDocs[order.order_id];
+                                            if (!docs) return <p className="text-[10px] text-gray-400">Загрузка...</p>;
+                                            if (docs.length === 0) return <p className="text-[10px] text-gray-400">Нет документов</p>;
+                                            return (
+                                                <div className="space-y-1">
+                                                    {docs.map((doc, i) => (
+                                                        <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded px-2 py-1.5">
+                                                            <Paperclip className="w-3 h-3 text-gray-400 shrink-0" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-[11px] font-medium text-gray-800 truncate">{doc.name}</p>
+                                                                <p className="text-[9px] text-gray-400">{(doc.size / 1024).toFixed(1)} KB</p>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => downloadClosingDoc(order.order_id, doc.index, doc.name)}
+                                                                className="text-primary-600 hover:text-primary-700 p-0.5"
+                                                                title="Скачать"
+                                                            >
+                                                                <Download className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                    <button
+                                        onClick={() => { updateOrderStatus(order.order_id, 'out_for_delivery'); setSelectedOrderId(null); }}
+                                        className="btn btn-primary text-xs py-2 px-4 flex-1 gap-1.5"
+                                    >
+                                        <Truck className="w-3.5 h-3.5" />
+                                        В доставку
+                                    </button>
+                                </>
                             )}
                             {perms.canChangeStatus && order.status === 'rework' && (
                                 <button
