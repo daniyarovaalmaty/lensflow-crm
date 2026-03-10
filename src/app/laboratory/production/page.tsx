@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
@@ -18,8 +19,16 @@ import * as XLSX from 'xlsx';
 
 export default function ProductionHubPage() {
     const { data: session } = useSession();
+    const router = useRouter();
     const subRole = (session?.user?.subRole || 'lab_admin') as SubRole;
     const perms = getPermissions(subRole);
+
+    // Redirect accountant to their dedicated page
+    useEffect(() => {
+        if (session?.user?.subRole === 'lab_accountant') {
+            router.replace('/laboratory/accountant');
+        }
+    }, [session, router]);
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
