@@ -54,6 +54,16 @@ export async function GET(request: NextRequest) {
             where.organizationId = opticId;
         }
 
+        // Exclude old delivered (>30 days) orders for performance
+        if (!status) {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            where.NOT = {
+                status: 'delivered',
+                deliveredAt: { lt: thirtyDaysAgo },
+            };
+        }
+
         const orders = await prisma.order.findMany({
             where,
             include: {
@@ -81,6 +91,16 @@ export async function GET(request: NextRequest) {
                 'cancelled': 'cancelled',
             };
 
+            // Strip heavy base64 RGP file data from list response (keep metadata only)
+            const lensConfig = { ...(order.lensConfig as any) };
+            if (lensConfig.rgpFiles) {
+                const stripped: any = {};
+                for (const [eye, file] of Object.entries(lensConfig.rgpFiles as Record<string, any>)) {
+                    stripped[eye] = { name: file.name, mimeType: file.mimeType, size: file.size };
+                }
+                lensConfig.rgpFiles = stripped;
+            }
+
             return {
                 order_id: order.orderNumber,
                 meta: {
@@ -97,7 +117,7 @@ export async function GET(request: NextRequest) {
                     email: order.patient.email || undefined,
                     notes: order.patient.notes || undefined,
                 } : { name: '', phone: '' },
-                config: order.lensConfig as any,
+                config: lensConfig,
                 company: order.company || undefined,
                 inn: order.inn || undefined,
                 delivery_method: order.deliveryMethod || undefined,

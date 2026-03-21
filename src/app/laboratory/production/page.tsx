@@ -790,41 +790,76 @@ export default function ProductionHubPage() {
                         {(() => {
                             const rgpFiles = (order.config as any).rgpFiles;
                             if (!rgpFiles) return null;
-                            const files = Object.entries(rgpFiles) as [string, { name: string; data: string; mimeType: string; size: number }][];
-                            if (files.length === 0) return null;
+                            const entries = Object.entries(rgpFiles) as [string, { name: string; data?: string; mimeType: string; size: number }][];
+                            if (entries.length === 0) return null;
+                            const hasData = entries.some(([, f]) => f.data);
                             return (
                                 <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4">
                                     <h4 className="text-xs font-semibold text-amber-700 uppercase mb-3 flex items-center gap-1.5">
                                         📎 Файлы RGP
                                     </h4>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {files.map(([eye, file]) => {
-                                            const isImage = file.mimeType.startsWith('image/');
-                                            const dataUrl = `data:${file.mimeType};base64,${file.data}`;
-                                            return (
-                                                <div key={eye} className="bg-white rounded-lg border border-amber-200 overflow-hidden">
-                                                    <div className="px-3 py-1.5 bg-amber-100/50 border-b border-amber-200">
-                                                        <span className="text-xs font-bold text-amber-800">{eye.toUpperCase()}</span>
-                                                        <span className="text-xs text-amber-600 ml-2">{file.name}</span>
-                                                    </div>
-                                                    {isImage ? (
-                                                        <a href={dataUrl} target="_blank" rel="noopener noreferrer" className="block p-2 hover:bg-amber-50 transition-colors">
-                                                            <img src={dataUrl} alt={`RGP ${eye.toUpperCase()}`} className="w-full h-32 object-contain rounded" />
-                                                            <span className="block text-center text-[10px] text-amber-500 mt-1">Нажмите для увеличения</span>
-                                                        </a>
-                                                    ) : (
-                                                        <a href={dataUrl} download={file.name} className="flex items-center gap-2 p-3 hover:bg-amber-50 transition-colors">
-                                                            <span className="text-2xl">📄</span>
-                                                            <div>
-                                                                <span className="text-xs font-medium text-gray-700 block">{file.name}</span>
-                                                                <span className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(0)} KB • Скачать</span>
-                                                            </div>
-                                                        </a>
-                                                    )}
+                                    {!hasData ? (
+                                        <div className="space-y-2">
+                                            {entries.map(([eye, file]) => (
+                                                <div key={eye} className="flex items-center gap-2 text-xs text-amber-700">
+                                                    <span className="font-bold">{eye.toUpperCase()}</span>
+                                                    <span>{file.name}</span>
+                                                    <span className="text-amber-500">({(file.size / 1024).toFixed(0)} KB)</span>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
+                                            ))}
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    try {
+                                                        const res = await fetch(`/api/orders/${order.order_id}`);
+                                                        if (res.ok) {
+                                                            const fullOrder = await res.json();
+                                                            setOrders(prev => prev.map(o =>
+                                                                o.order_id === order.order_id
+                                                                    ? { ...o, config: { ...o.config, rgpFiles: fullOrder.config.rgpFiles } }
+                                                                    : o
+                                                            ));
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('Failed to load RGP files:', err);
+                                                    }
+                                                }}
+                                                className="btn text-xs py-1.5 px-3 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg transition-colors w-full"
+                                            >
+                                                📥 Загрузить файлы
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {entries.map(([eye, file]) => {
+                                                if (!file.data) return null;
+                                                const isImage = file.mimeType.startsWith('image/');
+                                                const dataUrl = `data:${file.mimeType};base64,${file.data}`;
+                                                return (
+                                                    <div key={eye} className="bg-white rounded-lg border border-amber-200 overflow-hidden">
+                                                        <div className="px-3 py-1.5 bg-amber-100/50 border-b border-amber-200">
+                                                            <span className="text-xs font-bold text-amber-800">{eye.toUpperCase()}</span>
+                                                            <span className="text-xs text-amber-600 ml-2">{file.name}</span>
+                                                        </div>
+                                                        {isImage ? (
+                                                            <a href={dataUrl} target="_blank" rel="noopener noreferrer" className="block p-2 hover:bg-amber-50 transition-colors">
+                                                                <img src={dataUrl} alt={`RGP ${eye.toUpperCase()}`} className="w-full h-32 object-contain rounded" />
+                                                                <span className="block text-center text-[10px] text-amber-500 mt-1">Нажмите для увеличения</span>
+                                                            </a>
+                                                        ) : (
+                                                            <a href={dataUrl} download={file.name} className="flex items-center gap-2 p-3 hover:bg-amber-50 transition-colors">
+                                                                <span className="text-2xl">📄</span>
+                                                                <div>
+                                                                    <span className="text-xs font-medium text-gray-700 block">{file.name}</span>
+                                                                    <span className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(0)} KB • Скачать</span>
+                                                                </div>
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })()}
