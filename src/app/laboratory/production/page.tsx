@@ -887,16 +887,12 @@ export default function ProductionHubPage() {
                                                         for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
                                                         const blob = new Blob([ab], { type: file.mimeType });
                                                         const blobUrl = URL.createObjectURL(blob);
-                                                        if (isImage) {
-                                                            window.open(blobUrl, '_blank');
-                                                        } else {
-                                                            const a = document.createElement('a');
-                                                            a.href = blobUrl;
-                                                            a.download = file.name;
-                                                            document.body.appendChild(a);
-                                                            a.click();
-                                                            document.body.removeChild(a);
-                                                        }
+                                                        const a = document.createElement('a');
+                                                        a.href = blobUrl;
+                                                        a.download = file.name;
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
                                                         setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
                                                     } catch (err) {
                                                         console.error('Download error:', err);
@@ -912,7 +908,7 @@ export default function ProductionHubPage() {
                                                         {isImage ? (
                                                             <button onClick={handleDownload} className="block p-2 hover:bg-amber-50 transition-colors w-full cursor-pointer">
                                                                 <img src={dataUrl} alt={`RGP ${eye.toUpperCase()}`} className="w-full h-32 object-contain rounded" />
-                                                                <span className="block text-center text-[10px] text-amber-500 mt-1">Нажмите для увеличения</span>
+                                                                <span className="block text-center text-[10px] text-amber-500 mt-1">📥 Скачать</span>
                                                             </button>
                                                         ) : (
                                                             <button onClick={handleDownload} className="flex items-center gap-2 p-3 hover:bg-amber-50 transition-colors w-full cursor-pointer">
