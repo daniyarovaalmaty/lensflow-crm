@@ -325,7 +325,7 @@ export async function POST(request: NextRequest) {
                 inn: validatedData.inn || undefined,
                 deliveryMethod: validatedData.delivery_method || undefined,
                 deliveryAddress: validatedData.delivery_address || undefined,
-                lensConfig: validatedData.config as any,
+                lensConfig: { ...(validatedData.config as any), rgpFiles: body.rgpFiles || undefined } as any,
                 documentNameOd: documentNameOd || undefined,
                 documentNameOs: documentNameOs || undefined,
                 priceOd: odUnitPrice || undefined,

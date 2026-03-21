@@ -199,7 +199,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         if (odQtyVal > 0) {
             const od = data.config?.eyes?.od;
             if (!od?.characteristic) validationErrors.push('OD: выберите характеристику (тип линзы)');
-            if (od?.km == null) validationErrors.push('OD: укажите Km');
+            if (od?.characteristic !== 'rgp' && od?.km == null) validationErrors.push('OD: укажите Km');
             if (od?.dia == null) validationErrors.push('OD: укажите DIA');
             if (!od?.dk) validationErrors.push('OD: выберите Dk');
         }
@@ -208,7 +208,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         if (osQtyVal > 0) {
             const os = data.config?.eyes?.os;
             if (!os?.characteristic) validationErrors.push('OS: выберите характеристику (тип линзы)');
-            if (os?.km == null) validationErrors.push('OS: укажите Km');
+            if (os?.characteristic !== 'rgp' && os?.km == null) validationErrors.push('OS: укажите Km');
             if (os?.dia == null) validationErrors.push('OS: укажите DIA');
             if (!os?.dk) validationErrors.push('OS: выберите Dk');
         }
@@ -221,7 +221,22 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         setFormErrors([]);
         setIsSubmitting(true);
         try {
-            await onSubmit({ ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined });
+            // Convert RGP photos to base64 and attach to config
+            const submitData = { ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined };
+            if (rgpPhotos.od || rgpPhotos.os) {
+                const toBase64 = (file: File): Promise<{ name: string; data: string; mimeType: string; size: number }> =>
+                    new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve({ name: file.name, data: (reader.result as string).split(',')[1], mimeType: file.type, size: file.size });
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                const rgpFiles: any = {};
+                if (rgpPhotos.od) rgpFiles.od = await toBase64(rgpPhotos.od);
+                if (rgpPhotos.os) rgpFiles.os = await toBase64(rgpPhotos.os);
+                (submitData as any).rgpFiles = rgpFiles;
+            }
+            await onSubmit(submitData);
         } finally {
             setIsSubmitting(false);
         }
@@ -630,7 +645,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                     </span>
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/*,.pdf"
                                         className="hidden"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
@@ -650,7 +665,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                     </span>
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/*,.pdf"
                                         className="hidden"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];

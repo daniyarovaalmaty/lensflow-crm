@@ -77,6 +77,8 @@ export function EyeParametersCard({
     const eyeColor = eye === 'od' ? 'blue' : 'purple';
     const borderAccent = eye === 'od' ? 'border-l-blue-400' : 'border-l-purple-400';
 
+    const isRgp = characteristic === 'rgp';
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
@@ -101,7 +103,7 @@ export function EyeParametersCard({
 
             {/* Row 1: Характеристика + Km + TP + DIA */}
             <div className="space-y-5">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={`grid grid-cols-2 ${isRgp ? 'sm:grid-cols-3' : 'sm:grid-cols-4'} gap-3`}>
                     <div className="col-span-2 sm:col-span-1">
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика <span className="text-red-500">*</span></label>
                         <select {...register(`config.eyes.${eye}.characteristic`)} className="input">
@@ -111,18 +113,20 @@ export function EyeParametersCard({
                             ))}
                         </select>
                     </div>
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Km <span className="text-red-500">*</span></label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0.2"
-                            max="55"
-                            {...register(`config.eyes.${eye}.km`, { valueAsNumber: true })}
-                            className="input"
-                            placeholder="44.50"
-                        />
-                    </div>
+                    {!isRgp && (
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Km <span className="text-red-500">*</span></label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.2"
+                                max="55"
+                                {...register(`config.eyes.${eye}.km`, { valueAsNumber: true })}
+                                className="input"
+                                placeholder="44.50"
+                            />
+                        </div>
+                    )}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">TP</label>
                         <select {...register(`config.eyes.${eye}.tp`, { valueAsNumber: true })} className="input">

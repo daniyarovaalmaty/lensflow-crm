@@ -784,6 +784,49 @@ export default function ProductionHubPage() {
                             </div>
                         </div>
 
+                        {/* RGP Files — shown when order has RGP attachments */}
+                        {(() => {
+                            const rgpFiles = (order.config as any).rgpFiles;
+                            if (!rgpFiles) return null;
+                            const files = Object.entries(rgpFiles) as [string, { name: string; data: string; mimeType: string; size: number }][];
+                            if (files.length === 0) return null;
+                            return (
+                                <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4">
+                                    <h4 className="text-xs font-semibold text-amber-700 uppercase mb-3 flex items-center gap-1.5">
+                                        📎 Файлы RGP
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {files.map(([eye, file]) => {
+                                            const isImage = file.mimeType.startsWith('image/');
+                                            const dataUrl = `data:${file.mimeType};base64,${file.data}`;
+                                            return (
+                                                <div key={eye} className="bg-white rounded-lg border border-amber-200 overflow-hidden">
+                                                    <div className="px-3 py-1.5 bg-amber-100/50 border-b border-amber-200">
+                                                        <span className="text-xs font-bold text-amber-800">{eye.toUpperCase()}</span>
+                                                        <span className="text-xs text-amber-600 ml-2">{file.name}</span>
+                                                    </div>
+                                                    {isImage ? (
+                                                        <a href={dataUrl} target="_blank" rel="noopener noreferrer" className="block p-2 hover:bg-amber-50 transition-colors">
+                                                            <img src={dataUrl} alt={`RGP ${eye.toUpperCase()}`} className="w-full h-32 object-contain rounded" />
+                                                            <span className="block text-center text-[10px] text-amber-500 mt-1">Нажмите для увеличения</span>
+                                                        </a>
+                                                    ) : (
+                                                        <a href={dataUrl} download={file.name} className="flex items-center gap-2 p-3 hover:bg-amber-50 transition-colors">
+                                                            <span className="text-2xl">📄</span>
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-700 block">{file.name}</span>
+                                                                <span className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(0)} KB • Скачать</span>
+                                                            </div>
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
                         {/* Existing defects */}
                         {order.defects && order.defects.length > 0 && (
                             <div className="bg-red-50 border border-red-100 rounded-xl p-4">
