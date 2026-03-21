@@ -199,7 +199,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         if (odQtyVal > 0) {
             const od = data.config?.eyes?.od;
             if (!od?.characteristic) validationErrors.push('OD: выберите характеристику (тип линзы)');
-            if (od?.characteristic !== 'rgp' && od?.km == null) validationErrors.push('OD: укажите Km');
+            if (!od?.isRgp && od?.km == null) validationErrors.push('OD: укажите Km');
             if (od?.dia == null) validationErrors.push('OD: укажите DIA');
             if (!od?.dk) validationErrors.push('OD: выберите Dk');
         }
@@ -208,7 +208,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         if (osQtyVal > 0) {
             const os = data.config?.eyes?.os;
             if (!os?.characteristic) validationErrors.push('OS: выберите характеристику (тип линзы)');
-            if (os?.characteristic !== 'rgp' && os?.km == null) validationErrors.push('OS: укажите Km');
+            if (!os?.isRgp && os?.km == null) validationErrors.push('OS: укажите Km');
             if (os?.dia == null) validationErrors.push('OS: укажите DIA');
             if (!os?.dk) validationErrors.push('OS: выберите Dk');
         }
@@ -311,12 +311,16 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const osCharacteristic = watch('config.eyes.os.characteristic');
     const odQty = Number(watch('config.eyes.od.qty')) || 0;
     const osQty = Number(watch('config.eyes.os.qty')) || 0;
+    const isRgpOD = watch('config.eyes.od.isRgp') || false;
+    const isRgpOS = watch('config.eyes.os.isRgp') || false;
+    const hasAnyRgp = isRgpOD || isRgpOS;
 
     // Lens price from catalog based on characteristic
+    // RGP lenses have custom pricing (set by accountant), so price = 0
     const odLensProduct = getLensProduct(odCharacteristic || '');
     const osLensProduct = getLensProduct(osCharacteristic || '');
-    const odLensPrice = (odLensProduct?.price || 0) * odQty;
-    const osLensPrice = (osLensProduct?.price || 0) * osQty;
+    const odLensPrice = isRgpOD ? 0 : (odLensProduct?.price || 0) * odQty;
+    const osLensPrice = isRgpOS ? 0 : (osLensProduct?.price || 0) * osQty;
     const lensTotal = odLensPrice + osLensPrice;
 
     // Additional products total (solutions, accessories)
@@ -326,10 +330,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const priceAfterDiscount = basePrice - discountAmt;
     const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
     const totalPrice = priceAfterDiscount + urgentSurcharge;
-
-    const isRgpOD = odCharacteristic === 'rgp';
-    const isRgpOS = osCharacteristic === 'rgp';
-    const hasAnyRgp = isRgpOD || isRgpOS;
 
     return (
         <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="max-w-5xl mx-auto space-y-8">
@@ -582,6 +582,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     watch={watch}
                     setValue={setValue}
                     disabled={singleEye === 'os'}
+                    rgpFile={rgpPhotos.od}
+                    onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, od: file ?? undefined }))}
                 />
 
                 {/* Mirror Button */}
@@ -607,6 +609,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     watch={watch}
                     setValue={setValue}
                     disabled={singleEye === 'od'}
+                    rgpFile={rgpPhotos.os}
+                    onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, os: file ?? undefined }))}
                 />
             </motion.div>
 
@@ -656,68 +660,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </div>
             </motion.div>
 
-            {/* RGP Photo Upload — shown when any eye has RGP characteristic */}
-            {hasAnyRgp && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 }}
-                    className="card border-2 border-amber-200 bg-amber-50/30"
-                >
-                    <div className="flex items-center gap-3 mb-5">
-                        <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                            <Camera className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Фото для RGP</h2>
-                            <p className="text-sm text-gray-500">Прикрепите фото/скан для индивидуального изготовления</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {isRgpOD && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">OD (Правый глаз)</label>
-                                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors">
-                                    <Camera className="w-8 h-8 text-amber-400 mb-2" />
-                                    <span className="text-sm text-amber-600 font-medium">
-                                        {rgpPhotos.od ? rgpPhotos.od.name : 'Загрузить фото'}
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept="image/*,.pdf"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) setRgpPhotos(prev => ({ ...prev, od: file }));
-                                        }}
-                                    />
-                                </label>
-                            </div>
-                        )}
-                        {isRgpOS && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">OS (Левый глаз)</label>
-                                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 rounded-xl cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors">
-                                    <Camera className="w-8 h-8 text-amber-400 mb-2" />
-                                    <span className="text-sm text-amber-600 font-medium">
-                                        {rgpPhotos.os ? rgpPhotos.os.name : 'Загрузить фото'}
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept="image/*,.pdf"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) setRgpPhotos(prev => ({ ...prev, os: file }));
-                                        }}
-                                    />
-                                </label>
-                            </div>
-                        )}
-                    </div>
-                </motion.div>
-            )}
 
             {/* Notes */}
             <motion.div

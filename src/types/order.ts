@@ -9,13 +9,12 @@ export const DkEnum = z.enum(['50', '100', '125', '180']);
 export type DkValue = z.infer<typeof DkEnum>;
 
 // ==================== Characteristic (lens design) ====================
-export const CharacteristicEnum = z.enum(['toric', 'spherical', 'rgp']);
+export const CharacteristicEnum = z.enum(['toric', 'spherical']);
 export type Characteristic = z.infer<typeof CharacteristicEnum>;
 
 export const CharacteristicLabels: Record<Characteristic, string> = {
     toric: 'Торическая',
     spherical: 'Сферическая',
-    rgp: 'RGP',
 };
 
 // ==================== Color options per Dk ====================
@@ -49,6 +48,7 @@ const optionalEnum = <T extends [string, ...string[]]>(enumSchema: z.ZodEnum<T>)
 // ==================== Eye Parameters (Orthokeratology) ====================
 export const OrthoEyeParamsSchema = z.object({
     characteristic: optionalEnum(CharacteristicEnum),
+    isRgp: z.boolean().optional(),
     myorthok: z.boolean().optional(),
     km: optionalNumber,
     tp: optionalNumber,

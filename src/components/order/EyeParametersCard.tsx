@@ -2,19 +2,18 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Eye } from 'lucide-react';
+import { Eye, Camera } from 'lucide-react';
 import type { UseFormRegister, UseFormWatch, UseFormSetValue, FieldErrors } from 'react-hook-form';
 import type { CreateOrderDTO } from '@/types/order';
 import { CharacteristicLabels, ColorsByDk } from '@/types/order';
 
 // ==================== Dropdown Ranges ====================
 function generateRange(min: number, max: number, step: number, decimals: number): string[] {
-    const result: string[] = [];
-    const epsilon = step / 100;
-    for (let v = min; v <= max + epsilon; v += step) {
-        result.push(v.toFixed(decimals));
+    const arr: string[] = [];
+    for (let v = min; v <= max + step / 2; v += step) {
+        arr.push(v.toFixed(decimals));
     }
-    return result;
+    return arr;
 }
 
 // Pre-compute all option arrays once
@@ -33,6 +32,8 @@ interface EyeParametersCardProps {
     watch: UseFormWatch<CreateOrderDTO>;
     setValue: UseFormSetValue<CreateOrderDTO>;
     disabled?: boolean;
+    rgpFile?: File | null;
+    onRgpFileChange?: (file: File | null) => void;
 }
 
 export function EyeParametersCard({
@@ -43,9 +44,12 @@ export function EyeParametersCard({
     watch,
     setValue,
     disabled = false,
+    rgpFile,
+    onRgpFileChange,
 }: EyeParametersCardProps) {
     const dkValue = watch(`config.eyes.${eye}.dk`);
     const characteristic = watch(`config.eyes.${eye}.characteristic`);
+    const isRgp = watch(`config.eyes.${eye}.isRgp`) || false;
     const isTrial = dkValue === '50';
     const isSpherical = characteristic === 'spherical';
 
@@ -77,8 +81,6 @@ export function EyeParametersCard({
     const eyeColor = eye === 'od' ? 'blue' : 'purple';
     const borderAccent = eye === 'od' ? 'border-l-blue-400' : 'border-l-purple-400';
 
-    const isRgp = characteristic === 'rgp';
-
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
@@ -101,10 +103,11 @@ export function EyeParametersCard({
                 </div>
             </div>
 
-            {/* Row 1: Характеристика + Km + TP + DIA */}
+            {/* Row 1: Характеристика + RGP checkbox + Km + TP + DIA */}
             <div className="space-y-5">
                 <div className={`grid grid-cols-2 ${isRgp ? 'sm:grid-cols-3' : 'sm:grid-cols-4'} gap-3`}>
-                    <div className="col-span-2 sm:col-span-1">
+                    {/* Характеристика */}
+                    <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика <span className="text-red-500">*</span></label>
                         <select {...register(`config.eyes.${eye}.characteristic`)} className="input">
                             <option value="">— выберите —</option>
@@ -113,6 +116,26 @@ export function EyeParametersCard({
                             ))}
                         </select>
                     </div>
+
+                    {/* RGP checkbox */}
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">RGP</label>
+                        <div
+                            onClick={() => setValue(`config.eyes.${eye}.isRgp`, !isRgp)}
+                            className={`flex items-center h-[42px] px-3 rounded-lg border cursor-pointer transition-colors ${isRgp ? 'bg-amber-50 border-amber-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
+                        >
+                            <input
+                                type="checkbox"
+                                {...register(`config.eyes.${eye}.isRgp`)}
+                                className="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                            />
+                            <span className={`ml-2 text-sm font-medium ${isRgp ? 'text-amber-700' : 'text-gray-400'}`}>
+                                {isRgp ? 'Да' : 'Нет'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Km — hidden for RGP */}
                     {!isRgp && (
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Km <span className="text-red-500">*</span></label>
@@ -250,6 +273,47 @@ export function EyeParametersCard({
                         </select>
                     </div>
                 </div>
+
+                {/* RGP File Upload — only shown when isRgp is checked */}
+                {isRgp && (
+                    <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4">
+                        <label className="block text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                            <Camera className="w-4 h-4" />
+                            Файл RGP для {eye.toUpperCase()}
+                        </label>
+                        {rgpFile ? (
+                            <div className="flex items-center gap-3 bg-white rounded-lg border border-amber-200 p-3">
+                                <span className="text-2xl">📎</span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-700 truncate">{rgpFile.name}</p>
+                                    <p className="text-xs text-gray-400">{(rgpFile.size / 1024).toFixed(0)} KB</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => onRgpFileChange?.(null)}
+                                    className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                >
+                                    Удалить
+                                </button>
+                            </div>
+                        ) : (
+                            <label className="flex flex-col items-center gap-2 py-4 border-2 border-dashed border-amber-300 rounded-lg cursor-pointer hover:bg-amber-50 transition-colors">
+                                <Camera className="w-6 h-6 text-amber-400" />
+                                <span className="text-sm text-amber-600 font-medium">Нажмите для загрузки файла</span>
+                                <span className="text-xs text-amber-400">JPG, PNG или PDF</span>
+                                <input
+                                    type="file"
+                                    accept="image/*,.pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) onRgpFileChange?.(file);
+                                    }}
+                                />
+                            </label>
+                        )}
+                    </div>
+                )}
             </div>
         </motion.div>
     );
