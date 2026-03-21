@@ -114,9 +114,11 @@ export default function ProductionHubPage() {
 
     useEffect(() => {
         loadOrders();
+        // Pause auto-refresh when delete confirmation is active to prevent UI flash
+        if (confirmDeleteId) return;
         const interval = setInterval(loadOrders, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [confirmDeleteId]);
 
     const loadOrders = async () => {
         try {
@@ -1144,7 +1146,7 @@ export default function ProductionHubPage() {
                                     </div>
                                 ) : (
                                     <button
-                                        onClick={() => setConfirmDeleteId(order.order_id)}
+                                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(order.order_id); }}
                                         className="btn text-xs py-2 w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg gap-1.5 transition-colors"
                                     >
                                         <Ban className="w-3.5 h-3.5" />
