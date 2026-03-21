@@ -886,14 +886,20 @@ export default function ProductionHubPage() {
                                                         const ia = new Uint8Array(ab);
                                                         for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
                                                         const blob = new Blob([ab], { type: file.mimeType });
+                                                        // Ensure filename has proper extension
+                                                        const extMap: Record<string, string> = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'application/pdf': '.pdf' };
+                                                        const ext = extMap[file.mimeType] || '.jpg';
+                                                        let downloadName = file.name || `RGP_${eye.toUpperCase()}`;
+                                                        if (!downloadName.match(/\.\w{2,5}$/)) downloadName += ext;
                                                         const blobUrl = URL.createObjectURL(blob);
-                                                        const a = document.createElement('a');
-                                                        a.href = blobUrl;
-                                                        a.download = file.name;
-                                                        document.body.appendChild(a);
-                                                        a.click();
-                                                        document.body.removeChild(a);
-                                                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                                                        const link = document.createElement('a');
+                                                        link.style.display = 'none';
+                                                        link.href = blobUrl;
+                                                        link.download = downloadName;
+                                                        link.setAttribute('download', downloadName);
+                                                        document.body.appendChild(link);
+                                                        link.click();
+                                                        setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl); }, 1000);
                                                     } catch (err) {
                                                         console.error('Download error:', err);
                                                     }
