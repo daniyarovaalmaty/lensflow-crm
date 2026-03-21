@@ -876,6 +876,33 @@ export default function ProductionHubPage() {
                                                 if (!file.data) return null;
                                                 const isImage = file.mimeType.startsWith('image/');
                                                 const dataUrl = `data:${file.mimeType};base64,${file.data}`;
+
+                                                const handleDownload = (e: React.MouseEvent) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    try {
+                                                        const byteString = atob(file.data!);
+                                                        const ab = new ArrayBuffer(byteString.length);
+                                                        const ia = new Uint8Array(ab);
+                                                        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                                                        const blob = new Blob([ab], { type: file.mimeType });
+                                                        const blobUrl = URL.createObjectURL(blob);
+                                                        if (isImage) {
+                                                            window.open(blobUrl, '_blank');
+                                                        } else {
+                                                            const a = document.createElement('a');
+                                                            a.href = blobUrl;
+                                                            a.download = file.name;
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            document.body.removeChild(a);
+                                                        }
+                                                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                                                    } catch (err) {
+                                                        console.error('Download error:', err);
+                                                    }
+                                                };
+
                                                 return (
                                                     <div key={eye} className="bg-white rounded-lg border border-amber-200 overflow-hidden">
                                                         <div className="px-3 py-1.5 bg-amber-100/50 border-b border-amber-200">
@@ -883,18 +910,18 @@ export default function ProductionHubPage() {
                                                             <span className="text-xs text-amber-600 ml-2">{file.name}</span>
                                                         </div>
                                                         {isImage ? (
-                                                            <a href={dataUrl} target="_blank" rel="noopener noreferrer" className="block p-2 hover:bg-amber-50 transition-colors">
+                                                            <button onClick={handleDownload} className="block p-2 hover:bg-amber-50 transition-colors w-full cursor-pointer">
                                                                 <img src={dataUrl} alt={`RGP ${eye.toUpperCase()}`} className="w-full h-32 object-contain rounded" />
                                                                 <span className="block text-center text-[10px] text-amber-500 mt-1">Нажмите для увеличения</span>
-                                                            </a>
+                                                            </button>
                                                         ) : (
-                                                            <a href={dataUrl} download={file.name} className="flex items-center gap-2 p-3 hover:bg-amber-50 transition-colors">
+                                                            <button onClick={handleDownload} className="flex items-center gap-2 p-3 hover:bg-amber-50 transition-colors w-full cursor-pointer">
                                                                 <span className="text-2xl">📄</span>
-                                                                <div>
+                                                                <div className="text-left">
                                                                     <span className="text-xs font-medium text-gray-700 block">{file.name}</span>
                                                                     <span className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(0)} KB • Скачать</span>
                                                                 </div>
-                                                            </a>
+                                                            </button>
                                                         )}
                                                     </div>
                                                 );
