@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,12 +53,14 @@ interface OrderConstructorProps {
 export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const { data: session } = useSession();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formErrors, setFormErrors] = useState<string[]>([]);
+    const errorsRef = useRef<HTMLDivElement>(null);
 
     // Catalog
     const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
     const [rgpPhotos, setRgpPhotos] = useState<{ od?: File; os?: File }>({});
-    const [orgDiscount, setOrgDiscount] = useState<number>(5);
+    const [orgDiscount, setOrgDiscount] = useState<number>(0);
     const subRole = session?.user?.subRole || '';
     const canSeePrices = subRole !== 'optic_doctor';
 
@@ -168,6 +170,14 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         });
     };
 
+    // Show errors inline and scroll to them
+    const showFormErrors = (errors: string[]) => {
+        setFormErrors(errors);
+        setTimeout(() => {
+            errorsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    };
+
     // Form submission
     const onFormSubmit = async (data: CreateOrderDTO) => {
         // Custom validation: ensure key fields are filled
@@ -204,10 +214,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         }
 
         if (validationErrors.length > 0) {
-            alert('Заполните все обязательные поля:\n\n• ' + validationErrors.join('\n• '));
+            showFormErrors(validationErrors);
             return;
         }
 
+        setFormErrors([]);
         setIsSubmitting(true);
         try {
             await onSubmit({ ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined });
@@ -218,16 +229,23 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
     const onFormError = (errs: any) => {
         console.error('Form validation errors:', errs);
-        const extractMessages = (obj: any, prefix = ''): string[] => {
+        const extractMessages = (obj: any): string[] => {
+            if (!obj || typeof obj !== 'object' || obj instanceof Element) return [];
             const msgs: string[] = [];
             for (const key of Object.keys(obj)) {
-                const path = prefix ? `${prefix}.${key}` : key;
-                if (obj[key]?.message) msgs.push(`${path}: ${obj[key].message}`);
-                else if (typeof obj[key] === 'object') msgs.push(...extractMessages(obj[key], path));
+                if (key === 'ref' || key === 'type') continue;
+                if (obj[key]?.message && typeof obj[key].message === 'string') {
+                    msgs.push(obj[key].message);
+                } else if (typeof obj[key] === 'object' && obj[key] !== null && !(obj[key] instanceof Element)) {
+                    msgs.push(...extractMessages(obj[key]));
+                }
             }
             return msgs;
         };
-        console.error('Validation summary:', extractMessages(errs).join('\n'));
+        const messages = extractMessages(errs);
+        if (messages.length > 0) {
+            showFormErrors(messages);
+        }
     };
 
     // Price calculation
@@ -446,11 +464,51 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </div>
             </motion.div>
 
-            {/* Lens Type — shows lens products from catalog linked to characteristics */}
+            {/* Eye Parameters */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
+                className="space-y-6"
+            >
+                {/* OD (Right Eye) */}
+                <EyeParametersCard
+                    eye="od"
+                    label="OD (Правый глаз)"
+                    register={register}
+                    errors={errors}
+                    watch={watch}
+                    setValue={setValue}
+                />
+
+                {/* Mirror Button */}
+                <div className="flex justify-center">
+                    <button
+                        type="button"
+                        onClick={mirrorODtoOS}
+                        className="btn btn-secondary gap-2"
+                    >
+                        <Copy className="w-4 h-4" />
+                        Копировать параметры OD → OS
+                    </button>
+                </div>
+
+                {/* OS (Left Eye) */}
+                <EyeParametersCard
+                    eye="os"
+                    label="OS (Левый глаз)"
+                    register={register}
+                    errors={errors}
+                    watch={watch}
+                    setValue={setValue}
+                />
+            </motion.div>
+
+            {/* Lens Type — shows lens products from catalog linked to characteristics */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
                 className="card"
             >
                 <div className="flex items-center gap-3 mb-6">
@@ -490,46 +548,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         );
                     })}
                 </div>
-            </motion.div>
-
-            {/* Eye Parameters */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="space-y-6"
-            >
-                {/* OD (Right Eye) */}
-                <EyeParametersCard
-                    eye="od"
-                    label="OD (Правый глаз)"
-                    register={register}
-                    errors={errors}
-                    watch={watch}
-                    setValue={setValue}
-                />
-
-                {/* Mirror Button */}
-                <div className="flex justify-center">
-                    <button
-                        type="button"
-                        onClick={mirrorODtoOS}
-                        className="btn btn-secondary gap-2"
-                    >
-                        <Copy className="w-4 h-4" />
-                        Копировать параметры OD → OS
-                    </button>
-                </div>
-
-                {/* OS (Left Eye) */}
-                <EyeParametersCard
-                    eye="os"
-                    label="OS (Левый глаз)"
-                    register={register}
-                    errors={errors}
-                    watch={watch}
-                    setValue={setValue}
-                />
             </motion.div>
 
             {/* RGP Photo Upload — shown when any eye has RGP characteristic */}
@@ -766,6 +784,35 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <span className="text-xl font-bold text-primary-600">
                                 {totalPrice.toLocaleString('ru-RU')} ₸
                             </span>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Validation Errors Banner */}
+            {formErrors.length > 0 && (
+                <motion.div
+                    ref={errorsRef}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-xl border-2 border-red-200 bg-red-50 p-5"
+                >
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-red-800 mb-2">Заполните все обязательные поля</h3>
+                            <ul className="space-y-1">
+                                {formErrors.map((err, i) => (
+                                    <li key={i} className="text-sm text-red-700 flex items-start gap-1.5">
+                                        <span className="mt-0.5">•</span>
+                                        <span>{err}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </div>
                 </motion.div>

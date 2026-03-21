@@ -25,7 +25,7 @@ function calcOrderPrice(order: Order): number {
     const os = order.config.eyes.os;
     const totalLenses = (Number(od.qty) || 1) + (Number(os.qty) || 1);
     const base = totalLenses * PRICE_PER_LENS;
-    const pct = (order as any).discount_percent ?? 5;
+    const pct = (order as any).discount_percent ?? 0;
     const discountAmt = Math.round(base * pct / 100);
     const afterDiscount = base - discountAmt;
     const urgentCharge = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
@@ -204,7 +204,7 @@ export default function LabHeadDashboard() {
 
     const getOrgDiscount = (clinicName: string) => {
         const org = orgs.find(o => o.name === clinicName);
-        return org?.discountPercent ?? 5;
+        return org?.discountPercent ?? 0;
     };
 
     const getOrgId = (clinicName: string) => {

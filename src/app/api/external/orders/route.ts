@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
 
         // Calculate price from catalog
         const DISCOUNT_PCT = organizationId
-            ? (await prisma.organization.findUnique({ where: { id: organizationId }, select: { discountPercent: true } }))?.discountPercent || 5
-            : 5;
+            ? (await prisma.organization.findUnique({ where: { id: organizationId }, select: { discountPercent: true } }))?.discountPercent || 0
+            : 0;
         const URGENT_SURCHARGE_PCT = 25;
 
         const config = body.config;

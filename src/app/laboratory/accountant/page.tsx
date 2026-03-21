@@ -24,7 +24,7 @@ function calcOrderTotal(order: Order): number {
     const od = order.config.eyes.od?.qty ?? 0;
     const os = order.config.eyes.os?.qty ?? 0;
     const base = (Number(od) + Number(os)) * FALLBACK_PRICE_PER_LENS;
-    const pct = (order as any).discount_percent ?? 5;
+    const pct = (order as any).discount_percent ?? 0;
     const disc = Math.round(base * pct / 100);
     const after = base - disc;
     const surcharge = order.is_urgent ? Math.round(after * URGENT_SURCHARGE_PCT / 100) : 0;
@@ -46,7 +46,7 @@ async function generateInvoice(order: Order) {
     const odPrice = getLensPrice(odChar);
     const osPrice = getLensPrice(osChar);
     const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number }> || [];
-    const discountPct = (order as any).discount_percent ?? 5;
+    const discountPct = (order as any).discount_percent ?? 0;
     const date = new Date(order.meta.created_at);
     const dateStr = date.toLocaleDateString('ru-RU');
     const fmt = (n: number) => n.toLocaleString('ru-RU');
@@ -620,7 +620,7 @@ export default function AccountantPage() {
                                         const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number; category?: string }> || [];
                                         const additionalTotal = additionalProducts.reduce((sum, p) => sum + (p.price || 0) * (p.qty || 1), 0);
                                         const lensTotal = odSubtotal + osSubtotal + additionalTotal;
-                                        const orderDiscountPct = (order as any).discount_percent ?? 5;
+                                        const orderDiscountPct = (order as any).discount_percent ?? 0;
                                         const discountAmt = Math.round(lensTotal * orderDiscountPct / 100);
                                         const afterDiscount = lensTotal - discountAmt;
                                         const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;

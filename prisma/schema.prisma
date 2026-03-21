@@ -28,7 +28,7 @@ model Organization {
   directorName     String?  // ФИО руководителя
   contactPerson    String?  // Контактное лицо
   contactPhone     String?  // Телефон контактного лица
-  discountPercent  Float    @default(5)  // Персональная скидка (%), по умолчанию 5%
+  discountPercent  Float    @default(0)  // Персональная скидка (%), по умолчанию 0%
 
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())
@@ -178,7 +178,7 @@ model Order {
 
   // Payment
   totalPrice      Int           @default(0)
-  discountPercent Float         @default(5)  // Скидка, применённая к заказу
+  discountPercent Float         @default(0)  // Скидка, применённая к заказу
   paymentStatus   PaymentStatus @default(unpaid)
 
   // Timestamps

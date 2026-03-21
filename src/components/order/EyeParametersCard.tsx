@@ -20,7 +20,7 @@ function generateRange(min: number, max: number, step: number, decimals: number)
 // Pre-compute all option arrays once
 const TP_OPTIONS = generateRange(-25, 25, 0.25, 2);       // 201 options
 const DIA_OPTIONS = generateRange(8.0, 13.0, 0.1, 1);      // 51 options
-const E_OPTIONS = generateRange(0, 1.0, 0.01, 2);          // 101 options
+const E_OPTIONS = generateRange(0.30, 0.70, 0.01, 2);      // 41 options
 const APICAL_OPTIONS = generateRange(-9, 9, 0.5, 1);       // 37 options
 const QTY_OPTIONS = ['0', ...Array.from({ length: 10 }, (_, i) => String(i + 1))];
 

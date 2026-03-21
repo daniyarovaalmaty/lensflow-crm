@@ -928,23 +928,25 @@ export default function ProductionHubPage() {
                                     <Download className="w-3.5 h-3.5" />
                                     Скачать PDF
                                 </button>
-                                <button
-                                    onClick={() => {
-                                        import('@/lib/generateLabelPdf').then(({ generateLabelPdf }) => {
-                                            generateLabelPdf({
-                                                order_id: order.order_id,
-                                                patient: order.patient,
-                                                meta: order.meta,
-                                                company: order.company,
-                                                config: order.config,
+                                {order.status === 'ready' && (
+                                    <button
+                                        onClick={() => {
+                                            import('@/lib/generateLabelPdf').then(({ generateLabelPdf }) => {
+                                                generateLabelPdf({
+                                                    order_id: order.order_id,
+                                                    patient: order.patient,
+                                                    meta: order.meta,
+                                                    company: order.company,
+                                                    config: order.config,
+                                                });
                                             });
-                                        });
-                                    }}
-                                    className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
-                                >
-                                    <Tag className="w-3.5 h-3.5" />
-                                    Этикетка
-                                </button>
+                                        }}
+                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
+                                    >
+                                        <Tag className="w-3.5 h-3.5" />
+                                        Этикетка
+                                    </button>
+                                )}
                                 {perms.canChangeStatus && order.status === 'new' && (() => {
                                     const canStart = canStartProduction(order);
                                     const remainMs = editWindowRemainingMs(order);

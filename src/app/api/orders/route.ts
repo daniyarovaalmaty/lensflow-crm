@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
                 payment_status: order.paymentStatus,
                 defects: (order.defects as any[]) || [],
                 total_price: order.totalPrice || 0,
-                discount_percent: order.discountPercent ?? 5,
+                discount_percent: order.discountPercent ?? 0,
                 products: (order.products as any[]) || [],
                 document_name_od: order.documentNameOd || undefined,
                 document_name_os: order.documentNameOs || undefined,
@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
 
         // ── Calculate totalPrice from catalog ──
         // Get org discount (or user personal discount for independent doctors)
-        let DISCOUNT_PCT = 5;
+        let DISCOUNT_PCT = 0;
         if (session.user.organizationId) {
             const org = await prisma.organization.findUnique({
                 where: { id: session.user.organizationId },

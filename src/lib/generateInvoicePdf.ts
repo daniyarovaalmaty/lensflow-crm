@@ -41,7 +41,7 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     const odQty = Number(od.qty) || 0;
     const osQty = Number(os.qty) || 0;
     const additionalProducts = order.products || [];
-    const discountPct = order.discount_percent ?? 5;
+    const discountPct = order.discount_percent ?? 0;
     const isUrgent = order.is_urgent || false;
     const URGENT_PCT = 25;
     const dateStr = new Date(order.meta.created_at).toLocaleDateString('ru-RU');

@@ -140,7 +140,7 @@ export default function CounterpartiesPage() {
                 case 'orders': cmp = a.orders - b.orders; break;
                 case 'revenue': cmp = a.revenue - b.revenue; break;
                 case 'unpaid': cmp = a.unpaid - b.unpaid; break;
-                case 'discount': cmp = (a.discountPercent ?? 5) - (b.discountPercent ?? 5); break;
+                case 'discount': cmp = (a.discountPercent ?? 0) - (b.discountPercent ?? 0); break;
                 case 'lastDate': cmp = (a.lastDate || '').localeCompare(b.lastDate || ''); break;
             }
             return sortDir === 'desc' ? -cmp : cmp;
@@ -404,7 +404,7 @@ export default function CounterpartiesPage() {
                                     {filteredDoctors.map(doctor => {
                                         const isEditing = editingDiscount === doctor.id;
                                         const showDiscountEdit = !doctor.hasOrg; // Only for independent doctors
-                                        const effectiveDiscount = doctor.hasOrg ? null : (doctor.discountPercent ?? 5);
+                                        const effectiveDiscount = doctor.hasOrg ? null : (doctor.discountPercent ?? 0);
                                         return (
                                             <tr key={doctor.id} className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
                                                 <td className="py-3 px-4">
