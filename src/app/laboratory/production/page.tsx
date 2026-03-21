@@ -39,6 +39,7 @@ export default function ProductionHubPage() {
     const [showFilters, setShowFilters] = useState(false);
     const [bulkMode, setBulkMode] = useState(false);
     const [bulkSelectedIds, setBulkSelectedIds] = useState(new Set<string>());
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     // Tick every minute to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
@@ -1080,18 +1081,41 @@ export default function ProductionHubPage() {
 
                             {/* Cancel order — available for new, in_production, rework */}
                             {perms.canChangeStatus && ['new', 'in_production', 'rework'].includes(order.status) && (
-                                <button
-                                    onClick={() => {
-                                        if (confirm(`Удалить заказ ${order.order_id}? Заказ будет перемещён в «Удалённые».`)) {
-                                            updateOrderStatus(order.order_id, 'cancelled');
-                                            setSelectedOrderId(null);
-                                        }
-                                    }}
-                                    className="btn text-xs py-2 w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg gap-1.5 transition-colors"
-                                >
-                                    <Ban className="w-3.5 h-3.5" />
-                                    Удалить заказ
-                                </button>
+                                confirmDeleteId === order.order_id ? (
+                                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                                        <p className="text-sm font-medium text-red-700 flex items-center gap-2">
+                                            <Ban className="w-4 h-4" />
+                                            Вы уверены, что хотите удалить заказ {order.order_id}?
+                                        </p>
+                                        <p className="text-xs text-red-500">Заказ будет перемещён в «Удалённые» и не будет исполняться.</p>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    updateOrderStatus(order.order_id, 'cancelled');
+                                                    setSelectedOrderId(null);
+                                                    setConfirmDeleteId(null);
+                                                }}
+                                                className="btn text-xs py-2 px-4 flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                                            >
+                                                Да, удалить
+                                            </button>
+                                            <button
+                                                onClick={() => setConfirmDeleteId(null)}
+                                                className="btn text-xs py-2 px-4 flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg"
+                                            >
+                                                Отмена
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setConfirmDeleteId(order.order_id)}
+                                        className="btn text-xs py-2 w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg gap-1.5 transition-colors"
+                                    >
+                                        <Ban className="w-3.5 h-3.5" />
+                                        Удалить заказ
+                                    </button>
+                                )
                             )}
 
                             {/* Delivery button — full width, separate from other buttons */}
