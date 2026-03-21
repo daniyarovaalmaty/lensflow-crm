@@ -23,8 +23,11 @@ function calcOrderPrice(order: Order): number {
     // Fallback for old orders
     const od = order.config.eyes.od;
     const os = order.config.eyes.os;
-    const totalLenses = (Number(od.qty) || 1) + (Number(os.qty) || 1);
-    const base = totalLenses * PRICE_PER_LENS;
+    const odQty = Number(od.qty) || 0;
+    const osQty = Number(os.qty) || 0;
+    const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
+    const osPrice = (order as any).price_os ?? PRICE_PER_LENS;
+    const base = (odQty * odPrice) + (osQty * osPrice);
     const pct = (order as any).discount_percent ?? 0;
     const discountAmt = Math.round(base * pct / 100);
     const afterDiscount = base - discountAmt;

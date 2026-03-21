@@ -31,7 +31,9 @@ function calcOrderTotal(order: Order): number {
     return after + surcharge;
 }
 
-function getLensPrice(char: string | undefined): number {
+function getLensPrice(order: Order, char: string | undefined, eye: 'od' | 'os'): number {
+    const savedPrice = eye === 'od' ? (order as any).price_od : (order as any).price_os;
+    if (savedPrice != null) return savedPrice;
     if (char === 'toric') return 18_500;
     return 17_500;
 }
@@ -43,8 +45,8 @@ async function generateInvoice(order: Order) {
     const osQty = Number(os?.qty) || 0;
     const odChar = od?.characteristic as string | undefined;
     const osChar = os?.characteristic as string | undefined;
-    const odPrice = getLensPrice(odChar);
-    const osPrice = getLensPrice(osChar);
+    const odPrice = getLensPrice(order, odChar, 'od');
+    const osPrice = getLensPrice(order, osChar, 'os');
     const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number }> || [];
     const discountPct = (order as any).discount_percent ?? 0;
     const date = new Date(order.meta.created_at);
@@ -613,8 +615,8 @@ export default function AccountantPage() {
                                         const osQty = Number(os?.qty) || 0;
                                         const odChar = od?.characteristic as Characteristic | undefined;
                                         const osChar = os?.characteristic as Characteristic | undefined;
-                                        const odUnitPrice = getLensPrice(odChar);
-                                        const osUnitPrice = getLensPrice(osChar);
+                                        const odUnitPrice = getLensPrice(order, odChar, 'od');
+                                        const osUnitPrice = getLensPrice(order, osChar, 'os');
                                         const odSubtotal = odQty * odUnitPrice;
                                         const osSubtotal = osQty * osUnitPrice;
                                         const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number; category?: string }> || [];

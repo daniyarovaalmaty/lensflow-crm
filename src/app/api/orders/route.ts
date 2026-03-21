@@ -386,6 +386,10 @@ export async function POST(request: NextRequest) {
             notes: order.notes || undefined,
             total_price: order.totalPrice,
             discount_percent: order.discountPercent,
+            price_od: order.priceOd || undefined,
+            price_os: order.priceOs || undefined,
+            document_name_od: order.documentNameOd || undefined,
+            document_name_os: order.documentNameOs || undefined,
             products: (order as any).products || [],
         };
 

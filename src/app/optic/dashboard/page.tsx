@@ -467,8 +467,16 @@ export default function OpticDashboard() {
                             const isExpanded = expandedOrders.has(order.order_id);
                             const od = order.config.eyes.od;
                             const os = order.config.eyes.os;
-                            const totalLenses = (Number(od.qty) || 0) + (Number(os.qty) || 0);
-                            const totalPrice = order.total_price || totalLenses * PRICE_PER_LENS;
+                            const odQty = Number(od.qty) || 0;
+                            const osQty = Number(os.qty) || 0;
+                            const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
+                            const osPrice = (order as any).price_os ?? PRICE_PER_LENS;
+                            const lensTotal = (odQty * odPrice) + (osQty * osPrice);
+                            const additionalTotal = ((order as any).products || []).reduce((sum: number, p: any) => sum + (p.price || 0) * (p.qty || 1), 0);
+                            const discountAmt = Math.round((lensTotal + additionalTotal) * ((order as any).discount_percent || 0) / 100);
+                            const afterDiscount = (lensTotal + additionalTotal) - discountAmt;
+                            const urgentAmt = order.is_urgent ? Math.round(afterDiscount * 25 / 100) : 0;
+                            const totalPrice = order.total_price || (afterDiscount + urgentAmt);
 
                             return (
                                 <motion.div
@@ -686,9 +694,9 @@ export default function OpticDashboard() {
                                                         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
                                                             <div className="text-sm text-gray-600 space-y-0.5">
                                                                 <div>
-                                                                    <span>OD: {Number(od.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                                    <span>OD: {Number(od.qty)} × {((order as any).price_od ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
                                                                     <span className="mx-2">+</span>
-                                                                    <span>OS: {Number(os.qty)} × {PRICE_PER_LENS.toLocaleString('ru-RU')} ₸</span>
+                                                                    <span>OS: {Number(os.qty)} × {((order as any).price_os ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
                                                                 </div>
                                                                 {(order as any).products?.length > 0 && (
                                                                     <div className="text-xs text-gray-400">

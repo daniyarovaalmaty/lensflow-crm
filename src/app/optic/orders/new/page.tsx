@@ -24,7 +24,9 @@ function generateInvoiceHTML(order: Order): string {
     const URGENT_SURCHARGE_PCT = 25;
 
     // Calculate totals
-    const lensSubtotal = (odQty + osQty) * PRICE_PER_LENS;
+    const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
+    const osPrice = (order as any).price_os ?? PRICE_PER_LENS;
+    const lensSubtotal = (odQty * odPrice) + (osQty * osPrice);
     const additionalSubtotal = additionalProducts.reduce((sum, p) => sum + (p.price || 0) * (p.qty || 1), 0);
     const subtotal = lensSubtotal + additionalSubtotal;
     const discountAmt = Math.round(subtotal * DISCOUNT_PCT / 100);
@@ -32,7 +34,7 @@ function generateInvoiceHTML(order: Order): string {
     const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
     const grandTotal = order.total_price || (afterDiscount + urgentAmt);
 
-    const renderEyeRow = (label: string, eye: any, qty: number, docName?: string) => qty > 0 ? `
+    const renderEyeRow = (label: string, eye: any, qty: number, priceUnit: number, docName?: string) => qty > 0 ? `
         <tr>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;">${docName || 'MediLens — ' + label}</td>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">
@@ -42,8 +44,8 @@ function generateInvoiceHTML(order: Order): string {
                 ${eye.tor != null ? ', Тог. ' + eye.tor : ''}
             </td>
             <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:center;">${qty}</td>
-            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">—</td>
-            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">—</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;">${priceUnit.toLocaleString('ru-RU')} ₸</td>
+            <td style="padding:10px 14px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${(priceUnit * qty).toLocaleString('ru-RU')} ₸</td>
         </tr>
     ` : '';
 
@@ -140,8 +142,8 @@ function generateInvoiceHTML(order: Order): string {
             </tr>
         </thead>
         <tbody>
-            ${renderEyeRow('OD (Правый глаз)', od, odQty, (order as any).document_name_od)}
-            ${renderEyeRow('OS (Левый глаз)', os, osQty, (order as any).document_name_os)}
+            ${renderEyeRow('OD (Правый глаз)', od, odQty, odPrice, (order as any).document_name_od)}
+            ${renderEyeRow('OS (Левый глаз)', os, osQty, osPrice, (order as any).document_name_os)}
             ${additionalProducts.map(p => renderProductRow(p)).join('')}
         </tbody>
     </table>

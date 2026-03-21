@@ -47,8 +47,8 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     const dateStr = new Date(order.meta.created_at).toLocaleDateString('ru-RU');
     const fmt = (n: number) => n.toLocaleString('ru-RU');
 
-    const odUnitPrice = order.price_od || (odQty > 0 ? PRICE_PER_LENS : 0);
-    const osUnitPrice = order.price_os || (osQty > 0 ? PRICE_PER_LENS : 0);
+    const odUnitPrice = order.price_od ?? (odQty > 0 ? PRICE_PER_LENS : 0);
+    const osUnitPrice = order.price_os ?? (osQty > 0 ? PRICE_PER_LENS : 0);
 
     // === HEADER ===
     doc.setFontSize(18);
