@@ -221,20 +221,59 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         setFormErrors([]);
         setIsSubmitting(true);
         try {
-            // Convert RGP photos to base64 and attach to config
+            // Convert RGP photos to compressed base64 and attach to config
             const submitData = { ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined };
             if (rgpPhotos.od || rgpPhotos.os) {
-                const toBase64 = (file: File): Promise<{ name: string; data: string; mimeType: string; size: number }> =>
+                const MAX_SIZE = 1200; // max dimension in px
+                const QUALITY = 0.7;   // JPEG quality
+                const MAX_FILE_MB = 2;
+
+                const compressImage = (file: File): Promise<{ name: string; data: string; mimeType: string; size: number }> =>
                     new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve({ name: file.name, data: (reader.result as string).split(',')[1], mimeType: file.type, size: file.size });
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
+                        // PDFs — send as-is but check size
+                        if (file.type === 'application/pdf') {
+                            if (file.size > MAX_FILE_MB * 1024 * 1024) {
+                                reject(new Error(`Файл "${file.name}" слишком большой (${(file.size / 1024 / 1024).toFixed(1)}MB). Максимум ${MAX_FILE_MB}MB.`));
+                                return;
+                            }
+                            const reader = new FileReader();
+                            reader.onload = () => resolve({ name: file.name, data: (reader.result as string).split(',')[1], mimeType: file.type, size: file.size });
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                            return;
+                        }
+                        // Images — compress via canvas
+                        const img = new Image();
+                        img.onload = () => {
+                            let w = img.width, h = img.height;
+                            if (w > MAX_SIZE || h > MAX_SIZE) {
+                                const ratio = Math.min(MAX_SIZE / w, MAX_SIZE / h);
+                                w = Math.round(w * ratio);
+                                h = Math.round(h * ratio);
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext('2d')!;
+                            ctx.drawImage(img, 0, 0, w, h);
+                            const dataUrl = canvas.toDataURL('image/jpeg', QUALITY);
+                            const base64 = dataUrl.split(',')[1];
+                            resolve({ name: file.name, data: base64, mimeType: 'image/jpeg', size: Math.round(base64.length * 0.75) });
+                        };
+                        img.onerror = () => reject(new Error(`Не удалось загрузить изображение "${file.name}"`));
+                        img.src = URL.createObjectURL(file);
                     });
-                const rgpFiles: any = {};
-                if (rgpPhotos.od) rgpFiles.od = await toBase64(rgpPhotos.od);
-                if (rgpPhotos.os) rgpFiles.os = await toBase64(rgpPhotos.os);
-                (submitData as any).rgpFiles = rgpFiles;
+
+                try {
+                    const rgpFiles: any = {};
+                    if (rgpPhotos.od) rgpFiles.od = await compressImage(rgpPhotos.od);
+                    if (rgpPhotos.os) rgpFiles.os = await compressImage(rgpPhotos.os);
+                    (submitData as any).rgpFiles = rgpFiles;
+                } catch (compressErr: any) {
+                    showFormErrors([compressErr.message || 'Ошибка при обработке файла']);
+                    setIsSubmitting(false);
+                    return;
+                }
             }
             await onSubmit(submitData);
         } finally {
