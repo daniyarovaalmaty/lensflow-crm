@@ -8,7 +8,7 @@ import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
     RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip,
-    CheckSquare, Square, Tag
+    CheckSquare, Square, Tag, Trash2
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
@@ -641,13 +641,52 @@ export default function ProductionHubPage() {
                                     {OrderStatusLabels[order.status]} • {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
                                 </p>
                             </div>
-                            <button
-                                onClick={() => setSelectedOrderId(null)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                <X className="w-5 h-5 text-gray-500" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                                {perms.canChangeStatus && ['new', 'in_production', 'rework'].includes(order.status) && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(order.order_id); }}
+                                        className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
+                                        title="Удалить заказ"
+                                    >
+                                        <Trash2 className="w-5 h-5 text-gray-400 group-hover:text-red-500" />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setSelectedOrderId(null)}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-gray-500" />
+                                </button>
+                            </div>
                         </div>
+                        {/* Delete confirmation */}
+                        {confirmDeleteId === order.order_id && (
+                            <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                                <p className="text-sm font-medium text-red-700 flex items-center gap-2">
+                                    <Trash2 className="w-4 h-4" />
+                                    Вы уверены, что хотите удалить заказ {order.order_id}?
+                                </p>
+                                <p className="text-xs text-red-500">Заказ будет перемещён в «Удалённые» и не будет исполняться.</p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            updateOrderStatus(order.order_id, 'cancelled');
+                                            setSelectedOrderId(null);
+                                            setConfirmDeleteId(null);
+                                        }}
+                                        className="btn text-xs py-2 px-4 flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                                    >
+                                        Да, удалить
+                                    </button>
+                                    <button
+                                        onClick={() => setConfirmDeleteId(null)}
+                                        className="btn text-xs py-2 px-4 flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg"
+                                    >
+                                        Отмена
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         {/* Document actions bar for shipped orders */}
                         {order.status === 'shipped' && (
                             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
@@ -1116,44 +1155,6 @@ export default function ProductionHubPage() {
                                 )}
                             </div>
 
-                            {/* Cancel order — available for new, in_production, rework */}
-                            {perms.canChangeStatus && ['new', 'in_production', 'rework'].includes(order.status) && (
-                                confirmDeleteId === order.order_id ? (
-                                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
-                                        <p className="text-sm font-medium text-red-700 flex items-center gap-2">
-                                            <Ban className="w-4 h-4" />
-                                            Вы уверены, что хотите удалить заказ {order.order_id}?
-                                        </p>
-                                        <p className="text-xs text-red-500">Заказ будет перемещён в «Удалённые» и не будет исполняться.</p>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    updateOrderStatus(order.order_id, 'cancelled');
-                                                    setSelectedOrderId(null);
-                                                    setConfirmDeleteId(null);
-                                                }}
-                                                className="btn text-xs py-2 px-4 flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
-                                            >
-                                                Да, удалить
-                                            </button>
-                                            <button
-                                                onClick={() => setConfirmDeleteId(null)}
-                                                className="btn text-xs py-2 px-4 flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg"
-                                            >
-                                                Отмена
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(order.order_id); }}
-                                        className="btn text-xs py-2 w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg gap-1.5 transition-colors"
-                                    >
-                                        <Ban className="w-3.5 h-3.5" />
-                                        Удалить заказ
-                                    </button>
-                                )
-                            )}
 
                             {/* Delivery button — full width, separate from other buttons */}
                             {perms.canSendToAccountant && order.status === 'docs_ready' && (

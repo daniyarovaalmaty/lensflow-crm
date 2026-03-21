@@ -22,7 +22,7 @@ const navItems = [
 
 export default function LabNav() {
     const pathname = usePathname();
-    const { data: session } = useSession();
+    const { data: session, status: sessionStatus } = useSession();
     const subRole = (session?.user?.subRole || 'lab_admin') as SubRole;
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -66,7 +66,7 @@ export default function LabNav() {
                 {/* Right side: role + logout (desktop) */}
                 <div className="hidden md:flex items-center gap-3 shrink-0">
                     <span className="text-xs text-gray-400 hidden lg:block">
-                        {SubRoleLabels[subRole]}
+                        {sessionStatus === 'loading' ? '...' : SubRoleLabels[subRole]}
                     </span>
                     <Link
                         href="/profile"
