@@ -40,6 +40,7 @@ export default function ProductionHubPage() {
     const [bulkMode, setBulkMode] = useState(false);
     const [bulkSelectedIds, setBulkSelectedIds] = useState(new Set<string>());
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [loadingRgpId, setLoadingRgpId] = useState<string | null>(null);
     // Tick every minute to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
@@ -849,8 +850,10 @@ export default function ProductionHubPage() {
                                                 </div>
                                             ))}
                                             <button
+                                                disabled={loadingRgpId === order.order_id}
                                                 onClick={async (e) => {
                                                     e.stopPropagation();
+                                                    setLoadingRgpId(order.order_id);
                                                     try {
                                                         const res = await fetch(`/api/orders/${order.order_id}`);
                                                         if (res.ok) {
@@ -863,11 +866,23 @@ export default function ProductionHubPage() {
                                                         }
                                                     } catch (err) {
                                                         console.error('Failed to load RGP files:', err);
+                                                    } finally {
+                                                        setLoadingRgpId(null);
                                                     }
                                                 }}
-                                                className="btn text-xs py-1.5 px-3 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg transition-colors w-full"
+                                                className="btn text-xs py-1.5 px-3 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg transition-colors w-full disabled:opacity-60 disabled:cursor-wait"
                                             >
-                                                📥 Загрузить файлы
+                                                {loadingRgpId === order.order_id ? (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                        </svg>
+                                                        Загрузка...
+                                                    </span>
+                                                ) : (
+                                                    '📥 Загрузить файлы'
+                                                )}
                                             </button>
                                         </div>
                                     ) : (
