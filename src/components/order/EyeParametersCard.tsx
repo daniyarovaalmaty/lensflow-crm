@@ -32,6 +32,7 @@ interface EyeParametersCardProps {
     errors: FieldErrors<CreateOrderDTO>;
     watch: UseFormWatch<CreateOrderDTO>;
     setValue: UseFormSetValue<CreateOrderDTO>;
+    disabled?: boolean;
 }
 
 export function EyeParametersCard({
@@ -41,6 +42,7 @@ export function EyeParametersCard({
     errors,
     watch,
     setValue,
+    disabled = false,
 }: EyeParametersCardProps) {
     const dkValue = watch(`config.eyes.${eye}.dk`);
     const characteristic = watch(`config.eyes.${eye}.characteristic`);
@@ -79,8 +81,13 @@ export function EyeParametersCard({
         <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`card border-l-4 ${borderAccent}`}
+            className={`card border-l-4 ${borderAccent} relative ${disabled ? 'opacity-50' : ''}`}
         >
+            {disabled && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 rounded-xl">
+                    <span className="text-sm font-semibold text-gray-400 bg-gray-100 px-4 py-2 rounded-full">Не заказывается</span>
+                </div>
+            )}
             {/* Header */}
             <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${eye === 'od' ? 'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600' : 'bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600'}`}>

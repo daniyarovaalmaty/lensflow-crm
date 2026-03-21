@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
-import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye } from 'lucide-react';
 
 interface CatalogProduct {
     id: string;
@@ -56,11 +56,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [formErrors, setFormErrors] = useState<string[]>([]);
     const errorsRef = useRef<HTMLDivElement>(null);
 
-    // Catalog
     const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
     const [rgpPhotos, setRgpPhotos] = useState<{ od?: File; os?: File }>({});
     const [orgDiscount, setOrgDiscount] = useState<number>(0);
+    const [singleEye, setSingleEye] = useState<'both' | 'od' | 'os'>('both');
     const subRole = session?.user?.subRole || '';
     const canSeePrices = subRole !== 'optic_doctor';
 
@@ -464,6 +464,53 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </div>
             </motion.div>
 
+            {/* Single Eye Toggle */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="card"
+            >
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center">
+                        <Eye className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-900">Количество глаз</h2>
+                        <p className="text-sm text-gray-500">Заказ на оба глаза или только на один</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                    {[
+                        { value: 'both' as const, label: 'Оба глаза', sub: 'OD + OS' },
+                        { value: 'od' as const, label: 'Только OD', sub: 'Правый глаз' },
+                        { value: 'os' as const, label: 'Только OS', sub: 'Левый глаз' },
+                    ].map(opt => (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                                setSingleEye(opt.value);
+                                if (opt.value === 'od') setValue('config.eyes.os.qty', 0 as any);
+                                if (opt.value === 'os') setValue('config.eyes.od.qty', 0 as any);
+                                if (opt.value === 'both') {
+                                    if (Number(watch('config.eyes.od.qty')) === 0) setValue('config.eyes.od.qty', 1 as any);
+                                    if (Number(watch('config.eyes.os.qty')) === 0) setValue('config.eyes.os.qty', 1 as any);
+                                }
+                            }}
+                            className={`p-3 rounded-xl border-2 text-center transition-all ${singleEye === opt.value
+                                ? 'border-violet-500 bg-violet-50 text-violet-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                                }`}
+                        >
+                            <div className="font-semibold text-sm">{opt.label}</div>
+                            <div className="text-xs opacity-70 mt-0.5">{opt.sub}</div>
+                        </button>
+                    ))}
+                </div>
+            </motion.div>
+
             {/* Eye Parameters */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -479,19 +526,22 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     errors={errors}
                     watch={watch}
                     setValue={setValue}
+                    disabled={singleEye === 'os'}
                 />
 
                 {/* Mirror Button */}
-                <div className="flex justify-center">
-                    <button
-                        type="button"
-                        onClick={mirrorODtoOS}
-                        className="btn btn-secondary gap-2"
-                    >
-                        <Copy className="w-4 h-4" />
-                        Копировать параметры OD → OS
-                    </button>
-                </div>
+                {singleEye === 'both' && (
+                    <div className="flex justify-center">
+                        <button
+                            type="button"
+                            onClick={mirrorODtoOS}
+                            className="btn btn-secondary gap-2"
+                        >
+                            <Copy className="w-4 h-4" />
+                            Копировать параметры OD → OS
+                        </button>
+                    </div>
+                )}
 
                 {/* OS (Left Eye) */}
                 <EyeParametersCard
@@ -501,6 +551,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     errors={errors}
                     watch={watch}
                     setValue={setValue}
+                    disabled={singleEye === 'od'}
                 />
             </motion.div>
 
