@@ -429,6 +429,7 @@ export default function ProductionHubPage() {
         docs_ready: filteredOrders.filter(o => o.status === 'docs_ready'),
         out_for_delivery: filteredOrders.filter(o => o.status === 'out_for_delivery'),
         delivered: filteredOrders.filter(o => o.status === 'delivered'),
+        cancelled: filteredOrders.filter(o => o.status === 'cancelled'),
     };
 
     const allDefects = useMemo(() => {
@@ -1077,6 +1078,22 @@ export default function ProductionHubPage() {
                                 )}
                             </div>
 
+                            {/* Cancel order — available for new, in_production, rework */}
+                            {perms.canChangeStatus && ['new', 'in_production', 'rework'].includes(order.status) && (
+                                <button
+                                    onClick={() => {
+                                        if (confirm(`Удалить заказ ${order.order_id}? Заказ будет перемещён в «Удалённые».`)) {
+                                            updateOrderStatus(order.order_id, 'cancelled');
+                                            setSelectedOrderId(null);
+                                        }
+                                    }}
+                                    className="btn text-xs py-2 w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg gap-1.5 transition-colors"
+                                >
+                                    <Ban className="w-3.5 h-3.5" />
+                                    Удалить заказ
+                                </button>
+                            )}
+
                             {/* Delivery button — full width, separate from other buttons */}
                             {perms.canSendToAccountant && order.status === 'docs_ready' && (
                                 <button
@@ -1485,6 +1502,9 @@ export default function ProductionHubPage() {
                         <Column title="Док. готовы" icon={CheckCircle} orders={ordersByStatus.docs_ready} color="bg-emerald-50 text-emerald-700" />
                         <Column title="В доставке" icon={Truck} orders={ordersByStatus.out_for_delivery} color="bg-purple-50 text-purple-700" />
                         <Column title="Доставлено" icon={CheckCircle} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
+                        {ordersByStatus.cancelled.length > 0 && (
+                            <Column title="Удалённые" icon={Ban} orders={ordersByStatus.cancelled} color="bg-red-50 text-red-700" />
+                        )}
 
                         {/* Defects Column */}
                         <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[240px]">
