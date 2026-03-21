@@ -41,7 +41,10 @@ export async function PATCH(
         if (sub === 'lab_admin') {
             const currentStatus = Object.entries(statusMap).find(([, v]) => v === order.status)?.[0] || order.status;
             const allowedTransitions: Record<string, string[]> = {
+                'new': ['in_production', 'cancelled'],
+                'in_production': ['ready', 'cancelled'],
                 'ready': ['shipped', 'rework'],
+                'rework': ['in_production', 'cancelled'],
                 'shipped': ['accountant_review'],
                 'accountant_review': ['docs_ready'],
                 'docs_ready': ['out_for_delivery'],
