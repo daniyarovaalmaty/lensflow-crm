@@ -258,7 +258,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             ctx.drawImage(img, 0, 0, w, h);
                             const dataUrl = canvas.toDataURL('image/jpeg', QUALITY);
                             const base64 = dataUrl.split(',')[1];
-                            resolve({ name: file.name, data: base64, mimeType: 'image/jpeg', size: Math.round(base64.length * 0.75) });
+                            const jpgName = file.name.replace(/\.[^.]+$/, '.jpg');
+                            resolve({ name: jpgName, data: base64, mimeType: 'image/jpeg', size: Math.round(base64.length * 0.75) });
                         };
                         img.onerror = () => reject(new Error(`Не удалось загрузить изображение "${file.name}"`));
                         img.src = URL.createObjectURL(file);
