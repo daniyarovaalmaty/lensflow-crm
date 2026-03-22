@@ -335,7 +335,7 @@ export default function ProductionHubPage() {
                 ${[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => `
                     <tr>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;font-weight:700">${label}</td>
-                        <td style="padding:6px 8px;border:1px solid #d1d5db">${eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : '—'}</td>
+                        <td style="padding:6px 8px;border:1px solid #d1d5db">${eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : '—'}${eye.isRgp ? ' <span style="background:#fed7aa;color:#c2410c;font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px">RGP</span>' : ''}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.km ?? '—'}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.tp ?? '—'}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.dia ?? '—'}</td>
@@ -461,9 +461,12 @@ export default function ProductionHubPage() {
 
     const EyeSection = ({ label, eye, color }: { label: string; eye: any; color: string }) => (
         <div className="space-y-0.5">
-            <h5 className={`text-xs font-semibold ${color} mb-1`}>{label}</h5>
+            <h5 className={`text-xs font-semibold ${color} mb-1 flex items-center gap-1.5`}>
+                {label}
+                {eye.isRgp && <span className="text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+            </h5>
             <ParamRow label="Характеристика" value={eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : undefined} />
-            <ParamRow label="Km" value={eye.km} />
+            <ParamRow label="Km" value={eye.isRgp ? '— (RGP)' : eye.km} />
             <ParamRow label="TP" value={eye.tp} />
             <ParamRow label="DIA" value={eye.dia} />
             <ParamRow label="E1 / E2" value={eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : undefined} />
@@ -548,6 +551,9 @@ export default function ProductionHubPage() {
 
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span className="bg-gray-100 rounded px-1.5 py-0.5">{charLabel}</span>
+                        {(od as any).isRgp && (
+                            <span className="bg-orange-100 text-orange-700 font-semibold rounded px-1.5 py-0.5">RGP</span>
+                        )}
                         <span>Km: {od.km ?? '—'}</span>
                         <span>Dk: {od.dk ?? '—'}</span>
                     </div>
@@ -810,7 +816,10 @@ export default function ProductionHubPage() {
                                         {[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
-                                                <td className="px-3 py-2 text-gray-700">{eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}</td>
+                                                <td className="px-3 py-2 text-gray-700">
+                                                    {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
+                                                    {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                </td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
@@ -1338,7 +1347,10 @@ export default function ProductionHubPage() {
                                         {[{ label: 'OD', eye: order.config.eyes.od }, { label: 'OS', eye: order.config.eyes.os }].map(({ label, eye }) => (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
-                                                <td className="px-3 py-2 text-gray-700">{eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}</td>
+                                                <td className="px-3 py-2 text-gray-700">
+                                                    {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
+                                                    {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                </td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
