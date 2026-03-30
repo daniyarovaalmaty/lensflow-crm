@@ -6,79 +6,86 @@ import { RobotoRegular } from './fonts/roboto-regular';
 interface LabelOrder {
     order_id: string;
     patient: { name: string };
-    meta: { doctor?: string; created_at: string };
-    company?: string;
-    config: any;
+    meta: { optic_name?: string };
+    config: {
+        eyes: {
+            od: EyeData;
+            os: EyeData;
+        };
+    };
+    ready_at?: string;
+    production_started_at?: string;
 }
 
-/**
- * Generate lens label PDF matching the MedInnVision Lab sticker format.
- * 
- * Label layout (from physical template):
- *   qty     MedInnVision Lab
- *   Линза MediLens [type] [dk] [color]
- *   [order_id]: [patient] OD/OS
- *   [km_od/km_os]  [tp_od/tp_os]  D [dia_od/dia_os]
- *   T [tor_od/tor_os]  F [e1_od/e1_os]  [e2_od/e2_os]
- *                                       [apical_od/apical_os]
- *   Өндірілген күні [date]         DK [dk]
- *   Центр Ортокератологии
- *   Legal text in Kazakh
- *   [barcode]
- */
-export function generateLabelPdf(order: LabelOrder): void {
-    const od = order.config?.eyes?.od || {};
-    const os = order.config?.eyes?.os || {};
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
-    const totalQty = odQty + osQty;
+interface EyeData {
+    characteristic?: string;
+    km?: number;
+    tp?: number;
+    dia?: number;
+    e1?: number;
+    e2?: number;
+    tor?: number;
+    trial?: boolean;
+    color?: string;
+    dk?: string;
+    apical_clearance?: number;
+    compression_factor?: number;
+    qty?: number;
+    isRgp?: boolean;
+}
 
-    // Determine lens type description
-    const characteristic = od.characteristic || os.characteristic || '';
-    const isToric = characteristic.toLowerCase().includes('toric') || characteristic.toLowerCase().includes('торическ');
-    const typeStr = isToric ? 'Toric' : 'Spheric';
+function fmt(val: number | undefined | null): string {
+    if (val == null) return '—';
+    return String(val).replace('.', ',');
+}
 
-    // DK value
-    const dk = od.dk || os.dk || '';
+function pair(odVal: number | undefined | null, osVal: number | undefined | null): string {
+    return `${fmt(odVal)}/${fmt(osVal)}`;
+}
 
-    // Color
-    const color = od.color || os.color || '';
+function generateBarcodeDataUrl(text: string): string {
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 300;
+        canvas.height = 60;
+        const JsBarcode = (window as any).JsBarcode;
+        if (JsBarcode) {
+            JsBarcode(canvas, text, {
+                format: 'CODE128',
+                width: 2,
+                height: 50,
+                displayValue: false,
+                margin: 0,
+            });
+            return canvas.toDataURL('image/png');
+        }
+    } catch (e) {
+        console.warn('Barcode generation failed:', e);
+    }
+    return '';
+}
 
-    // Determine if trial (DK=50 means пробная)
-    const isTrial = dk === '50' || dk === 50;
+export async function generateLabelPdf(order: LabelOrder): Promise<void> {
+    // Dynamically load JsBarcode from CDN
+    if (!(window as any).JsBarcode) {
+        await new Promise<void>((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js';
+            script.onload = () => resolve();
+            script.onerror = () => { console.warn('JsBarcode CDN failed'); resolve(); };
+            document.head.appendChild(script);
+        });
+    }
 
-    // Build lens description
-    let lensDesc = `Линза MediLens ${typeStr}`;
-    if (dk) lensDesc += ` ${dk}`;
-    if (color) lensDesc += ` ${color}`;
+    const od = order.config.eyes.od || ({} as EyeData);
+    const os = order.config.eyes.os || ({} as EyeData);
 
-    // Eyes string
-    const eyesList: string[] = [];
-    if (odQty > 0) eyesList.push('OD');
-    if (osQty > 0) eyesList.push('OS');
-    const eyesStr = eyesList.join('/');
+    // Label dimensions (mm)
+    const W = 130;
+    const H = 99;
+    const m = 5; // margin
 
-    // Format value helper — handles undefined/null
-    const fv = (v: any): string => {
-        if (v == null || v === '' || v === undefined) return '—';
-        return String(v).replace('.', ',');
-    };
-
-    // Format paired values: od/os
-    const pair = (odVal: any, osVal: any): string => {
-        if (odQty > 0 && osQty > 0) return `${fv(odVal)}/${fv(osVal)}`;
-        if (odQty > 0) return fv(odVal);
-        return fv(osVal);
-    };
-
-    // Production date
-    const prodDate = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-    // ===== Generate PDF =====
-    // Label size: approximately 80mm x 50mm
-    const labelW = 80;
-    const labelH = 55;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [labelH, labelW] });
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [H, W] });
 
     // Register Cyrillic font
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
@@ -86,113 +93,159 @@ export function generateLabelPdf(order: LabelOrder): void {
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
     doc.setFont('Roboto', 'normal');
 
-    const m = 3; // margin
-    let y = 5;
+    let y = 0;
 
-    // Row 1: Quantity + Company name
-    doc.setFontSize(14);
+    // ===== BACKGROUND =====
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, W, H, 'F');
+
+    // ===== TOP: LOGO + PRODUCT NAME =====
+    y = m + 3;
+
+    // Moon icon
+    doc.setFillColor(0, 0, 0);
+    doc.circle(m + 4, y + 2, 4, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.circle(m + 6.5, y + 1, 3.5, 'F');
+
+    // "MediLens" brand
     doc.setFont('Roboto', 'bold');
-    doc.text(String(totalQty), m, y);
+    doc.setFontSize(18);
+    doc.setTextColor(0, 0, 0);
+    doc.text('MediLens', m + 12, y + 4);
 
-    doc.setFontSize(9);
-    doc.setFont('Roboto', 'bold');
-    doc.text('MedInnVision Lab', labelW - m, y, { align: 'right' });
-
-    // Row 2: Lens description
-    y += 4;
-    doc.setFontSize(7);
-    doc.setFont('Roboto', 'bold');
-    doc.text(lensDesc, m, y);
-
-    // Row 3: Order ID: Patient OD/OS
-    y += 3.5;
-    doc.setFontSize(7);
-    doc.setFont('Roboto', 'bold');
-    doc.text(`${order.order_id}: ${order.patient.name} ${eyesStr}`, m, y);
-
-    // Row 4: Km, TP, DIA values
-    y += 4;
-    doc.setFontSize(6.5);
+    // Product name — top right
+    const charLabel = od.characteristic === 'toric' ? 'Toric' : od.characteristic === 'spherical' ? 'Spherical' : '';
+    const dkVal = od.dk || os.dk || '';
+    const productName = `Линза MediLens ${charLabel} ${dkVal}`.trim();
     doc.setFont('Roboto', 'normal');
-    const kmStr = pair(od.km, os.km);
-    const tpStr = pair(od.tp, os.tp);
-    const diaStr = `D ${pair(od.dia, os.dia)}`;
-    doc.text(kmStr, m, y);
-    doc.text(tpStr, m + 22, y);
-    doc.text(diaStr, m + 44, y);
+    doc.setFontSize(8);
+    doc.text(productName, W - m - 14, y - 1);
 
-    // Row 5: Tor, F (e1), E (e2) values
-    y += 3.5;
-    const torOd = od.tor != null ? od.tor : '—';
-    const torOs = os.tor != null ? os.tor : '—';
-    const torStr = `T ${pair(torOd, torOs)}`;
-    const e1Str = `F ${pair(od.e1, os.e1)}`;
-    const e2Str = pair(od.e2, os.e2);
-    doc.text(torStr, m, y);
-    doc.text(e1Str, m + 22, y);
-    doc.text(e2Str, m + 44, y);
-
-    // Row 6: Apical clearance / Compression factor
-    y += 3;
-    const apicalStr = pair(od.apical_clearance, os.apical_clearance);
-    const comprStr = pair(od.compression_factor, os.compression_factor);
-    if (apicalStr !== '—' || comprStr !== '—') {
-        doc.text(apicalStr, m + 44, y);
+    // Color
+    const colorOd = od.color || '';
+    const colorOs = os.color || '';
+    const colorStr = colorOd && colorOs && colorOd !== colorOs
+        ? `${colorOd}/${colorOs}`
+        : colorOd || colorOs || '';
+    if (colorStr) {
+        doc.setFontSize(7);
+        doc.text(colorStr, W - m - 14, y + 3);
     }
 
-    // Row 7: Production date + DK
-    y += 4;
-    doc.setFontSize(6.5);
-    doc.setFont('Roboto', 'normal');
-    doc.text(`Өндірілген күні ${prodDate}`, m, y);
-    doc.setFontSize(10);
+    // Quantity — large number
+    const totalQty = (Number(od.qty) || 0) + (Number(os.qty) || 0);
     doc.setFont('Roboto', 'bold');
-    doc.text(`DK ${dk}`, labelW - m, y, { align: 'right' });
+    doc.setFontSize(30);
+    doc.text(String(totalQty), W - m, y + 5, { align: 'right' });
 
-    // Row 8: Center name
-    y += 3.5;
-    doc.setFontSize(6.5);
-    doc.setFont('Roboto', 'bold');
-    doc.text('Центр Ортокератологии', m, y);
-
-    // Row 9-10: Legal text in Kazakh
-    y += 3.5;
-    doc.setFontSize(5);
-    doc.setFont('Roboto', 'normal');
-    doc.text('Қазақстанда жасалған ЖШС "MedInnVision', m, y);
-    y += 2.5;
-    doc.text('Lab" Жарамдылық мерзімі өндірілген', m, y);
-    y += 2.5;
-    doc.text('күнінен бастап 5 жыл.', m, y);
-
-    // Simple barcode (Code 39 style — just visual lines)
-    y += 3;
-    const barcodeData = order.order_id.replace(/[^A-Z0-9\-]/gi, '');
-    const barcodeX = m;
-    const barcodeW = labelW - m * 2;
-    const barHeight = 6;
-
+    // ===== DIVIDER =====
+    y = 18;
     doc.setDrawColor(0, 0, 0);
-    // Generate simple barcode-like pattern from order ID
-    const chars = barcodeData.split('');
-    const totalBars = chars.length * 5;
-    const barWidth = barcodeW / totalBars;
-    let bx = barcodeX;
+    doc.setLineWidth(0.3);
+    doc.line(m, y, W - m, y);
 
-    for (let i = 0; i < chars.length; i++) {
-        const charCode = chars[i].charCodeAt(0);
-        // Create a pattern based on char code
-        for (let j = 0; j < 5; j++) {
-            const isBlack = (charCode >> j) & 1;
-            if (isBlack) {
-                const w = barWidth * (j % 2 === 0 ? 1 : 0.6);
-                doc.setFillColor(0, 0, 0);
-                doc.rect(bx, y, Math.max(w, 0.3), barHeight, 'F');
-            }
-            bx += barWidth;
+    // ===== PATIENT ROW =====
+    y += 5;
+    doc.setFont('Roboto', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`${order.order_id}:`, m, y);
+
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text(order.patient.name || '—', W / 2, y, { align: 'center' });
+
+    // OD/OS
+    const eyeLabel = (od.qty && os.qty) ? 'OD/OS' : (od.qty ? 'OD' : (os.qty ? 'OS' : 'OD/OS'));
+    doc.setFont('Roboto', 'normal');
+    doc.setFontSize(9);
+    doc.text(eyeLabel, W - m, y, { align: 'right' });
+
+    // ===== PARAMETERS =====
+    y += 10;
+    doc.setFont('Roboto', 'bold');
+    doc.setTextColor(0, 0, 0);
+
+    // Row 1: Km | TP | D (DIA)
+    doc.setFontSize(16);
+    doc.text(pair(od.km, os.km), m, y);
+    doc.text(pair(od.tp, os.tp), W / 2 - 10, y, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('D', W / 2 + 18, y);
+    doc.setFontSize(16);
+    doc.text(pair(od.dia, os.dia), W / 2 + 24, y);
+
+    // Row 2: T (tor) | F+ (apical clearance) | E values
+    y += 10;
+    doc.setFontSize(10);
+    doc.text('T', m, y);
+    doc.setFontSize(16);
+    doc.text(pair(od.tor, os.tor), m + 6, y);
+
+    doc.setFontSize(10);
+    doc.text('F+', W / 2 - 16, y);
+    doc.setFontSize(16);
+    doc.text(pair(od.apical_clearance, os.apical_clearance), W / 2 - 9, y);
+
+    // E values — od.e1/od.e2 first line, os.e1/os.e2 second line
+    doc.setFontSize(14);
+    doc.text(`${fmt(od.e1)}/${fmt(od.e2)}`, W - m, y - 2, { align: 'right' });
+    doc.text(`${fmt(os.e1)}/${fmt(os.e2)}`, W - m, y + 5, { align: 'right' });
+
+    // ===== CLINIC + Dk =====
+    y += 14;
+    doc.setFont('Roboto', 'normal');
+    doc.setFontSize(8);
+    doc.text(order.meta.optic_name || '', m, y);
+
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(10);
+    doc.text('Dk', W / 2 - 4, y + 2);
+    doc.setFontSize(26);
+    doc.text(String(dkVal), W / 2 + 5, y + 3);
+
+    // ===== BARCODE =====
+    y += 8;
+    const barcodeUrl = generateBarcodeDataUrl(order.order_id);
+    if (barcodeUrl) {
+        try {
+            doc.addImage(barcodeUrl, 'PNG', m, y, W - m * 2, 12);
+        } catch {
+            drawPlaceholderBars(doc, m, y, W);
         }
+    } else {
+        drawPlaceholderBars(doc, m, y, W);
     }
 
-    // Save the PDF
+    // ===== FOOTER =====
+    y += 16;
+    doc.setFont('Roboto', 'normal');
+    doc.setFontSize(5.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Қазақстанда жасалған. ЖШС "MedInnVision Lab"', m, y);
+    doc.text('Жарамдылық мерзімі өндірілген күнінен бастап 5 жыл.', m, y + 3);
+
+    // Production date
+    const readyDate = order.ready_at
+        ? new Date(order.ready_at).toLocaleDateString('ru-RU')
+        : order.production_started_at
+            ? new Date(order.production_started_at).toLocaleDateString('ru-RU')
+            : new Date().toLocaleDateString('ru-RU');
+
+    doc.text('Өндірілген күні:', W - m, y, { align: 'right' });
+    doc.text(readyDate, W - m, y + 3, { align: 'right' });
+
+    // ===== SAVE =====
     doc.save(`Этикетка_${order.order_id}.pdf`);
+}
+
+function drawPlaceholderBars(doc: jsPDF, m: number, y: number, W: number) {
+    doc.setFillColor(0, 0, 0);
+    const seed = 42;
+    for (let i = 0; i < 40; i++) {
+        const barW = ((i * seed) % 3 === 0) ? 1.5 : 0.8;
+        doc.rect(m + i * 2.8, y, barW, 12, 'F');
+    }
 }
