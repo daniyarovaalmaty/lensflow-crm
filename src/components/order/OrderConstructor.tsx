@@ -349,8 +349,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         <h2 className="text-xl font-semibold text-gray-900">Тип заказа</h2>
                         <p className="text-sm text-gray-500">
                             {isUrgent
-                                ? 'Срочный — лаборатория может приступить сразу (+25% к стоимости)'
-                                : 'Обычный — лаборатория начнёт через 2 часа (время на редактирование)'}
+                                ? 'Срочный — инженер приступит сразу, редактирование невозможно (+25% к стоимости)'
+                                : 'Обычный — у вас будет 2 часа на редактирование после создания'}
                         </p>
                     </div>
                 </div>
@@ -367,7 +367,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         <Clock className="w-5 h-5 shrink-0" />
                         <div className="text-left">
                             <div className="font-semibold">Обычный</div>
-                            <div className="text-xs opacity-70">2 часа на изменение</div>
+                            <div className="text-xs opacity-70">2 часа на редактирование</div>
                         </div>
                     </button>
 
@@ -382,7 +382,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         <Zap className="w-5 h-5 shrink-0" />
                         <div className="text-left">
                             <div className="font-semibold">Срочный</div>
-                            <div className="text-xs opacity-70">Начнут сразу</div>
+                            <div className="text-xs opacity-70">Без редактирования, в порядке срочной очереди</div>
                         </div>
                     </button>
                 </div>
