@@ -526,9 +526,21 @@ export default function OpticDashboard() {
                                                     const ps = (order as any).payment_status || 'unpaid';
                                                     return (
                                                         <span className={`badge flex items-center gap-1.5 ${PaymentStatusColors[ps as PaymentStatus]}`}>
-                                                            <span className={`w-2 h-2 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-400'
-                                                                }`} />
+                                                            <span className={`w-2 h-2 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-400'}`} />
                                                             {PaymentStatusLabels[ps as PaymentStatus]}
+                                                        </span>
+                                                    );
+                                                })()}
+                                                {/* Comment notification from lab */}
+                                                {(() => {
+                                                    const comments = (order as any).comments || [];
+                                                    if (comments.length === 0) return null;
+                                                    const last = comments[comments.length - 1];
+                                                    if (last.role !== 'laboratory') return null;
+                                                    return (
+                                                        <span className="badge bg-blue-100 text-blue-700 flex items-center gap-1 animate-pulse">
+                                                            <MessageCircle className="w-3 h-3" />
+                                                            Комментарий от лаборатории
                                                         </span>
                                                     );
                                                 })()}

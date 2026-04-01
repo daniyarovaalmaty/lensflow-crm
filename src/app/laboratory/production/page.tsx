@@ -571,6 +571,20 @@ export default function ProductionHubPage() {
                         </div>
                     )}
 
+                    {/* Comment notification badge */}
+                    {(() => {
+                        const comments = (order as any).comments || [];
+                        if (comments.length === 0) return null;
+                        const last = comments[comments.length - 1];
+                        if (last.role === 'laboratory') return null;
+                        return (
+                            <div className="flex items-center gap-1 text-xs text-blue-600 font-medium animate-pulse">
+                                <MessageCircle className="w-3 h-3" />
+                                Новый комментарий от врача
+                            </div>
+                        );
+                    })()}
+
                     <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-gray-100">
                         {order.meta.doctor ? (
                             <div className="flex items-center gap-1 text-xs text-gray-400">
