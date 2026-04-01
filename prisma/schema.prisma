@@ -75,6 +75,7 @@ model User {
   updatedAt      DateTime  @updatedAt
 
   orders Order[] @relation("CreatedBy")
+  supportTickets SupportTicket[]
 
   @@map("users")
 }
@@ -229,4 +230,31 @@ enum PaymentStatus {
   unpaid
   paid
   partial
+}
+
+// ==================== Support Tickets ====================
+model SupportTicket {
+  id           String       @id @default(cuid())
+  title        String
+  description  String       @db.Text
+  category     String       @default("feature") // feature | bug | question
+  status       TicketStatus @default(new_ticket)
+  priority     String       @default("normal")  // low | normal | high
+
+  authorId     String
+  author       User         @relation(fields: [authorId], references: [id])
+
+  adminComment String?      @db.Text
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("support_tickets")
+}
+
+enum TicketStatus {
+  new_ticket   @map("new")
+  in_progress
+  done
+  rejected
 }
