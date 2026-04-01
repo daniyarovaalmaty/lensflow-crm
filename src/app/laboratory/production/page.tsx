@@ -8,7 +8,7 @@ import {
     Clock, CheckCircle, TruckIcon, Package, Printer, User,
     Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
     RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip,
-    CheckSquare, Square, Tag, Trash2
+    CheckSquare, Square, Tag, Trash2, MessageCircle, Send
 } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
@@ -82,6 +82,8 @@ export default function ProductionHubPage() {
     // Modal state - store IDs only to avoid sync issues
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [selectedDefectId, setSelectedDefectId] = useState<{ orderId: string; defectId: string } | null>(null);
+    const [commentText, setCommentText] = useState('');
+    const [sendingComment, setSendingComment] = useState(false);
 
     const selectedOrder = useMemo(() =>
         orders.find(o => o.order_id === selectedOrderId) || null,
@@ -750,6 +752,101 @@ export default function ProductionHubPage() {
                                 <span className="font-medium">Примечания:</span> {order.notes}
                             </div>
                         )}
+
+                        {/* Comments Section */}
+                        <div className="bg-gray-50 rounded-xl p-4">
+                            <h4 className="text-xs font-semibold text-gray-400 uppercase mb-3 flex items-center gap-1.5">
+                                <MessageCircle className="w-3.5 h-3.5" />
+                                Комментарии к заказу
+                                {((order as any).comments?.length > 0) && (
+                                    <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full">
+                                        {(order as any).comments.length}
+                                    </span>
+                                )}
+                            </h4>
+
+                            {/* Existing comments */}
+                            {((order as any).comments?.length > 0) && (
+                                <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
+                                    {((order as any).comments as any[]).map((c: any, i: number) => (
+                                        <div key={i} className={`text-xs rounded-lg p-2.5 ${
+                                            c.role === 'laboratory'
+                                                ? 'bg-blue-50 border border-blue-100 ml-4'
+                                                : 'bg-white border border-gray-200 mr-4'
+                                        }`}>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="font-semibold text-gray-700">
+                                                    {c.authorName}
+                                                    <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                                                        c.role === 'laboratory'
+                                                            ? 'bg-blue-100 text-blue-600'
+                                                            : 'bg-green-100 text-green-600'
+                                                    }`}>
+                                                        {c.role === 'laboratory' ? 'Лаборатория' : 'Врач'}
+                                                    </span>
+                                                </span>
+                                                <span className="text-gray-400">
+                                                    {new Date(c.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <p className="text-gray-600 whitespace-pre-wrap">{c.text}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Comment input */}
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={commentText}
+                                    onChange={e => setCommentText(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' && commentText.trim() && !sendingComment) {
+                                            e.preventDefault();
+                                            setSendingComment(true);
+                                            fetch(`/api/orders/${(order as any).id}/comments`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ text: commentText }),
+                                            }).then(res => {
+                                                if (res.ok) {
+                                                    setCommentText('');
+                                                    loadOrders();
+                                                }
+                                            }).finally(() => setSendingComment(false));
+                                        }
+                                    }}
+                                    placeholder="Написать комментарий врачу..."
+                                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    disabled={sendingComment}
+                                />
+                                <button
+                                    onClick={() => {
+                                        if (!commentText.trim() || sendingComment) return;
+                                        setSendingComment(true);
+                                        fetch(`/api/orders/${(order as any).id}/comments`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ text: commentText }),
+                                        }).then(res => {
+                                            if (res.ok) {
+                                                setCommentText('');
+                                                loadOrders();
+                                            }
+                                        }).finally(() => setSendingComment(false));
+                                    }}
+                                    disabled={!commentText.trim() || sendingComment}
+                                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                    title="Отправить (заказ вернётся врачу на редактирование)"
+                                >
+                                    <Send className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1.5">
+                                ℹ️ После отправки комментария заказ вернётся врачу на дозаполнение (24 часа)
+                            </p>
+                        </div>
 
                         {/* Payment status toggle — only visible to roles with canViewPayments */}
                         {perms.canViewPayments && (

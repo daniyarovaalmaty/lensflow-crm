@@ -192,6 +192,7 @@ model Order {
   // Notes & Defects
   notes   String?
   defects Json?   // Array of defect records
+  comments Json?  // Array of comments: [{ authorId, authorName, role, text, createdAt }]
 
   // Delivery confirmation
   deliveryConfirmed  Boolean?

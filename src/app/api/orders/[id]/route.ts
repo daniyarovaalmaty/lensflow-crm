@@ -63,6 +63,7 @@ function transformOrder(order: any) {
         notes: order.notes || undefined,
         payment_status: order.paymentStatus,
         defects: (order.defects as any[]) || [],
+        comments: (order.comments as any[]) || [],
     };
 }
 
