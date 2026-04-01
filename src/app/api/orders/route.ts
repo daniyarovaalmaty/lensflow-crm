@@ -102,6 +102,7 @@ export async function GET(request: NextRequest) {
             }
 
             return {
+                id: order.id,
                 order_id: order.orderNumber,
                 meta: {
                     optic_id: order.organizationId || '',
