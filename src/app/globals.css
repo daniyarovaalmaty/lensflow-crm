@@ -139,3 +139,12 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
   }
 }
+
+/* Comment notification blink animation — more visible than animate-pulse */
+@keyframes comment-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.97); }
+}
+.animate-comment-blink {
+  animation: comment-blink 1.2s ease-in-out infinite;
+}

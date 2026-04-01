@@ -538,7 +538,7 @@ export default function OpticDashboard() {
                                                     const last = comments[comments.length - 1];
                                                     if (last.role !== 'laboratory') return null;
                                                     return (
-                                                        <span className="badge bg-blue-100 text-blue-700 flex items-center gap-1 animate-pulse">
+                                                        <span className="badge bg-blue-100 text-blue-700 flex items-center gap-1 animate-comment-blink">
                                                             <MessageCircle className="w-3 h-3" />
                                                             Комментарий от лаборатории
                                                         </span>

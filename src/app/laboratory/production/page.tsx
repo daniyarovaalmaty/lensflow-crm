@@ -578,7 +578,7 @@ export default function ProductionHubPage() {
                         const last = comments[comments.length - 1];
                         if (last.role === 'laboratory') return null;
                         return (
-                            <div className="flex items-center gap-1 text-xs text-blue-600 font-medium animate-pulse">
+                            <div className="flex items-center gap-1 text-xs text-blue-600 font-medium animate-comment-blink">
                                 <MessageCircle className="w-3 h-3" />
                                 Новый комментарий от врача
                             </div>
