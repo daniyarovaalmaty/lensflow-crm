@@ -141,9 +141,7 @@ export function EyeParametersCard({
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Km <span className="text-red-500">*</span></label>
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0.2"
-                                max="55"
+                                step="any"
                                 {...register(`config.eyes.${eye}.km`, { valueAsNumber: true })}
                                 className="input"
                                 placeholder="44.50"
@@ -154,7 +152,7 @@ export function EyeParametersCard({
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">TP</label>
                         <input
                             type="number"
-                            step="0.01"
+                            step="any"
                             {...register(`config.eyes.${eye}.tp`, { valueAsNumber: true })}
                             className="input"
                             placeholder="0.00"
@@ -164,7 +162,7 @@ export function EyeParametersCard({
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">DIA <span className="text-red-500">*</span></label>
                         <input
                             type="number"
-                            step="0.1"
+                            step="any"
                             {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })}
                             className="input"
                             placeholder="10.6"
@@ -182,7 +180,7 @@ export function EyeParametersCard({
                         {isSpherical ? (
                             <input
                                 type="number"
-                                step="0.01"
+                                step="any"
                                 {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
                                 className="input"
                                 placeholder="0.00"
@@ -191,7 +189,7 @@ export function EyeParametersCard({
                             <div className="flex items-center gap-1.5">
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="any"
                                     {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
                                     className="input"
                                     placeholder="0.00"
@@ -199,7 +197,7 @@ export function EyeParametersCard({
                                 <span className="text-lg font-bold text-gray-400 flex-shrink-0">/</span>
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="any"
                                     {...register(`config.eyes.${eye}.e2`, { valueAsNumber: true })}
                                     className="input"
                                     placeholder="0.00"
@@ -214,9 +212,7 @@ export function EyeParametersCard({
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Тог.</label>
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0"
-                                max="6"
+                                step="any"
                                 {...register(`config.eyes.${eye}.tor`, { valueAsNumber: true })}
                                 className="input"
                                 placeholder="0.00"
@@ -266,7 +262,7 @@ export function EyeParametersCard({
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Апик. клиренс</label>
                         <input
                             type="number"
-                            step="0.01"
+                            step="any"
                             {...register(`config.eyes.${eye}.apical_clearance`, { valueAsNumber: true })}
                             className="input"
                             placeholder="0.00"
@@ -276,9 +272,7 @@ export function EyeParametersCard({
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Фактор компр.</label>
                         <input
                             type="number"
-                            step="0.01"
-                            min="-4.5"
-                            max="4.5"
+                            step="any"
                             {...register(`config.eyes.${eye}.compression_factor`, { valueAsNumber: true })}
                             className="input"
                             placeholder="0.00"

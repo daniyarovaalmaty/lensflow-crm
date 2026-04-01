@@ -59,11 +59,11 @@ export const OrthoEyeParamsSchema = z.object({
     trial: z.boolean().optional(),
     color: z.string().optional(),
     dk: optionalEnum(DkEnum),
-    apical_clearance: optionalBoundedNumber(-9, 9),
-    compression_factor: optionalBoundedNumber(-4.5, 4.5),
+    apical_clearance: optionalNumber,
+    compression_factor: optionalNumber,
     qty: z.preprocess(
         (val) => (val === '' || val === null || val === undefined || Number.isNaN(Number(val)) ? 1 : Number(val)),
-        z.number().int().min(0).max(100).default(1)
+        z.number().int().default(1)
     ),
 });
 
@@ -72,7 +72,7 @@ export type OrthoEyeParams = z.infer<typeof OrthoEyeParamsSchema>;
 // ==================== Patient ====================
 export const PatientSchema = z.object({
     id: z.string().optional(),
-    name: z.string().min(2, 'Имя должно содержать минимум 2 символа'),
+    name: z.string().min(1, 'Укажите имя'),
     phone: z.string().optional(),
     email: z.string().email('Неверный email').optional(),
     notes: z.string().optional(),
