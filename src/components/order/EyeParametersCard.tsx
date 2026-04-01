@@ -152,17 +152,23 @@ export function EyeParametersCard({
                     )}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">TP</label>
-                        <select {...register(`config.eyes.${eye}.tp`, { valueAsNumber: true })} className="input">
-                            <option value="">—</option>
-                            {TP_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
+                        <input
+                            type="number"
+                            step="0.01"
+                            {...register(`config.eyes.${eye}.tp`, { valueAsNumber: true })}
+                            className="input"
+                            placeholder="0.00"
+                        />
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">DIA <span className="text-red-500">*</span></label>
-                        <select {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })} className="input">
-                            <option value="">—</option>
-                            {DIA_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
+                        <input
+                            type="number"
+                            step="0.1"
+                            {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })}
+                            className="input"
+                            placeholder="10.6"
+                        />
                     </div>
                 </div>
 
@@ -174,21 +180,30 @@ export function EyeParametersCard({
                             {isSpherical ? 'E' : 'E (дробь)'}
                         </label>
                         {isSpherical ? (
-                            <select {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })} className="input">
-                                <option value="">—</option>
-                                {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                            </select>
+                            <input
+                                type="number"
+                                step="0.01"
+                                {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
+                                className="input"
+                                placeholder="0.00"
+                            />
                         ) : (
                             <div className="flex items-center gap-1.5">
-                                <select {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })} className="input">
-                                    <option value="">—</option>
-                                    {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                                </select>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
+                                    className="input"
+                                    placeholder="0.00"
+                                />
                                 <span className="text-lg font-bold text-gray-400 flex-shrink-0">/</span>
-                                <select {...register(`config.eyes.${eye}.e2`, { valueAsNumber: true })} className="input">
-                                    <option value="">—</option>
-                                    {E_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                                </select>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    {...register(`config.eyes.${eye}.e2`, { valueAsNumber: true })}
+                                    className="input"
+                                    placeholder="0.00"
+                                />
                             </div>
                         )}
                     </div>
@@ -249,10 +264,13 @@ export function EyeParametersCard({
                 <div className="grid grid-cols-3 gap-3">
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Апик. клиренс</label>
-                        <select {...register(`config.eyes.${eye}.apical_clearance`, { valueAsNumber: true })} className="input">
-                            <option value="">—</option>
-                            {APICAL_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
-                        </select>
+                        <input
+                            type="number"
+                            step="0.01"
+                            {...register(`config.eyes.${eye}.apical_clearance`, { valueAsNumber: true })}
+                            className="input"
+                            placeholder="0.00"
+                        />
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Фактор компр.</label>
