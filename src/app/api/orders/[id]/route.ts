@@ -136,3 +136,29 @@ export async function PATCH(
 
     return NextResponse.json(transformOrder(updated));
 }
+
+/**
+ * DELETE /api/orders/[id] — Admin (lab_head) permanently deletes an order
+ */
+export async function DELETE(
+    _req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    const session = await auth();
+    if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
+
+    // Only lab_head can permanently delete
+    if (session.user.role !== 'laboratory' || session.user.subRole !== 'lab_head') {
+        return NextResponse.json({ error: 'Only admin can delete orders' }, { status: 403 });
+    }
+
+    const order = await prisma.order.findUnique({ where: { orderNumber: params.id } });
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+
+    // Delete related records first (raw SQL for FK tables), then the order
+    await prisma.$executeRawUnsafe(`DELETE FROM "defects" WHERE "orderId" = '${order.id}'`);
+    await prisma.$executeRawUnsafe(`DELETE FROM "order_products" WHERE "orderId" = '${order.id}'`);
+    await prisma.order.delete({ where: { id: order.id } });
+
+    return NextResponse.json({ success: true, deleted: params.id });
+}

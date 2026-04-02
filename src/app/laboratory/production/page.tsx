@@ -175,6 +175,39 @@ export default function ProductionHubPage() {
         }
     };
 
+    // Permanent delete (lab_head only)
+    const deleteOrder = async (orderId: string) => {
+        try {
+            const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+            if (res.ok) {
+                setSelectedOrderId(null);
+                setConfirmDeleteId(null);
+                await loadOrders();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Ошибка удаления');
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            alert('Ошибка удаления заказа');
+        }
+    };
+
+    const bulkDeleteOrders = async () => {
+        const ids = Array.from(bulkSelectedIds);
+        if (ids.length === 0) return;
+        if (!confirm(`Удалить ${ids.length} заказ(ов) из базы НАВСЕГДА?`)) return;
+        try {
+            await Promise.all(ids.map(id => fetch(`/api/orders/${id}`, { method: 'DELETE' })));
+            setBulkSelectedIds(new Set<string>());
+            setBulkMode(false);
+            await loadOrders();
+        } catch (error) {
+            console.error('Bulk delete error:', error);
+            alert('Ошибка при массовом удалении');
+        }
+    };
+
     const toggleBulkSelect = (orderId: string) => {
         setBulkSelectedIds(prev => {
             const next = new Set(prev);
@@ -701,9 +734,8 @@ export default function ProductionHubPage() {
                             <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
                                 <p className="text-sm font-medium text-red-700 flex items-center gap-2">
                                     <Trash2 className="w-4 h-4" />
-                                    Вы уверены, что хотите отменить заказ {order.order_id}?
+                                    Что сделать с заказом {order.order_id}?
                                 </p>
-                                <p className="text-xs text-red-500">Заказ будет перемещён в статус «Отменён» и не будет исполняться.</p>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => {
@@ -711,13 +743,21 @@ export default function ProductionHubPage() {
                                             setSelectedOrderId(null);
                                             setConfirmDeleteId(null);
                                         }}
-                                        className="btn text-xs py-2 px-4 flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                                        className="btn text-xs py-2 px-4 flex-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium"
                                     >
-                                        Да, отменить
+                                        Отменить
                                     </button>
+                                    {subRole === 'lab_head' && (
+                                        <button
+                                            onClick={() => deleteOrder(order.order_id)}
+                                            className="btn text-xs py-2 px-4 flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                                        >
+                                            🗑 Удалить навсегда
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => setConfirmDeleteId(null)}
-                                        className="btn text-xs py-2 px-4 flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg"
+                                        className="btn text-xs py-2 px-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg"
                                     >
                                         Нет
                                     </button>
@@ -1905,6 +1945,9 @@ export default function ProductionHubPage() {
                             )}
                             {(perms.canSendToAccountant || perms.canDeliver) && (
                                 <button onClick={() => bulkUpdateStatus('out_for_delivery')} className="btn text-xs py-1.5 px-3 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg">В доставку</button>
+                            )}
+                            {subRole === 'lab_head' && (
+                                <button onClick={bulkDeleteOrders} className="btn text-xs py-1.5 px-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg">🗑 Удалить</button>
                             )}
                         </div>
                         <button
