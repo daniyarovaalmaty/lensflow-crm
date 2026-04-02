@@ -41,7 +41,7 @@ export default function LabNav() {
                 {/* Logo */}
                 <span className="text-lg font-bold text-blue-600 mr-2 shrink-0">LensFlow</span>
 
-                {/* Desktop nav — all items in one scrollable row */}
+                {/* Desktop nav — scrollable menu items */}
                 <div className="hidden md:flex items-center flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                     {visibleItems.map(item => {
                         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -50,7 +50,7 @@ export default function LabNav() {
                                 key={item.href}
                                 href={item.href}
                                 className={`
-                                    px-2 xl:px-3 py-3.5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap
+                                    px-2 xl:px-3 py-3.5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap shrink-0
                                     ${isActive
                                         ? 'border-blue-600 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
@@ -61,8 +61,10 @@ export default function LabNav() {
                             </Link>
                         );
                     })}
-                    {/* Separator + Profile & Logout inside scroll */}
-                    <span className="mx-1 w-px h-5 bg-gray-200 shrink-0 self-center" />
+                </div>
+
+                {/* Right side: Profile & Logout — fixed, with fade mask */}
+                <div className="hidden md:flex items-center shrink-0 ml-0 pl-3 bg-white" style={{ boxShadow: '-12px 0 8px -4px white' }}>
                     <Link
                         href="/profile"
                         className="px-2 py-3.5 text-[13px] font-medium border-b-2 border-transparent text-gray-400 hover:text-blue-500 hover:border-blue-300 transition-colors whitespace-nowrap flex items-center gap-1"
