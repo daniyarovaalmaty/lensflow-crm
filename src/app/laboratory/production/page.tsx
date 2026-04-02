@@ -119,7 +119,7 @@ export default function ProductionHubPage() {
         loadOrders();
         // Pause auto-refresh when delete confirmation is active to prevent UI flash
         if (confirmDeleteId) return;
-        const interval = setInterval(loadOrders, 30000);
+        const interval = setInterval(loadOrders, 10000);
         return () => clearInterval(interval);
     }, [confirmDeleteId]);
 
@@ -1684,8 +1684,17 @@ export default function ProductionHubPage() {
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Производственный хаб</h1>
                             <p className="text-sm text-gray-600 mt-0.5">Управление очередью заказов</p>
                         </div>
-                        <div className="text-sm text-gray-500">
-                            Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
+                        <div className="flex items-center gap-3">
+                            <div className="text-sm text-gray-500">
+                                Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                LIVE
+                            </div>
                         </div>
                     </div>
 
