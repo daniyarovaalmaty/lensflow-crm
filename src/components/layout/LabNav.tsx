@@ -41,8 +41,8 @@ export default function LabNav() {
                 {/* Logo */}
                 <span className="text-lg font-bold text-blue-600 mr-2 shrink-0">LensFlow</span>
 
-                {/* Desktop nav — scrollable menu items */}
-                <div className="hidden md:flex items-center flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+                {/* Desktop nav — static, no scroll */}
+                <div className="hidden md:flex items-center">
                     {visibleItems.map(item => {
                         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                         return (
@@ -50,7 +50,7 @@ export default function LabNav() {
                                 key={item.href}
                                 href={item.href}
                                 className={`
-                                    px-2 xl:px-3 py-3.5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap shrink-0
+                                    px-1.5 lg:px-2.5 py-3.5 text-[12px] lg:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap
                                     ${isActive
                                         ? 'border-blue-600 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
@@ -63,26 +63,26 @@ export default function LabNav() {
                     })}
                 </div>
 
-                {/* Right side: Profile & Logout — pinned to far right */}
-                <div className="hidden md:flex items-center shrink-0 ml-auto pl-3 bg-white" style={{ boxShadow: '-12px 0 8px -4px white' }}>
+                {/* Right side: Profile & Logout — far right */}
+                <div className="hidden md:flex items-center shrink-0 ml-auto gap-1">
                     <Link
                         href="/profile"
-                        className="px-2 py-3.5 text-[13px] font-medium border-b-2 border-transparent text-gray-400 hover:text-blue-500 hover:border-blue-300 transition-colors whitespace-nowrap flex items-center gap-1"
+                        className="p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50"
+                        title="Профиль"
                     >
-                        <User className="w-3.5 h-3.5" />
-                        Профиль
+                        <User className="w-4 h-4" />
                     </Link>
                     <button
                         onClick={handleLogout}
                         disabled={loggingOut}
-                        className="px-2 py-3.5 text-[13px] font-medium border-b-2 border-transparent text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors whitespace-nowrap flex items-center gap-1"
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                        title="Выйти"
                     >
                         {loggingOut ? (
-                            <span className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin block" />
+                            <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin block" />
                         ) : (
-                            <LogOut className="w-3.5 h-3.5" />
+                            <LogOut className="w-4 h-4" />
                         )}
-                        {loggingOut ? 'Выход...' : 'Выйти'}
                     </button>
                 </div>
 
