@@ -219,11 +219,13 @@ export default function ProductionHubPage() {
 
     // Check if the current user can do anything with an order in this status
     const canBulkSelectOrder = (status: OrderStatus): boolean => {
+        // Admin can select ANY order for bulk delete
+        if (subRole === 'lab_head') return true;
         switch (status) {
-            case 'new': return perms.canChangeStatus; // → in_production
-            case 'in_production': return perms.canMarkReady;   // → ready
+            case 'new': return perms.canChangeStatus;
+            case 'in_production': return perms.canMarkReady;
             case 'ready': return perms.canShip || perms.canMarkRework || perms.canSendToAccountant;
-            case 'rework': return perms.canChangeStatus; // → in_production
+            case 'rework': return perms.canChangeStatus;
             case 'shipped': return perms.canDeliver || perms.canSendToAccountant;
             case 'accountant_review': return perms.canProcessDocs;
             case 'docs_ready': return perms.canSendToAccountant;
