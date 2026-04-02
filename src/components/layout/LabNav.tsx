@@ -42,7 +42,7 @@ export default function LabNav() {
                 <span className="text-lg font-bold text-blue-600 mr-4 shrink-0">LensFlow</span>
 
                 {/* Desktop nav */}
-                <div className="hidden md:flex items-center gap-1 flex-1 min-w-0">
+                <div className="hidden md:flex items-center gap-0.5 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                     {visibleItems.map(item => {
                         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                         return (
@@ -50,15 +50,15 @@ export default function LabNav() {
                                 key={item.href}
                                 href={item.href}
                                 className={`
-                                    flex items-center gap-2 px-3 lg:px-4 py-3.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
+                                    flex items-center gap-1.5 px-2.5 lg:px-3 py-3.5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap
                                     ${isActive
                                         ? 'border-blue-600 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                     }
                                 `}
                             >
-                                <item.icon className="w-4 h-4" />
-                                <span className="hidden lg:inline">{item.label}</span>
+                                <item.icon className="w-4 h-4 shrink-0" />
+                                <span>{item.label}</span>
                             </Link>
                         );
                     })}
