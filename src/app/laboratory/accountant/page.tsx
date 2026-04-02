@@ -783,7 +783,7 @@ export default function AccountantPage() {
                                                                                     <span>Скидка {orderDiscountPct}%</span>
                                                                                     <span>−{discountAmt.toLocaleString('ru-RU')} ₸</span>
                                                                                 </div>
-                                                                                {order.is_urgent && (
+                                                                                {order.is_urgent && urgentSurchargePct > 0 && (
                                                                                     <div className="flex justify-between text-amber-600">
                                                                                         <span>Наценка срочный {urgentSurchargePct}%</span>
                                                                                         <span>+{urgentAmt.toLocaleString('ru-RU')} ₸</span>
