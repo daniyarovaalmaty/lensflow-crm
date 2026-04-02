@@ -142,7 +142,7 @@ export async function PATCH(
  */
 export async function DELETE(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await auth();
     if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
@@ -152,13 +152,21 @@ export async function DELETE(
         return NextResponse.json({ error: 'Only admin can delete orders' }, { status: 403 });
     }
 
-    const order = await prisma.order.findUnique({ where: { orderNumber: params.id } });
+    const { id } = await params;
+
+    const order = await prisma.order.findUnique({ where: { orderNumber: id } });
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
-    // Delete related records first (raw SQL for FK tables), then the order
-    await prisma.$executeRawUnsafe(`DELETE FROM "defects" WHERE "orderId" = '${order.id}'`);
-    await prisma.$executeRawUnsafe(`DELETE FROM "order_products" WHERE "orderId" = '${order.id}'`);
-    await prisma.order.delete({ where: { id: order.id } });
-
-    return NextResponse.json({ success: true, deleted: params.id });
+    try {
+        // Try to delete related records (may not exist)
+        try { await prisma.$executeRawUnsafe(`DELETE FROM "defects" WHERE "orderId" = $1`, order.id); } catch {}
+        try { await prisma.$executeRawUnsafe(`DELETE FROM "order_products" WHERE "orderId" = $1`, order.id); } catch {}
+        
+        // Delete the order
+        await prisma.order.delete({ where: { id: order.id } });
+        return NextResponse.json({ success: true, deleted: id });
+    } catch (error: any) {
+        console.error('DELETE order error:', error);
+        return NextResponse.json({ error: 'Failed to delete order: ' + error.message }, { status: 500 });
+    }
 }
