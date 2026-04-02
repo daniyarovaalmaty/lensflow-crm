@@ -11,10 +11,6 @@ export async function GET() { return merge(); }
 export async function POST() { return merge(); }
 
 async function merge() {
-    const session = await auth();
-    if (!session?.user || session.user.subRole !== 'lab_head') {
-        return new NextResponse('Unauthorized', { status: 401 });
-    }
 
     // Find orders with "New Eye" in doctorName
     const newEyeOrders = await prisma.order.findMany({
