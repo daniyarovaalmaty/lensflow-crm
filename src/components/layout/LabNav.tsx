@@ -39,10 +39,10 @@ export default function LabNav() {
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
             <div className="max-w-[1800px] mx-auto px-4 sm:px-6 flex items-center justify-between">
                 {/* Logo */}
-                <span className="text-lg font-bold text-blue-600 mr-4 shrink-0">LensFlow</span>
+                <span className="text-lg font-bold text-blue-600 mr-2 shrink-0">LensFlow</span>
 
                 {/* Desktop nav */}
-                <div className="hidden md:flex items-center gap-0.5 flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+                <div className="hidden md:flex items-center flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                     {visibleItems.map(item => {
                         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                         return (
@@ -50,43 +50,39 @@ export default function LabNav() {
                                 key={item.href}
                                 href={item.href}
                                 className={`
-                                    flex items-center gap-1.5 px-2.5 lg:px-3 py-3.5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap
+                                    px-2 xl:px-3 py-3.5 text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap
                                     ${isActive
                                         ? 'border-blue-600 text-blue-600'
                                         : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                     }
                                 `}
                             >
-                                <item.icon className="w-4 h-4 shrink-0" />
-                                <span>{item.label}</span>
+                                {item.label}
                             </Link>
                         );
                     })}
                 </div>
 
-                {/* Right side: role + logout (desktop) */}
-                <div className="hidden md:flex items-center gap-3 shrink-0">
-                    <span className="text-xs text-gray-400 hidden lg:block">
-                        {sessionStatus === 'loading' ? '...' : SubRoleLabels[subRole]}
-                    </span>
+                {/* Right side: logout (desktop) */}
+                <div className="hidden md:flex items-center gap-1 shrink-0 ml-2">
                     <Link
                         href="/profile"
-                        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-blue-500 transition-colors py-2 px-2 rounded-lg hover:bg-blue-50"
+                        className="p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50"
+                        title="Профиль"
                     >
-                        <User className="w-3.5 h-3.5" />
-                        <span className="hidden lg:inline">Профиль</span>
+                        <User className="w-4 h-4" />
                     </Link>
                     <button
                         onClick={handleLogout}
                         disabled={loggingOut}
-                        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors py-2 px-2 rounded-lg hover:bg-red-50"
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                        title="Выйти"
                     >
                         {loggingOut ? (
-                            <span className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                            <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin block" />
                         ) : (
-                            <LogOut className="w-3.5 h-3.5" />
+                            <LogOut className="w-4 h-4" />
                         )}
-                        <span className="hidden lg:inline">{loggingOut ? 'Выход...' : 'Выйти'}</span>
                     </button>
                 </div>
 
