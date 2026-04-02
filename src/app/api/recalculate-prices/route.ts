@@ -46,7 +46,7 @@ export async function GET() {
             select: {
                 id: true,
                 orderNumber: true,
-                config: true,
+                lensConfig: true,
                 isUrgent: true,
                 totalPrice: true,
                 discountPercent: true,
@@ -58,7 +58,7 @@ export async function GET() {
         const results: { orderNumber: string; oldPrice: number; newPrice: number }[] = [];
 
         for (const order of orders) {
-            const config = order.config as any;
+            const config = order.lensConfig as any;
             const odChar = config?.eyes?.od?.characteristic || '';
             const osChar = config?.eyes?.os?.characteristic || '';
             const odDk = String(config?.eyes?.od?.dk || '');
