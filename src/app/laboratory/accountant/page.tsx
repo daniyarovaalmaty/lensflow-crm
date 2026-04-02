@@ -17,9 +17,8 @@ import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 
 const FALLBACK_PRICE_PER_LENS = 17_500;
-const URGENT_SURCHARGE_PCT = 25;
 
-function calcOrderTotal(order: Order): number {
+function calcOrderTotal(order: Order, urgentPct: number = 0): number {
     if (order.total_price && order.total_price > 0) return order.total_price;
     const od = order.config.eyes.od?.qty ?? 0;
     const os = order.config.eyes.os?.qty ?? 0;
@@ -27,7 +26,7 @@ function calcOrderTotal(order: Order): number {
     const pct = (order as any).discount_percent ?? 0;
     const disc = Math.round(base * pct / 100);
     const after = base - disc;
-    const surcharge = order.is_urgent ? Math.round(after * URGENT_SURCHARGE_PCT / 100) : 0;
+    const surcharge = order.is_urgent ? Math.round(after * urgentPct / 100) : 0;
     return after + surcharge;
 }
 
@@ -38,7 +37,7 @@ function getLensPrice(order: Order, char: string | undefined, eye: 'od' | 'os'):
     return 17_500;
 }
 
-async function generateInvoice(order: Order) {
+async function generateInvoice(order: Order, urgentPct: number = 0) {
     const od = order.config.eyes.od;
     const os = order.config.eyes.os;
     const odQty = Number(od?.qty) || 0;
@@ -56,7 +55,7 @@ async function generateInvoice(order: Order) {
     const subtotal = (odQty * odPrice) + (osQty * osPrice) + additionalProducts.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
     const discountAmt = Math.round(subtotal * discountPct / 100);
     const afterDiscount = subtotal - discountAmt;
-    const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+    const urgentAmt = order.is_urgent ? Math.round(afterDiscount * urgentPct / 100) : 0;
     const total = afterDiscount + urgentAmt;
 
     const wb = new ExcelJS.Workbook();
@@ -196,7 +195,7 @@ async function generateInvoice(order: Order) {
 
     addTotalRow('Подитог:', fmt(subtotal));
     if (discountPct > 0) addTotalRow(`Скидка ${discountPct}%:`, `−${fmt(discountAmt)}`);
-    if (order.is_urgent) addTotalRow(`Срочность ${URGENT_SURCHARGE_PCT}%:`, `+${fmt(urgentAmt)}`);
+    if (order.is_urgent) addTotalRow(`Срочность ${urgentPct}%:`, `+${fmt(urgentAmt)}`);
     addTotalRow('ИТОГО к оплате:', `${fmt(total)} ₸`, true);
 
     ws.addRow([]);
@@ -251,8 +250,14 @@ export default function AccountantPage() {
     const [docFilter, setDocFilter] = useState<'all' | 'accountant_review' | 'docs_ready'>('all');
     const [orderDocs, setOrderDocs] = useState<Record<string, Array<{ index: number; name: string; mimeType: string; size: number; uploadedAt: string; uploadedBy: string }>>>({});
     const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+    const [urgentSurchargePct, setUrgentSurchargePct] = useState(0);
 
-    useEffect(() => { loadOrders(); }, []);
+    useEffect(() => {
+        loadOrders();
+        fetch('/api/settings').then(r => r.json()).then(s => {
+            setUrgentSurchargePct(s.urgentSurchargePercent ?? 0);
+        }).catch(() => {});
+    }, []);
 
     // Load documents when an order is expanded
     useEffect(() => {
@@ -625,7 +630,7 @@ export default function AccountantPage() {
                                         const orderDiscountPct = (order as any).discount_percent ?? 0;
                                         const discountAmt = Math.round(lensTotal * orderDiscountPct / 100);
                                         const afterDiscount = lensTotal - discountAmt;
-                                        const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+                                        const urgentAmt = order.is_urgent ? Math.round(afterDiscount * urgentSurchargePct / 100) : 0;
 
                                         const isAccountantReview = order.status === 'accountant_review';
                                         return (
@@ -780,7 +785,7 @@ export default function AccountantPage() {
                                                                                 </div>
                                                                                 {order.is_urgent && (
                                                                                     <div className="flex justify-between text-amber-600">
-                                                                                        <span>Наценка срочный {URGENT_SURCHARGE_PCT}%</span>
+                                                                                        <span>Наценка срочный {urgentSurchargePct}%</span>
                                                                                         <span>+{urgentAmt.toLocaleString('ru-RU')} ₸</span>
                                                                                     </div>
                                                                                 )}
@@ -819,7 +824,7 @@ export default function AccountantPage() {
                                                                         <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
                                                                             <span className="text-sm font-semibold text-gray-700">Счёт на оплату</span>
                                                                             <button
-                                                                                onClick={() => generateInvoice(order)}
+                                                                                onClick={() => generateInvoice(order, urgentSurchargePct)}
                                                                                 className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-lg transition-colors"
                                                                             >
                                                                                 <Download className="w-3.5 h-3.5" />

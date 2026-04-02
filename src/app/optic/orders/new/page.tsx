@@ -21,7 +21,7 @@ function generateInvoiceHTML(order: Order): string {
     const dateStr = date.toLocaleDateString('ru-RU');
 
     const DISCOUNT_PCT = (order as any).discount_percent ?? 0;
-    const URGENT_SURCHARGE_PCT = 25;
+    const urgentSurchargePct = (order as any).urgent_surcharge_pct ?? 0;
 
     // Calculate totals
     const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
@@ -31,7 +31,7 @@ function generateInvoiceHTML(order: Order): string {
     const subtotal = lensSubtotal + additionalSubtotal;
     const discountAmt = Math.round(subtotal * DISCOUNT_PCT / 100);
     const afterDiscount = subtotal - discountAmt;
-    const urgentAmt = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+    const urgentAmt = order.is_urgent ? Math.round(afterDiscount * urgentSurchargePct / 100) : 0;
     const grandTotal = order.total_price || (afterDiscount + urgentAmt);
 
     const renderEyeRow = (label: string, eye: any, qty: number, priceUnit: number, docName?: string) => qty > 0 ? `
@@ -159,7 +159,7 @@ function generateInvoiceHTML(order: Order): string {
         </div>
         ${order.is_urgent ? `
         <div class="line surcharge">
-            <span>Наценка срочный ${URGENT_SURCHARGE_PCT}%:</span>
+            <span>Наценка срочный ${urgentSurchargePct}%:</span>
             <span>+${urgentAmt.toLocaleString('ru-RU')} ₸</span>
         </div>` : ''}
         <div class="line total-line">
@@ -261,7 +261,7 @@ export default function NewOrderPage() {
     if (createdOrder) {
         const odQty = Number(createdOrder.config.eyes.od.qty) || 0;
         const osQty = Number(createdOrder.config.eyes.os.qty) || 0;
-        const totalPrice = (odQty + osQty) * PRICE_PER_LENS;
+        const totalPrice = createdOrder.total_price || (odQty + osQty) * PRICE_PER_LENS;
 
         return (
             <div className="min-h-screen bg-surface py-12">

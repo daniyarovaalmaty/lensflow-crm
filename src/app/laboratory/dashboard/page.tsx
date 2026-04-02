@@ -16,9 +16,8 @@ import type { SubRole } from '@/types/user';
 import * as XLSX from 'xlsx';
 
 const PRICE_PER_LENS = 17_500;
-const URGENT_SURCHARGE_PCT = 25;
 
-function calcOrderPrice(order: Order): number {
+function calcOrderPrice(order: Order, urgentPct: number = 0): number {
     // Use stored total_price if available
     if (order.total_price && order.total_price > 0) return order.total_price;
     // Fallback for old orders
@@ -32,7 +31,7 @@ function calcOrderPrice(order: Order): number {
     const pct = (order as any).discount_percent ?? 0;
     const discountAmt = Math.round(base * pct / 100);
     const afterDiscount = base - discountAmt;
-    const urgentCharge = order.is_urgent ? Math.round(afterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+    const urgentCharge = order.is_urgent ? Math.round(afterDiscount * urgentPct / 100) : 0;
     return afterDiscount + urgentCharge;
 }
 
@@ -49,12 +48,20 @@ export default function LabHeadDashboard() {
     const [orgs, setOrgs] = useState<{ id: string; name: string; discountPercent: number }[]>([]);
     const [editingDiscount, setEditingDiscount] = useState<string | null>(null);
     const [discountInput, setDiscountInput] = useState('');
+    const [urgentPct, setUrgentPct] = useState(0);
 
     useEffect(() => {
         (async () => {
             try {
                 const res = await fetch('/api/organizations');
                 if (res.ok) setOrgs(await res.json());
+            } catch (e) { console.error(e); }
+            try {
+                const res = await fetch('/api/settings');
+                if (res.ok) {
+                    const s = await res.json();
+                    setUrgentPct(s.urgentSurchargePercent ?? 0);
+                }
             } catch (e) { console.error(e); }
         })();
     }, []);

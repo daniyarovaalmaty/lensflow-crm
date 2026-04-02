@@ -305,7 +305,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
     // Price calculation
     const DISCOUNT_PCT = orgDiscount;
-    const URGENT_SURCHARGE_PCT = 25;
+    const [urgentSurchargePct, setUrgentSurchargePct] = useState(0);
+    useEffect(() => {
+        fetch('/api/settings').then(r => r.json()).then(s => {
+            setUrgentSurchargePct(s.urgentSurchargePercent ?? 0);
+        }).catch(() => {});
+    }, []);
     const isUrgent = watch('is_urgent');
     const odCharacteristic = watch('config.eyes.od.characteristic');
     const osCharacteristic = watch('config.eyes.os.characteristic');
@@ -328,7 +333,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const basePrice = lensTotal + additionalTotal;
     const discountAmt = Math.round(basePrice * DISCOUNT_PCT / 100);
     const priceAfterDiscount = basePrice - discountAmt;
-    const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+    const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * urgentSurchargePct / 100) : 0;
     const totalPrice = priceAfterDiscount + urgentSurcharge;
 
     return (
@@ -822,7 +827,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         {/* Urgent surcharge */}
                         {isUrgent && (
                             <div className="flex justify-between items-center text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                                <span>Срочность (+{URGENT_SURCHARGE_PCT}%)</span>
+                                <span>Срочность (+{urgentSurchargePct}%)</span>
                                 <span className="font-medium">+{urgentSurcharge.toLocaleString('ru-RU')} ₸</span>
                             </div>
                         )}
