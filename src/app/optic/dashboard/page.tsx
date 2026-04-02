@@ -60,6 +60,9 @@ export default function OpticDashboard() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [sendingComment, setSendingComment] = useState(false);
+    const [requestType, setRequestType] = useState<'comment' | 'request_edit' | 'request_cancel'>('comment');
+    const [showRequestModal, setShowRequestModal] = useState<string | null>(null);
+    const [requestReason, setRequestReason] = useState('');
     // tick every 30s to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
@@ -620,17 +623,54 @@ export default function OpticDashboard() {
                                             const editable = canEditOrder(order);
                                             const remainMs = editWindowRemainingMs(order);
                                             const countdown = formatCountdown(remainMs);
+                                            // Check pending requests
+                                            const comments = ((order as any).comments || []) as any[];
+                                            const hasPendingRequest = comments.some((c: any) => 
+                                                ['request_edit', 'request_cancel'].includes(c.type) &&
+                                                !comments.some((r: any) => ['approve_edit', 'approve_cancel', 'reject_request'].includes(r.type) && new Date(r.createdAt) > new Date(c.createdAt))
+                                            );
+                                            const lastAction = [...comments].reverse().find((c: any) => ['approve_edit', 'approve_cancel', 'reject_request'].includes(c.type));
+
+                                            if (order.status === 'cancelled') {
+                                                return (
+                                                    <span className="flex items-center gap-1 text-xs text-red-400">
+                                                        <X className="w-3.5 h-3.5" />
+                                                        Заказ отменён
+                                                    </span>
+                                                );
+                                            }
                                             if (order.status !== 'new') {
-                                                // show lock only if in non-editable production states
-                                                if (['in_production', 'ready', 'rework', 'shipped', 'cancelled'].includes(order.status)) {
+                                                // In production — show request buttons
+                                                if (['in_production', 'ready', 'rework', 'shipped'].includes(order.status)) {
                                                     return (
-                                                        <span className="flex items-center gap-1 text-xs text-gray-400">
-                                                            <Lock className="w-3.5 h-3.5" />
-                                                            В производстве
-                                                        </span>
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="flex items-center gap-1 text-xs text-gray-400">
+                                                                <Lock className="w-3.5 h-3.5" />
+                                                                В производстве
+                                                            </span>
+                                                            {!hasPendingRequest && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_edit'); setRequestReason(''); }}
+                                                                        className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1"
+                                                                    >
+                                                                        <Pencil className="w-3 h-3" /> Запросить ред.
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_cancel'); setRequestReason(''); }}
+                                                                        className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
+                                                                    >
+                                                                        <X className="w-3 h-3" /> Запросить отмену
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            {hasPendingRequest && (
+                                                                <span className="text-xs text-amber-600 font-medium animate-comment-blink">⏳ Запрос отправлен</span>
+                                                            )}
+                                                        </div>
                                                     );
                                                 }
-                                                return null; // out_for_delivery and delivered have banners above
+                                                return null;
                                             }
                                             if (editable) {
                                                 return (
@@ -651,13 +691,81 @@ export default function OpticDashboard() {
                                                     </>
                                                 );
                                             }
+                                            // Edit window closed — show request buttons
                                             return (
-                                                <span className="flex items-center gap-1 text-xs text-gray-400">
-                                                    <Lock className="w-3.5 h-3.5" />
-                                                    Окно редактирования закрыто
-                                                </span>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="flex items-center gap-1 text-xs text-gray-400">
+                                                        <Lock className="w-3.5 h-3.5" />
+                                                        Закрыто
+                                                    </span>
+                                                    {!hasPendingRequest && (
+                                                        <>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_edit'); setRequestReason(''); }}
+                                                                className="text-xs text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1"
+                                                            >
+                                                                <Pencil className="w-3 h-3" /> Запросить ред.
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_cancel'); setRequestReason(''); }}
+                                                                className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
+                                                            >
+                                                                <X className="w-3 h-3" /> Запросить отмену
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {hasPendingRequest && (
+                                                        <span className="text-xs text-amber-600 font-medium animate-comment-blink">⏳ Запрос отправлен</span>
+                                                    )}
+                                                    {lastAction?.type === 'reject_request' && (
+                                                        <span className="text-xs text-red-500">❌ Отклонено: {lastAction.text}</span>
+                                                    )}
+                                                </div>
                                             );
                                         })()}
+
+                                        {/* Request modal */}
+                                        {showRequestModal === order.order_id && (
+                                            <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2" onClick={e => e.stopPropagation()}>
+                                                <p className="text-sm font-medium text-amber-800">
+                                                    {requestType === 'request_edit' ? '📝 Запрос на редактирование' : '❌ Запрос на отмену заказа'}
+                                                </p>
+                                                <textarea
+                                                    value={requestReason}
+                                                    onChange={e => setRequestReason(e.target.value)}
+                                                    placeholder="Укажите причину..."
+                                                    className="w-full px-3 py-2 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white"
+                                                    rows={2}
+                                                />
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!requestReason.trim()) return;
+                                                            setSendingComment(true);
+                                                            await fetch(`/api/orders/${(order as any).id}/comments`, {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ text: requestReason, type: requestType }),
+                                                            });
+                                                            setShowRequestModal(null);
+                                                            setRequestReason('');
+                                                            setSendingComment(false);
+                                                            loadOrders();
+                                                        }}
+                                                        disabled={!requestReason.trim() || sendingComment}
+                                                        className="flex-1 text-sm py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 font-medium"
+                                                    >
+                                                        Отправить запрос
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setShowRequestModal(null)}
+                                                        className="text-sm py-2 px-4 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50"
+                                                    >
+                                                        Отмена
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {perms.canViewPayments && (
                                             <button
@@ -753,7 +861,16 @@ export default function OpticDashboard() {
 
                                                         {((order as any).comments?.length > 0) && (
                                                             <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
-                                                                {((order as any).comments as any[]).map((c: any, i: number) => (
+                                                                {((order as any).comments as any[]).map((c: any, i: number) => {
+                                                                    const typeLabels: Record<string, { label: string; cls: string }> = {
+                                                                        request_edit: { label: '📝 Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
+                                                                        request_cancel: { label: '❌ Запрос отмены', cls: 'bg-red-100 text-red-700' },
+                                                                        approve_edit: { label: '✅ Одобрено ред.', cls: 'bg-green-100 text-green-700' },
+                                                                        approve_cancel: { label: '✅ Отменён', cls: 'bg-red-100 text-red-700' },
+                                                                        reject_request: { label: '❌ Отклонено', cls: 'bg-gray-100 text-gray-700' },
+                                                                    };
+                                                                    const typeBadge = typeLabels[c.type];
+                                                                    return (
                                                                     <div key={i} className={`text-xs rounded-lg p-2.5 ${
                                                                         c.role === 'laboratory'
                                                                             ? 'bg-blue-50 border border-blue-100 mr-4'
@@ -769,6 +886,11 @@ export default function OpticDashboard() {
                                                                                 }`}>
                                                                                     {c.role === 'laboratory' ? 'Лаборатория' : 'Врач'}
                                                                                 </span>
+                                                                                {typeBadge && (
+                                                                                    <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${typeBadge.cls}`}>
+                                                                                        {typeBadge.label}
+                                                                                    </span>
+                                                                                )}
                                                                             </span>
                                                                             <span className="text-gray-400">
                                                                                 {new Date(c.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
@@ -776,7 +898,8 @@ export default function OpticDashboard() {
                                                                         </div>
                                                                         <p className="text-gray-600 whitespace-pre-wrap">{c.text}</p>
                                                                     </div>
-                                                                ))}
+                                                                    );
+                                                                })}
                                                             </div>
                                                         )}
 

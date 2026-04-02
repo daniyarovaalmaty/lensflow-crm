@@ -571,10 +571,24 @@ export default function ProductionHubPage() {
                         </div>
                     )}
 
-                    {/* Comment notification badge */}
+                    {/* Comment / Request notification badge */}
                     {(() => {
                         const comments = (order as any).comments || [];
                         if (comments.length === 0) return null;
+                        // Check for pending doctor requests
+                        const hasPendingRequest = comments.some((c: any) =>
+                            ['request_edit', 'request_cancel'].includes(c.type) &&
+                            !comments.some((r: any) => ['approve_edit', 'approve_cancel', 'reject_request'].includes(r.type) && new Date(r.createdAt) > new Date(c.createdAt))
+                        );
+                        if (hasPendingRequest) {
+                            const lastReq = [...comments].reverse().find((c: any) => ['request_edit', 'request_cancel'].includes(c.type));
+                            return (
+                                <div className={`flex items-center gap-1 text-xs font-medium animate-comment-blink ${lastReq.type === 'request_cancel' ? 'text-red-600' : 'text-amber-600'}`}>
+                                    <MessageCircle className="w-3 h-3" />
+                                    {lastReq.type === 'request_edit' ? '📝 Запрос на ред.' : '❌ Запрос на отмену'}
+                                </div>
+                            );
+                        }
                         const last = comments[comments.length - 1];
                         if (last.role === 'laboratory') return null;
                         return (
@@ -669,7 +683,7 @@ export default function ProductionHubPage() {
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(order.order_id); }}
                                         className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
-                                        title="Удалить заказ"
+                                        title="Отменить заказ"
                                     >
                                         <Trash2 className="w-5 h-5 text-gray-400 group-hover:text-red-500" />
                                     </button>
@@ -682,14 +696,14 @@ export default function ProductionHubPage() {
                                 </button>
                             </div>
                         </div>
-                        {/* Delete confirmation */}
+                        {/* Cancel confirmation */}
                         {confirmDeleteId === order.order_id && (
                             <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
                                 <p className="text-sm font-medium text-red-700 flex items-center gap-2">
                                     <Trash2 className="w-4 h-4" />
-                                    Вы уверены, что хотите удалить заказ {order.order_id}?
+                                    Вы уверены, что хотите отменить заказ {order.order_id}?
                                 </p>
-                                <p className="text-xs text-red-500">Заказ будет перемещён в «Удалённые» и не будет исполняться.</p>
+                                <p className="text-xs text-red-500">Заказ будет перемещён в статус «Отменён» и не будет исполняться.</p>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => {
@@ -699,17 +713,70 @@ export default function ProductionHubPage() {
                                         }}
                                         className="btn text-xs py-2 px-4 flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
                                     >
-                                        Да, удалить
+                                        Да, отменить
                                     </button>
                                     <button
                                         onClick={() => setConfirmDeleteId(null)}
                                         className="btn text-xs py-2 px-4 flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg"
                                     >
-                                        Отмена
+                                        Нет
                                     </button>
                                 </div>
                             </div>
                         )}
+
+                        {/* Pending doctor requests */}
+                        {(() => {
+                            const comments = ((order as any).comments || []) as any[];
+                            const pendingRequests = comments.filter((c: any) =>
+                                ['request_edit', 'request_cancel'].includes(c.type) &&
+                                !comments.some((r: any) => ['approve_edit', 'approve_cancel', 'reject_request'].includes(r.type) && new Date(r.createdAt) > new Date(c.createdAt))
+                            );
+                            if (pendingRequests.length === 0) return null;
+                            const lastReq = pendingRequests[pendingRequests.length - 1];
+                            const isEditReq = lastReq.type === 'request_edit';
+                            return (
+                                <div className={`mt-3 border rounded-xl p-4 space-y-3 ${isEditReq ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
+                                    <p className={`text-sm font-medium flex items-center gap-2 ${isEditReq ? 'text-amber-800' : 'text-red-800'}`}>
+                                        {isEditReq ? '📝 Запрос на редактирование' : '❌ Запрос на отмену'}
+                                    </p>
+                                    <p className="text-sm text-gray-700">от <strong>{lastReq.authorName}</strong>: {lastReq.text}</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={async () => {
+                                                await fetch(`/api/orders/${(order as any).id}/comments`, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        text: isEditReq ? 'Редактирование одобрено' : 'Отмена одобрена',
+                                                        type: isEditReq ? 'approve_edit' : 'approve_cancel',
+                                                    }),
+                                                });
+                                                loadOrders();
+                                            }}
+                                            className="flex-1 text-xs py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium"
+                                        >
+                                            ✅ Принять
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                const reason = prompt('Причина отказа:');
+                                                if (!reason?.trim()) return;
+                                                await fetch(`/api/orders/${(order as any).id}/comments`, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ text: reason, type: 'reject_request' }),
+                                                });
+                                                loadOrders();
+                                            }}
+                                            className="flex-1 text-xs py-2 px-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium"
+                                        >
+                                            ❌ Отклонить
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                         {/* Document actions bar for shipped orders */}
                         {order.status === 'shipped' && (
                             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
@@ -782,7 +849,16 @@ export default function ProductionHubPage() {
                             {/* Existing comments */}
                             {((order as any).comments?.length > 0) && (
                                 <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
-                                    {((order as any).comments as any[]).map((c: any, i: number) => (
+                                    {((order as any).comments as any[]).map((c: any, i: number) => {
+                                        const typeLabels: Record<string, { label: string; cls: string }> = {
+                                            request_edit: { label: '📝 Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
+                                            request_cancel: { label: '❌ Запрос отмены', cls: 'bg-red-100 text-red-700' },
+                                            approve_edit: { label: '✅ Одобрено ред.', cls: 'bg-green-100 text-green-700' },
+                                            approve_cancel: { label: '✅ Отменён', cls: 'bg-red-100 text-red-700' },
+                                            reject_request: { label: '❌ Отклонено', cls: 'bg-gray-100 text-gray-700' },
+                                        };
+                                        const typeBadge = typeLabels[c.type];
+                                        return (
                                         <div key={i} className={`text-xs rounded-lg p-2.5 ${
                                             c.role === 'laboratory'
                                                 ? 'bg-blue-50 border border-blue-100 ml-4'
@@ -798,6 +874,11 @@ export default function ProductionHubPage() {
                                                     }`}>
                                                         {c.role === 'laboratory' ? 'Лаборатория' : 'Врач'}
                                                     </span>
+                                                    {typeBadge && (
+                                                        <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${typeBadge.cls}`}>
+                                                            {typeBadge.label}
+                                                        </span>
+                                                    )}
                                                 </span>
                                                 <span className="text-gray-400">
                                                     {new Date(c.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
@@ -805,7 +886,8 @@ export default function ProductionHubPage() {
                                             </div>
                                             <p className="text-gray-600 whitespace-pre-wrap">{c.text}</p>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
 
