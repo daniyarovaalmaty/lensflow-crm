@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     Package, Clock, CheckCircle, TruckIcon, AlertTriangle,
     BarChart3, DollarSign, TrendingUp, TrendingDown,
@@ -37,6 +38,7 @@ function calcOrderPrice(order: Order): number {
 
 export default function LabHeadDashboard() {
     const { data: session } = useSession();
+    const router = useRouter();
     const subRole = (session?.user?.subRole || 'lab_head') as SubRole;
 
     const [orders, setOrders] = useState<Order[]>([]);
@@ -615,7 +617,11 @@ export default function LabHeadDashboard() {
                             </thead>
                             <tbody>
                                 {(counterpartyTab === 'doctors' ? counterparties.doctors : counterparties.clinics).map((cp, i) => (
-                                    <tr key={cp.name + i} className="border-b border-gray-50 hover:bg-gray-50/50">
+                                    <tr
+                                        key={cp.name + i}
+                                        className="border-b border-gray-50 hover:bg-blue-50/50 cursor-pointer transition-colors"
+                                        onClick={() => router.push(`/laboratory/counterparties`)}
+                                    >
                                         <td className="py-3 px-3">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${counterpartyTab === 'doctors'
@@ -624,7 +630,7 @@ export default function LabHeadDashboard() {
                                                     }`}>
                                                     {cp.name.charAt(0).toUpperCase()}
                                                 </div>
-                                                <span className="font-medium text-gray-900">{cp.name}</span>
+                                                <span className="font-medium text-blue-700 hover:underline">{cp.name}</span>
                                             </div>
                                         </td>
                                         <td className="py-3 px-3 text-center">
