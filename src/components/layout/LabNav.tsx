@@ -63,8 +63,8 @@ export default function LabNav() {
                     })}
                 </div>
 
-                {/* Right side: Profile & Logout — fixed, with fade mask */}
-                <div className="hidden md:flex items-center shrink-0 ml-0 pl-3 bg-white" style={{ boxShadow: '-12px 0 8px -4px white' }}>
+                {/* Right side: Profile & Logout — pinned to far right */}
+                <div className="hidden md:flex items-center shrink-0 ml-auto pl-3 bg-white" style={{ boxShadow: '-12px 0 8px -4px white' }}>
                     <Link
                         href="/profile"
                         className="px-2 py-3.5 text-[13px] font-medium border-b-2 border-transparent text-gray-400 hover:text-blue-500 hover:border-blue-300 transition-colors whitespace-nowrap flex items-center gap-1"
