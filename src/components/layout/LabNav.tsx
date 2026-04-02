@@ -41,7 +41,7 @@ export default function LabNav() {
                 {/* Logo */}
                 <span className="text-lg font-bold text-blue-600 mr-2 shrink-0">LensFlow</span>
 
-                {/* Desktop nav */}
+                {/* Desktop nav — all items in one scrollable row */}
                 <div className="hidden md:flex items-center flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                     {visibleItems.map(item => {
                         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -61,28 +61,26 @@ export default function LabNav() {
                             </Link>
                         );
                     })}
-                </div>
-
-                {/* Right side: logout (desktop) */}
-                <div className="hidden md:flex items-center gap-1 shrink-0 ml-2">
+                    {/* Separator + Profile & Logout inside scroll */}
+                    <span className="mx-1 w-px h-5 bg-gray-200 shrink-0 self-center" />
                     <Link
                         href="/profile"
-                        className="p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50"
-                        title="Профиль"
+                        className="px-2 py-3.5 text-[13px] font-medium border-b-2 border-transparent text-gray-400 hover:text-blue-500 hover:border-blue-300 transition-colors whitespace-nowrap flex items-center gap-1"
                     >
-                        <User className="w-4 h-4" />
+                        <User className="w-3.5 h-3.5" />
+                        Профиль
                     </Link>
                     <button
                         onClick={handleLogout}
                         disabled={loggingOut}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
-                        title="Выйти"
+                        className="px-2 py-3.5 text-[13px] font-medium border-b-2 border-transparent text-gray-400 hover:text-red-500 hover:border-red-300 transition-colors whitespace-nowrap flex items-center gap-1"
                     >
                         {loggingOut ? (
-                            <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin block" />
+                            <span className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin block" />
                         ) : (
-                            <LogOut className="w-4 h-4" />
+                            <LogOut className="w-3.5 h-3.5" />
                         )}
+                        {loggingOut ? 'Выход...' : 'Выйти'}
                     </button>
                 </div>
 
