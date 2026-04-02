@@ -42,7 +42,7 @@ export default function LabNav() {
                 <span className="text-lg font-bold text-blue-600 mr-2 shrink-0">LensFlow</span>
 
                 {/* Desktop nav — static, no scroll */}
-                <div className="hidden md:flex items-center">
+                <div className="hidden md:flex items-center flex-1">
                     {visibleItems.map(item => {
                         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                         return (
