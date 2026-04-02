@@ -9,7 +9,7 @@ export async function GET() {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const isAdmin = session.user.subRole === 'lab_head' || session.user.subRole === 'lab_admin';
+    const isAdmin = session.user.role === 'laboratory' || session.user.subRole === 'lab_head' || session.user.subRole === 'lab_admin';
 
     const tickets = await prisma.supportTicket.findMany({
         where: isAdmin ? {} : { authorId: session.user.id },

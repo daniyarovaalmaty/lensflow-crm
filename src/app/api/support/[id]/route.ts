@@ -9,7 +9,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const isAdmin = session.user.subRole === 'lab_head' || session.user.subRole === 'lab_admin';
+    const isAdmin = session.user.role === 'laboratory' || session.user.subRole === 'lab_head' || session.user.subRole === 'lab_admin';
     if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const { id } = await params;
