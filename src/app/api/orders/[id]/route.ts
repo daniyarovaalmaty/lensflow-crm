@@ -158,9 +158,11 @@ export async function DELETE(
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
     try {
-        // Try to delete related records (may not exist)
+        // Try to delete ALL related records (no trace)
+        try { await prisma.$executeRawUnsafe(`DELETE FROM "comments" WHERE "orderId" = $1`, order.id); } catch {}
         try { await prisma.$executeRawUnsafe(`DELETE FROM "defects" WHERE "orderId" = $1`, order.id); } catch {}
         try { await prisma.$executeRawUnsafe(`DELETE FROM "order_products" WHERE "orderId" = $1`, order.id); } catch {}
+        try { await prisma.$executeRawUnsafe(`DELETE FROM "notifications" WHERE "orderId" = $1`, order.id); } catch {}
         
         // Delete the order
         await prisma.order.delete({ where: { id: order.id } });

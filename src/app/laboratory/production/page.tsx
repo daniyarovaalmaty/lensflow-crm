@@ -1473,19 +1473,21 @@ export default function ProductionHubPage() {
                         </div>
 
                         {/* Admin actions: Cancel & Delete — bottom of modal */}
-                        {subRole === 'lab_head' && order.status !== 'cancelled' && (
+                        {subRole === 'lab_head' && (
                             <div className="border-t border-red-100 bg-red-50/50 px-6 py-4">
                                 <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() => {
-                                            if (!confirm(`Отменить заказ ${order.order_id}?`)) return;
-                                            updateOrderStatus(order.order_id, 'cancelled');
-                                            setSelectedOrderId(null);
-                                        }}
-                                        className="flex-1 text-xs py-2.5 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg font-medium transition-colors"
-                                    >
-                                        ⛔ Отменить заказ
-                                    </button>
+                                    {order.status !== 'cancelled' && (
+                                        <button
+                                            onClick={() => {
+                                                if (!confirm(`Отменить заказ ${order.order_id}?`)) return;
+                                                updateOrderStatus(order.order_id, 'cancelled');
+                                                setSelectedOrderId(null);
+                                            }}
+                                            className="flex-1 text-xs py-2.5 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg font-medium transition-colors"
+                                        >
+                                            ⛔ Отменить заказ
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => {
                                             if (!confirm(`УДАЛИТЬ заказ ${order.order_id} из базы НАВСЕГДА? Это действие необратимо.`)) return;
