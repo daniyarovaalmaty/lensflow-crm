@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { MessageSquarePlus, CheckCircle2, Clock, AlertCircle, XCircle, Send, ChevronDown, ChevronUp, ArrowLeft, Filter } from 'lucide-react';
 import Link from 'next/link';
+import LabNav from '@/components/layout/LabNav';
 
 interface Ticket {
     id: string;
@@ -134,27 +135,50 @@ export default function SupportPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href={backHref} className="text-gray-400 hover:text-gray-600 transition-colors">
-                            <ArrowLeft className="w-5 h-5" />
-                        </Link>
+            {/* Show LabNav for lab users, simple header for others */}
+            {session?.user?.role === 'laboratory' ? (
+                <LabNav />
+            ) : (
+                <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Link href={backHref} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <ArrowLeft className="w-5 h-5" />
+                            </Link>
+                            <div>
+                                <h1 className="text-lg font-bold text-gray-900">Служба поддержки</h1>
+                                <p className="text-xs text-gray-500">Заявки на доработки и сообщения об ошибках</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowForm(!showForm)}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                        >
+                            <MessageSquarePlus className="w-4 h-4" />
+                            Новая заявка
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Page header for lab users */}
+            {session?.user?.role === 'laboratory' && (
+                <div className="bg-white border-b border-gray-200">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
                         <div>
                             <h1 className="text-lg font-bold text-gray-900">Служба поддержки</h1>
                             <p className="text-xs text-gray-500">Заявки на доработки и сообщения об ошибках</p>
                         </div>
+                        <button
+                            onClick={() => setShowForm(!showForm)}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                        >
+                            <MessageSquarePlus className="w-4 h-4" />
+                            Новая заявка
+                        </button>
                     </div>
-                    <button
-                        onClick={() => setShowForm(!showForm)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
-                    >
-                        <MessageSquarePlus className="w-4 h-4" />
-                        Новая заявка
-                    </button>
                 </div>
-            </div>
+            )}
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
                 {/* New Ticket Form */}

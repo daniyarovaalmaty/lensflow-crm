@@ -10,6 +10,7 @@ import {
 import PhoneInput from '@/components/ui/PhoneInput';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
+import LabNav from '@/components/layout/LabNav';
 
 interface OrgData {
     id: string;
@@ -173,6 +174,8 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-surface">
+            {/* Nav for lab users */}
+            {session?.user?.role === 'laboratory' && <LabNav />}
             {/* Header */}
             <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
                 <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
