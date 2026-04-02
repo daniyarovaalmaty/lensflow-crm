@@ -354,7 +354,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         <h2 className="text-xl font-semibold text-gray-900">Тип заказа</h2>
                         <p className="text-sm text-gray-500">
                             {isUrgent
-                                ? 'Срочный — инженер приступит сразу, редактирование невозможно (+25% к стоимости)'
+                                ? `Срочный — инженер приступит сразу, редактирование невозможно${urgentSurchargePct > 0 ? ` (+${urgentSurchargePct}% к стоимости)` : ''}`
                                 : 'Обычный — у вас будет 2 часа на редактирование после создания'}
                         </p>
                     </div>
