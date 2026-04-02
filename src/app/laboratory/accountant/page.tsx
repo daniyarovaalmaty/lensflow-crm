@@ -659,7 +659,7 @@ export default function AccountantPage() {
                                                             : <span className="text-xs text-gray-400">—</span>
                                                         }
                                                     </td>
-                                                    <td className="px-4 py-3 text-right font-semibold text-gray-900">{total.toLocaleString('ru-RU')} ₸</td>
+                                                    <td className="px-4 py-3 text-right font-semibold text-gray-900">{(afterDiscount + urgentAmt).toLocaleString('ru-RU')} ₸</td>
                                                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                                                         {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
                                                     </td>
@@ -791,7 +791,7 @@ export default function AccountantPage() {
                                                                                 )}
                                                                                 <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-200">
                                                                                     <span>Итого</span>
-                                                                                    <span>{total.toLocaleString('ru-RU')} ₸</span>
+                                                                                    <span>{(afterDiscount + urgentAmt).toLocaleString('ru-RU')} ₸</span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
