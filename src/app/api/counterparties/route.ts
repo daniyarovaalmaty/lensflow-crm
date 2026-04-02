@@ -30,8 +30,9 @@ export async function GET() {
             orderBy: { name: 'asc' },
         });
 
-        // Get all orders with doctor info
+        // Get all orders with doctor info (exclude cancelled)
         const orders = await prisma.order.findMany({
+            where: { status: { not: 'cancelled' } },
             select: {
                 id: true,
                 orderNumber: true,
