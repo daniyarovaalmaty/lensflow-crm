@@ -7,7 +7,10 @@ import prisma from '@/lib/db/prisma';
  * POST /api/merge-doctors — Merge "Доктор New Eye" into "Айгерим Аскаровна"
  * One-time admin endpoint
  */
-export async function POST() {
+export async function GET() { return merge(); }
+export async function POST() { return merge(); }
+
+async function merge() {
     const session = await auth();
     if (!session?.user || session.user.subRole !== 'lab_head') {
         return new NextResponse('Unauthorized', { status: 401 });
