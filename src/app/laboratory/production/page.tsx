@@ -90,6 +90,16 @@ export default function ProductionHubPage() {
         [orders, selectedOrderId]
     );
 
+    // Lock body scroll when any modal is open
+    useEffect(() => {
+        if (selectedOrderId || selectedDefectId) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [selectedOrderId, selectedDefectId]);
+
     // Load closing docs when an order is selected
     useEffect(() => {
         if (selectedOrderId && ['docs_ready', 'out_for_delivery', 'delivered'].includes(selectedOrder?.status || '')) {
@@ -696,7 +706,7 @@ export default function ProductionHubPage() {
                 className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 pt-[2vh] sm:pt-[5vh] overflow-y-auto"
                 onClick={() => setSelectedOrderId(null)}
             >
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1518,7 +1528,7 @@ export default function ProductionHubPage() {
                 className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] overflow-y-auto"
                 onClick={() => setSelectedDefectId(null)}
             >
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
