@@ -1325,8 +1325,8 @@ export default function ProductionHubPage() {
                                 )}
                                 <button
                                     onClick={() => {
-                                        import('@/lib/generateOrderApplicationPdf').then(({ generateOrderApplicationPdf }) => {
-                                            generateOrderApplicationPdf({
+                                        import('@/lib/generateOrderApplicationXlsx').then(({ generateOrderApplicationXlsx }) => {
+                                            generateOrderApplicationXlsx({
                                                 order_id: order.order_id,
                                                 patient: order.patient,
                                                 meta: order.meta,
@@ -1345,7 +1345,7 @@ export default function ProductionHubPage() {
                                     className="btn btn-secondary text-xs py-2 px-3 gap-1.5"
                                 >
                                     <Download className="w-3.5 h-3.5" />
-                                    Скачать PDF
+                                    Скачать Excel
                                 </button>
                                 <button
                                     onClick={() => {
