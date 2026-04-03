@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { formatDate } from '@/lib/dateUtils';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -164,7 +165,7 @@ export default function LabHeadDashboard() {
                 return d >= mStart && d <= mEnd;
             });
             monthlyRevenue.push({
-                month: mStart.toLocaleDateString('ru-RU', { month: 'short' }),
+                month: mStart.toLocaleDateString('ru-RU', { month: 'short', timeZone: 'Asia/Almaty' }),
                 revenue: mo.reduce((s, o) => s + calcOrderPrice(o), 0),
                 orders: mo.length,
             });
@@ -247,7 +248,7 @@ export default function LabHeadDashboard() {
                 'Телефон': o.patient.phone,
                 'Статус': OrderStatusLabels[o.status],
                 'Оплата': (o as any).payment_status === 'paid' ? 'Оплачен' : (o as any).payment_status === 'partial' ? 'Частично' : 'Не оплачен',
-                'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
+                'Дата': formatDate(o.meta.created_at),
                 'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
                 'Врач': o.meta.doctor || '—',
                 'Оптика': o.meta.optic_name || '—',
@@ -702,7 +703,7 @@ export default function LabHeadDashboard() {
                                             );
                                         })()}
                                         <td className="py-3 px-3 text-right text-gray-500">
-                                            {cp.lastDate ? new Date(cp.lastDate).toLocaleDateString('ru-RU') : '—'}
+                                            {cp.lastDate ? formatDate(cp.lastDate) : '—'}
                                         </td>
                                     </tr>
                                 ))}
@@ -776,7 +777,7 @@ export default function LabHeadDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className="py-3 px-3 text-right font-medium text-gray-900">{fmt(calcOrderPrice(order))} ₸</td>
-                                                <td className="py-3 px-3 text-right text-gray-500">{new Date(order.meta.created_at).toLocaleDateString('ru-RU')}</td>
+                                                <td className="py-3 px-3 text-right text-gray-500">{formatDate(order.meta.created_at)}</td>
                                             </tr>
                                         );
                                     })}

@@ -8,6 +8,7 @@ import { OrderConstructor } from '@/components/order/OrderConstructor';
 import { CharacteristicLabels } from '@/types/order';
 import type { CreateOrderDTO, Order, Characteristic } from '@/types/order';
 import { CheckCircle, Download, ArrowLeft, FileText } from 'lucide-react';
+import { formatDate } from '@/lib/dateUtils';
 
 const PRICE_PER_LENS = 17500; // fallback
 
@@ -17,8 +18,7 @@ function generateInvoiceHTML(order: Order): string {
     const odQty = Number(od.qty) || 0;
     const osQty = Number(os.qty) || 0;
     const additionalProducts = order.products || [];
-    const date = new Date(order.meta.created_at);
-    const dateStr = date.toLocaleDateString('ru-RU');
+    const dateStr = formatDate(order.meta.created_at);
 
     const DISCOUNT_PCT = (order as any).discount_percent ?? 0;
     const urgentSurchargePct = (order as any).urgent_surcharge_pct ?? 0;

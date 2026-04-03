@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatDate } from '@/lib/dateUtils';
 import {
     FileText, Download, DollarSign, CheckCircle, Clock, XCircle,
     Search, Calendar, TrendingUp, Package, ChevronDown, ChevronUp, User, Building2, MapPin,
@@ -48,8 +49,7 @@ async function generateInvoice(order: Order, urgentPct: number = 0) {
     const osPrice = getLensPrice(order, osChar, 'os');
     const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number }> || [];
     const discountPct = (order as any).discount_percent ?? 0;
-    const date = new Date(order.meta.created_at);
-    const dateStr = date.toLocaleDateString('ru-RU');
+    const dateStr = formatDate(order.meta.created_at);
     const fmt = (n: number) => n.toLocaleString('ru-RU');
 
     const subtotal = (odQty * odPrice) + (osQty * osPrice) + additionalProducts.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
@@ -433,7 +433,7 @@ export default function AccountantPage() {
                 'Статус оплаты': PaymentStatusLabels[o.payment_status ?? 'unpaid'],
                 'Срочный': o.is_urgent ? 'Да' : 'Нет',
                 'Сумма (₸)': calcOrderTotal(o),
-                'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
+                'Дата': formatDate(o.meta.created_at),
             }));
             const ws = XLSX.utils.json_to_sheet(rows);
             const colWidths = Object.keys(rows[0] || {}).map(key => ({
@@ -661,7 +661,7 @@ export default function AccountantPage() {
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-semibold text-gray-900">{(afterDiscount + urgentAmt).toLocaleString('ru-RU')} ₸</td>
                                                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                                                        {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
+                                                        {formatDate(order.meta.created_at)}
                                                     </td>
                                                     <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                                                         {order.status === 'accountant_review' ? (

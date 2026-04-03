@@ -13,6 +13,7 @@ import {
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
+import { formatDate, formatDateTime, formatShortDate } from '@/lib/dateUtils';
 import type { Characteristic } from '@/types/order';
 import { getPermissions, SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
@@ -286,7 +287,7 @@ export default function ProductionHubPage() {
                 'Компания': o.company || '—',
                 'Статус': OrderStatusLabels[o.status],
                 'Оплата': o.payment_status === 'paid' ? 'Оплачен' : o.payment_status === 'partial' ? 'Частично' : 'Не оплачен',
-                'Дата': new Date(o.meta.created_at).toLocaleDateString('ru-RU'),
+                'Дата': formatDate(o.meta.created_at),
                 'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
                 'Врач': o.meta.doctor || '—',
                 'Оптика': o.meta.optic_name || '—',
@@ -586,7 +587,7 @@ export default function ProductionHubPage() {
                         </div>
                         <div className="flex flex-col items-end gap-1">
                             <span className="text-xs text-gray-400">
-                                {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
+                                {formatDate(order.meta.created_at)}
                             </span>
                             {order.is_urgent && (
                                 <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded px-1.5 py-0.5">
@@ -720,7 +721,7 @@ export default function ProductionHubPage() {
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900">Заказ {order.order_id}</h2>
                                 <p className="text-sm text-gray-500">
-                                    {OrderStatusLabels[order.status]} • {new Date(order.meta.created_at).toLocaleDateString('ru-RU')}
+                                    {OrderStatusLabels[order.status]} • {formatDate(order.meta.created_at)}
                                 </p>
                             </div>
                             <div className="flex items-center gap-1">
@@ -1213,7 +1214,7 @@ export default function ProductionHubPage() {
                                 <div className="space-y-1.5">
                                     {order.defects.map((d: DefectRecord) => (
                                         <div key={d.id} className="flex items-center justify-between text-xs text-red-600 bg-white rounded-lg px-3 py-2">
-                                            <span>{new Date(d.date).toLocaleDateString('ru-RU')} — {d.qty} шт. {d.eye_side ? `[${EyeSideLabels[d.eye_side]}]` : ''}</span>
+                                            <span>{formatDate(d.date)} — {d.qty} шт. {d.eye_side ? `[${EyeSideLabels[d.eye_side]}]` : ''}</span>
                                             {d.note && <span className="text-red-400 ml-2">({d.note})</span>}
                                             {d.archived && <span className="text-green-600 ml-auto">✅ Архив</span>}
                                         </div>
@@ -1479,7 +1480,7 @@ export default function ProductionHubPage() {
                                 <div className="flex-1 flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2">
                                     <CheckCircle className="w-3.5 h-3.5" />
                                     Получение подтверждено
-                                    {order.delivered_at && <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>}
+                                    {order.delivered_at && <span className="ml-auto text-teal-500">{formatDate(order.delivered_at)}</span>}
                                 </div>
                             )}
                         </div>
@@ -1940,7 +1941,7 @@ export default function ProductionHubPage() {
                                                         <p className="text-xs text-gray-600">{order.patient.name}</p>
                                                     </div>
                                                     <span className="text-xs text-gray-500">
-                                                        {new Date(defect.date).toLocaleDateString('ru-RU')}
+                                                        {formatDate(defect.date)}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">

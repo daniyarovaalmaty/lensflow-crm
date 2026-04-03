@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -570,7 +571,7 @@ export default function OpticDashboard() {
                                             </div>
                                         </div>
                                         <div className="text-left sm:text-right text-sm text-gray-500 sm:ml-4 flex-shrink-0 flex sm:block items-center gap-3">
-                                            <p>{new Date(order.meta.created_at).toLocaleDateString('ru-RU')}</p>
+                                            <p>{formatDate(order.meta.created_at)}</p>
                                             <p className="text-base font-semibold text-gray-900 sm:mt-1">
                                                 {canSeePrices ? `${totalPrice.toLocaleString('ru-RU')} ₸` : ''}
                                             </p>
@@ -613,7 +614,7 @@ export default function OpticDashboard() {
                                                 <CheckCircle className="w-3.5 h-3.5" />
                                                 <span>Доставлен — вы подтвердили получение</span>
                                                 {order.delivered_at && (
-                                                    <span className="ml-auto text-teal-500">{new Date(order.delivered_at).toLocaleDateString('ru-RU')}</span>
+                                                    <span className="ml-auto text-teal-500">{formatDate(order.delivered_at)}</span>
                                                 )}
                                             </div>
                                         )}
