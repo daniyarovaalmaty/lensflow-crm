@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Package, Clock, CheckCircle, TruckIcon,
     Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse
+    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart
 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
@@ -270,6 +270,13 @@ export default function OpticDashboard() {
                                         Склад
                                     </Link>
                                     <Link
+                                        href="/optic/pos"
+                                        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
+                                    >
+                                        <ShoppingCart className="w-4 h-4" />
+                                        Касса
+                                    </Link>
+                                    <Link
                                         href="/optic/staff"
                                         className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
                                     >
@@ -338,6 +345,14 @@ export default function OpticDashboard() {
                                     >
                                         <Warehouse className="w-4 h-4" />
                                         Склад
+                                    </Link>
+                                    <Link
+                                        href="/optic/pos"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                    >
+                                        <ShoppingCart className="w-4 h-4" />
+                                        Касса
                                     </Link>
                                     <Link
                                         href="/optic/staff"
