@@ -16,6 +16,7 @@ interface CatalogProduct {
     sku: string | null;
     description: string | null;
     price?: number; // undefined for doctors
+    priceByDk?: Record<string, number> | null; // DK-specific prices: { "50": 15000, "100": 18500, ... }
     unit: string;
 }
 
@@ -103,6 +104,16 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     // Map characteristic code → catalog product
     const getLensProduct = (characteristic: string) => {
         return lensProducts.find(p => p.description === characteristic);
+    };
+
+    // Get price for a lens based on DK (mirrors backend getLensPrice logic)
+    const getLensPrice = (product: CatalogProduct | undefined, dk: string): number => {
+        if (!product) return 0;
+        if (product.priceByDk && typeof product.priceByDk === 'object') {
+            const dkPrice = product.priceByDk[dk];
+            if (dkPrice != null) return dkPrice;
+        }
+        return product.price || 0;
     };
 
     const addProduct = (product: CatalogProduct) => {
@@ -319,18 +330,23 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const isUrgent = watch('is_urgent');
     const odCharacteristic = watch('config.eyes.od.characteristic');
     const osCharacteristic = watch('config.eyes.os.characteristic');
+    const odDk = watch('config.eyes.od.dk') || '';
+    const osDk = watch('config.eyes.os.dk') || '';
     const odQty = Number(watch('config.eyes.od.qty')) || 0;
     const osQty = Number(watch('config.eyes.os.qty')) || 0;
     const isRgpOD = watch('config.eyes.od.isRgp') || false;
     const isRgpOS = watch('config.eyes.os.isRgp') || false;
     const hasAnyRgp = isRgpOD || isRgpOS;
 
-    // Lens price from catalog based on characteristic
+    // Lens price from catalog based on characteristic + DK
+    // Uses priceByDk when available (matches backend calculation)
     // RGP lenses have custom pricing (set by accountant), so price = 0
     const odLensProduct = getLensProduct(odCharacteristic || '');
     const osLensProduct = getLensProduct(osCharacteristic || '');
-    const odLensPrice = isRgpOD ? 0 : (odLensProduct?.price || 0) * odQty;
-    const osLensPrice = isRgpOS ? 0 : (osLensProduct?.price || 0) * osQty;
+    const odUnitPrice = isRgpOD ? 0 : getLensPrice(odLensProduct, odDk);
+    const osUnitPrice = isRgpOS ? 0 : getLensPrice(osLensProduct, osDk);
+    const odLensPrice = odUnitPrice * odQty;
+    const osLensPrice = osUnitPrice * osQty;
     const lensTotal = odLensPrice + osLensPrice;
 
     // Additional products total (solutions, accessories)
