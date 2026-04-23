@@ -167,12 +167,18 @@ export async function GET(request: NextRequest) {
         const status = searchParams.get('status');
         const externalId = searchParams.get('medmundus_order_id');
         const orderId = searchParams.get('order_id');
+        const patientPhone = searchParams.get('patient_phone');
 
         const where: any = {};
 
         if (externalId) where.externalId = externalId;
         if (orderId) where.orderNumber = orderId;
         if (clinicName) where.opticName = { contains: clinicName, mode: 'insensitive' };
+        if (patientPhone) {
+            // Normalize phone: strip spaces, dashes
+            const normalized = patientPhone.replace(/[\s\-()]/g, '');
+            where.patient = { phone: { contains: normalized } };
+        }
         if (status) {
             const statusMap: Record<string, string> = {
                 'new': 'new_order',
@@ -187,8 +193,8 @@ export async function GET(request: NextRequest) {
             where.status = statusMap[status] || status;
         }
 
-        // Only return MedMundus orders by default
-        if (!externalId && !orderId) {
+        // Only restrict to MedMundus source when no specific filter is applied
+        if (!externalId && !orderId && !patientPhone) {
             where.source = 'medmundus';
         }
 
