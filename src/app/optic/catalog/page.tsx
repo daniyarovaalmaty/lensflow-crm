@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Package, Plus, Search, X, Eye, Edit2, Trash2,
     Tag, ShoppingBag, Droplets, Glasses, Wrench, Star,
-    Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon, ArrowLeft
+    Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon, ArrowLeft,
+    Sparkles, Send, Bot, Loader2, MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -81,6 +82,17 @@ export default function OpticCatalogPage() {
         images: [] as string[], specs: {} as Record<string, string>,
     });
     const [saving, setSaving] = useState(false);
+
+    // AI assistant state
+    const [showAI, setShowAI] = useState(false);
+    const [aiInput, setAiInput] = useState('');
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiMessages, setAiMessages] = useState<Array<{
+        role: 'user' | 'assistant'; text: string; products?: any[];
+    }>>([
+        { role: 'assistant', text: 'Привет! Я помогу добавить товары в каталог. Напишите список товаров с ценами в свободной форме, и я добавлю их автоматически.\n\nНапример:\n«Добавь оправу Ray-Ban RB5228, закуп 15000, розница 25000. Проверка зрения — 3000 тенге»' },
+    ]);
+    const aiChatRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => { loadProducts(); }, []);
 
@@ -161,6 +173,48 @@ export default function OpticCatalogPage() {
 
     const isService = form.category.startsWith('service_');
 
+    // ==================== AI Handler ====================
+    const handleAiSend = async () => {
+        if (!aiInput.trim() || aiLoading) return;
+        const text = aiInput.trim();
+        setAiInput('');
+        setAiMessages(prev => [...prev, { role: 'user', text }]);
+        setAiLoading(true);
+
+        setTimeout(() => aiChatRef.current?.scrollTo({ top: aiChatRef.current.scrollHeight, behavior: 'smooth' }), 100);
+
+        try {
+            const res = await fetch('/api/optic/ai-catalog', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text }),
+            });
+            const data = await res.json();
+
+            if (res.ok && data.products?.length > 0) {
+                setAiMessages(prev => [...prev, {
+                    role: 'assistant',
+                    text: data.message,
+                    products: data.products,
+                }]);
+                await loadProducts(); // refresh catalog
+            } else {
+                setAiMessages(prev => [...prev, {
+                    role: 'assistant',
+                    text: data.message || 'Не удалось обработать запрос. Попробуйте иначе.',
+                }]);
+            }
+        } catch {
+            setAiMessages(prev => [...prev, {
+                role: 'assistant',
+                text: '❗ Ошибка соединения. Проверьте ключ OpenAI и попробуйте снова.',
+            }]);
+        } finally {
+            setAiLoading(false);
+            setTimeout(() => aiChatRef.current?.scrollTo({ top: aiChatRef.current.scrollHeight, behavior: 'smooth' }), 200);
+        }
+    };
+
     // ==================== Stats ====================
     const stats = useMemo(() => {
         const active = products.filter(p => p.isActive);
@@ -199,7 +253,106 @@ export default function OpticCatalogPage() {
                             <Plus className="w-4 h-4" />
                             Добавить
                         </button>
+                        <button
+                            onClick={() => setShowAI(!showAI)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm ${
+                                showAI
+                                    ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white ring-2 ring-purple-300'
+                                    : 'bg-gradient-to-r from-violet-500 to-purple-500 text-white hover:from-violet-600 hover:to-purple-600'
+                            }`}
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            ИИ-ассистент
+                        </button>
                     </div>
+
+                    {/* AI Assistant Panel */}
+                    <AnimatePresence>
+                        {showAI && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden mb-4"
+                            >
+                                <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-purple-100 rounded-2xl overflow-hidden">
+                                    {/* AI header */}
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-purple-100">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                                                <Bot className="w-4 h-4 text-white" />
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-900 text-sm">ИИ-ассистент каталога</span>
+                                                <p className="text-[10px] text-purple-500">Напишите товары текстом — добавлю автоматически</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setShowAI(false)} className="text-gray-400 hover:text-gray-600">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* Chat messages */}
+                                    <div ref={aiChatRef} className="px-4 py-3 space-y-3 max-h-[300px] overflow-y-auto">
+                                        {aiMessages.map((msg, i) => (
+                                            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                                                    msg.role === 'user'
+                                                        ? 'bg-primary-600 text-white rounded-br-md'
+                                                        : 'bg-white text-gray-700 border border-purple-100 rounded-bl-md shadow-sm'
+                                                }`}>
+                                                    <div className="whitespace-pre-line">{msg.text}</div>
+                                                    {msg.products && msg.products.length > 0 && (
+                                                        <div className="mt-2 space-y-1">
+                                                            {msg.products.map((p: any, j: number) => (
+                                                                <div key={j} className="flex items-center gap-2 bg-green-50 rounded-lg px-2 py-1 text-xs text-green-700">
+                                                                    <Package className="w-3 h-3 flex-shrink-0" />
+                                                                    <span className="font-medium truncate">{p.name}</span>
+                                                                    {p.retailPrice > 0 && <span className="ml-auto font-bold whitespace-nowrap">{p.retailPrice.toLocaleString('ru-RU')} ₸</span>}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {aiLoading && (
+                                            <div className="flex justify-start">
+                                                <div className="bg-white border border-purple-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                                                    <div className="flex items-center gap-2 text-purple-500">
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        <span className="text-sm">Обрабатываю запрос...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Input */}
+                                    <div className="border-t border-purple-100 px-4 py-3">
+                                        <form onSubmit={e => { e.preventDefault(); handleAiSend(); }} className="flex gap-2">
+                                            <textarea
+                                                value={aiInput}
+                                                onChange={e => setAiInput(e.target.value)}
+                                                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAiSend(); } }}
+                                                placeholder="Напр.: Добавь оправы Ray-Ban RB5228 закуп 15000, розница 25000..."
+                                                rows={2}
+                                                className="flex-1 border border-purple-200 rounded-xl px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white"
+                                            />
+                                            <button
+                                                type="submit"
+                                                disabled={!aiInput.trim() || aiLoading}
+                                                className="self-end px-4 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-all"
+                                            >
+                                                {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                            </button>
+                                        </form>
+                                        <p className="text-[10px] text-purple-400 mt-1.5">Можно добавить несколько товаров и услуг одним сообщением • Enter для отправки, Shift+Enter для новой строки</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
