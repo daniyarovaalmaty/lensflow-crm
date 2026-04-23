@@ -188,6 +188,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             validationErrors.push('Укажите имя пациента (минимум 2 символа)');
         }
 
+        // Patient phone is required for integration
+        if (!data.patient?.phone || data.patient.phone.trim().length < 10) {
+            validationErrors.push('Укажите корректный номер телефона пациента');
+        }
+
         // At least one eye must have qty > 0
         const odQtyVal = Number(data.config?.eyes?.od?.qty) || 0;
         const osQtyVal = Number(data.config?.eyes?.os?.qty) || 0;
@@ -490,6 +495,25 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         />
                         {errors.patient?.name && (
                             <p className="mt-1 text-sm text-red-600">{errors.patient.name.message}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label htmlFor="patient-phone" className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Телефон пациента *
+                        </label>
+                        <input
+                            id="patient-phone"
+                            type="text"
+                            {...register('patient.phone')}
+                            className="input"
+                            placeholder="+7 700 000 00 00"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                            Пациент получит SMS с доступом к порталу MedMundus
+                        </p>
+                        {errors.patient?.phone && (
+                            <p className="mt-1 text-sm text-red-600">{errors.patient.phone.message}</p>
                         )}
                     </div>
 

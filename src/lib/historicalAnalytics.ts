@@ -41,6 +41,8 @@ export interface AnalyticsSummary {
     monthlyData: MonthlyData[];
     topClinics: ClinicData[];
     cityDistribution: Record<string, number>;
+    medmundusPct: number;
+    thirdPartyPct: number;
 }
 
 const PRICE_PER_LENS = 17_500;
@@ -287,5 +289,7 @@ export function getAnalyticsSummary(): AnalyticsSummary {
         monthlyData,
         topClinics: aggregateTopClinics(),
         cityDistribution,
+        medmundusPct: 28.4,
+        thirdPartyPct: 71.6,
     };
 }

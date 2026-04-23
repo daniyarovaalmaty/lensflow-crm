@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 gap-6 mb-8">
                 {/* Monthly Orders Bar Chart */}
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -84,7 +84,10 @@ export default function AnalyticsPage() {
                         ))}
                     </div>
                 </div>
+            </div>
 
+            {/* Pie Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Lens Type Distribution */}
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -154,6 +157,60 @@ export default function AnalyticsPage() {
                                 );
                             })}
                         </div>
+                    </div>
+                </div>
+
+                {/* Source Distribution */}
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                        <PieChart className="w-4 h-4 text-pink-500" />
+                        Источники заказов
+                    </h3>
+
+                    <div className="flex items-center gap-8 mb-6 flex-1">
+                        <div className="relative w-40 h-40 shrink-0">
+                            <svg viewBox="0 0 36 36" className="w-full h-full">
+                                {/* MedMundus */}
+                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#ec4899" strokeWidth="3.5"
+                                    strokeDasharray={`${analytics.medmundusPct} ${100 - analytics.medmundusPct}`}
+                                    strokeDashoffset="25" />
+                                {/* Third Party */}
+                                <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#94a3b8" strokeWidth="3.5"
+                                    strokeDasharray={`${analytics.thirdPartyPct} ${100 - analytics.thirdPartyPct}`}
+                                    strokeDashoffset={`${25 - analytics.medmundusPct}`} />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-2xl font-bold text-gray-900">{analytics.medmundusPct}%</span>
+                                <span className="text-xs text-gray-400">Врачи M.M</span>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center shrink-0`}>
+                                    <Activity className="w-5 h-5 text-pink-500" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">Врачи MedMundus</p>
+                                    <p className="text-xs text-gray-500">{analytics.medmundusPct}% от всех заказов</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center shrink-0`}>
+                                    <Building2 className="w-5 h-5 text-slate-500" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">Сторонние Оптики</p>
+                                    <p className="text-xs text-gray-500">{analytics.thirdPartyPct}% от всех заказов</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="border-t border-gray-100 pt-4 mt-auto">
+                        <h4 className="text-xs font-medium text-gray-500 mb-2">ЗАМЕТКА</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            Интеграция с порталом MedMundus позволяет генерировать автоматический поток заказов напрямую от лечащих врачей после консультаций.
+                        </p>
                     </div>
                 </div>
             </div>
