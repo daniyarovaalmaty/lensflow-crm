@@ -5,8 +5,9 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft,
-    Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown
+    Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { formatDateTime } from '@/lib/dateUtils';
 
@@ -171,6 +172,9 @@ export default function POSPage() {
             <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div>
+                        <Link href="/optic/dashboard" className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-primary-600 mb-0.5">
+                            <ArrowLeft className="w-3 h-3" /> Назад
+                        </Link>
                         <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                             <ShoppingCart className="w-5 h-5 text-primary-600" /> Касса
                         </h1>

@@ -7,8 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Package, Plus, Search, X, Eye, Edit2, Trash2,
     Tag, ShoppingBag, Droplets, Glasses, Wrench, Star,
-    Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon
+    Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon, ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
 
 // ==================== Types ====================
 interface OpticProduct {
@@ -185,6 +186,9 @@ export default function OpticCatalogPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
                     <div className="flex items-center justify-between mb-6">
                         <div>
+                            <Link href="/optic/dashboard" className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-primary-600 mb-1">
+                                <ArrowLeft className="w-3 h-3" /> Назад
+                            </Link>
                             <h1 className="text-2xl font-bold text-gray-900">Каталог товаров и услуг</h1>
                             <p className="text-sm text-gray-500 mt-1">Управление ассортиментом вашей оптики</p>
                         </div>
