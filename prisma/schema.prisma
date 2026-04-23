@@ -38,6 +38,13 @@ model Organization {
   orders   Order[]
   patients Patient[]
 
+  // Inventory & POS
+  opticProducts   OpticProduct[]
+  stockItems      StockItem[]
+  stockDocuments  StockDocument[]
+  stockMovements  StockMovement[]
+  sales           Sale[]
+
   @@map("organizations")
 }
 
@@ -258,4 +265,194 @@ enum TicketStatus {
   in_progress
   done
   rejected
+}
+
+// ==================== Optic Product Catalog ====================
+model OpticProduct {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  name             String
+  slug             String?
+  category         String          // frame | sun_glasses | contact_lens | spectacle_lens | solution | accessory | service_exam | service_fitting | service_cutting | service_repair | service_other
+  type             String  @default("product")  // product | service
+
+  brand            String?
+  model            String?
+  sku              String?
+  barcode          String?
+  shortDescription String?
+  fullDescription  String?  @db.Text
+
+  images           Json?    // ["url1.jpg", "url2.jpg"]
+  specs            Json?    // { "material": "Пластик", ... }
+
+  purchasePrice    Int      @default(0)
+  retailPrice      Int      @default(0)
+
+  minStock         Int      @default(0)
+  currentStock     Int      @default(0)
+  unit             String   @default("шт")
+  trackSerials     Boolean  @default(false)
+
+  isPublic         Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  stockItems       StockItem[]
+  movements        StockMovement[]
+  saleItems        SaleItem[]
+
+  @@unique([organizationId, sku])
+  @@map("optic_products")
+}
+
+// ==================== Stock Item (serial-tracked units) ====================
+model StockItem {
+  id              String   @id @default(cuid())
+  productId       String
+  product         OpticProduct @relation(fields: [productId], references: [id])
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  serialNumber    String?
+  barcode         String?
+
+  status          String   @default("in_stock")
+  // in_stock | reserved | sold | returned | defective | written_off
+
+  color           String?
+  size            String?
+  sph             Float?
+  cyl             Float?
+  ax              Float?
+
+  batchNumber     String?
+  expiryDate      DateTime?
+  purchasePrice   Int?
+
+  receiptDocId    String?
+
+  receivedAt      DateTime @default(now())
+  soldAt          DateTime?
+  notes           String?
+
+  @@unique([organizationId, serialNumber])
+  @@map("stock_items")
+}
+
+// ==================== Stock Movement (history log) ====================
+model StockMovement {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  productId       String
+  product         OpticProduct @relation(fields: [productId], references: [id])
+
+  type            String   // receipt | sale | return_in | return_out | write_off | adjustment
+  quantity        Int
+
+  serialNumbers   Json?    // ["SN-001", "SN-002"]
+
+  documentNumber  String?
+  documentId      String?
+  supplier        String?
+  customerName    String?
+  reason          String?
+
+  performedById   String?
+  performedByName String?
+
+  createdAt       DateTime @default(now())
+
+  @@map("stock_movements")
+}
+
+// ==================== Stock Document (invoices, acts) ====================
+model StockDocument {
+  id               String   @id @default(cuid())
+  documentNumber   String
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id])
+
+  type             String   // receipt | write_off | return_out | adjustment
+  status           String   @default("draft")   // draft | confirmed | cancelled
+
+  counterpartyName String?
+  counterpartyInn  String?
+
+  totalAmount      Int      @default(0)
+  items            Json     // [{ productId, name, qty, price, serialNumbers }]
+
+  notes            String?
+
+  performedById    String?
+  performedByName  String?
+  confirmedAt      DateTime?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("stock_documents")
+}
+
+// ==================== Sale (POS transaction) ====================
+model Sale {
+  id              String   @id @default(cuid())
+  saleNumber      String   @unique
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  customerName    String?
+  customerPhone   String?
+  customerInn     String?
+
+  subtotal        Int      @default(0)
+  discountPercent Float    @default(0)
+  discountAmount  Int      @default(0)
+  total           Int      @default(0)
+
+  paymentMethod   String   @default("cash")   // cash | card | transfer | mixed
+  paymentStatus   String   @default("paid")   // paid | unpaid | partial
+  paidAmount      Int      @default(0)
+
+  invoiceGenerated Boolean @default(false)
+  invoiceData      Json?
+
+  performedById   String?
+  performedByName String?
+  notes           String?
+
+  syncedTo1C      Boolean  @default(false)
+  external1CId    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           SaleItem[]
+
+  @@map("sales")
+}
+
+// ==================== Sale Item ====================
+model SaleItem {
+  id         String       @id @default(cuid())
+  saleId     String
+  sale       Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId  String
+  product    OpticProduct @relation(fields: [productId], references: [id])
+
+  name       String
+  category   String?
+  quantity   Int
+  unitPrice  Int
+  total      Int
+
+  serialNumbers Json?     // ["NE-F-00001"]
+
+  @@map("sale_items")
 }

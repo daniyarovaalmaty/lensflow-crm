@@ -254,13 +254,22 @@ export default function OpticDashboard() {
                                 </Link>
                             )}
                             {subRole === 'optic_manager' && (
-                                <Link
-                                    href="/optic/staff"
-                                    className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
-                                >
-                                    <Users className="w-4 h-4" />
-                                    Сотрудники
-                                </Link>
+                                <>
+                                    <Link
+                                        href="/optic/catalog"
+                                        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
+                                    >
+                                        <Package className="w-4 h-4" />
+                                        Каталог
+                                    </Link>
+                                    <Link
+                                        href="/optic/staff"
+                                        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
+                                    >
+                                        <Users className="w-4 h-4" />
+                                        Сотрудники
+                                    </Link>
+                                </>
                             )}
                             <Link
                                 href="/profile"
@@ -306,14 +315,24 @@ export default function OpticDashboard() {
                     {mobileMenuOpen && (
                         <div className="md:hidden border-t border-gray-100 mt-3 pt-3 space-y-1">
                             {subRole === 'optic_manager' && (
-                                <Link
-                                    href="/optic/staff"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                                >
-                                    <Users className="w-4 h-4" />
-                                    Сотрудники
-                                </Link>
+                                <>
+                                    <Link
+                                        href="/optic/catalog"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                    >
+                                        <Package className="w-4 h-4" />
+                                        Каталог
+                                    </Link>
+                                    <Link
+                                        href="/optic/staff"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                    >
+                                        <Users className="w-4 h-4" />
+                                        Сотрудники
+                                    </Link>
+                                </>
                             )}
                             <Link
                                 href="/profile"
