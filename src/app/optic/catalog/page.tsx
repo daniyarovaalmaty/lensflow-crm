@@ -98,7 +98,7 @@ export default function OpticCatalogPage() {
 
     const loadProducts = async () => {
         try {
-            const res = await fetch('/api/optic/products');
+            const res = await fetch('/api/optic/products?t=' + Date.now(), { cache: 'no-store' });
             if (res.ok) setProducts(await res.json());
         } finally {
             setLoading(false);
