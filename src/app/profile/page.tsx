@@ -161,7 +161,7 @@ export default function ProfilePage() {
             else if (avatarPreview === null && profile?.avatar) body.avatar = null;
 
             if (isManager && hasOrg) {
-                const orgToSave = { ...org };
+                const orgToSave: any = { ...org };
                 if (logoUrl !== undefined) orgToSave.logo = logoUrl;
                 body.organization = orgToSave;
             }
@@ -325,6 +325,7 @@ export default function ProfilePage() {
                                     )}
                                     <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogoChange} />
                                 </div>
+                                <div>
                                     <p className="text-sm text-gray-700 font-medium">Загрузите логотип</p>
                                     <p className="text-xs text-gray-400 mt-1">JPG, PNG или WebP, максимум 5МБ</p>
                                     {logoFile && (
