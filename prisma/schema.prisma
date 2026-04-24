@@ -29,6 +29,7 @@ model Organization {
   contactPerson    String?  // Контактное лицо
   contactPhone     String?  // Телефон контактного лица
   discountPercent  Float    @default(0)  // Персональная скидка (%), по умолчанию 0%
+  logo             String?  @db.Text     // URL логотипа организации
 
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())

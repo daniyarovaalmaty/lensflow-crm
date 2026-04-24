@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         const result = orgs.map((org: any) => ({
             id: org.id,
             name: org.name,
+            logo: org.logo || null,
             city: org.city || '',
             address: org.actualAddress || org.address || '',
             phone: org.phone || '',

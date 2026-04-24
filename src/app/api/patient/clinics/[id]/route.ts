@@ -69,6 +69,7 @@ export async function GET(
         const result = {
             id: org.id,
             name: org.name,
+            logo: org.logo || null,
             inn: org.inn || '',
             phone: org.phone || '',
             email: org.email || '',

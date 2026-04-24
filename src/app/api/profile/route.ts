@@ -37,6 +37,7 @@ export async function GET() {
                     contactPerson: true,
                     contactPhone: true,
                     discountPercent: true,
+                    logo: true,
                 },
             },
         },
@@ -86,7 +87,7 @@ export async function PUT(req: NextRequest) {
         const orgFields = [
             'name', 'inn', 'phone', 'email', 'address', 'city',
             'actualAddress', 'deliveryAddress', 'bankName', 'bik',
-            'iban', 'directorName', 'contactPerson', 'contactPhone',
+            'iban', 'directorName', 'contactPerson', 'contactPhone', 'logo',
         ];
         for (const f of orgFields) {
             if (organization[f] !== undefined) {

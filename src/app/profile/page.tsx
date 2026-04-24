@@ -8,6 +8,7 @@ import {
     MapPin, CreditCard, Landmark, UserCheck, Truck
 } from 'lucide-react';
 import PhoneInput from '@/components/ui/PhoneInput';
+import { uploadToMedMundus } from '@/lib/uploadMedia';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import LabNav from '@/components/layout/LabNav';
@@ -28,6 +29,7 @@ interface OrgData {
     directorName: string | null;
     contactPerson: string | null;
     contactPhone: string | null;
+    logo: string | null;
 }
 
 interface ProfileData {
@@ -54,14 +56,18 @@ export default function ProfilePage() {
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    const [avatarFile, setAvatarFile] = useState<string | null>(null);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
     // Organization fields
     const [org, setOrg] = useState({
         name: '', inn: '', phone: '', email: '', address: '', city: '',
         actualAddress: '', deliveryAddress: '', bankName: '', bik: '',
-        iban: '', directorName: '', contactPerson: '', contactPhone: '',
+        iban: '', directorName: '', contactPerson: '', contactPhone: '', logo: '',
     });
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const logoInputRef = useRef<HTMLInputElement>(null);
 
     const isManager = session?.user?.subRole === 'optic_manager';
     const hasOrg = session?.user?.role === 'optic';
@@ -92,7 +98,9 @@ export default function ProfilePage() {
                             directorName: data.organization.directorName || '',
                             contactPerson: data.organization.contactPerson || '',
                             contactPhone: data.organization.contactPhone || '',
+                            logo: data.organization.logo || '',
                         });
+                        setLogoPreview(data.organization.logo || null);
                     }
                 }
             } catch (e) { console.error(e); }
@@ -103,36 +111,56 @@ export default function ProfilePage() {
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 2_097_152) { alert('Файл слишком большой. Максимум 2МБ.'); return; }
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result as string;
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const size = 200;
-                canvas.width = size; canvas.height = size;
-                const ctx = canvas.getContext('2d')!;
-                const minDim = Math.min(img.width, img.height);
-                const sx = (img.width - minDim) / 2;
-                const sy = (img.height - minDim) / 2;
-                ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                setAvatarPreview(dataUrl);
-                setAvatarFile(dataUrl);
-            };
-            img.src = result;
-        };
-        reader.readAsDataURL(file);
+        if (file.size > 5_242_880) { alert('Файл слишком большой. Максимум 5МБ.'); return; }
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+    };
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 5_242_880) { alert('Файл слишком большой. Максимум 5МБ.'); return; }
+        setLogoFile(file);
+        setLogoPreview(URL.createObjectURL(file));
     };
 
     const handleSave = async () => {
         setIsSaving(true);
         setSaved(false);
         try {
+            // Upload avatar if changed
+            let avatarUrl: string | null | undefined = undefined;
+            if (avatarFile) {
+                setUploadingAvatar(true);
+                try {
+                    avatarUrl = await uploadToMedMundus(avatarFile);
+                } catch (e) {
+                    console.error('Avatar upload error:', e);
+                    alert('Ошибка загрузки фото. Попробуйте ещё раз.');
+                    setIsSaving(false);
+                    setUploadingAvatar(false);
+                    return;
+                }
+                setUploadingAvatar(false);
+            }
+
+            // Upload logo if changed
+            let logoUrl: string | undefined = undefined;
+            if (logoFile) {
+                try {
+                    logoUrl = await uploadToMedMundus(logoFile);
+                } catch (e) {
+                    console.error('Logo upload error:', e);
+                }
+            }
+
             const body: any = { fullName, phone };
-            if (avatarFile !== null) body.avatar = avatarFile;
-            if (isManager && hasOrg) body.organization = org;
+            if (avatarUrl !== undefined) body.avatar = avatarUrl;
+            if (isManager && hasOrg) {
+                const orgToSave = { ...org };
+                if (logoUrl) orgToSave.logo = logoUrl;
+                body.organization = orgToSave;
+            }
 
             const res = await fetch('/api/profile', {
                 method: 'PUT',
@@ -142,6 +170,8 @@ export default function ProfilePage() {
             if (res.ok) {
                 const data = await res.json();
                 setProfile(prev => prev ? { ...prev, ...data } : prev);
+                setAvatarFile(null);
+                setLogoFile(null);
                 setSaved(true);
                 setTimeout(() => setSaved(false), 3000);
             }
@@ -271,6 +301,35 @@ export default function ProfilePage() {
                     <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
                         <h3 className="text-base font-semibold text-gray-900 mb-1">Реквизиты организации</h3>
                         <p className="text-xs text-gray-400 mb-5">Эти данные будут использоваться в заказах и документах</p>
+
+                        {/* Organization Logo */}
+                        <div className="mb-6 pb-5 border-b border-gray-100">
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Логотип организации</h4>
+                            <div className="flex items-center gap-6">
+                                <div className="relative group">
+                                    {logoPreview ? (
+                                        <img src={logoPreview} alt="Логотип" className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-200" />
+                                    ) : (
+                                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                                            <Building2 className="w-8 h-8" />
+                                        </div>
+                                    )}
+                                    {isManager && (
+                                        <button onClick={() => logoInputRef.current?.click()} className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center justify-center shadow-lg transition-colors">
+                                            <Camera className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogoChange} />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-700 font-medium">Загрузите логотип</p>
+                                    <p className="text-xs text-gray-400 mt-1">JPG, PNG или WebP, максимум 5МБ</p>
+                                    {logoFile && (
+                                        <p className="text-xs text-blue-500 mt-1 font-medium">✓ Фото выбрано — нажмите «Сохранить»</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
                         <div className="space-y-5">
                             {/* БИН / Основные */}
