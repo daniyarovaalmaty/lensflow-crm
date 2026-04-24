@@ -145,20 +145,24 @@ export default function ProfilePage() {
             }
 
             // Upload logo if changed
-            let logoUrl: string | undefined = undefined;
+            let logoUrl: string | null | undefined = undefined;
             if (logoFile) {
                 try {
                     logoUrl = await uploadToMedMundus(logoFile);
                 } catch (e) {
                     console.error('Logo upload error:', e);
                 }
+            } else if (logoPreview === null && profile?.organization?.logo) {
+                logoUrl = null;
             }
 
             const body: any = { fullName, phone };
             if (avatarUrl !== undefined) body.avatar = avatarUrl;
+            else if (avatarPreview === null && profile?.avatar) body.avatar = null;
+
             if (isManager && hasOrg) {
                 const orgToSave = { ...org };
-                if (logoUrl) orgToSave.logo = logoUrl;
+                if (logoUrl !== undefined) orgToSave.logo = logoUrl;
                 body.organization = orgToSave;
             }
 
@@ -321,11 +325,15 @@ export default function ProfilePage() {
                                     )}
                                     <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogoChange} />
                                 </div>
-                                <div>
                                     <p className="text-sm text-gray-700 font-medium">Загрузите логотип</p>
                                     <p className="text-xs text-gray-400 mt-1">JPG, PNG или WebP, максимум 5МБ</p>
                                     {logoFile && (
                                         <p className="text-xs text-blue-500 mt-1 font-medium">✓ Фото выбрано — нажмите «Сохранить»</p>
+                                    )}
+                                    {logoPreview && isManager && (
+                                        <button onClick={() => { setLogoPreview(null); setLogoFile(null); }} className="text-xs text-red-500 hover:text-red-600 mt-2 font-medium">
+                                            Удалить логотип
+                                        </button>
                                     )}
                                 </div>
                             </div>
