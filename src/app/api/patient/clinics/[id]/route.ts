@@ -25,7 +25,13 @@ export async function GET(
             where: { id: params.id },
             include: {
                 users: {
-                    where: { status: 'active' },
+                    where: {
+                        status: 'active',
+                        OR: [
+                            { role: 'doctor' },
+                            { subRole: 'optic_doctor' },
+                        ],
+                    },
                     select: {
                         id: true, fullName: true, phone: true, email: true,
                         avatar: true, role: true, subRole: true,
