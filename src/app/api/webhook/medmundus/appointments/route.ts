@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
                     appointmentNotes: notes,
                     doctorId: resolvedDoctorId || existingByApptId.doctorId,
                     clinicId: clinicId || existingByApptId.clinicId,
-                    stage: 'appointment_scheduled', // update stage to scheduled
+                    stage: 'appointment', // update stage to scheduled
                 }
             });
             return NextResponse.json({ success: true, action: 'updated', id: existingByApptId.id });
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
                     appointmentNotes: notes,
                     doctorId: resolvedDoctorId || existingByPhone.doctorId,
                     clinicId: clinicId || existingByPhone.clinicId,
-                    stage: 'appointment_scheduled',
+                    stage: 'appointment',
                 }
             });
             return NextResponse.json({ success: true, action: 'updated_by_phone', id: existingByPhone.id });
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
                 name: patientName,
                 source: 'whatsapp',
                 funnel: 'sales',
-                stage: 'appointment_scheduled',
+                stage: 'appointment',
                 medmundusAppointmentId: String(appointmentId),
                 appointmentAt: appointmentDate ? new Date(appointmentDate) : null,
                 appointmentNotes: notes,
