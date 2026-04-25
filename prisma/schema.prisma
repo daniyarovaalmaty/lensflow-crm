@@ -89,6 +89,7 @@ model User {
   orders Order[] @relation("CreatedBy")
   supportTickets SupportTicket[]
   assignedLeads  Lead[]  @relation("AssignedLeads")
+  doctorLeads    Lead[]  @relation("DoctorLeads")
 
   @@map("users")
 }
@@ -515,8 +516,11 @@ model Lead {
   clinic        Organization? @relation("ClinicLeads", fields: [clinicId], references: [id])
 
   // Appointment
-  appointmentAt    DateTime?
-  appointmentNotes String?
+  appointmentAt          DateTime?
+  appointmentNotes       String?
+  medmundusAppointmentId String?   @unique
+  doctorId               String?
+  doctor                 User?     @relation("DoctorLeads", fields: [doctorId], references: [id])
 
   // Metrics
   lostReason    String?
