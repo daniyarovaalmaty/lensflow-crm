@@ -8,7 +8,7 @@ import { Target, BarChart3, MessageCircle, Settings, ArrowLeft, LogOut, User, Me
 import { signOut } from 'next-auth/react';
 
 const navItems = [
-    { href: '/sales/leads', label: 'Новые лиды', icon: Target },
+    { href: '/sales/pipeline', label: 'Новые лиды', icon: Target },
     { href: '/sales/retention', label: 'Постоянные', icon: Heart },
     { href: '/sales/calendar', label: 'Календарь', icon: Calendar },
     { href: '/sales/analytics', label: 'Аналитика', icon: BarChart3 },
