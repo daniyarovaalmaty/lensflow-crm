@@ -327,7 +327,7 @@ export default function LabOrderDetailPage() {
                         <>
                             <div className="border-t border-gray-100" />
                             <div className="px-6 py-4">
-                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">📝 Примечания</h3>
+                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2"> Примечания</h3>
                                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{order.notes}</p>
                             </div>
                         </>

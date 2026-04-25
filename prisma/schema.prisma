@@ -46,6 +46,10 @@ model Organization {
   stockMovements  StockMovement[]
   sales           Sale[]
 
+  // CRM Sales
+  clinicLeads         Lead[]               @relation("ClinicLeads")
+  clinicSubscription  ClinicSubscription[]  @relation("ClinicSubscription")
+
   @@map("organizations")
 }
 
@@ -84,6 +88,7 @@ model User {
 
   orders Order[] @relation("CreatedBy")
   supportTickets SupportTicket[]
+  assignedLeads  Lead[]  @relation("AssignedLeads")
 
   @@map("users")
 }
@@ -105,6 +110,7 @@ enum SubRole {
   optic_doctor
   optic_accountant
   doctor
+  sales_manager
 }
 
 enum UserStatus {
@@ -217,6 +223,9 @@ model Order {
   // External integration (MedMundus)
   externalId String?  // MedMundus order ID for cross-referencing
   source     String?  // Origin: 'lensflow' | 'medmundus'
+
+  // CRM Lead link
+  lead       Lead?
 
   @@map("orders")
 }
@@ -456,4 +465,171 @@ model SaleItem {
   serialNumbers Json?     // ["NE-F-00001"]
 
   @@map("sale_items")
+}
+
+// ==================== CRM: Sales Funnel ====================
+
+enum LeadSource {
+  whatsapp
+  instagram
+  website
+  manual
+  referral
+}
+
+enum LeadStage {
+  new_lead       @map("new")
+  contacted
+  qualified
+  appointment
+  visited
+  converted
+  lost
+
+  // Retention stages
+  checkup
+  supplies
+  renewal
+  retention_dialog
+  retention_success
+  retention_lost
+}
+
+model Lead {
+  id            String     @id @default(cuid())
+
+  // Contact
+  phone         String     // WhatsApp chatId: 77001234567@c.us
+  name          String?
+  city          String?
+  source        LeadSource @default(whatsapp)
+
+  // Funnel
+  funnel        String     @default("sales") // "sales" or "retention"
+  stage         LeadStage  @default(new_lead)
+  assigneeId    String?
+  assignee      User?      @relation("AssignedLeads", fields: [assigneeId], references: [id])
+
+  // Partner clinic
+  clinicId      String?
+  clinic        Organization? @relation("ClinicLeads", fields: [clinicId], references: [id])
+
+  // Appointment
+  appointmentAt    DateTime?
+  appointmentNotes String?
+
+  // Metrics
+  lostReason    String?
+  convertedAt   DateTime?
+  revenue       Float?
+
+  // LTV & Retention Dates
+  lastLensPurchaseDate     DateTime?
+  lastSolutionPurchaseDate DateTime?
+  nextCheckupDate          DateTime?
+
+  // Link to order
+  orderId       String?   @unique
+  order         Order?    @relation(fields: [orderId], references: [id])
+
+  // Meta
+  tags          String[]
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  messages      ChatMessage[]
+  reminders     Reminder[]
+  activities    LeadActivity[]
+
+  @@index([stage])
+  @@index([assigneeId])
+  @@index([phone])
+  @@map("leads")
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  channel     String   // 'whatsapp' | 'instagram'
+  direction   String   // 'incoming' | 'outgoing'
+  messageType String   @default("text") // 'text' | 'image' | 'document' | 'audio'
+  content     String   @db.Text
+  mediaUrl    String?  @db.Text
+
+  // Green API metadata
+  externalId  String?  // idMessage from Green API
+  status      String?  // 'sent' | 'delivered' | 'read'
+
+  sentBy      String?  // userId of sales manager (for outgoing)
+  sentAt      DateTime @default(now())
+
+  @@index([leadId])
+  @@map("chat_messages")
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  type        String   // 'appointment_1d' | 'appointment_2h' | 'follow_up' | 'custom'
+  channel     String   @default("whatsapp")
+  message     String   @db.Text
+
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      String   @default("pending") // 'pending' | 'sent' | 'failed'
+
+  @@index([scheduledAt, status])
+  @@map("reminders")
+}
+
+model LeadActivity {
+  id       String   @id @default(cuid())
+  leadId   String
+  lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  action   String   // 'stage_change' | 'note_added' | 'message_sent' | 'appointment_booked'
+  details  String?  @db.Text
+  userId   String?  // null = bot
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@map("lead_activities")
+}
+
+model ClinicSubscription {
+  id        String   @id @default(cuid())
+  clinicId  String
+  clinic    Organization @relation("ClinicSubscription", fields: [clinicId], references: [id])
+
+  plan       String   // 'start' | 'growth' | 'premium'
+  leadsLimit Int
+  leadsUsed  Int      @default(0)
+  price      Float
+
+  startsAt  DateTime
+  expiresAt DateTime
+  status    String   @default("active") // 'active' | 'expired' | 'cancelled'
+
+  @@index([clinicId])
+  @@map("clinic_subscriptions")
+}
+
+model BotScenario {
+  id        String   @id @default(cuid())
+  trigger   String
+  step      Int
+  message   String   @db.Text
+
+  nextAction String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("bot_scenarios")
 }

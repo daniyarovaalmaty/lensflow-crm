@@ -4,12 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Clock, CheckCircle, TruckIcon, Package, Printer, User,
-    Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban,
-    RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip,
-    CheckSquare, Square, Tag, Trash2, MessageCircle, Send
-} from 'lucide-react';
+import { Clock, CheckCircle, TruckIcon, Package, Printer, User, Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban, RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip, CheckSquare, Square, Tag, Trash2, MessageCircle, Send, XCircle, Slash, FileEdit } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
@@ -312,7 +307,7 @@ export default function ProductionHubPage() {
             XLSX.writeFile(wb, `LensFlow_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
         } catch (err: any) {
             console.error('Export error:', err);
-            alert('Ошибка экспорта: ' + (err.message || err));
+            alert('Ошибка экспорта ' + (err.message || err));
         }
     };
 
@@ -342,7 +337,7 @@ export default function ProductionHubPage() {
             XLSX.writeFile(wb, `LensFlow_Materials_${new Date().toISOString().slice(0, 10)}.xlsx`);
         } catch (err: any) {
             console.error('Materials export error:', err);
-            alert('Ошибка экспорта: ' + (err.message || err));
+            alert('Ошибка экспорта ' + (err.message || err));
         }
     };
 
@@ -631,7 +626,7 @@ export default function ProductionHubPage() {
                             return (
                                 <div className={`flex items-center gap-1 text-xs font-medium animate-comment-blink ${lastReq.type === 'request_cancel' ? 'text-red-600' : 'text-amber-600'}`}>
                                     <MessageCircle className="w-3 h-3" />
-                                    {lastReq.type === 'request_edit' ? '📝 Запрос на ред.' : '❌ Запрос на отмену'}
+                                    {lastReq.type === 'request_edit' ? '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос на ред.' : '<XCircle className="w-4 h-4 inline mr-1" /> Запрос на отмену'}
                                 </div>
                             );
                         }
@@ -765,7 +760,7 @@ export default function ProductionHubPage() {
                                             onClick={() => deleteOrder(order.order_id)}
                                             className="btn text-xs py-2 px-4 flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
                                         >
-                                            🗑 Удалить навсегда
+                                            <Trash2 className="w-4 h-4 inline mr-1" /> Удалить навсегда
                                         </button>
                                     )}
                                     <button
@@ -791,7 +786,7 @@ export default function ProductionHubPage() {
                             return (
                                 <div className={`mt-3 border rounded-xl p-4 space-y-3 ${isEditReq ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
                                     <p className={`text-sm font-medium flex items-center gap-2 ${isEditReq ? 'text-amber-800' : 'text-red-800'}`}>
-                                        {isEditReq ? '📝 Запрос на редактирование' : '❌ Запрос на отмену'}
+                                        {isEditReq ? '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос на редактирование' : '<XCircle className="w-4 h-4 inline mr-1" /> Запрос на отмену'}
                                     </p>
                                     <p className="text-sm text-gray-700">от <strong>{lastReq.authorName}</strong>: {lastReq.text}</p>
                                     <div className="flex gap-2">
@@ -809,7 +804,7 @@ export default function ProductionHubPage() {
                                             }}
                                             className="flex-1 text-xs py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium"
                                         >
-                                            ✅ Принять
+                                            <CheckCircle className="w-4 h-4 inline mr-1" /> Принять
                                         </button>
                                         <button
                                             onClick={async () => {
@@ -824,7 +819,7 @@ export default function ProductionHubPage() {
                                             }}
                                             className="flex-1 text-xs py-2 px-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium"
                                         >
-                                            ❌ Отклонить
+                                            <XCircle className="w-4 h-4 inline mr-1" /> Отклонить
                                         </button>
                                     </div>
                                 </div>
@@ -904,11 +899,11 @@ export default function ProductionHubPage() {
                                 <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
                                     {((order as any).comments as any[]).map((c: any, i: number) => {
                                         const typeLabels: Record<string, { label: string; cls: string }> = {
-                                            request_edit: { label: '📝 Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
-                                            request_cancel: { label: '❌ Запрос отмены', cls: 'bg-red-100 text-red-700' },
-                                            approve_edit: { label: '✅ Одобрено ред.', cls: 'bg-green-100 text-green-700' },
-                                            approve_cancel: { label: '✅ Отменён', cls: 'bg-red-100 text-red-700' },
-                                            reject_request: { label: '❌ Отклонено', cls: 'bg-gray-100 text-gray-700' },
+                                            request_edit: { label: '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
+                                            request_cancel: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Запрос отмены', cls: 'bg-red-100 text-red-700' },
+                                            approve_edit: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Одобрено ред.', cls: 'bg-green-100 text-green-700' },
+                                            approve_cancel: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Отменён', cls: 'bg-red-100 text-red-700' },
+                                            reject_request: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Отклонено', cls: 'bg-gray-100 text-gray-700' },
                                         };
                                         const typeBadge = typeLabels[c.type];
                                         return (
@@ -1093,7 +1088,7 @@ export default function ProductionHubPage() {
                             return (
                                 <div className="border border-amber-200 bg-amber-50/50 rounded-xl p-4">
                                     <h4 className="text-xs font-semibold text-amber-700 uppercase mb-3 flex items-center gap-1.5">
-                                        📎 Файлы RGP
+                                        <Paperclip className="w-4 h-4 inline mr-1" /> Файлы RGP
                                     </h4>
                                     {!hasData ? (
                                         <div className="space-y-2">
@@ -1136,7 +1131,7 @@ export default function ProductionHubPage() {
                                                         Загрузка...
                                                     </span>
                                                 ) : (
-                                                    '📥 Загрузить файлы'
+                                                    '<Download className="w-4 h-4 inline mr-1" /> Загрузить файлы'
                                                 )}
                                             </button>
                                         </div>
@@ -1184,11 +1179,11 @@ export default function ProductionHubPage() {
                                                         {isImage ? (
                                                             <button onClick={handleDownload} className="block p-2 hover:bg-amber-50 transition-colors w-full cursor-pointer">
                                                                 <img src={dataUrl} alt={`RGP ${eye.toUpperCase()}`} className="w-full h-32 object-contain rounded" />
-                                                                <span className="block text-center text-[10px] text-amber-500 mt-1">📥 Скачать</span>
+                                                                <span className="block text-center text-[10px] text-amber-500 mt-1"><Download className="w-4 h-4 inline mr-1" /> Скачать</span>
                                                             </button>
                                                         ) : (
                                                             <button onClick={handleDownload} className="flex items-center gap-2 p-3 hover:bg-amber-50 transition-colors w-full cursor-pointer">
-                                                                <span className="text-2xl">📄</span>
+                                                                <span className="text-2xl"><FileText className="w-6 h-6 inline mr-1" /></span>
                                                                 <div className="text-left">
                                                                     <span className="text-xs font-medium text-gray-700 block">{file.name}</span>
                                                                     <span className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(0)} KB • Скачать</span>
@@ -1216,7 +1211,7 @@ export default function ProductionHubPage() {
                                         <div key={d.id} className="flex items-center justify-between text-xs text-red-600 bg-white rounded-lg px-3 py-2">
                                             <span>{formatDate(d.date)} — {d.qty} шт. {d.eye_side ? `[${EyeSideLabels[d.eye_side]}]` : ''}</span>
                                             {d.note && <span className="text-red-400 ml-2">({d.note})</span>}
-                                            {d.archived && <span className="text-green-600 ml-auto">✅ Архив</span>}
+                                            {d.archived && <span className="text-green-600 ml-auto"><CheckCircle className="w-4 h-4 inline mr-1" /> Архив</span>}
                                         </div>
                                     ))}
                                 </div>
@@ -1498,7 +1493,7 @@ export default function ProductionHubPage() {
                                             }}
                                             className="flex-1 text-xs py-2.5 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-lg font-medium transition-colors"
                                         >
-                                            ⛔ Отменить заказ
+                                            <Slash className="w-4 h-4 inline mr-1" /> Отменить заказ
                                         </button>
                                     )}
                                     <button
@@ -1508,7 +1503,7 @@ export default function ProductionHubPage() {
                                         }}
                                         className="flex-1 text-xs py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
                                     >
-                                        🗑 Удалить навсегда
+                                        <Trash2 className="w-4 h-4 inline mr-1" /> Удалить навсегда
                                     </button>
                                 </div>
                             </div>
@@ -1652,7 +1647,7 @@ export default function ProductionHubPage() {
                                 className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
                             />
                             <span className={`text-sm font-medium ${defect.archived ? 'text-green-700' : 'text-gray-600'}`}>
-                                {defect.archived ? '✅ Принято в архив' : 'Принято в архив'}
+                                {defect.archived ? '<CheckCircle className="w-4 h-4 inline mr-1" /> Принято в архив' : 'Принято в архив'}
                             </span>
                         </label>
 
@@ -1950,7 +1945,7 @@ export default function ProductionHubPage() {
                                                         {defect.qty} шт.
                                                     </span>
                                                     {defect.archived && (
-                                                        <span className="text-xs text-green-600 font-medium">✅ Архив</span>
+                                                        <span className="text-xs text-green-600 font-medium"><CheckCircle className="w-4 h-4 inline mr-1" /> Архив</span>
                                                     )}
                                                 </div>
                                                 {defect.note && (
@@ -1998,7 +1993,7 @@ export default function ProductionHubPage() {
                                 <button onClick={() => bulkUpdateStatus('out_for_delivery')} className="btn text-xs py-1.5 px-3 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg">В доставку</button>
                             )}
                             {subRole === 'lab_head' && (
-                                <button onClick={bulkDeleteOrders} className="btn text-xs py-1.5 px-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg">🗑 Удалить</button>
+                                <button onClick={bulkDeleteOrders} className="btn text-xs py-1.5 px-3 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg"><Trash2 className="w-4 h-4 inline mr-1" /> Удалить</button>
                             )}
                         </div>
                         <button

@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import Link from 'next/link';
+import { Microscope, Factory, BarChart2, Truck, Users, Banknote, Key, Eye, Check, FileEdit } from 'lucide-react';
 
 export default async function HomePage() {
     const session = await auth();
@@ -15,32 +16,32 @@ export default async function HomePage() {
 
     const features = [
         {
-            icon: '🔬',
+            icon: <Microscope className="w-8 h-8 text-blue-400" />,
             title: 'Конструктор заказов',
             desc: 'Удобное оформление заказов на ортокератологические линзы с полной параметризацией',
         },
         {
-            icon: '🏭',
+            icon: <Factory className="w-8 h-8 text-purple-400" />,
             title: 'Производственный хаб',
             desc: 'Канбан-доска, контроль качества, учёт браков и отслеживание всех этапов',
         },
         {
-            icon: '📊',
+            icon: <BarChart2 className="w-8 h-8 text-emerald-400" />,
             title: 'Аналитика и отчёты',
             desc: 'Дашборды с KPI, графики выручки, экспорт в Excel для бухгалтерии',
         },
         {
-            icon: '🚚',
+            icon: <Truck className="w-8 h-8 text-orange-400" />,
             title: 'Логистика и доставка',
             desc: 'Отслеживание отгрузок, статусы доставки и интеграция с курьерскими службами',
         },
         {
-            icon: '👥',
+            icon: <Users className="w-8 h-8 text-indigo-400" />,
             title: 'Управление персоналом',
             desc: 'Роли для врачей, бухгалтеров, инженеров, логистов — каждый видит только своё',
         },
         {
-            icon: '💰',
+            icon: <Banknote className="w-8 h-8 text-yellow-400" />,
             title: 'Финансовый модуль',
             desc: 'Контроль оплат, частичная оплата, счета-фактуры и финансовая отчётность',
         },
@@ -126,7 +127,7 @@ export default async function HomePage() {
                             </svg>
                         </Link>
                         <Link href="/login" className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-semibold text-lg transition-all flex items-center justify-center gap-2">
-                            🔑 Войти в систему
+                            <Key className="w-5 h-5" /> Войти в систему
                         </Link>
                     </div>
                 </div>
@@ -154,7 +155,7 @@ export default async function HomePage() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {features.map((f, i) => (
                             <div key={i} className="group p-6 bg-white/[0.03] border border-white/[0.06] rounded-2xl hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-300">
-                                <div className="text-3xl mb-4">{f.icon}</div>
+                                <div className="mb-4">{f.icon}</div>
                                 <h3 className="font-semibold text-lg text-white mb-2">{f.title}</h3>
                                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
                             </div>
@@ -172,30 +173,30 @@ export default async function HomePage() {
                     <div className="grid md:grid-cols-2 gap-8">
                         {/* Optic Module */}
                         <div className="p-8 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20 rounded-3xl">
-                            <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-5">
-                                <span className="text-2xl">👁️</span>
+                            <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-5 text-blue-400">
+                                <Eye className="w-7 h-7" />
                             </div>
                             <h3 className="text-xl font-bold mb-3">Модуль оптики</h3>
                             <ul className="space-y-2.5 text-gray-400 text-sm">
-                                <li className="flex items-start gap-2"><span className="text-blue-400 mt-0.5">✓</span> Конструктор заказов с полной параметризацией линз</li>
-                                <li className="flex items-start gap-2"><span className="text-blue-400 mt-0.5">✓</span> Управление пациентами и историей заказов</li>
-                                <li className="flex items-start gap-2"><span className="text-blue-400 mt-0.5">✓</span> Отслеживание статусов в реальном времени</li>
-                                <li className="flex items-start gap-2"><span className="text-blue-400 mt-0.5">✓</span> Управление сотрудниками и ролями (врач, бухгалтер)</li>
-                                <li className="flex items-start gap-2"><span className="text-blue-400 mt-0.5">✓</span> Профиль компании с реквизитами</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Конструктор заказов с полной параметризацией линз</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Управление пациентами и историей заказов</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Отслеживание статусов в реальном времени</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Управление сотрудниками и ролями (врач, бухгалтер)</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Профиль компании с реквизитами</li>
                             </ul>
                         </div>
                         {/* Lab Module */}
                         <div className="p-8 bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20 rounded-3xl">
-                            <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-5">
-                                <span className="text-2xl">🏭</span>
+                            <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-5 text-purple-400">
+                                <Factory className="w-7 h-7" />
                             </div>
                             <h3 className="text-xl font-bold mb-3">Производственный хаб</h3>
                             <ul className="space-y-2.5 text-gray-400 text-sm">
-                                <li className="flex items-start gap-2"><span className="text-purple-400 mt-0.5">✓</span> Канбан-доска с drag-and-drop управлением</li>
-                                <li className="flex items-start gap-2"><span className="text-purple-400 mt-0.5">✓</span> Контроль качества и регистрация браков</li>
-                                <li className="flex items-start gap-2"><span className="text-purple-400 mt-0.5">✓</span> Управление каталогом продукции</li>
-                                <li className="flex items-start gap-2"><span className="text-purple-400 mt-0.5">✓</span> Финансы: оплаты, счета, экспорт в Excel</li>
-                                <li className="flex items-start gap-2"><span className="text-purple-400 mt-0.5">✓</span> Дашборд с KPI, выручкой и аналитикой</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Канбан-доска с drag-and-drop управлением</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Контроль качества и регистрация браков</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Управление каталогом продукции</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Финансы: оплаты, счета, экспорт в Excel</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Дашборд с KPI, выручкой и аналитикой</li>
                             </ul>
                         </div>
                     </div>
@@ -229,8 +230,8 @@ export default async function HomePage() {
                             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Готовы начать?</h2>
                             <p className="text-gray-400 mb-8 max-w-md mx-auto">Зарегистрируйтесь как руководитель оптики и начните управлять заказами уже сегодня</p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <Link href="/register" className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl font-semibold text-lg transition-all hover:shadow-lg hover:shadow-blue-500/25">
-                                    📝 Зарегистрироваться
+                                <Link href="/register" className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl font-semibold text-lg transition-all hover:shadow-lg hover:shadow-blue-500/25 flex items-center gap-2">
+                                    <FileEdit className="w-5 h-5" /> Зарегистрироваться
                                 </Link>
                                 <Link href="/login" className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-semibold text-lg transition-all">
                                     Войти

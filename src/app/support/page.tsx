@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { MessageSquarePlus, CheckCircle2, Clock, AlertCircle, XCircle, Send, ChevronDown, ChevronUp, ArrowLeft, Filter } from 'lucide-react';
+import { MessageSquarePlus, CheckCircle2, Clock, AlertCircle, XCircle, Send, ChevronDown, ChevronUp, ArrowLeft, Filter, Flame, Edit2, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import LabNav from '@/components/layout/LabNav';
 
@@ -27,9 +27,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-    feature: '✨ Доработка',
-    bug: '🐛 Ошибка',
-    question: '❓ Вопрос',
+    feature: 'Доработка',
+    bug: 'Ошибка',
+    question: 'Вопрос',
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -197,9 +197,9 @@ export default function SupportPage() {
                                     onChange={e => setCategory(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
-                                    <option value="feature">✨ Доработка</option>
-                                    <option value="bug">🐛 Ошибка</option>
-                                    <option value="question">❓ Вопрос</option>
+                                    <option value="feature">Доработка</option>
+                                    <option value="bug">Ошибка</option>
+                                    <option value="question">Вопрос</option>
                                 </select>
                             </div>
                             <div>
@@ -314,7 +314,7 @@ export default function SupportPage() {
                                                     {CATEGORY_LABELS[ticket.category] || ticket.category}
                                                 </span>
                                                 {ticket.priority === 'high' && (
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700">🔥 Высокий</span>
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700"><Flame className="w-3 h-3 inline mr-1" /> Высокий</span>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
@@ -335,7 +335,7 @@ export default function SupportPage() {
 
                                             {ticket.adminComment && (
                                                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                                    <p className="text-xs font-semibold text-blue-700 mb-1">💬 Ответ администратора</p>
+                                                    <p className="text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1"><MessageSquare className="w-3 h-3" /> Ответ администратора</p>
                                                     <p className="text-sm text-blue-900 whitespace-pre-wrap">{ticket.adminComment}</p>
                                                 </div>
                                             )}
@@ -351,7 +351,7 @@ export default function SupportPage() {
                                                     }}
                                                     className="text-xs text-blue-600 hover:text-blue-800 font-medium"
                                                 >
-                                                    ✏️ Изменить статус / ответить
+                                                    <Edit2 className="w-4 h-4 inline mr-1" /> Изменить статус / ответить
                                                 </button>
                                             )}
 
@@ -365,9 +365,9 @@ export default function SupportPage() {
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                                                         >
                                                             <option value="new_ticket">🆕 Новый</option>
-                                                            <option value="in_progress">🔧 В работе</option>
-                                                            <option value="done">✅ Реализовано</option>
-                                                            <option value="rejected">❌ Отклонено</option>
+                                                            <option value="in_progress">В работе</option>
+                                                            <option value="done">Реализовано</option>
+                                                            <option value="rejected">Отклонено</option>
                                                         </select>
                                                     </div>
                                                     <div>

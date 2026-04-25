@@ -6,11 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Plus, Package, Clock, CheckCircle, TruckIcon,
-    Search, SlidersHorizontal, ChevronDown, ArrowUpDown,
-    Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart
-} from 'lucide-react';
+import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -286,6 +282,13 @@ export default function OpticDashboard() {
                                 </>
                             )}
                             <Link
+                                href="/sales/pipeline"
+                                className="flex items-center gap-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
+                            >
+                                <Target className="w-4 h-4" />
+                                CRM Продажи
+                            </Link>
+                            <Link
                                 href="/profile"
                                 className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
                             >
@@ -364,6 +367,14 @@ export default function OpticDashboard() {
                                     </Link>
                                 </>
                             )}
+                            <Link
+                                href="/sales/pipeline"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                            >
+                                <Target className="w-4 h-4" />
+                                CRM Продажи
+                            </Link>
                             <Link
                                 href="/profile"
                                 onClick={() => setMobileMenuOpen(false)}
@@ -768,7 +779,7 @@ export default function OpticDashboard() {
                                                         <span className="text-xs text-amber-600 font-medium animate-comment-blink">⏳ Запрос отправлен</span>
                                                     )}
                                                     {lastAction?.type === 'reject_request' && (
-                                                        <span className="text-xs text-red-500">❌ Отклонено: {lastAction.text}</span>
+                                                        <span className="text-xs text-red-500"><XCircle className="w-4 h-4 inline mr-1" /> Отклонено: {lastAction.text}</span>
                                                     )}
                                                 </div>
                                             );
@@ -778,7 +789,7 @@ export default function OpticDashboard() {
                                         {showRequestModal === order.order_id && (
                                             <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2" onClick={e => e.stopPropagation()}>
                                                 <p className="text-sm font-medium text-amber-800">
-                                                    {requestType === 'request_edit' ? '📝 Запрос на редактирование' : '❌ Запрос на отмену заказа'}
+                                                    {requestType === 'request_edit' ? '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос на редактирование' : '<XCircle className="w-4 h-4 inline mr-1" /> Запрос на отмену заказа'}
                                                 </p>
                                                 <textarea
                                                     value={requestReason}
@@ -913,11 +924,11 @@ export default function OpticDashboard() {
                                                             <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
                                                                 {((order as any).comments as any[]).map((c: any, i: number) => {
                                                                     const typeLabels: Record<string, { label: string; cls: string }> = {
-                                                                        request_edit: { label: '📝 Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
-                                                                        request_cancel: { label: '❌ Запрос отмены', cls: 'bg-red-100 text-red-700' },
-                                                                        approve_edit: { label: '✅ Одобрено ред.', cls: 'bg-green-100 text-green-700' },
-                                                                        approve_cancel: { label: '✅ Отменён', cls: 'bg-red-100 text-red-700' },
-                                                                        reject_request: { label: '❌ Отклонено', cls: 'bg-gray-100 text-gray-700' },
+                                                                        request_edit: { label: '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
+                                                                        request_cancel: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Запрос отмены', cls: 'bg-red-100 text-red-700' },
+                                                                        approve_edit: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Одобрено ред.', cls: 'bg-green-100 text-green-700' },
+                                                                        approve_cancel: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Отменён', cls: 'bg-red-100 text-red-700' },
+                                                                        reject_request: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Отклонено', cls: 'bg-gray-100 text-gray-700' },
                                                                     };
                                                                     const typeBadge = typeLabels[c.type];
                                                                     return (

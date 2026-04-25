@@ -1,7 +1,9 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { LoginSchema } from '@/types/user';
-import { findUserByEmail, verifyPassword, findUserWithOrg } from '@/lib/db/users';
+import { findUserByEmail, verifyPassword, findUserWithOrg, createUser } from '@/lib/db/users';
+import { verifyViaMedMundus } from '@/lib/medmundus-bridge';
+import prisma from '@/lib/db/prisma';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
@@ -19,37 +21,120 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                 const { email, password } = parsed.data;
 
-                // Find user
+                // ======== Strategy 1: Local Lens Flow user ========
                 const user = await findUserByEmail(email);
-                if (!user) {
-                    return null;
+                if (user && user.status === 'active') {
+                    const isValidPassword = await verifyPassword(user, password);
+                    if (isValidPassword) {
+                        // Load org info
+                        const userWithOrg = await findUserWithOrg(user.id);
+                        const orgName = userWithOrg?.organization?.name;
+
+                        return {
+                            id: user.id,
+                            email: user.email,
+                            role: user.role,
+                            subRole: user.subRole,
+                            organizationId: user.organizationId,
+                            profile: {
+                                fullName: user.fullName,
+                                phone: user.phone,
+                                opticName: orgName,
+                                labName: orgName,
+                                clinic: orgName,
+                            },
+                        };
+                    }
                 }
 
-                // Check user status
-                if (user.status !== 'active') {
-                    return null;
+                // ======== Strategy 2: MedMundus Dual Login ========
+                // If local auth fails, try verifying against MedMundus API.
+                // The "email" field may actually contain a phone number (MedMundus username).
+                const mmProfile = await verifyViaMedMundus(email, password);
+                if (!mmProfile) {
+                    return null; // Neither local nor MedMundus auth succeeded
                 }
 
-                // Verify password
-                const isValidPassword = await verifyPassword(user, password);
-                if (!isValidPassword) {
-                    return null;
+                // MedMundus verified! Now JIT-provision local user if needed.
+                const existingLinked = await prisma.user.findFirst({
+                    where: {
+                        OR: [
+                            { email: mmProfile.email || undefined },
+                            { phone: mmProfile.phone },
+                        ],
+                    },
+                    include: { organization: true },
+                });
+
+                if (existingLinked && existingLinked.status === 'active') {
+                    // User already exists in Lens Flow — just log them in
+                    const orgName = existingLinked.organization?.name;
+                    return {
+                        id: existingLinked.id,
+                        email: existingLinked.email,
+                        role: existingLinked.role,
+                        subRole: existingLinked.subRole,
+                        organizationId: existingLinked.organizationId,
+                        profile: {
+                            fullName: existingLinked.fullName,
+                            phone: existingLinked.phone,
+                            opticName: orgName,
+                            labName: orgName,
+                            clinic: orgName,
+                        },
+                    };
                 }
 
-                // Load org info
-                const userWithOrg = await findUserWithOrg(user.id);
-                const orgName = userWithOrg?.organization?.name;
+                // JIT Provision: Create organization + user in Lens Flow
+                let organizationId: string | undefined;
 
-                // Return user data for JWT
+                if (mmProfile.clinic) {
+                    // Check if clinic already exists in Lens Flow
+                    if (mmProfile.clinic.lensflow_id) {
+                        organizationId = mmProfile.clinic.lensflow_id;
+                    } else {
+                        // Create a new organization
+                        const newOrg = await prisma.organization.create({
+                            data: {
+                                name: mmProfile.clinic.name,
+                                phone: mmProfile.clinic.phone || null,
+                                email: mmProfile.clinic.email || null,
+                                city: mmProfile.clinic.city || null,
+                                status: 'active',
+                            },
+                        });
+                        organizationId = newOrg.id;
+                    }
+                }
+
+                // Determine Lens Flow role mapping
+                const lfRole = mmProfile.role === 'clinic' ? 'optic' : 'doctor';
+                const lfSubRole = mmProfile.role === 'clinic' ? 'optic_manager' : 'optic_doctor';
+
+                // Use email from MedMundus, fallback to phone-based email
+                const userEmail = mmProfile.email || `${mmProfile.phone}@medmundus.bridge`;
+
+                const newUser = await createUser({
+                    email: userEmail,
+                    password: password, // will be hashed by createUser
+                    fullName: mmProfile.fullName || '',
+                    phone: mmProfile.phone,
+                    role: lfRole as any,
+                    subRole: lfSubRole,
+                    organizationId,
+                    status: 'active',
+                });
+
+                const orgName = mmProfile.clinic?.name;
                 return {
-                    id: user.id,
-                    email: user.email,
-                    role: user.role,
-                    subRole: user.subRole,
-                    organizationId: user.organizationId,
+                    id: newUser.id,
+                    email: newUser.email,
+                    role: newUser.role,
+                    subRole: newUser.subRole,
+                    organizationId: newUser.organizationId,
                     profile: {
-                        fullName: user.fullName,
-                        phone: user.phone,
+                        fullName: newUser.fullName,
+                        phone: newUser.phone,
                         opticName: orgName,
                         labName: orgName,
                         clinic: orgName,

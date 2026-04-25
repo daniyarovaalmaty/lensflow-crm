@@ -110,7 +110,7 @@ export function EyeParametersCard({
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика <span className="text-red-500">*</span></label>
                         <select {...register(`config.eyes.${eye}.characteristic`)} className="input">
-                            <option value="">— выберите —</option>
+                            <option value="">выберите —</option>
                             {Object.entries(CharacteristicLabels).map(([val, lbl]) => (
                                 <option key={val} value={val}>{lbl}</option>
                             ))}
@@ -295,7 +295,7 @@ export function EyeParametersCard({
                         </label>
                         {rgpFile ? (
                             <div className="flex items-center gap-3 bg-white rounded-lg border border-amber-200 p-3">
-                                <span className="text-2xl">📎</span>
+                                <span className="text-2xl"></span>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-700 truncate">{rgpFile.name}</p>
                                     <p className="text-xs text-gray-400">{(rgpFile.size / 1024).toFixed(0)} KB</p>

@@ -3,10 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft,
-    Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft
-} from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { formatDateTime } from '@/lib/dateUtils';
@@ -362,7 +359,7 @@ export default function POSPage() {
                                         </div>
                                         <button onClick={() => setShowCheckout(true)}
                                             className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition-colors shadow-sm">
-                                            💰 Оформить — {fmt(total)} ₸
+                                            <Banknote className="w-4 h-4 inline mr-1" /> Оформить — {fmt(total)} ₸
                                         </button>
                                     </div>
                                 </>
@@ -417,7 +414,7 @@ export default function POSPage() {
                                 </button>
                                 <button onClick={handleCheckout} disabled={saving}
                                     className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold">
-                                    {saving ? 'Оформление...' : '✅ Подтвердить'}
+                                    {saving ? 'Оформление...' : '<CheckCircle className="w-4 h-4 inline mr-1" /> Подтвердить'}
                                 </button>
                             </div>
                         </motion.div>

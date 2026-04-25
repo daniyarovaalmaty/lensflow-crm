@@ -27,6 +27,9 @@ export const SubRoleEnum = z.enum([
 
     // Doctor (independent)
     'doctor',           // Независимый врач
+
+    // Sales CRM
+    'sales_manager',    // Менеджер по продажам
 ]);
 export type SubRole = z.infer<typeof SubRoleEnum>;
 
@@ -41,18 +44,19 @@ export const SubRoleLabels: Record<SubRole, string> = {
     optic_doctor: 'Врач',
     optic_accountant: 'Бухгалтер',
     doctor: 'Врач',
+    sales_manager: 'Менеджер по продажам',
 };
 
 // Which sub-roles belong to which top-level role
 export const SubRolesByRole: Record<UserRole, SubRole[]> = {
-    laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_head', 'lab_admin', 'lab_accountant'],
+    laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_head', 'lab_admin', 'lab_accountant', 'sales_manager'],
     optic: ['optic_manager', 'optic_doctor', 'optic_accountant'],
     doctor: ['doctor'],
 };
 
 // Reverse: get top-level role from sub-role
 export function getRoleFromSubRole(subRole: SubRole): UserRole {
-    if (subRole.startsWith('lab_')) return 'laboratory';
+    if (subRole.startsWith('lab_') || subRole === 'sales_manager') return 'laboratory';
     if (subRole.startsWith('optic_')) return 'optic';
     return 'doctor';
 }
@@ -255,6 +259,24 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canViewOrders: true,
         canViewAllOrders: false,
         canViewStats: true,
+        canSendToAccountant: false,
+        canProcessDocs: false,
+    },
+    sales_manager: {
+        canViewKanban: false,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: false,
+        canAddDefects: false,
+        canViewPayments: false,
+        canChangePayments: false,
+        canShip: false,
+        canPrint: false,
+        canCreateOrders: false,
+        canViewOrders: false,
+        canViewAllOrders: false,
+        canViewStats: false,
         canSendToAccountant: false,
         canProcessDocs: false,
     },

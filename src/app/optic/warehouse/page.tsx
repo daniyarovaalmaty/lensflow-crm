@@ -3,11 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine,
-    FileText, Clock, AlertTriangle, Trash2, BarChart3,
-    ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft
-} from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
 
@@ -42,12 +38,12 @@ interface StockDoc {
 
 // ==================== Constants ====================
 const MOVEMENT_TYPES: Record<string, { label: string; color: string; icon: string }> = {
-    receipt: { label: 'Приход', color: 'text-green-700 bg-green-50', icon: '📥' },
-    sale: { label: 'Продажа', color: 'text-blue-700 bg-blue-50', icon: '💰' },
-    write_off: { label: 'Списание', color: 'text-red-700 bg-red-50', icon: '🗑' },
+    receipt: { label: 'Приход', color: 'text-green-700 bg-green-50', icon: '<Download className="w-4 h-4 inline mr-1" />' },
+    sale: { label: 'Продажа', color: 'text-blue-700 bg-blue-50', icon: '<Banknote className="w-4 h-4 inline mr-1" />' },
+    write_off: { label: 'Списание', color: 'text-red-700 bg-red-50', icon: '' },
     return_in: { label: 'Возврат (от покупателя)', color: 'text-amber-700 bg-amber-50', icon: '↩️' },
-    return_out: { label: 'Возврат поставщику', color: 'text-orange-700 bg-orange-50', icon: '📤' },
-    adjustment: { label: 'Корректировка', color: 'text-purple-700 bg-purple-50', icon: '🔧' },
+    return_out: { label: 'Возврат поставщику', color: 'text-orange-700 bg-orange-50', icon: '<Upload className="w-4 h-4 inline mr-1" />' },
+    adjustment: { label: 'Корректировка', color: 'text-purple-700 bg-purple-50', icon: '' },
 };
 
 const DOC_TYPES: Record<string, string> = {
@@ -154,7 +150,7 @@ export default function WarehousePage() {
 
             if (res.ok) {
                 const result = await res.json();
-                alert(`✅ Приход оформлен: ${result.document.documentNumber}\n${result.serialNumbers?.length ? `Серийные номера: ${result.serialNumbers.join(', ')}` : ''}`);
+                alert(`<CheckCircle className="w-4 h-4 inline mr-1" /> Приход оформлен: ${result.document.documentNumber}\n${result.serialNumbers?.length ? `Серийные номера: ${result.serialNumbers.join(', ')}` : ''}`);
                 setReceiveItems([]);
                 setSupplier('');
                 setReceiveNotes('');
@@ -178,7 +174,7 @@ export default function WarehousePage() {
                 }),
             });
             if (res.ok) {
-                alert('✅ Списание оформлено');
+                alert(' Списание оформлено');
                 setShowWriteOff(false);
                 setWoProduct(''); setWoQty('1'); setWoReason('');
                 loadData();
@@ -471,7 +467,7 @@ export default function WarehousePage() {
 
                             <button onClick={handleReceive} disabled={!receiveItems.length || saving}
                                 className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors">
-                                {saving ? 'Оформление...' : '✅ Оформить приход'}
+                                {saving ? 'Оформление...' : '<CheckCircle className="w-4 h-4 inline mr-1" /> Оформить приход'}
                             </button>
                         </div>
                     </div>
@@ -490,7 +486,7 @@ export default function WarehousePage() {
                         ) : (
                             <div className="space-y-2">
                                 {movements.map(m => {
-                                    const mt = MOVEMENT_TYPES[m.type] || { label: m.type, color: 'text-gray-700 bg-gray-50', icon: '📦' };
+                                    const mt = MOVEMENT_TYPES[m.type] || { label: m.type, color: 'text-gray-700 bg-gray-50', icon: '<Package className="w-4 h-4 inline mr-1" />' };
                                     return (
                                         <div key={m.id} className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-4">
                                             <div className="text-2xl">{mt.icon}</div>
@@ -500,10 +496,10 @@ export default function WarehousePage() {
                                                     <span className="font-medium text-gray-900 text-sm truncate">{m.product.name}</span>
                                                 </div>
                                                 <div className="text-xs text-gray-400 mt-0.5">
-                                                    {m.documentNumber && <span className="mr-2">📄 {m.documentNumber}</span>}
-                                                    {m.supplier && <span className="mr-2">🏢 {m.supplier}</span>}
-                                                    {m.reason && <span className="mr-2">💬 {m.reason}</span>}
-                                                    {m.performedByName && <span>👤 {m.performedByName}</span>}
+                                                    {m.documentNumber && <span className="mr-2"><FileText className="w-6 h-6 inline mr-1" /> {m.documentNumber}</span>}
+                                                    {m.supplier && <span className="mr-2"> {m.supplier}</span>}
+                                                    {m.reason && <span className="mr-2"> {m.reason}</span>}
+                                                    {m.performedByName && <span> {m.performedByName}</span>}
                                                 </div>
                                             </div>
                                             <div className="text-right">
@@ -558,7 +554,7 @@ export default function WarehousePage() {
                                             ))}
                                         </div>
                                         {doc.performedByName && (
-                                            <div className="text-xs text-gray-400 mt-1">👤 {doc.performedByName}</div>
+                                            <div className="text-xs text-gray-400 mt-1"> {doc.performedByName}</div>
                                         )}
                                     </div>
                                 ))}

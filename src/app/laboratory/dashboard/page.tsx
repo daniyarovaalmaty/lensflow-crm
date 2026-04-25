@@ -266,7 +266,7 @@ export default function LabHeadDashboard() {
             XLSX.writeFile(wb, `LensFlow_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
         } catch (err: any) {
             console.error('Export error:', err);
-            alert('Ошибка экспорта: ' + (err.message || err));
+            alert('Ошибка экспорта ' + (err.message || err));
         }
     };
 

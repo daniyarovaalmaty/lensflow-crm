@@ -32,7 +32,7 @@ export default function AnalyticsPage() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">📊 Аналитика старых заказов</h1>
+                <h1 className="text-2xl font-bold text-gray-900"> Аналитика старых заказов</h1>
                 <p className="text-sm text-gray-500 mt-1">Данные из Google Sheets · Июль 2025 — Март 2026 · {fmt(analytics.totalOrders)} заказов</p>
             </div>
 
@@ -299,7 +299,7 @@ export default function AnalyticsPage() {
 
             {/* Summary stats at the bottom */}
             <div className="mt-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
-                <h3 className="text-lg font-bold mb-4">📈 Итого за период Июль 2025 — Март 2026</h3>
+                <h3 className="text-lg font-bold mb-4"> Итого за период Июль 2025 — Март 2026</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
                         <p className="text-blue-200 text-xs">Общая выручка</p>

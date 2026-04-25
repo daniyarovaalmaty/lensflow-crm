@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save, User, Building2, Truck, FileText, Eye, Copy } from 'lucide-react';
+import { ArrowLeft, Save, User, Building2, Truck, FileText, Eye, Copy, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from '@/components/order/EyeParametersCard';
@@ -188,7 +188,7 @@ export default function EditOrderPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm"
                     >
-                        ✅ Заказ успешно обновлён. Перенаправление...
+                        <CheckCircle className="w-4 h-4 inline mr-1" /> Заказ успешно обновлён. Перенаправление...
                     </motion.div>
                 )}
 

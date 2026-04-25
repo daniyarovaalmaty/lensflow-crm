@@ -111,7 +111,7 @@ export default function ProfilePage() {
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 5_242_880) { alert('Файл слишком большой. Максимум 5МБ.'); return; }
+        if (file.size > 5_242_880) { alert('Файл слишком большой. Максимум 5МБ'); return; }
         setAvatarFile(file);
         setAvatarPreview(URL.createObjectURL(file));
     };
@@ -119,7 +119,7 @@ export default function ProfilePage() {
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 5_242_880) { alert('Файл слишком большой. Максимум 5МБ.'); return; }
+        if (file.size > 5_242_880) { alert('Файл слишком большой. Максимум 5МБ'); return; }
         setLogoFile(file);
         setLogoPreview(URL.createObjectURL(file));
     };
@@ -136,7 +136,7 @@ export default function ProfilePage() {
                     avatarUrl = await uploadToMedMundus(avatarFile);
                 } catch (e) {
                     console.error('Avatar upload error:', e);
-                    alert('Ошибка загрузки фото. Попробуйте ещё раз.');
+                    alert('Ошибка загрузки фото. Попробуйте ещё раз');
                     setIsSaving(false);
                     setUploadingAvatar(false);
                     return;
