@@ -375,11 +375,17 @@ export async function POST(request: NextRequest) {
                 });
                 break; // Success
             } catch (error: any) {
-                if (error.code === 'P2002' && attempts < maxAttempts - 1) {
+                // Detect unique constraint violation - Prisma P2002 OR PostgreSQL 23505 via DriverAdapter
+                const isUniqueViolation = error.code === 'P2002' 
+                    || error?.cause?.originalCode === '23505'
+                    || JSON.stringify(error).includes('UniqueConstraintViolation')
+                    || JSON.stringify(error).includes('23505');
+                
+                if (isUniqueViolation && attempts < maxAttempts - 1) {
                     attempts++;
                     continue; // Retry with a new orderNumber
                 }
-                throw error; // Rethrow if not P2002 or max attempts reached
+                throw error; // Rethrow if not unique violation or max attempts reached
             }
         }
         
@@ -430,19 +436,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Prisma unique constraint
-        if (error.code === 'P2002') {
-            const target = error.meta?.target;
-            const targetStr = Array.isArray(target) ? target.join(', ') : (target || 'unknown');
-            const fullMsg = `Дублирование записи: ${targetStr} | meta: ${JSON.stringify(error.meta)} | msg: ${error.message?.substring(0, 200)}`;
+        // Prisma unique constraint (P2002) or PostgreSQL 23505 via DriverAdapter
+        const isUniqueViolation = error.code === 'P2002' 
+            || error?.cause?.originalCode === '23505'
+            || JSON.stringify(error).includes('UniqueConstraintViolation');
+        
+        if (isUniqueViolation) {
             return NextResponse.json(
-                { error: fullMsg },
+                { error: 'Конфликт номера заказа. Пожалуйста, попробуйте создать заказ ещё раз.' },
                 { status: 409 }
             );
         }
 
         return NextResponse.json(
-            { error: `[code:${error.code || 'none'}] ${error.message || 'Не удалось создать заказ'}` },
+            { error: error.message || 'Не удалось создать заказ' },
             { status: 500 }
         );
     }
