@@ -173,32 +173,38 @@ export async function POST(request: NextRequest) {
         const validatedData = CreateOrderSchema.parse(body);
 
         // Generate order ID in AB01 sequential format
-        const generateOrderNumber = async (attemptOffset = 0): Promise<string> => {
-            const lastOrder = await prisma.order.findFirst({
+        // Convert letter-pair + number to a single sequential integer for proper comparison
+        const orderToSeq = (letters: string, num: number): number => {
+            const c1 = letters.charCodeAt(0) - 65; // A=0, B=1, ...
+            const c2 = letters.charCodeAt(1) - 65;
+            return (c1 * 26 + c2) * 99 + num; // Each letter-pair holds 99 numbers (01-99)
+        };
+        const seqToOrder = (seq: number): string => {
+            const num = ((seq - 1) % 99) + 1;
+            const letterIdx = Math.floor((seq - 1) / 99);
+            const c1 = Math.floor(letterIdx / 26);
+            const c2 = letterIdx % 26;
+            const letters = String.fromCharCode(65 + c1, 65 + c2);
+            return `${letters}${num.toString().padStart(2, '0')}`;
+        };
+
+        const generateOrderNumber = async (): Promise<string> => {
+            // Fetch ALL non-LX order numbers to find the true maximum
+            const allOrders = await prisma.order.findMany({
                 where: { orderNumber: { not: { startsWith: 'LX-' } } },
-                orderBy: { orderNumber: 'desc' },
                 select: { orderNumber: true },
             });
-            if (!lastOrder) {
-                // If this is the absolute first order ever, generate AB01, AB02 etc based on attempt
-                let num = 1 + attemptOffset;
-                return `AB${num.toString().padStart(2, '0')}`;
+            
+            let maxSeq = 0; // Before AB01
+            for (const o of allOrders) {
+                const match = o.orderNumber.match(/^([A-Z]{2})(\d+)$/);
+                if (match) {
+                    const seq = orderToSeq(match[1], parseInt(match[2], 10));
+                    if (seq > maxSeq) maxSeq = seq;
+                }
             }
-            const prev = lastOrder.orderNumber;
-            const match = prev.match(/^([A-Z]{2})(\d+)$/);
-            if (!match) return `AB${(1 + attemptOffset).toString().padStart(2, '0')}`;
-            let [, letters, numStr] = match;
-            let num = parseInt(numStr, 10) + 1 + attemptOffset;
-            while (num > 99) {
-                num -= 99;
-                let c1 = letters.charCodeAt(0);
-                let c2 = letters.charCodeAt(1);
-                c2++;
-                if (c2 > 90) { c2 = 65; c1++; }
-                if (c1 > 90) { c1 = 65; c2 = 65; }
-                letters = String.fromCharCode(c1, c2);
-            }
-            return `${letters}${num.toString().padStart(2, '0')}`;
+            
+            return seqToOrder(maxSeq + 1);
         };
 
         const now = new Date();
@@ -341,7 +347,7 @@ export async function POST(request: NextRequest) {
 
         while (attempts < maxAttempts) {
             try {
-                const orderNumber = await generateOrderNumber(attempts);
+                const orderNumber = await generateOrderNumber();
                 order = await prisma.order.create({
                     data: {
                         orderNumber,
