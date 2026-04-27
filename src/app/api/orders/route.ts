@@ -434,14 +434,15 @@ export async function POST(request: NextRequest) {
         if (error.code === 'P2002') {
             const target = error.meta?.target;
             const targetStr = Array.isArray(target) ? target.join(', ') : (target || 'unknown');
+            const fullMsg = `Дублирование записи: ${targetStr} | meta: ${JSON.stringify(error.meta)} | msg: ${error.message?.substring(0, 200)}`;
             return NextResponse.json(
-                { error: `Дублирование записи: ${targetStr}. Попробуйте еще раз.`, debug: { code: error.code, meta: error.meta, message: error.message } },
+                { error: fullMsg },
                 { status: 409 }
             );
         }
 
         return NextResponse.json(
-            { error: error.message || 'Не удалось создать заказ' },
+            { error: `[code:${error.code || 'none'}] ${error.message || 'Не удалось создать заказ'}` },
             { status: 500 }
         );
     }
