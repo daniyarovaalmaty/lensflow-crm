@@ -173,20 +173,24 @@ export async function POST(request: NextRequest) {
         const validatedData = CreateOrderSchema.parse(body);
 
         // Generate order ID in AB01 sequential format
-        const generateOrderNumber = async (): Promise<string> => {
+        const generateOrderNumber = async (attemptOffset = 0): Promise<string> => {
             const lastOrder = await prisma.order.findFirst({
                 where: { orderNumber: { not: { startsWith: 'LX-' } } },
                 orderBy: { orderNumber: 'desc' },
                 select: { orderNumber: true },
             });
-            if (!lastOrder) return 'AB01';
+            if (!lastOrder) {
+                // If this is the absolute first order ever, generate AB01, AB02 etc based on attempt
+                let num = 1 + attemptOffset;
+                return `AB${num.toString().padStart(2, '0')}`;
+            }
             const prev = lastOrder.orderNumber;
-            const match = prev.match(/^([A-Z]{2})(\d{2})$/);
-            if (!match) return 'AB01';
+            const match = prev.match(/^([A-Z]{2})(\d+)$/);
+            if (!match) return `AB${(1 + attemptOffset).toString().padStart(2, '0')}`;
             let [, letters, numStr] = match;
-            let num = parseInt(numStr, 10) + 1;
-            if (num > 99) {
-                num = 1;
+            let num = parseInt(numStr, 10) + 1 + attemptOffset;
+            while (num > 99) {
+                num -= 99;
                 let c1 = letters.charCodeAt(0);
                 let c2 = letters.charCodeAt(1);
                 c2++;
@@ -337,7 +341,7 @@ export async function POST(request: NextRequest) {
 
         while (attempts < maxAttempts) {
             try {
-                const orderNumber = await generateOrderNumber();
+                const orderNumber = await generateOrderNumber(attempts);
                 order = await prisma.order.create({
                     data: {
                         orderNumber,
@@ -428,8 +432,10 @@ export async function POST(request: NextRequest) {
 
         // Prisma unique constraint
         if (error.code === 'P2002') {
+            const target = error.meta?.target;
+            const targetStr = Array.isArray(target) ? target.join(', ') : (target || 'unknown');
             return NextResponse.json(
-                { error: `Дублирование записи: ${error.meta?.target || 'unknown'}` },
+                { error: `Дублирование записи: ${targetStr}. Попробуйте еще раз.` },
                 { status: 409 }
             );
         }
