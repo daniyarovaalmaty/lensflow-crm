@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
         const generateOrderNumber = async (): Promise<string> => {
             const lastOrder = await prisma.order.findFirst({
                 where: { orderNumber: { not: { startsWith: 'LX-' } } },
-                orderBy: { createdAt: 'desc' },
+                orderBy: { orderNumber: 'desc' },
                 select: { orderNumber: true },
             });
             if (!lastOrder) return 'AB01';
@@ -196,7 +196,6 @@ export async function POST(request: NextRequest) {
             }
             return `${letters}${num.toString().padStart(2, '0')}`;
         };
-        const orderNumber = await generateOrderNumber();
 
         const now = new Date();
         const is_urgent = validatedData.is_urgent ?? false;
@@ -331,38 +330,58 @@ export async function POST(request: NextRequest) {
         const urgentSurcharge = is_urgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
         const totalPrice = priceAfterDiscount + urgentSurcharge;
 
-        // Create order in database
-        const order = await prisma.order.create({
-            data: {
-                orderNumber,
-                status: 'new_order',
-                isUrgent: is_urgent,
-                organizationId: session.user.organizationId || undefined,
-                createdById: session.user.id,
-                patientId,
-                opticName: session.user.profile?.opticName || '',
-                doctorName: validatedData.doctor || session.user.profile?.fullName || '',
-                doctorEmail: validatedData.doctor_email || undefined,
-                company: validatedData.company || undefined,
-                inn: validatedData.inn || undefined,
-                deliveryMethod: validatedData.delivery_method || undefined,
-                deliveryAddress: validatedData.delivery_address || undefined,
-                lensConfig: { ...(validatedData.config as any), rgpFiles: body.rgpFiles || undefined } as any,
-                documentNameOd: documentNameOd || undefined,
-                documentNameOs: documentNameOs || undefined,
-                priceOd: odUnitPrice || undefined,
-                priceOs: osUnitPrice || undefined,
-                editDeadline: edit_deadline,
-                notes: validatedData.notes || undefined,
-                products: additionalProducts || undefined,
-                totalPrice,
-                discountPercent: DISCOUNT_PCT,
-            },
-            include: {
-                patient: true,
-                organization: { select: { name: true } },
-            },
-        });
+        // Create order in database with retry mechanism for unique constraint
+        let order;
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (attempts < maxAttempts) {
+            try {
+                const orderNumber = await generateOrderNumber();
+                order = await prisma.order.create({
+                    data: {
+                        orderNumber,
+                        status: 'new_order',
+                        isUrgent: is_urgent,
+                        organizationId: session.user.organizationId || undefined,
+                        createdById: session.user.id,
+                        patientId,
+                        opticName: session.user.profile?.opticName || '',
+                        doctorName: validatedData.doctor || session.user.profile?.fullName || '',
+                        doctorEmail: validatedData.doctor_email || undefined,
+                        company: validatedData.company || undefined,
+                        inn: validatedData.inn || undefined,
+                        deliveryMethod: validatedData.delivery_method || undefined,
+                        deliveryAddress: validatedData.delivery_address || undefined,
+                        lensConfig: { ...(validatedData.config as any), rgpFiles: body.rgpFiles || undefined } as any,
+                        documentNameOd: documentNameOd || undefined,
+                        documentNameOs: documentNameOs || undefined,
+                        priceOd: odUnitPrice || undefined,
+                        priceOs: osUnitPrice || undefined,
+                        editDeadline: edit_deadline,
+                        notes: validatedData.notes || undefined,
+                        products: additionalProducts || undefined,
+                        totalPrice,
+                        discountPercent: DISCOUNT_PCT,
+                    },
+                    include: {
+                        patient: true,
+                        organization: { select: { name: true } },
+                    },
+                });
+                break; // Success
+            } catch (error: any) {
+                if (error.code === 'P2002' && attempts < maxAttempts - 1) {
+                    attempts++;
+                    continue; // Retry with a new orderNumber
+                }
+                throw error; // Rethrow if not P2002 or max attempts reached
+            }
+        }
+        
+        if (!order) {
+            throw new Error('Failed to create order after multiple attempts');
+        }
 
         // Transform response to match frontend format
         const response = {
