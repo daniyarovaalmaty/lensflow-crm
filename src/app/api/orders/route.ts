@@ -435,7 +435,7 @@ export async function POST(request: NextRequest) {
             const target = error.meta?.target;
             const targetStr = Array.isArray(target) ? target.join(', ') : (target || 'unknown');
             return NextResponse.json(
-                { error: `Дублирование записи: ${targetStr}. Попробуйте еще раз.` },
+                { error: `Дублирование записи: ${targetStr}. Попробуйте еще раз.`, debug: { code: error.code, meta: error.meta, message: error.message } },
                 { status: 409 }
             );
         }

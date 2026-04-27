@@ -213,7 +213,9 @@ export default function NewOrderPage() {
 
             if (!response.ok) {
                 const errBody = await response.json().catch(() => ({}));
-                throw new Error(errBody.error || `Ошибка ${response.status}`);
+                const msg = errBody.error || `Ошибка ${response.status}`;
+                const debugInfo = errBody.debug ? `\n\nDEBUG: ${JSON.stringify(errBody.debug)}` : '';
+                throw new Error(msg + debugInfo);
             }
 
             const order = await response.json();
