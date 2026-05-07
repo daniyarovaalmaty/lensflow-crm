@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
+import { MediLensCalculator } from './MediLensCalculator';
 import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye } from 'lucide-react';
 
 interface CatalogProduct {
@@ -618,6 +619,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 transition={{ delay: 0.1 }}
                 className="space-y-6"
             >
+                {/* Calculator */}
+                <MediLensCalculator onApplyToEye={(eye, data) => {
+                    Object.entries(data).forEach(([key, val]) => {
+                        setValue(`config.eyes.${eye}.${key}` as any, val, { shouldValidate: true, shouldDirty: true });
+                    });
+                }} />
+
                 {/* OD (Right Eye) */}
                 <EyeParametersCard
                     eye="od"
