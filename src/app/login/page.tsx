@@ -182,7 +182,7 @@ function LoginContent() {
                         <LogIn className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">LensFlow CRM</h1>
-                    <p className="text-gray-600">Войдите в свою учетную запись</p>
+                    <p className="text-gray-600">Вход и регистрация в системе</p>
                 </div>
 
                 {/* Login Card */}
@@ -251,7 +251,7 @@ function LoginContent() {
                                         disabled={isLoading}
                                         className="btn btn-primary w-full"
                                     >
-                                        {isLoading ? 'Отправка...' : 'Получить код'}
+                                        {isLoading ? 'Отправка...' : 'Получить код (Вход / Регистрация)'}
                                     </button>
                                 </>
                             ) : (

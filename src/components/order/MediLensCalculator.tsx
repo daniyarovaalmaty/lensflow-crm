@@ -160,8 +160,17 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                         <div key={eye} className="border border-gray-200 rounded-2xl p-5 bg-gray-50/50">
                                             <h3 className="text-base font-bold text-gray-900 mb-4 uppercase text-center border-b pb-2">{eye === 'od' ? 'OD (Правый)' : 'OS (Левый)'}</h3>
                                             <div className="grid grid-cols-2 gap-3 mb-6">
-                                                <div><label className="text-xs font-semibold text-gray-500">Sph</label><input type="number" step="any" value={inputs[eye].sph} onChange={e => handleInputChange(eye, 'sph', e.target.value)} className="input text-sm h-9" placeholder="0.00" /></div>
-                                                <div><label className="text-xs font-semibold text-gray-500">Cyl</label><input type="number" step="any" value={inputs[eye].cyl} onChange={e => handleInputChange(eye, 'cyl', e.target.value)} className="input text-sm h-9" placeholder="0.00" /></div>
+                                                <div className="col-span-2 sm:col-span-1"><label className="text-xs font-semibold text-gray-500">Sph</label><input type="number" step="any" value={inputs[eye].sph} onChange={e => handleInputChange(eye, 'sph', e.target.value)} className="input text-sm h-9" placeholder="0.00" /></div>
+                                                <div className="col-span-2 sm:col-span-1"><label className="text-xs font-semibold text-gray-500">Cyl</label><input type="number" step="any" value={inputs[eye].cyl} onChange={e => handleInputChange(eye, 'cyl', e.target.value)} className="input text-sm h-9" placeholder="0.00" /></div>
+                                                <div className="col-span-2 flex items-center justify-between bg-white border border-gray-100 rounded-lg p-2 px-3 shadow-sm mb-1">
+                                                    <span className="text-xs font-semibold text-gray-500">Spherical Equivalent (SE):</span>
+                                                    <span className="text-sm font-bold text-gray-900">{(() => {
+                                                        const sph = parseFloat(inputs[eye].sph) || 0;
+                                                        const cyl = parseFloat(inputs[eye].cyl) || 0;
+                                                        const se = sph + (cyl / 2);
+                                                        return se ? (se > 0 ? '+' : '') + se.toFixed(2) : '0.00';
+                                                    })()}</span>
+                                                </div>
                                                 <div><label className="text-xs font-semibold text-indigo-600">FK (Flat K)</label><input type="number" step="any" value={inputs[eye].fk} onChange={e => handleInputChange(eye, 'fk', e.target.value)} className="input border-indigo-200 focus:border-indigo-500 text-sm h-9" placeholder="43.85" /></div>
                                                 <div><label className="text-xs font-semibold text-indigo-600">Eccentricity (ex)</label><input type="number" step="any" value={inputs[eye].ex} onChange={e => handleInputChange(eye, 'ex', e.target.value)} className="input border-indigo-200 focus:border-indigo-500 text-sm h-9" placeholder="0.56" /></div>
                                                 <div><label className="text-xs font-semibold text-indigo-600">Tor (Периф. астиг.)</label><input type="number" step="any" value={inputs[eye].tor} onChange={e => handleInputChange(eye, 'tor', e.target.value)} className="input border-indigo-200 focus:border-indigo-500 text-sm h-9" placeholder="1.68" /></div>
