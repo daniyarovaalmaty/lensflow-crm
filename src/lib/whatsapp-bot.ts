@@ -14,7 +14,7 @@ const INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID;
 const TOKEN = process.env.GREEN_API_TOKEN;
 
 // ── Load dynamic system prompt from BotConfig DB ──
-async function buildSystemPrompt(): Promise<string> {
+export async function buildSystemPrompt(): Promise<string> {
     const configs = await prisma.botConfig.findMany();
     const cfg: Record<string, string> = {};
     for (const c of configs) cfg[c.key] = c.value;
@@ -71,6 +71,7 @@ ${busyText}
 ПРАВИЛА:
 - Общайся на русском языке
 - Отвечай кратко и по делу (2-4 предложения максимум)
+- Ты ВИДИШЬ всю историю переписки. Если пациент спрашивает "ты меня помнишь?" — отвечай как человек ("Да, конечно, мы с вами только что обсуждали..."). НИКОГДА не говори, что ты ИИ и не можешь помнить.
 - НЕ придумывай данные которых нет выше
 - Когда пациент хочет записаться — собери: имя, удобную дату и время
 - Обязательно сверяйся со списком ЗАНЯТОГО ВРЕМЕНИ выше. Если время занято, предложи соседнее свободное!
