@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Users, Search, Plus, Phone, FileText, Eye, RefreshCw, ChevronRight, Loader2 } from 'lucide-react';
+import { Users, Search, Plus, Phone, FileText, Eye, RefreshCw, ChevronRight, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 interface Patient {
@@ -113,6 +113,17 @@ export default function PatientsPage() {
     return (
         <div className="min-h-screen bg-surface">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+                {/* Back button */}
+                <div className="mb-5">
+                    <Link
+                        href="/optic/dashboard"
+                        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        На дашборд
+                    </Link>
+                </div>
+
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>
