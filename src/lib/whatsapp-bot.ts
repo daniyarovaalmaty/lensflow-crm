@@ -128,9 +128,9 @@ async function sendWhatsApp(phone: string, message: string): Promise<void> {
         const text = parts[i];
         
         // Add a dynamic delay based on length of the message to simulate typing
-        // Minimum 1.5 seconds, plus ~30ms per character
+        // Minimum 2 seconds, plus ~40ms per character (up to 8 seconds max)
         if (i > 0) {
-            const delayMs = Math.min(3000, 1000 + text.length * 20);
+            const delayMs = Math.min(8000, 2000 + text.length * 40);
             await new Promise(r => setTimeout(r, delayMs));
         }
 
