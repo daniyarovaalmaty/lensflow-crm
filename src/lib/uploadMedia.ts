@@ -1,25 +1,44 @@
-const UPLOAD_URL = 'https://mmundus.com/api/lensflow-upload/';
-const UPLOAD_KEY = 'lf-upload-2026-medmundus-key';
-
 /**
- * Upload a file to MedMundus media storage.
- * Returns the public URL of the uploaded file.
+ * Convert a File to a base64 data URL string.
+ * Stores the image directly in the database — no external upload needed.
  */
 export async function uploadToMedMundus(file: File): Promise<string> {
-    const formData = new FormData();
-    formData.append('file', file);
+    // Resize/compress the image before base64 encoding to keep DB size small
+    const compressed = await compressImage(file, 400, 0.75);
+    return compressed;
+}
 
-    const resp = await fetch(UPLOAD_URL, {
-        method: 'POST',
-        headers: { 'X-LF-Upload-Key': UPLOAD_KEY },
-        body: formData,
+/**
+ * Compress an image and return as base64 data URL.
+ */
+function compressImage(file: File, maxDimension = 400, quality = 0.8): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+            // Scale down if needed
+            if (width > maxDimension || height > maxDimension) {
+                if (width > height) {
+                    height = Math.round((height * maxDimension) / width);
+                    width = maxDimension;
+                } else {
+                    width = Math.round((width * maxDimension) / height);
+                    height = maxDimension;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d')!;
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load image'));
+        };
+        img.src = url;
     });
-
-    if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: 'Upload failed' }));
-        throw new Error(err.error || `Upload failed: ${resp.status}`);
-    }
-
-    const data = await resp.json();
-    return data.url;
 }
