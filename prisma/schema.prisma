@@ -125,6 +125,7 @@ enum UserStatus {
 // ==================== Patient ====================
 model Patient {
   id             String  @id @default(cuid())
+  medmundusId    Int?    @unique  // MedMundus Patient.id for cross-system sync
   name           String
   phone          String
   email          String?
@@ -143,6 +144,7 @@ model Patient {
 
   @@index([organizationId])
   @@index([phone])
+  @@index([medmundusId])
   @@map("patients")
 }
 

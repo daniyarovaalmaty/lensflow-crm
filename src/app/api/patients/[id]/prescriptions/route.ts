@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
+import { mmPushPrescription } from '@/lib/mm-patient-bridge';
+
 
 // POST /api/patients/[id]/prescriptions — add prescription
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -34,6 +36,23 @@ export async function POST(request: Request, { params }: { params: { id: string 
             prescribedAt: prescribedAt ? new Date(prescribedAt) : new Date(),
         },
     });
+
+    // Push Rx to MedMundus as a PatientNote
+    const patient = await prisma.patient.findUnique({ where: { id: params.id } });
+    if (patient?.medmundusId) {
+        try {
+            await mmPushPrescription(patient.medmundusId, {
+                doctorPhone: session.user.phone || undefined,
+                date: prescribedAt || new Date().toISOString().split('T')[0],
+                rxType: type || 'glasses',
+                od: { sph: prescription.odSph ?? undefined, cyl: prescription.odCyl ?? undefined, ax: prescription.odAx ?? undefined, add: prescription.odAdd ?? undefined, pd: prescription.odPd ?? undefined },
+                os: { sph: prescription.osSph ?? undefined, cyl: prescription.osCyl ?? undefined, ax: prescription.osAx ?? undefined, add: prescription.osAdd ?? undefined, pd: prescription.osPd ?? undefined },
+                pdTotal: prescription.pdTotal ?? undefined,
+            });
+        } catch (e) {
+            console.warn('[PatientSync] MM prescription push failed:', e);
+        }
+    }
 
     return NextResponse.json(prescription, { status: 201 });
 }

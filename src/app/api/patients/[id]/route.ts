@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
+import { mmUpdatePatient } from '@/lib/mm-patient-bridge';
+
 
 // GET /api/patients/[id]
 export async function GET(_: Request, { params }: { params: { id: string } }) {
@@ -52,6 +54,21 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             doctorId: doctorId || null,
         },
     });
+
+    // Sync to MedMundus if linked
+    if (patient.medmundusId) {
+        try {
+            await mmUpdatePatient(patient.medmundusId, {
+                name: patient.name,
+                phone: patient.phone,
+                email: patient.email || undefined,
+                birthDate: patient.birthDate?.toISOString().split('T')[0],
+                gender: patient.gender || undefined,
+            });
+        } catch (e) {
+            console.warn('[PatientSync] MM update failed:', e);
+        }
+    }
 
     return NextResponse.json(patient);
 }
