@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
-import { mmGetDoctorPatients, mmCreatePatient, mmPatientToLF } from '@/lib/mm-patient-bridge';
+import { mmGetPatients, mmCreatePatient, mmPatientToLF } from '@/lib/mm-patient-bridge';
 
-// GET /api/patients — list patients (local + pull from MedMundus)
+// GET /api/patients — list patients (local + pull from MedMundus on first load)
 export async function GET(request: Request) {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -11,39 +11,54 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q') || '';
     const page = parseInt(searchParams.get('page') || '1');
+    const noSync = searchParams.get('noSync') === '1'; // skip sync for subsequent pages
     const limit = 30;
 
+    // Build base filter — show org patients OR doctor's own patients
     const where: any = {
-        organizationId: session.user.organizationId || undefined,
+        OR: [
+            { organizationId: session.user.organizationId || 'none' },
+            { doctorId: session.user.id },
+        ],
     };
+
     if (q) {
-        where.OR = [
-            { name: { contains: q, mode: 'insensitive' } },
-            { phone: { contains: q, mode: 'insensitive' } },
-        ];
+        where.AND = [{
+            OR: [
+                { name: { contains: q, mode: 'insensitive' } },
+                { phone: { contains: q, mode: 'insensitive' } },
+            ]
+        }];
     }
 
-    // Pull from MedMundus and upsert locally (background sync)
-    if (session.user.phone) {
+    // Sync from MedMundus on first page load (not on search/paginate to keep it fast)
+    if (!noSync && page === 1) {
         try {
-            const mmPatients = await mmGetDoctorPatients(session.user.phone);
+            // Fetch all MM patients (doctor-filtered or all if admin)
+            const doctorPhone = session.user.phone;
+            const mmPatients = await mmGetPatients(doctorPhone || undefined, undefined);
+
             for (const mm of mmPatients) {
                 const lf = mmPatientToLF(mm);
-                if (!lf.name.trim()) continue;
+                // Skip nameless records
+                const fullName = lf.name.trim();
+                if (!fullName || fullName === ' ') continue;
+
                 await prisma.patient.upsert({
                     where: { medmundusId: mm.medmundus_patient_id },
                     update: {
-                        name: lf.name,
+                        name: fullName,
                         phone: lf.phone || '',
                         email: lf.email,
                         birthDate: lf.birthDate ? new Date(lf.birthDate) : null,
                         gender: lf.gender,
-                        organizationId: session.user.organizationId || null,
+                        // Only set org/doctor if not already set to avoid overwriting manual links
+                        ...(session.user.organizationId ? { organizationId: session.user.organizationId } : {}),
                         doctorId: session.user.id,
                     },
                     create: {
                         medmundusId: mm.medmundus_patient_id,
-                        name: lf.name,
+                        name: fullName,
                         phone: lf.phone || '',
                         email: lf.email,
                         birthDate: lf.birthDate ? new Date(lf.birthDate) : null,
@@ -54,7 +69,6 @@ export async function GET(request: Request) {
                 });
             }
         } catch (e) {
-            // Non-fatal: continue with local data if MM is unreachable
             console.warn('[PatientSync] MedMundus sync failed:', e);
         }
     }
@@ -116,9 +130,10 @@ export async function POST(request: Request) {
             gender: gender || null,
             notes: notes || null,
             organizationId: session.user.organizationId || null,
-            doctorId: doctorId || null,
+            doctorId: doctorId || session.user.id || null,
         },
     });
 
     return NextResponse.json(patient, { status: 201 });
 }
+

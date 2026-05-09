@@ -383,6 +383,14 @@ export default function OpticDashboard() {
                                 CRM Продажи
                             </Link>
                             <Link
+                                href="/optic/patients"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                            >
+                                <Users className="w-4 h-4" />
+                                Пациенты
+                            </Link>
+                            <Link
                                 href="/profile"
                                 onClick={() => setMobileMenuOpen(false)}
                                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -433,6 +441,22 @@ export default function OpticDashboard() {
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* === PATIENT QUICK ACCESS BANNER === */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+                <Link href="/optic/patients" className="group flex items-center gap-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl p-4 shadow-sm transition-all hover:shadow-md">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-white font-bold text-base">Мои пациенты</p>
+                        <p className="text-emerald-100 text-sm">Карточки, рецепты на зрение — все в одном месте. Синхронизация с MedMundus</p>
+                    </div>
+                    <div className="text-white/70 group-hover:text-white transition-colors flex-shrink-0">
+                        <ChevronDown className="w-5 h-5 -rotate-90" />
+                    </div>
+                </Link>
             </div>
 
             {/* Filters & Orders */}

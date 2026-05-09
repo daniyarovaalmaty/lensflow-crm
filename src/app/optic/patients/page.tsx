@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Users, Search, Plus, Phone, FileText, Eye, Calendar, ChevronRight, User } from 'lucide-react';
-import OpticNav from '@/components/layout/OpticNav';
+import { Users, Search, Plus, Phone, FileText, Eye, RefreshCw, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface Patient {
@@ -14,6 +13,7 @@ interface Patient {
     email: string | null;
     birthDate: string | null;
     gender: string | null;
+    medmundusId: number | null;
     createdAt: string;
     _count: { orders: number; prescriptions: number };
     prescriptions: Array<{
@@ -43,31 +43,36 @@ export default function PatientsPage() {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [total, setTotal] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
     const [q, setQ] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    // New patient form
     const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '' });
     const [saving, setSaving] = useState(false);
 
-    const load = useCallback(async (query = q) => {
+    const load = useCallback(async (query = '', noSync = false) => {
+        if (!noSync) setIsSyncing(true);
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/patients?q=${encodeURIComponent(query)}`);
+            const params = new URLSearchParams({ q: query });
+            if (noSync) params.set('noSync', '1');
+            const res = await fetch(`/api/patients?${params}`);
             const data = await res.json();
             setPatients(data.patients || []);
             setTotal(data.total || 0);
         } finally {
             setIsLoading(false);
+            setIsSyncing(false);
         }
-    }, [q]);
+    }, []);
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => { load('', false); }, [load]);
 
     const handleSearch = (val: string) => {
         setQ(val);
-        const timer = setTimeout(() => load(val), 400);
-        return () => clearTimeout(timer);
+        clearTimeout(searchTimer.current);
+        searchTimer.current = setTimeout(() => load(val, true), 400);
     };
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -92,24 +97,49 @@ export default function PatientsPage() {
 
     return (
         <div className="min-h-screen bg-surface">
-            <OpticNav />
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <Users className="w-6 h-6 text-primary-600" />
+                            <Users className="w-6 h-6 text-emerald-600" />
                             Пациенты
                         </h1>
-                        <p className="text-sm text-gray-500 mt-1">Всего: {total} пациентов</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                            {isSyncing ? (
+                                <span className="flex items-center gap-1.5 text-emerald-600">
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    Синхронизация с MedMundus...
+                                </span>
+                            ) : (
+                                <span>Всего: <b>{total}</b> пациентов</span>
+                            )}
+                        </p>
                     </div>
-                    <button onClick={() => setShowModal(true)} className="btn btn-primary flex items-center gap-2">
-                        <Plus className="w-4 h-4" /> Новый пациент
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => load(q, false)}
+                            title="Синхронизировать с MedMundus"
+                            className="p-2 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                        >
+                            <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin text-emerald-500' : ''}`} />
+                        </button>
+                        <button onClick={() => setShowModal(true)} className="btn btn-primary flex items-center gap-2">
+                            <Plus className="w-4 h-4" /> Новый пациент
+                        </button>
+                    </div>
                 </div>
 
+                {/* Sync badge */}
+                {!isSyncing && total > 0 && (
+                    <div className="flex items-center gap-2 mb-4 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                        Данные синхронизированы с MedMundus · Нажмите 🔄 для обновления
+                    </div>
+                )}
+
                 {/* Search */}
-                <div className="relative mb-6">
+                <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                         type="text"
@@ -120,66 +150,64 @@ export default function PatientsPage() {
                     />
                 </div>
 
-                {/* Patient List */}
+                {/* List */}
                 {isLoading ? (
-                    <div className="space-y-3">
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="skeleton h-20 rounded-xl" />
+                    <div className="space-y-2">
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="animate-pulse bg-white rounded-xl border border-gray-200 p-4 h-16" />
                         ))}
                     </div>
                 ) : patients.length === 0 ? (
-                    <div className="text-center py-16">
+                    <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
                         <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 font-medium">Пациентов не найдено</p>
-                        <p className="text-gray-400 text-sm mt-1">Добавьте первого пациента</p>
-                        <button onClick={() => setShowModal(true)} className="btn btn-primary mt-4">
+                        <p className="text-gray-700 font-semibold">Пациентов пока нет</p>
+                        <p className="text-gray-400 text-sm mt-1 mb-4">
+                            {q
+                                ? 'Ничего не найдено по запросу'
+                                : 'Синхронизация с MedMundus завершена — добавьте первого пациента'}
+                        </p>
+                        <button onClick={() => setShowModal(true)} className="btn btn-primary">
                             Добавить пациента
                         </button>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {patients.map(p => {
                             const lastRx = p.prescriptions[0];
+                            const initials = p.name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
                             return (
-                                <Link key={p.id} href={`/optic/patients/${p.id}`}
-                                    className="block bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all group">
-                                    <div className="flex items-center gap-4">
-                                        {/* Avatar */}
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                                            {p.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
-                                        </div>
-                                        {/* Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-semibold text-gray-900">{p.name}</span>
-                                                {p.birthDate && (
-                                                    <span className="text-xs text-gray-400">{calcAge(p.birthDate)}</span>
-                                                )}
-                                                {p.gender === 'male' && <span className="text-xs text-blue-500">♂</span>}
-                                                {p.gender === 'female' && <span className="text-xs text-pink-500">♀</span>}
-                                            </div>
-                                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                                                <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{p.phone}</span>
-                                                <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" />{p._count.orders} заказов</span>
-                                                <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{p._count.prescriptions} рецептов</span>
-                                            </div>
-                                        </div>
-                                        {/* Last Rx */}
-                                        {lastRx && (
-                                            <div className="hidden sm:block text-right text-xs text-gray-500 flex-shrink-0">
-                                                <p className="font-mono text-gray-700 text-sm">
-                                                    OD: {formatRx(lastRx.odSph, lastRx.odCyl)}
-                                                </p>
-                                                <p className="font-mono text-gray-700 text-sm">
-                                                    OS: {formatRx(lastRx.osSph, lastRx.osCyl)}
-                                                </p>
-                                                <p className="text-gray-400 mt-0.5">
-                                                    {new Date(lastRx.prescribedAt).toLocaleDateString('ru-RU')}
-                                                </p>
-                                            </div>
-                                        )}
-                                        <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-primary-500 transition-colors flex-shrink-0" />
+                                <Link
+                                    key={p.id}
+                                    href={`/optic/patients/${p.id}`}
+                                    className="flex items-center gap-4 bg-white rounded-xl border border-gray-200 p-4 hover:border-emerald-300 hover:shadow-sm transition-all group"
+                                >
+                                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                        {initials}
                                     </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                            <span className="font-semibold text-gray-900 truncate">{p.name}</span>
+                                            {p.birthDate && <span className="text-xs text-gray-400">{calcAge(p.birthDate)}</span>}
+                                            {p.gender === 'male' && <span className="text-xs text-blue-400">♂</span>}
+                                            {p.gender === 'female' && <span className="text-xs text-pink-400">♀</span>}
+                                            {p.medmundusId && (
+                                                <span className="text-xs bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-medium">MM</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                                            {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
+                                            <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.orders} заказ.</span>
+                                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{p._count.prescriptions} рецепт.</span>
+                                        </div>
+                                    </div>
+                                    {lastRx && (
+                                        <div className="hidden sm:block text-right text-xs flex-shrink-0">
+                                            <p className="font-mono text-gray-700">OD: {formatRx(lastRx.odSph, lastRx.odCyl)}</p>
+                                            <p className="font-mono text-gray-700">OS: {formatRx(lastRx.osSph, lastRx.osCyl)}</p>
+                                            <p className="text-gray-400">{new Date(lastRx.prescribedAt).toLocaleDateString('ru-RU')}</p>
+                                        </div>
+                                    )}
+                                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 transition-colors flex-shrink-0" />
                                 </Link>
                             );
                         })}
@@ -193,24 +221,21 @@ export default function PatientsPage() {
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
                         <div className="p-6 border-b border-gray-100">
                             <h2 className="text-lg font-bold text-gray-900">Новый пациент</h2>
+                            <p className="text-xs text-emerald-600 mt-0.5">Будет добавлен в LensFlow и MedMundus</p>
                         </div>
                         <form onSubmit={handleCreate} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">ФИО *</label>
-                                <input
-                                    type="text" required
-                                    value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                    className="input w-full" placeholder="Фамилия Имя Отчество"
-                                />
+                                <input type="text" required value={form.name}
+                                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                    className="input w-full" placeholder="Фамилия Имя Отчество" />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Телефон *</label>
-                                    <input
-                                        type="tel" required
-                                        value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                                        className="input w-full" placeholder="+7 777 123 45 67"
-                                    />
+                                    <input type="tel" required value={form.phone}
+                                        onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                                        className="input w-full" placeholder="+7 777 000 00 00" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Пол</label>
@@ -224,27 +249,20 @@ export default function PatientsPage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Дата рождения</label>
-                                    <input
-                                        type="date"
-                                        value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))}
-                                        className="input w-full"
-                                    />
+                                    <input type="date" value={form.birthDate}
+                                        onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} className="input w-full" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input
-                                        type="email"
-                                        value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                                        className="input w-full" placeholder="email@example.com"
-                                    />
+                                    <input type="email" value={form.email}
+                                        onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                                        className="input w-full" placeholder="email@example.com" />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Заметки</label>
-                                <textarea
-                                    value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                                    className="input w-full resize-none" rows={2} placeholder="Аллергии, особенности..."
-                                />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Заметки / Анамнез</label>
+                                <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                                    className="input w-full resize-none" rows={2} placeholder="Аллергии, особенности..." />
                             </div>
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary flex-1">Отмена</button>
