@@ -92,7 +92,12 @@ ${busyText}
 
 ПОДТВЕРЖДЕНИЕ ЗАПИСИ:
 Когда пациент назвал Имя, Дату и Время, и ты соглашаешься — напиши подтверждение и В САМОМ КОНЦЕ добавь скрытый код:
-BOOKING_CONFIRMED: Имя|ГГГГ-ММ-ДД|ЧЧ:ММ`;
+BOOKING_CONFIRMED: Имя|ГГГГ-ММ-ДД|ЧЧ:ММ
+
+ОТМЕНА ЗАПИСИ:
+Если пациент просит отменить существующую запись, спроси его Имя, чтобы подтвердить отмену.
+Когда он назовет Имя, подтверди отмену и В САМОМ КОНЦЕ добавь скрытый код:
+BOOKING_CANCELED: Имя`;
 }
 
 // ── Send reply via Green API ──
@@ -117,9 +122,16 @@ function parseBookingConfirmation(text: string): { name: string; date: string; t
     };
 }
 
-// ── Clean BOOKING_CONFIRMED marker from reply before sending ──
+// ── Parse BOOKING_CANCELED from AI response ──
+function parseBookingCancellation(text: string): { name: string } | null {
+    const match = text.match(/BOOKING_CANCELED:\s*([^\n]+)/);
+    if (!match) return null;
+    return { name: match[1].trim() };
+}
+
+// ── Clean BOOKING_CONFIRMED and BOOKING_CANCELED markers from reply before sending ──
 function cleanReply(text: string): string {
-    return text.replace(/BOOKING_CONFIRMED:[^\n]+/g, '').trim();
+    return text.replace(/BOOKING_CONFIRMED:[^\n]+/g, '').replace(/BOOKING_CANCELED:[^\n]+/g, '').trim();
 }
 
 // ── Main bot handler ──
@@ -248,6 +260,47 @@ export async function handleWhatsAppBot(phone: string, incomingText: string): Pr
         });
 
         // Send clean reply (without BOOKING_CONFIRMED marker)
+        await sendWhatsApp(normalizedPhone, cleanReply(aiReply));
+        return;
+    }
+
+    // Check for booking cancellation
+    const cancellation = parseBookingCancellation(aiReply);
+    if (cancellation) {
+        let lead = await prisma.lead.findFirst({
+            where: { phone: { contains: normalizedPhone.slice(-9) } },
+        });
+
+        if (lead) {
+            await prisma.lead.update({
+                where: { id: lead.id },
+                data: {
+                    appointmentAt: null, // Clear appointment
+                    stage: 'new_lead', // Reset stage
+                },
+            });
+
+            await prisma.chatMessage.create({
+                data: {
+                    leadId: lead.id,
+                    direction: 'outgoing',
+                    content: cleanReply(aiReply),
+                    channel: 'whatsapp',
+                    status: 'sent',
+                },
+            });
+        }
+
+        // Update session
+        await prisma.botSession.update({
+            where: { phone: normalizedPhone },
+            data: {
+                state: 'greeting', // Reset state
+                bookedAt: null,
+                history: trimmedHistory,
+            },
+        });
+
         await sendWhatsApp(normalizedPhone, cleanReply(aiReply));
         return;
     }
