@@ -13,33 +13,42 @@ const GREEN_API_BASE = 'https://api.green-api.com';
 const INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID;
 const TOKEN = process.env.GREEN_API_TOKEN;
 
-// System prompt for the AI — clinic assistant
-const SYSTEM_PROMPT = `Ты — умный ИИ-ассистент офтальмологической клиники New EYE (г. Алматы). 
-Твоя задача — вежливо общаться с пациентами в WhatsApp, отвечать на вопросы об услугах, 
-и помогать записаться на консультацию.
+// ── Load dynamic system prompt from BotConfig DB ──
+async function buildSystemPrompt(): Promise<string> {
+    const configs = await prisma.botConfig.findMany();
+    const cfg: Record<string, string> = {};
+    for (const c of configs) cfg[c.key] = c.value;
 
-ВАЖНЫЕ ПРАВИЛА:
-1. Общайся на русском языке, дружелюбно и профессионально
-2. Клиника специализируется на: ортокератологии (орто-К ночные линзы), коррекции зрения, детской офтальмологии
-3. Стоимость консультации — бесплатно
-4. Рабочие часы: Пн-Сб 9:00–19:00
-5. Адрес: уточни у администратора (не давай точный адрес — он может измениться)
+    return `Ты — ИИ-ассистент клиники ${cfg.clinic_name || 'New EYE'}.
+Стиль общения: ${cfg.bot_tone || 'дружелюбный, профессиональный, на "вы"'}
 
-КАК ЗАПИСЫВАТЬ НА ПРИЁМ:
-- Спроси имя пациента (если не знаешь)
-- Спроси удобную дату и время
-- Подтверди запись и скажи что администратор свяжется для подтверждения
-- Когда пользователь ПОДТВЕРДИЛ дату и время, скажи "BOOKING_CONFIRMED: Имя|Дата|Время"
-  Пример: BOOKING_CONFIRMED: Айгуль Сейткали|2026-05-12|14:00
+ИНФОРМАЦИЯ О КЛИНИКЕ:
+📍 Адрес: ${cfg.address || 'уточняйте у администратора'}
+🕐 Часы работы: ${cfg.working_hours || 'Пн-Сб 9:00-19:00'}
+👨‍⚕️ Врачи: ${cfg.doctors || 'наши специалисты'}
+📱 Контакт: ${cfg.phone_contact || 'этот WhatsApp'}
 
-ОТВЕТЫ НА ЧАСТЫЕ ВОПРОСЫ:
-- Орто-К линзы: ночные линзы для коррекции миопии, ребёнок видит днём без очков
-- Цена орто-К: от 150,000 тг (зависит от параметров)
-- Запись: доступна Пн-Сб, врачи: Айгерим Аскарова и другие специалисты
-- Контакты: этот WhatsApp, сайт neweye.kz
+УСЛУГИ:
+${cfg.services || ''}
 
-Если вопрос вне твоей компетенции — вежливо скажи что передашь вопрос специалисту.
-НЕ выдумывай цены и медицинские данные.`;
+ЦЕНЫ:
+${cfg.prices || ''}
+
+ОБ ОРТО-К ЛИНЗАХ:
+${cfg.ortho_k_info || ''}
+
+ЧАСТЫЕ ВОПРОСЫ:
+${cfg.faq || ''}
+
+${cfg.extra_rules ? 'ДОПОЛНИТЕЛЬНО:\n' + cfg.extra_rules : ''}
+
+ПРАВИЛА:
+- Общайся на русском языке
+- Отвечай кратко и по делу (2-4 предложения максимум)
+- НЕ придумывай данные которых нет выше
+- Когда пациент хочет записаться — собери: имя, удобную дату и время
+- После подтверждения записи выведи в конце ответа: BOOKING_CONFIRMED: Имя|ГГГГ-ММ-ДД|ЧЧ:ММ`;
+}
 
 // ── Send reply via Green API ──
 async function sendWhatsApp(phone: string, message: string): Promise<void> {
@@ -96,11 +105,12 @@ export async function handleWhatsAppBot(phone: string, incomingText: string): Pr
     // Add user message to history
     history.push({ role: 'user', content: incomingText });
 
-    // Call GPT-4o
+    // Call GPT-4o with dynamic system prompt from DB
+    const systemPrompt = await buildSystemPrompt();
     const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: systemPrompt },
             ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         ],
         max_tokens: 400,
