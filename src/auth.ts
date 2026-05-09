@@ -29,8 +29,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 if (phone && otpVerified) {
                     const normalizedPhone = normalizePhone(phone);
 
-                    // Check local user by phone
-                    const localUser = await prisma.user.findFirst({
+                    // Check local user by exact phone match
+                    let localUser = await prisma.user.findFirst({
                         where: {
                             OR: [
                                 { phone: normalizedPhone },
@@ -39,6 +39,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         },
                         include: { organization: true },
                     });
+
+                    // Fallback: Search in memory for users with formatted phones (e.g. "+7 (777) 123-45-67")
+                    // Self-healing: Update their phone format in the DB if found.
+                    if (!localUser) {
+                        const allUsers = await prisma.user.findMany({
+                            where: { phone: { not: null } },
+                            include: { organization: true },
+                        });
+                        
+                        const match = allUsers.find(u => {
+                            if (!u.phone) return false;
+                            const dbNorm = normalizePhone(u.phone);
+                            return dbNorm === normalizedPhone || `+${dbNorm}` === `+${normalizedPhone}`;
+                        });
+
+                        if (match) {
+                            localUser = match;
+                            // Heal the database to speed up future logins
+                            await prisma.user.update({
+                                where: { id: match.id },
+                                data: { phone: `+${normalizedPhone}` }
+                            });
+                        }
+                    }
 
                     if (localUser && localUser.status === 'active') {
                         const orgName = localUser.organization?.name;
