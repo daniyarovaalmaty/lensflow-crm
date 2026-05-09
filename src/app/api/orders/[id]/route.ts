@@ -4,13 +4,20 @@ import prisma from '@/lib/db/prisma';
 import { auth } from '@/auth';
 
 /**
- * Helper: find order by orderNumber and check access
+ * Helper: find order by orderNumber OR cuid id, check access
  */
-async function findOrderWithAccess(orderNumber: string, session: any) {
-    const order = await prisma.order.findUnique({
-        where: { orderNumber },
+async function findOrderWithAccess(idOrNumber: string, session: any) {
+    // Try by orderNumber first (e.g. "AB44"), then by cuid
+    let order = await prisma.order.findUnique({
+        where: { orderNumber: idOrNumber },
         include: { patient: true, organization: { select: { name: true } } },
     });
+    if (!order) {
+        order = await prisma.order.findUnique({
+            where: { id: idOrNumber },
+            include: { patient: true, organization: { select: { name: true } } },
+        });
+    }
     if (!order) return null;
 
     // Lab sees everything
@@ -154,7 +161,9 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const order = await prisma.order.findUnique({ where: { orderNumber: id } });
+    const order = await prisma.order.findFirst({
+        where: { OR: [{ orderNumber: id }, { id }] }
+    });
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
     try {
