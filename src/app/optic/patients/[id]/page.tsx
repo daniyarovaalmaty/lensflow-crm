@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
-    Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2
+    Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
+    Activity, Clock, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -13,6 +14,21 @@ interface Prescription {
     odSph: number | null; odCyl: number | null; odAx: number | null; odAdd: number | null; odPd: number | null;
     osSph: number | null; osCyl: number | null; osAx: number | null; osAdd: number | null; osPd: number | null;
     pdTotal: number | null; type: string; notes: string | null; prescribedAt: string;
+}
+
+interface Consultation {
+    id: string;
+    visitDate: string;
+    type: string;
+    diagnosis: string | null;
+    treatment: string | null;
+    nextVisit: string | null;
+    intraocularPressureOD: number | null;
+    intraocularPressureOS: number | null;
+    visualAcuityOD: number | null;
+    visualAcuityOS: number | null;
+    notes: string | null;
+    doctor: { fullName: string } | null;
 }
 
 interface PatientDetail {
@@ -136,11 +152,27 @@ export default function PatientDetailPage() {
     const [rxForm, setRxForm] = useState<any>({ type: 'glasses', prescribedAt: new Date().toISOString().split('T')[0] });
     const [savingRx, setSavingRx] = useState(false);
 
+    // Consultations
+    const [consultations, setConsultations] = useState<Consultation[]>([]);
+    const [showConsultForm, setShowConsultForm] = useState(false);
+    const [consultForm, setConsultForm] = useState<any>({
+        visitDate: new Date().toISOString().split('T')[0],
+        type: 'exam', diagnosis: '', treatment: '', nextVisit: '',
+        intraocularPressureOD: '', intraocularPressureOS: '',
+        visualAcuityOD: '', visualAcuityOS: '', notes: '',
+    });
+    const [savingConsult, setSavingConsult] = useState(false);
+    const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
+
     useEffect(() => {
         fetch(`/api/patients/${id}`)
             .then(r => r.json())
             .then(data => { setPatient(data); setEditForm(data); })
             .finally(() => setIsLoading(false));
+
+        fetch(`/api/patients/${id}/consultations`)
+            .then(r => r.ok ? r.json() : [])
+            .then(data => setConsultations(Array.isArray(data) ? data : []));
     }, [id]);
 
     const handleSave = async () => {
@@ -179,6 +211,29 @@ export default function PatientDetailPage() {
         if (!confirm('Удалить рецепт?')) return;
         await fetch(`/api/prescriptions/${rxId}`, { method: 'DELETE' });
         setPatient(p => p ? { ...p, prescriptions: p.prescriptions.filter(r => r.id !== rxId) } : p);
+    };
+
+    const handleAddConsult = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSavingConsult(true);
+        const res = await fetch(`/api/patients/${id}/consultations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(consultForm),
+        });
+        if (res.ok) {
+            const c = await res.json();
+            setConsultations(prev => [c, ...prev]);
+            setShowConsultForm(false);
+            setConsultForm({ visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '' });
+        }
+        setSavingConsult(false);
+    };
+
+    const handleDeleteConsult = async (cId: string) => {
+        if (!confirm('Удалить запись консультации?')) return;
+        await fetch(`/api/consultations/${cId}`, { method: 'DELETE' });
+        setConsultations(prev => prev.filter(c => c.id !== cId));
     };
 
     const calcAge = (birthDate: string | null) => {
@@ -420,6 +475,191 @@ export default function PatientDetailPage() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Consultations */}
+                <div className="mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-teal-600" /> История консультаций
+                            {consultations.length > 0 && (
+                                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{consultations.length}</span>
+                            )}
+                        </h2>
+                        <button onClick={() => setShowConsultForm(!showConsultForm)} className="btn btn-secondary btn-sm flex items-center gap-1">
+                            <Plus className="w-4 h-4" /> Добавить визит
+                        </button>
+                    </div>
+
+                    {/* New Consultation Form */}
+                    {showConsultForm && (
+                        <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
+                            <h3 className="font-semibold text-gray-900 mb-4">Новая запись консультации</h3>
+                            <form onSubmit={handleAddConsult}>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Дата визита</label>
+                                        <input type="date" value={consultForm.visitDate} onChange={e => setConsultForm((f: any) => ({ ...f, visitDate: e.target.value }))} className="input w-full text-sm h-9" required />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Тип приёма</label>
+                                        <select value={consultForm.type} onChange={e => setConsultForm((f: any) => ({ ...f, type: e.target.value }))} className="input w-full text-sm h-9">
+                                            <option value="exam">🔍 Первичный осмотр</option>
+                                            <option value="follow_up">🔄 Повторный приём</option>
+                                            <option value="fitting">👁 Подбор линз</option>
+                                            <option value="other">📋 Другое</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Visual metrics */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OD</label>
+                                        <input type="number" step="0.1" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOD} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OS</label>
+                                        <input type="number" step="0.1" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOS} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OD (мм рт.)</label>
+                                        <input type="number" step="0.5" placeholder="15.0" value={consultForm.intraocularPressureOD} onChange={e => setConsultForm((f: any) => ({ ...f, intraocularPressureOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OS (мм рт.)</label>
+                                        <input type="number" step="0.5" placeholder="15.0" value={consultForm.intraocularPressureOS} onChange={e => setConsultForm((f: any) => ({ ...f, intraocularPressureOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 mb-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Диагноз / Клинические данные</label>
+                                        <textarea value={consultForm.diagnosis} onChange={e => setConsultForm((f: any) => ({ ...f, diagnosis: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">План лечения / Рекомендации</label>
+                                        <textarea value={consultForm.treatment} onChange={e => setConsultForm((f: any) => ({ ...f, treatment: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит</label>
+                                            <input type="date" value={consultForm.nextVisit} onChange={e => setConsultForm((f: any) => ({ ...f, nextVisit: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки</label>
+                                            <input type="text" value={consultForm.notes} onChange={e => setConsultForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full text-sm h-9" placeholder="Дополнительно..." />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => setShowConsultForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>
+                                    <button type="submit" disabled={savingConsult} className="btn btn-primary flex-1 text-sm">
+                                        {savingConsult ? 'Сохранение...' : 'Сохранить запись'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {consultations.length === 0 && !showConsultForm ? (
+                        <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                            <Activity className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">Записей консультаций пока нет</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {consultations.map(c => {
+                                const typeLabels: Record<string, string> = {
+                                    exam: '🔍 Первичный осмотр',
+                                    follow_up: '🔄 Повторный приём',
+                                    fitting: '👁 Подбор линз',
+                                    other: '📋 Другое',
+                                };
+                                const isExpanded = expandedConsult === c.id;
+                                return (
+                                    <div key={c.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                        <div
+                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                                            onClick={() => setExpandedConsult(isExpanded ? null : c.id)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                                                    <Activity className="w-5 h-5 text-teal-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-900">{typeLabels[c.type] || c.type}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {new Date(c.visitDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                        {c.doctor && <span className="ml-2">· {c.doctor.fullName}</span>}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                {(c.visualAcuityOD || c.visualAcuityOS) && (
+                                                    <div className="hidden sm:block text-right text-xs font-mono text-gray-600">
+                                                        <p>OD: {c.visualAcuityOD ?? '—'}</p>
+                                                        <p>OS: {c.visualAcuityOS ?? '—'}</p>
+                                                    </div>
+                                                )}
+                                                {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                            </div>
+                                        </div>
+
+                                        {isExpanded && (
+                                            <div className="border-t border-gray-100 p-4 bg-gray-50/50 space-y-3">
+                                                {(c.visualAcuityOD != null || c.visualAcuityOS != null || c.intraocularPressureOD != null) && (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">Острота OD</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.visualAcuityOD ?? '—'}</p>
+                                                        </div>
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">Острота OS</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.visualAcuityOS ?? '—'}</p>
+                                                        </div>
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">ВГД OD</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.intraocularPressureOD != null ? `${c.intraocularPressureOD} мм` : '—'}</p>
+                                                        </div>
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">ВГД OS</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.intraocularPressureOS != null ? `${c.intraocularPressureOS} мм` : '—'}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {c.diagnosis && (
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{c.diagnosis}</p>
+                                                    </div>
+                                                )}
+                                                {c.treatment && (
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-500 mb-1">Рекомендации</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{c.treatment}</p>
+                                                    </div>
+                                                )}
+                                                {c.nextVisit && (
+                                                    <div className="flex items-center gap-2 text-sm text-teal-700 bg-teal-50 rounded-lg p-3">
+                                                        <Clock className="w-4 h-4" />
+                                                        Следующий визит: <strong>{new Date(c.nextVisit).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                                                    </div>
+                                                )}
+                                                {c.notes && <p className="text-xs text-gray-500 italic">{c.notes}</p>}
+                                                <div className="flex justify-end">
+                                                    <button onClick={() => handleDeleteConsult(c.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors">
+                                                        <Trash2 className="w-3.5 h-3.5" /> Удалить запись
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

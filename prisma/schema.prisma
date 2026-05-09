@@ -92,6 +92,7 @@ model User {
   doctorLeads    Lead[]  @relation("DoctorLeads")
   patients       Patient[] @relation("DoctorPatients")
   prescriptions  Prescription[] @relation("DoctorPrescriptions")
+  consultations  Consultation[] @relation("DoctorConsultations")
 
   @@map("users")
 }
@@ -141,6 +142,7 @@ model Patient {
 
   orders        Order[]
   prescriptions Prescription[]
+  consultations Consultation[]
 
   @@index([organizationId])
   @@index([phone])
@@ -179,6 +181,31 @@ model Prescription {
 
   @@index([patientId])
   @@map("prescriptions")
+}
+
+// ==================== Consultation (Visit History) ====================
+model Consultation {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId    String?
+  doctor      User?    @relation("DoctorConsultations", fields: [doctorId], references: [id])
+
+  visitDate   DateTime @default(now())   // Date of the visit
+  type        String   @default("exam")  // exam | follow_up | fitting | other
+  diagnosis   String?  @db.Text          // Clinical notes / diagnosis
+  treatment   String?  @db.Text          // Treatment plan / recommendation
+  nextVisit   DateTime?                  // Scheduled next appointment
+  intraocularPressureOD Float?           // IOP OD (mmHg)
+  intraocularPressureOS Float?           // IOP OS
+  visualAcuityOD Float?                  // Visual acuity OD (e.g. 0.8)
+  visualAcuityOS Float?                  // Visual acuity OS
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([patientId])
+  @@index([visitDate])
+  @@map("consultations")
 }
 
 // ==================== Product Catalog ====================
