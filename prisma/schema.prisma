@@ -735,6 +735,7 @@ model BotSession {
   history   Json     @default("[]")   // array of {role, content} for GPT context
   bookedAt  DateTime?                 // final appointment datetime
   patientId String?                   // linked Patient after booking
+  followUpCount     Int      @default(0) // tracks automatic reminders sent (1 day, 2 days, etc)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

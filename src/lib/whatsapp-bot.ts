@@ -19,6 +19,31 @@ async function buildSystemPrompt(): Promise<string> {
     const cfg: Record<string, string> = {};
     for (const c of configs) cfg[c.key] = c.value;
 
+    // Fetch busy slots for the next 14 days
+    const now = new Date();
+    const twoWeeksLater = new Date();
+    twoWeeksLater.setDate(now.getDate() + 14);
+
+    const upcomingLeads = await prisma.lead.findMany({
+        where: {
+            appointmentAt: { gte: now, lte: twoWeeksLater }
+        },
+        select: { appointmentAt: true }
+    });
+
+    const busySlots = upcomingLeads
+        .map(l => l.appointmentAt)
+        .filter((d): d is Date => d !== null)
+        .map(d => {
+            const dateStr = d.toISOString().split('T')[0];
+            const timeStr = d.toISOString().split('T')[1].substring(0, 5);
+            return `${dateStr} ${timeStr}`;
+        });
+
+    const busyText = busySlots.length > 0 
+        ? `\nЗАНЯТОЕ ВРЕМЯ НА БЛИЖАЙШИЕ 2 НЕДЕЛИ (НЕ ПРЕДЛАГАЙ ЭТИ ОКНА! Они уже заняты):\n${busySlots.join(', ')}\nПредлагай время с интервалом в 30 минут (например 10:00, 10:30) и только в рабочие часы.`
+        : `\nСвободных окон много. Предлагай время с интервалом в 30 минут (например 10:00, 10:30) и только в рабочие часы.`;
+
     return `Ты — ИИ-ассистент клиники ${cfg.clinic_name || 'New EYE'}.
 Стиль общения: ${cfg.bot_tone || 'дружелюбный, профессиональный, на "вы"'}
 
@@ -41,13 +66,15 @@ ${cfg.ortho_k_info || ''}
 ${cfg.faq || ''}
 
 ${cfg.extra_rules ? 'ДОПОЛНИТЕЛЬНО:\n' + cfg.extra_rules : ''}
+${busyText}
 
 ПРАВИЛА:
 - Общайся на русском языке
 - Отвечай кратко и по делу (2-4 предложения максимум)
 - НЕ придумывай данные которых нет выше
 - Когда пациент хочет записаться — собери: имя, удобную дату и время
-- После подтверждения записи выведи в конце ответа: BOOKING_CONFIRMED: Имя|ГГГГ-ММ-ДД|ЧЧ:ММ`;
+- Обязательно сверяйся со списком ЗАНЯТОГО ВРЕМЕНИ выше. Если время занято, предложи соседнее свободное!
+- После подтверждения записи выведи в самом конце своего ответа: BOOKING_CONFIRMED: Имя|ГГГГ-ММ-ДД|ЧЧ:ММ (строго в таком формате английскими буквами!)`;
 }
 
 // ── Send reply via Green API ──
