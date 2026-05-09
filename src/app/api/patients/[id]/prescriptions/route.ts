@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (patient?.medmundusId) {
         try {
             await mmPushPrescription(patient.medmundusId, {
-                doctorPhone: session.user.phone || undefined,
+                doctorPhone: session.user.profile?.phone || undefined,
                 date: prescribedAt || new Date().toISOString().split('T')[0],
                 rxType: type || 'glasses',
                 od: { sph: prescription.odSph ?? undefined, cyl: prescription.odCyl ?? undefined, ax: prescription.odAx ?? undefined, add: prescription.odAdd ?? undefined, pd: prescription.odPd ?? undefined },

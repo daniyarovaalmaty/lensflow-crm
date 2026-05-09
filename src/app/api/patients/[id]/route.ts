@@ -14,16 +14,15 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
         include: {
             prescriptions: { orderBy: { prescribedAt: 'desc' } },
             orders: {
-                orderBy: { created_at: 'desc' },
+                orderBy: { createdAt: 'desc' },
                 take: 20,
                 select: {
                     id: true,
-                    order_id: true,
+                    orderNumber: true,
                     status: true,
-                    created_at: true,
-                    total_price: true,
-                    is_urgent: true,
-                    lens_type: true,
+                    createdAt: true,
+                    totalPrice: true,
+                    isUrgent: true,
                 },
             },
             doctor: { select: { id: true, fullName: true } },

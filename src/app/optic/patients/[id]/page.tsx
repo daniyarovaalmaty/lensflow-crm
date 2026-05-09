@@ -6,7 +6,6 @@ import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2
 } from 'lucide-react';
-import OpticNav from '@/components/layout/OpticNav';
 import Link from 'next/link';
 
 interface Prescription {
@@ -28,8 +27,8 @@ interface PatientDetail {
     createdAt: string;
     prescriptions: Prescription[];
     orders: Array<{
-        id: string; order_id: string; status: string; created_at: string;
-        total_price: number | null; is_urgent: boolean; lens_type: string;
+        id: string; orderNumber: string; status: string; createdAt: string;
+        totalPrice: number | null; isUrgent: boolean;
     }>;
 }
 
@@ -211,7 +210,6 @@ export default function PatientDetailPage() {
 
     return (
         <div className="min-h-screen bg-surface">
-            <OpticNav />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
                 {/* Back */}
                 <button onClick={() => router.push('/optic/patients')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 mb-6 transition-colors">
@@ -406,13 +404,13 @@ export default function PatientDetailPage() {
                                             className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all group">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-gray-900">{order.order_id}</span>
+                                                    <span className="font-semibold text-gray-900">{order.orderNumber || order.id}</span>
                                                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
-                                                    {order.is_urgent && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">СРОЧНО</span>}
+                                                    {order.isUrgent && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">СРОЧНО</span>}
                                                 </div>
                                                 <p className="text-xs text-gray-500 mt-0.5">
-                                                    {new Date(order.created_at).toLocaleDateString('ru-RU')}
-                                                    {order.total_price ? ` · ${order.total_price.toLocaleString('ru-RU')} ₸` : ''}
+                                                    {new Date(order.createdAt).toLocaleDateString('ru-RU')}
+                                                    {order.totalPrice ? ` · ${order.totalPrice.toLocaleString('ru-RU')} ₸` : ''}
                                                 </p>
                                             </div>
                                             <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary-500 transition-colors" />

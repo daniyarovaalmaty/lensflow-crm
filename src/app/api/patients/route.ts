@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     if (!noSync && page === 1) {
         try {
             // Fetch all MM patients (doctor-filtered or all if admin)
-            const doctorPhone = session.user.phone;
+            const doctorPhone = session.user.profile?.phone;
             const mmPatients = await mmGetPatients(doctorPhone || undefined, undefined);
 
             for (const mm of mmPatients) {
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
             email: email?.trim() || undefined,
             birthDate: birthDate || undefined,
             gender: gender || undefined,
-            doctorPhone: session.user.phone || undefined,
+            doctorPhone: session.user.profile?.phone || undefined,
         });
     } catch (e) {
         console.warn('[PatientSync] Could not push to MedMundus:', e);
