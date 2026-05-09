@@ -1,13 +1,17 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { handleWhatsAppBot } from '@/lib/whatsapp-bot';
 
 const WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || '';
 
+// Phone numbers that bypass the AI bot (admins/doctors managing the account)
+const BOT_BLACKLIST = (process.env.WHATSAPP_BOT_BLACKLIST || '').split(',').filter(Boolean);
+
 /**
  * POST /api/webhooks/whatsapp
- * Green API → LensFlow CRM
- * Incoming WhatsApp message → creates/updates Lead + saves ChatMessage
+ * Receives all Green API webhook events.
+ * Routes incoming messages to the AI bot.
  */
 export async function POST(req: NextRequest) {
     // Verify secret if set
@@ -23,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const typeWebhook = body?.typeWebhook;
 
-    // Handle incoming messages only
+    // Only handle incoming messages
     if (typeWebhook !== 'incomingMessageReceived') {
         return NextResponse.json({ ok: true, skipped: typeWebhook });
     }
@@ -38,6 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     const rawPhone = senderData.chatId.replace('@c.us', '');
+    const normalizedPhone = rawPhone.replace(/\D/g, '');
     const senderName = senderData.senderName || senderData.chatName || '';
 
     // Extract message text
@@ -48,25 +53,25 @@ export async function POST(req: NextRequest) {
     } else if (msgType === 'extendedTextMessage') {
         messageText = messageData?.extendedTextMessageData?.text || '';
     } else if (msgType === 'imageMessage') {
-        messageText = `📷 Фото${messageData?.imageMessageData?.caption ? ': ' + messageData.imageMessageData.caption : ''}`;
+        messageText = `[Фото]${messageData?.imageMessageData?.caption ? ': ' + messageData.imageMessageData.caption : ''}`;
     } else if (msgType === 'audioMessage') {
-        messageText = '🎤 Голосовое сообщение';
-    } else if (msgType === 'documentMessage') {
-        messageText = `📄 ${messageData?.documentMessageData?.fileName || 'Документ'}`;
+        messageText = '[Голосовое сообщение]';
     } else {
-        messageText = `[${msgType || 'unknown'}]`;
+        // Non-text messages — acknowledge but don't bot-reply
+        return NextResponse.json({ ok: true, skipped: msgType });
     }
 
-    // Find existing lead by phone (last 9 digits)
+    if (!messageText.trim()) return NextResponse.json({ ok: true });
+
+    // Find or create Lead (for message storage)
     let lead = await prisma.lead.findFirst({
-        where: { phone: { contains: rawPhone.slice(-9) } },
+        where: { phone: { contains: normalizedPhone.slice(-9) } },
     });
 
     if (!lead) {
-        // Create new lead from WhatsApp message
         lead = await prisma.lead.create({
             data: {
-                phone: rawPhone,
+                phone: normalizedPhone,
                 name: senderName || null,
                 source: 'whatsapp',
                 stage: 'new_lead',
@@ -75,7 +80,7 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // Save message to ChatMessage
+    // Save incoming message
     await prisma.chatMessage.create({
         data: {
             leadId: lead.id,
@@ -87,11 +92,28 @@ export async function POST(req: NextRequest) {
         },
     });
 
-    // Update lead updatedAt
+    // Update lead
     await prisma.lead.update({
         where: { id: lead.id },
-        data: { updatedAt: new Date() },
+        data: {
+            name: lead.name || senderName || null,
+            updatedAt: new Date(),
+        },
     });
+
+    // Skip bot for blacklisted numbers
+    if (BOT_BLACKLIST.some(b => normalizedPhone.includes(b.replace(/\D/g, '')))) {
+        return NextResponse.json({ ok: true, bot: 'skipped (blacklist)' });
+    }
+
+    // Run AI bot asynchronously (don't block webhook response)
+    // Vercel has 30s timeout so we run it synchronously but catch errors
+    try {
+        await handleWhatsAppBot(normalizedPhone, messageText);
+    } catch (err: any) {
+        console.error('[WhatsApp Bot Error]', err?.message);
+        // Bot failed silently — message was still saved
+    }
 
     return NextResponse.json({ ok: true, leadId: lead.id });
 }
@@ -99,7 +121,8 @@ export async function POST(req: NextRequest) {
 export async function GET() {
     return NextResponse.json({
         ok: true,
-        service: 'LensFlow WhatsApp Webhook',
+        service: 'LensFlow WhatsApp AI Bot',
         instance: process.env.GREEN_API_INSTANCE_ID || 'not set',
+        bot: 'active',
     });
 }

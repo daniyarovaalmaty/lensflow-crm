@@ -709,3 +709,24 @@ model BotScenario {
 
   @@map("bot_scenarios")
 }
+
+// ==================== AI Bot Session ====================
+model BotSession {
+  id        String   @id @default(cuid())
+  phone     String   @unique          // normalized phone e.g. 77001234567
+  leadId    String?                   // linked Lead
+  state     String   @default("greeting") // greeting | collecting_name | collecting_date | collecting_time | confirming | done | paused
+  collectedName     String?           // extracted patient name
+  collectedDate     String?           // extracted preferred date (ISO string)
+  collectedTime     String?           // extracted preferred time e.g. "14:00"
+  collectedQuestion String?           // last unresolved question from user
+  history   Json     @default("[]")   // array of {role, content} for GPT context
+  bookedAt  DateTime?                 // final appointment datetime
+  patientId String?                   // linked Patient after booking
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+  @@map("bot_sessions")
+}
+
