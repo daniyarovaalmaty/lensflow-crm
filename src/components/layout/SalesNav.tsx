@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { Target, BarChart3, MessageCircle, Settings, ArrowLeft, LogOut, User, Menu, X, Calendar, CreditCard, Heart } from 'lucide-react';
+import { Target, BarChart3, MessageCircle, Settings, ArrowLeft, LogOut, User, Menu, X, Calendar, CreditCard, Heart, Bot } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 const navItems = [
-    { href: '/sales/pipeline', label: 'Новые лиды', icon: Target },
-    { href: '/sales/retention', label: 'Постоянные', icon: Heart },
-    { href: '/sales/calendar', label: 'Календарь', icon: Calendar },
-    { href: '/sales/analytics', label: 'Аналитика', icon: BarChart3 },
-    { href: '/sales/billing', label: 'Тарифы', icon: CreditCard },
+    { href: '/sales/pipeline',     label: 'Новые лиды', icon: Target },
+    { href: '/sales/retention',    label: 'Постоянные', icon: Heart },
+    { href: '/sales/calendar',     label: 'Календарь',  icon: Calendar },
+    { href: '/sales/analytics',    label: 'Аналитика',  icon: BarChart3 },
+    { href: '/sales/billing',      label: 'Тарифы',     icon: CreditCard },
+    { href: '/sales/bot-settings', label: 'Бот',        icon: Bot },
 ];
 
 export default function SalesNav() {
