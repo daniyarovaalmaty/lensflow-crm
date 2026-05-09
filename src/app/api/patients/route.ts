@@ -34,16 +34,50 @@ export async function GET(request: Request) {
     // Sync from MedMundus on first page load (not on search/paginate to keep it fast)
     if (!noSync && page === 1) {
         try {
-            // Fetch all MM patients (doctor-filtered or all if admin)
             const doctorPhone = session.user.profile?.phone;
             const mmPatients = await mmGetPatients(doctorPhone || undefined, undefined);
 
             for (const mm of mmPatients) {
                 const lf = mmPatientToLF(mm);
-                // Skip nameless records
                 const fullName = lf.name.trim();
                 if (!fullName || fullName === ' ') continue;
 
+                // Normalize phone for dedup comparison
+                const normalizedPhone = (lf.phone || '').replace(/[\s\-\+\(\)]/g, '');
+
+                // If phone exists, link medmundusId to that existing record (no duplicate)
+                if (normalizedPhone) {
+                    const existing = await prisma.patient.findFirst({
+                        where: {
+                            phone: { contains: normalizedPhone.slice(-9) }, // match last 9 digits
+                            OR: [
+                                { organizationId: session.user.organizationId || 'none' },
+                                { doctorId: session.user.id },
+                                { medmundusId: null },
+                            ],
+                        },
+                    });
+
+                    if (existing) {
+                        // Update existing record with MM data
+                        await prisma.patient.update({
+                            where: { id: existing.id },
+                            data: {
+                                medmundusId: existing.medmundusId ?? mm.medmundus_patient_id,
+                                // Use the fuller name (longer = more complete)
+                                name: fullName.length > existing.name.length ? fullName : existing.name,
+                                email: existing.email || lf.email,
+                                birthDate: existing.birthDate || (lf.birthDate ? new Date(lf.birthDate) : null),
+                                gender: existing.gender || lf.gender,
+                                ...(session.user.organizationId ? { organizationId: session.user.organizationId } : {}),
+                                doctorId: existing.doctorId || session.user.id,
+                            },
+                        });
+                        continue; // don't create a new record
+                    }
+                }
+
+                // No match by phone — upsert by medmundusId
                 await prisma.patient.upsert({
                     where: { medmundusId: mm.medmundus_patient_id },
                     update: {
@@ -52,7 +86,6 @@ export async function GET(request: Request) {
                         email: lf.email,
                         birthDate: lf.birthDate ? new Date(lf.birthDate) : null,
                         gender: lf.gender,
-                        // Only set org/doctor if not already set to avoid overwriting manual links
                         ...(session.user.organizationId ? { organizationId: session.user.organizationId } : {}),
                         doctorId: session.user.id,
                     },
@@ -72,6 +105,7 @@ export async function GET(request: Request) {
             console.warn('[PatientSync] MedMundus sync failed:', e);
         }
     }
+
 
     const [patients, total] = await Promise.all([
         prisma.patient.findMany({

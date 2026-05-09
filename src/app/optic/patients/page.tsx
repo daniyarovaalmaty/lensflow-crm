@@ -50,6 +50,21 @@ export default function PatientsPage() {
 
     const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '' });
     const [saving, setSaving] = useState(false);
+    const [dedupMsg, setDedupMsg] = useState('');
+
+    const handleDedup = async () => {
+        if (!confirm('Объединить пациентов с одинаковым номером телефона? Дубли будут удалены.')) return;
+        setIsSyncing(true);
+        try {
+            const res = await fetch('/api/patients/dedup', { method: 'POST' });
+            const data = await res.json();
+            setDedupMsg(data.message || 'Готово');
+            setTimeout(() => setDedupMsg(''), 5000);
+            load('', false); // reload list
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     const load = useCallback(async (query = '', noSync = false) => {
         if (!noSync) setIsSyncing(true);
@@ -118,6 +133,14 @@ export default function PatientsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <button
+                            onClick={handleDedup}
+                            title="Объединить дубли по телефону"
+                            className="p-2 rounded-lg text-gray-400 hover:text-orange-500 hover:bg-orange-50 transition-colors text-xs flex items-center gap-1"
+                        >
+                            <span className="text-base">🔗</span>
+                            <span className="hidden sm:inline">Дедубликация</span>
+                        </button>
+                        <button
                             onClick={() => load(q, false)}
                             title="Синхронизировать с MedMundus"
                             className="p-2 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
@@ -129,6 +152,13 @@ export default function PatientsPage() {
                         </button>
                     </div>
                 </div>
+
+                {/* Dedup result message */}
+                {dedupMsg && (
+                    <div className="flex items-center gap-2 mb-3 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+                        <span>✅</span> {dedupMsg}
+                    </div>
+                )}
 
                 {/* Sync badge */}
                 {!isSyncing && total > 0 && (
