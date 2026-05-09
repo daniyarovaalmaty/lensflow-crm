@@ -67,6 +67,29 @@ export default function SalesPipelinePage() {
     const [dragOverStage, setDragOverStage] = useState<string | null>(null);
     const [stageCounts, setStageCounts] = useState<Record<string, number>>({});
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+    const [waMessage, setWaMessage] = useState('');
+    const [waSending, setWaSending] = useState(false);
+    const [waSent, setWaSent] = useState(false);
+
+    const handleSendWA = async (lead: LeadCard) => {
+        if (!waMessage.trim() || waSending) return;
+        setWaSending(true);
+        try {
+            const res = await fetch('/api/whatsapp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: lead.phone.replace('@c.us', ''), message: waMessage, leadId: lead.id }),
+            });
+            if (res.ok) {
+                setWaSent(true);
+                setWaMessage('');
+                setTimeout(() => setWaSent(false), 3000);
+                fetchLeads();
+            }
+        } finally {
+            setWaSending(false);
+        }
+    };
 
     const fetchLeads = useCallback(async () => {
         try {
@@ -441,6 +464,38 @@ export default function SalesPipelinePage() {
                                                 </div>
                                             ))}
                                         </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* WhatsApp Quick Reply */}
+                            <div className="border-t border-gray-100 px-6 pt-4 pb-2">
+                                <label className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
+                                    <MessageSquare className="w-3.5 h-3.5 text-green-500" />
+                                    Написать в WhatsApp
+                                </label>
+                                {waSent ? (
+                                    <div className="text-sm text-green-600 bg-green-50 rounded-lg px-3 py-2 flex items-center gap-2">
+                                        ✅ Сообщение отправлено!
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={waMessage}
+                                            onChange={e => setWaMessage(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && handleSendWA(selectedLead)}
+                                            placeholder="Введите сообщение..."
+                                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-100 focus:border-green-400"
+                                        />
+                                        <button
+                                            onClick={() => handleSendWA(selectedLead)}
+                                            disabled={!waMessage.trim() || waSending}
+                                            className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                                        >
+                                            <MessageSquare className="w-4 h-4" />
+                                            {waSending ? '...' : 'Отправить'}
+                                        </button>
                                     </div>
                                 )}
                             </div>
