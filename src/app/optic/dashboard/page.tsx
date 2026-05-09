@@ -242,79 +242,63 @@ export default function OpticDashboard() {
                         </div>
 
                         {/* Desktop nav */}
-                        <div className="hidden md:flex items-center gap-3">
+                        <div className="hidden md:flex items-center gap-2">
+                            {/* Primary actions */}
                             {perms.canCreateOrders && (
-                                <Link href="/optic/orders/new" className="btn btn-primary gap-2">
-                                    <Plus className="w-5 h-5" />
+                                <Link href="/optic/orders/new" className="btn btn-primary gap-2 text-sm">
+                                    <Plus className="w-4 h-4" />
                                     Создать заказ
                                 </Link>
                             )}
-                            {subRole === 'optic_manager' && (
-                                <>
-                                    <Link
-                                        href="/optic/catalog"
-                                        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
-                                    >
-                                        <Package className="w-4 h-4" />
-                                        Каталог
-                                    </Link>
-                                    <Link
-                                        href="/optic/warehouse"
-                                        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
-                                    >
-                                        <Warehouse className="w-4 h-4" />
-                                        Склад
-                                    </Link>
-                                    <Link
-                                        href="/optic/pos"
-                                        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
-                                    >
-                                        <ShoppingCart className="w-4 h-4" />
-                                        Касса
-                                    </Link>
-                                    <Link
-                                        href="/optic/staff"
-                                        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
-                                    >
-                                        <Users className="w-4 h-4" />
-                                        Сотрудники
-                                    </Link>
-                                </>
-                            )}
+                            <Link
+                                href="/sales/pipeline"
+                                className="flex items-center gap-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
+                            >
+                                <Target className="w-4 h-4" />
+                                CRM
+                            </Link>
                             <Link
                                 href="/optic/patients"
-                                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
+                                className="flex items-center gap-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors py-2 px-3 rounded-lg"
                             >
                                 <Users className="w-4 h-4" />
                                 Пациенты
                             </Link>
-                            <Link
-                                href="/sales/pipeline"
-                                className="flex items-center gap-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
-                            >
-                                <Target className="w-4 h-4" />
-                                CRM Продажи
-                            </Link>
-                            <Link
-                                href="/profile"
-                                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
-                            >
+
+                            {/* Divider */}
+                            <div className="w-px h-6 bg-gray-200 mx-1" />
+
+                            {/* Manager extras */}
+                            {subRole === 'optic_manager' && (
+                                <>
+                                    <Link href="/optic/catalog" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Каталог">
+                                        <Package className="w-4 h-4" />
+                                    </Link>
+                                    <Link href="/optic/warehouse" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Склад">
+                                        <Warehouse className="w-4 h-4" />
+                                    </Link>
+                                    <Link href="/optic/pos" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса">
+                                        <ShoppingCart className="w-4 h-4" />
+                                    </Link>
+                                    <Link href="/optic/staff" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Сотрудники">
+                                        <Users className="w-4 h-4" />
+                                    </Link>
+                                    <div className="w-px h-6 bg-gray-200" />
+                                </>
+                            )}
+
+                            <Link href="/profile" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Профиль">
                                 <User className="w-4 h-4" />
-                                Профиль
                             </Link>
-                            <Link
-                                href="/support"
-                                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
-                            >
+                            <Link href="/support" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Поддержка">
                                 <MessageSquarePlus className="w-4 h-4" />
-                                Поддержка
                             </Link>
                             <button
                                 onClick={() => signOut({ callbackUrl: '/login' })}
-                                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-red-500 transition-colors py-2 px-3 rounded-lg hover:bg-red-50"
+                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Выйти"
                             >
                                 <LogOut className="w-4 h-4" />
-                                Выйти
                             </button>
                         </div>
 
@@ -443,20 +427,18 @@ export default function OpticDashboard() {
                 </div>
             </div>
 
-            {/* === PATIENT QUICK ACCESS BANNER === */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
-                <Link href="/optic/patients" className="group flex items-center gap-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-2xl p-4 shadow-sm transition-all hover:shadow-md">
-                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <Users className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-white font-bold text-base">Мои пациенты</p>
-                        <p className="text-emerald-100 text-sm">Карточки, рецепты на зрение — все в одном месте. Синхронизация с MedMundus</p>
-                    </div>
-                    <div className="text-white/70 group-hover:text-white transition-colors flex-shrink-0">
-                        <ChevronDown className="w-5 h-5 -rotate-90" />
-                    </div>
-                </Link>
+            {/* === PATIENT QUICK ACCESS - compact ===  */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-1">
+                <div className="flex items-center gap-3 flex-wrap">
+                    <Link href="/optic/patients"
+                        className="group inline-flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-sm font-medium py-2 px-4 rounded-xl transition-all hover:shadow-sm"
+                    >
+                        <Users className="w-4 h-4 text-emerald-600" />
+                        Мои пациенты
+                        <span className="text-emerald-400 group-hover:text-emerald-600 transition-colors">→</span>
+                    </Link>
+                    <span className="text-xs text-gray-400">Карточки, рецепты, консультации · синхронизация с MedMundus</span>
+                </div>
             </div>
 
             {/* Filters & Orders */}
