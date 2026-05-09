@@ -179,13 +179,13 @@ export async function handleWhatsAppBot(phone: string, incomingText: string): Pr
         create: { phone: normalizedPhone },
     });
 
-    // If session is "done" or "paused" — restart if user messages again
+    // If session is "done" or "paused" — restart state but KEEP HISTORY
     if (session.state === 'done') {
         await prisma.botSession.update({
             where: { phone: normalizedPhone },
-            data: { state: 'greeting', history: [] },
+            data: { state: 'greeting' },
         });
-        session = { ...session, state: 'greeting', history: [] as any };
+        session = { ...session, state: 'greeting' };
     }
 
     // Build conversation history
