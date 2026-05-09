@@ -282,6 +282,13 @@ export default function OpticDashboard() {
                                 </>
                             )}
                             <Link
+                                href="/optic/patients"
+                                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-500 transition-colors py-2 px-3 rounded-lg hover:bg-blue-50"
+                            >
+                                <Users className="w-4 h-4" />
+                                Пациенты
+                            </Link>
+                            <Link
                                 href="/sales/pipeline"
                                 className="flex items-center gap-1.5 text-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
                             >

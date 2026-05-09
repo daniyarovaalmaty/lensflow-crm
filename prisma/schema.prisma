@@ -90,6 +90,8 @@ model User {
   supportTickets SupportTicket[]
   assignedLeads  Lead[]  @relation("AssignedLeads")
   doctorLeads    Lead[]  @relation("DoctorLeads")
+  patients       Patient[] @relation("DoctorPatients")
+  prescriptions  Prescription[] @relation("DoctorPrescriptions")
 
   @@map("users")
 }
@@ -126,14 +128,55 @@ model Patient {
   name           String
   phone          String
   email          String?
-  notes          String?
+  birthDate      DateTime?
+  gender         String?   // male | female
+  notes          String?   @db.Text
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
+  doctorId       String?
+  doctor         User?    @relation("DoctorPatients", fields: [doctorId], references: [id])
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 
-  orders Order[]
+  orders        Order[]
+  prescriptions Prescription[]
 
+  @@index([organizationId])
+  @@index([phone])
   @@map("patients")
+}
+
+// ==================== Prescription (Vision Rx History) ====================
+model Prescription {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId    String?
+  doctor      User?    @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
+
+  // Right eye (OD)
+  odSph       Float?
+  odCyl       Float?
+  odAx        Float?
+  odAdd       Float?
+  odPd        Float?
+
+  // Left eye (OS)
+  osSph       Float?
+  osCyl       Float?
+  osAx        Float?
+  osAdd       Float?
+  osPd        Float?
+
+  // General
+  pdTotal     Float?   // Total PD if measured together
+  type        String   @default("glasses") // glasses | contacts | ortho-k
+  notes       String?  @db.Text
+  prescribedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([patientId])
+  @@map("prescriptions")
 }
 
 // ==================== Product Catalog ====================
