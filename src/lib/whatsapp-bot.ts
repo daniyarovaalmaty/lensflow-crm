@@ -14,7 +14,7 @@ const INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID;
 const TOKEN = process.env.GREEN_API_TOKEN;
 
 // ── Load dynamic system prompt from BotConfig DB ──
-export async function buildSystemPrompt(session?: any): Promise<string> {
+export async function buildSystemPrompt(session?: any, lead?: any): Promise<string> {
     // Fetch busy slots for the next 14 days
     const now = new Date();
     const twoWeeksLater = new Date();
@@ -39,11 +39,17 @@ export async function buildSystemPrompt(session?: any): Promise<string> {
         : `\nСвободных окон много. Предлагай время с интервалом в 30 минут (например 10:00, 10:30) и только в рабочие часы.`;
 
     let patientContext = '';
-    if (session) {
-        const nameStr = session.collectedName ? `Имя: ${session.collectedName}` : 'Имя неизвестно';
+    
+    // Check if we have CRM lead info
+    const crmName = lead?.name || session?.collectedName;
+    const crmDate = lead?.appointmentAt || session?.bookedAt;
+    
+    if (crmName || crmDate) {
+        const nameStr = crmName ? `Имя: ${crmName}` : 'Имя неизвестно';
         let bookingStr = 'Нет активных записей.';
-        if (session.bookedAt) {
-            const date = new Date(session.bookedAt);
+        
+        if (crmDate) {
+            const date = new Date(crmDate);
             const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
             bookingStr = `Есть запись! Дата: ${dateStr}, Время: ${timeStr}`;
@@ -210,8 +216,13 @@ export async function handleWhatsAppBot(phone: string, incomingText: string): Pr
     // Add user message to history
     history.push({ role: 'user', content: incomingText });
 
+    // Fetch real CRM lead if it exists
+    const existingLead = await prisma.lead.findFirst({
+        where: { phone: { contains: normalizedPhone.slice(-9) } },
+    });
+
     // Call GPT-4o with dynamic system prompt from DB
-    const systemPrompt = await buildSystemPrompt(session);
+    const systemPrompt = await buildSystemPrompt(session, existingLead);
     const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -360,9 +371,6 @@ export async function handleWhatsAppBot(phone: string, incomingText: string): Pr
     });
 
     // Save incoming message to ChatMessage for lead if exists
-    const existingLead = await prisma.lead.findFirst({
-        where: { phone: { contains: normalizedPhone.slice(-9) } },
-    });
     if (existingLead) {
         await prisma.chatMessage.create({
             data: {
