@@ -14,7 +14,7 @@ const INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID;
 const TOKEN = process.env.GREEN_API_TOKEN;
 
 // ── Load dynamic system prompt from BotConfig DB ──
-export async function buildSystemPrompt(): Promise<string> {
+export async function buildSystemPrompt(session?: any): Promise<string> {
     // Fetch busy slots for the next 14 days
     const now = new Date();
     const twoWeeksLater = new Date();
@@ -37,6 +37,19 @@ export async function buildSystemPrompt(): Promise<string> {
     const busyText = busySlots.length > 0 
         ? `\nЗАНЯТОЕ ВРЕМЯ НА БЛИЖАЙШИЕ 2 НЕДЕЛИ (НЕ ПРЕДЛАГАЙ ЭТИ ОКНА! Они уже заняты):\n${busySlots.join(', ')}\nПредлагай время с интервалом в 30 минут (например 10:00, 10:30) и только в рабочие часы.`
         : `\nСвободных окон много. Предлагай время с интервалом в 30 минут (например 10:00, 10:30) и только в рабочие часы.`;
+
+    let patientContext = '';
+    if (session) {
+        const nameStr = session.collectedName ? `Имя: ${session.collectedName}` : 'Имя неизвестно';
+        let bookingStr = 'Нет активных записей.';
+        if (session.bookedAt) {
+            const date = new Date(session.bookedAt);
+            const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            bookingStr = `Есть запись! Дата: ${dateStr}, Время: ${timeStr}`;
+        }
+        patientContext = `\nДАННЫЕ ПАЦИЕНТА ИЗ CRM:\n${nameStr}\nСтатус записи: ${bookingStr}\n(Если пациент спрашивает "есть ли у меня запись?" или "когда я записан?", СРАЗУ отвечай используя эти данные. Не говори "я сейчас проверю" или "минуточку"!)`;
+    }
 
     return `Ты — администратор офтальмологии New EYE. Меня зовут Валерия.
 New EYE — первый офтальмологический центр с Искусственным Интеллектом.
@@ -66,6 +79,7 @@ New EYE — первый офтальмологический центр с Ис
 МОТИВАЦИЯ И ЗАПИСЬ:
 Если анамнез собран и воспалений нет, расскажи о наших преимуществах (бесплатная консультация, лучшие врачи, своя лаборатория) и предложи подобрать удобное окно для записи. Обязательно узнай полное Имя и Фамилию пациента для карточки.
 ${busyText}
+${patientContext}
 
 Основные направления клиники:
 1. Детская и взрослая аппаратная диагностика зрения.
@@ -197,7 +211,7 @@ export async function handleWhatsAppBot(phone: string, incomingText: string): Pr
     history.push({ role: 'user', content: incomingText });
 
     // Call GPT-4o with dynamic system prompt from DB
-    const systemPrompt = await buildSystemPrompt();
+    const systemPrompt = await buildSystemPrompt(session);
     const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
