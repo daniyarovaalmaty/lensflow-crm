@@ -208,18 +208,33 @@ export async function handleWhatsAppBot(phone: string, incomingText: string): Pr
         session = { ...session, state: 'greeting' };
     }
 
-    // Build conversation history
-    const history: Array<{ role: string; content: string }> = Array.isArray(session.history)
-        ? (session.history as any[])
-        : [];
-
-    // Add user message to history
-    history.push({ role: 'user', content: incomingText });
-
-    // Fetch real CRM lead if it exists
+    // Fetch real CRM lead if it exists (including chat history!)
     const existingLead = await prisma.lead.findFirst({
         where: { phone: { contains: normalizedPhone.slice(-9) } },
+        include: {
+            messages: {
+                orderBy: { sentAt: 'desc' },
+                take: 20
+            }
+        }
     });
+
+    // Build conversation history from GLOBAL CRM Chat Messages
+    let history: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+
+    if (existingLead && existingLead.messages.length > 0) {
+        // Reverse to chronological order (oldest first)
+        const crmMessages = [...existingLead.messages].reverse();
+        
+        history = crmMessages.map(msg => ({
+            role: msg.direction === 'incoming' ? 'user' : 'assistant',
+            content: msg.content
+        }));
+    } else {
+        // Fallback for edge cases where webhook didn't create a Lead
+        history = Array.isArray(session.history) ? (session.history as any[]) : [];
+        history.push({ role: 'user', content: incomingText });
+    }
 
     // Call GPT-4o with dynamic system prompt from DB
     const systemPrompt = await buildSystemPrompt(session, existingLead);
