@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import Link from 'next/link';
-import { Microscope, Factory, BarChart2, Truck, Users, Banknote, Key, Eye, Check, FileEdit, MessageSquare, ShoppingCart, Scan, UserCheck, Stethoscope, Package, Shield, Smartphone, Bot, CalendarDays, PieChart, Warehouse } from 'lucide-react';
+import { Microscope, Factory, BarChart2, Truck, Users, Banknote, Key, Eye, Check, FileEdit, MessageSquare, ShoppingCart, Scan, UserCheck, Stethoscope, Package, Shield, Smartphone, Bot, CalendarDays, PieChart, Warehouse, Globe, Link2, Zap, Gift, ArrowRight } from 'lucide-react';
 
 export default async function HomePage() {
     const session = await auth();
@@ -350,17 +350,84 @@ export default async function HomePage() {
                 </div>
             </section>
 
+            {/* Integrations: ITIGRIS + MedMundus */}
+            <section className="py-24 px-6">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Интеграции с <span className="text-blue-400">экосистемой</span></h2>
+                        <p className="text-gray-500 max-w-2xl mx-auto">LensFlow работает в связке с ведущими платформами для максимальной эффективности вашей клиники</p>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        {/* ITIGRIS */}
+                        <div className="p-8 bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-3xl">
+                            <div className="w-14 h-14 bg-orange-500/20 rounded-2xl flex items-center justify-center mb-5 text-orange-400">
+                                <Link2 className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-3">Интеграция с ITIGRIS</h3>
+                            <p className="text-gray-400 text-sm mb-5 leading-relaxed">
+                                Если ваша клиника уже работает в ITIGRIS — данные автоматически синхронизируются с LensFlow.
+                                Заказы, пациенты и рецепты переносятся без ручного ввода.
+                            </p>
+                            <ul className="space-y-2.5 text-gray-400 text-sm">
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" /> Автоимпорт заказов из ITIGRIS</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" /> Синхронизация карточек пациентов</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" /> Единый поток данных между системами</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" /> Нет дублирования — работайте в привычной среде</li>
+                            </ul>
+                        </div>
+                        {/* MedMundus */}
+                        <div className="p-8 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-3xl">
+                            <div className="w-14 h-14 bg-cyan-500/20 rounded-2xl flex items-center justify-center mb-5 text-cyan-400">
+                                <Globe className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-3">MedMundus — трафик пациентов</h3>
+                            <p className="text-gray-400 text-sm mb-5 leading-relaxed">
+                                Ваши врачи появятся на портале MedMundus — крупнейшей медицинской платформе.
+                                Пациенты находят вашу клинику, записываются онлайн, а лиды попадают прямо в LensFlow CRM.
+                            </p>
+                            <ul className="space-y-2.5 text-gray-400 text-sm">
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" /> Профиль врача на MedMundus с рейтингом</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" /> Пациенты записываются онлайн</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" /> Бесплатный входящий трафик для клиники</li>
+                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" /> Единый вход: один аккаунт для LensFlow и MedMundus</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Free trial banner */}
+            <section className="py-12 px-6">
+                <div className="max-w-4xl mx-auto">
+                    <div className="p-8 bg-gradient-to-r from-emerald-600/20 via-green-600/15 to-teal-600/20 border border-green-500/30 rounded-3xl flex flex-col md:flex-row items-center gap-6">
+                        <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <Gift className="w-8 h-8 text-green-400" />
+                        </div>
+                        <div className="flex-1 text-center md:text-left">
+                            <h3 className="text-2xl font-bold mb-2">3 месяца <span className="text-green-400">бесплатно</span></h3>
+                            <p className="text-gray-400">Зарегистрируйтесь сейчас и получите полный доступ ко всем модулям LensFlow на 3 месяца — без оплаты, без ограничений</p>
+                        </div>
+                        <Link href="/register" className="px-6 py-3 bg-green-600 hover:bg-green-500 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-green-500/25 flex items-center gap-2 shrink-0">
+                            Попробовать <ArrowRight className="w-4 h-4" />
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
             {/* CTA */}
             <section className="py-24 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <div className="p-12 bg-gradient-to-br from-blue-600/20 to-purple-600/10 border border-blue-500/20 rounded-3xl relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5" />
                         <div className="relative z-10">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-500/15 border border-green-500/30 rounded-full text-green-400 text-sm font-semibold mb-6">
+                                <Zap className="w-4 h-4" /> 3 месяца бесплатно при регистрации
+                            </div>
                             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Готовы начать?</h2>
-                            <p className="text-gray-400 mb-8 max-w-md mx-auto">Подключите свою клинику к LensFlow и начните принимать заказы через WhatsApp уже сегодня</p>
+                            <p className="text-gray-400 mb-8 max-w-md mx-auto">Подключите свою клинику к LensFlow, получите трафик с MedMundus и начните принимать заказы уже сегодня</p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Link href="/register" className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl font-semibold text-lg transition-all hover:shadow-lg hover:shadow-blue-500/25 flex items-center gap-2">
-                                    <FileEdit className="w-5 h-5" /> Зарегистрироваться
+                                    <FileEdit className="w-5 h-5" /> Зарегистрироваться бесплатно
                                 </Link>
                                 <Link href="/login" className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-semibold text-lg transition-all">
                                     Войти
