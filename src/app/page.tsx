@@ -1,11 +1,10 @@
 import { auth } from '@/auth';
 import Link from 'next/link';
-import { Microscope, Factory, BarChart2, Truck, Users, Banknote, Key, Eye, Check, FileEdit } from 'lucide-react';
+import { Microscope, Factory, BarChart2, Truck, Users, Banknote, Key, Eye, Check, FileEdit, MessageSquare, ShoppingCart, Scan, UserCheck, Stethoscope, Package, Shield, Smartphone, Bot, CalendarDays, PieChart, Warehouse } from 'lucide-react';
 
 export default async function HomePage() {
     const session = await auth();
 
-    // Determine dashboard URL for logged-in users (no redirect — user can always see landing)
     let dashboardUrl = '';
     if (session?.user) {
         const role = session.user.role;
@@ -18,51 +17,112 @@ export default async function HomePage() {
         {
             icon: <Microscope className="w-8 h-8 text-blue-400" />,
             title: 'Конструктор заказов',
-            desc: 'Удобное оформление заказов на ортокератологические линзы с полной параметризацией',
+            desc: 'Полная параметризация ортокератологических линз: OD/OS, радиусы, диаметры, дизайны',
         },
         {
             icon: <Factory className="w-8 h-8 text-purple-400" />,
             title: 'Производственный хаб',
-            desc: 'Канбан-доска, контроль качества, учёт браков и отслеживание всех этапов',
+            desc: 'Канбан-доска с drag-and-drop, контроль качества, учёт браков на каждом этапе',
+        },
+        {
+            icon: <MessageSquare className="w-8 h-8 text-green-400" />,
+            title: 'WhatsApp CRM',
+            desc: 'Каждая клиника подключает свой WhatsApp через QR. Лиды, воронка продаж, чат-бот',
+        },
+        {
+            icon: <Stethoscope className="w-8 h-8 text-cyan-400" />,
+            title: 'Пациенты и рецепты',
+            desc: 'Карточки пациентов, история рецептов, привязка к заказам, автодедупликация',
+        },
+        {
+            icon: <ShoppingCart className="w-8 h-8 text-orange-400" />,
+            title: 'POS-терминал',
+            desc: 'Кассовый модуль для оптик: продажа товаров, чеки, история продаж',
+        },
+        {
+            icon: <Warehouse className="w-8 h-8 text-amber-400" />,
+            title: 'Склад и товары',
+            desc: 'Управление остатками, приход/расход, каталог товаров с ценами по ролям',
         },
         {
             icon: <BarChart2 className="w-8 h-8 text-emerald-400" />,
-            title: 'Аналитика и отчёты',
-            desc: 'Дашборды с KPI, графики выручки, экспорт в Excel для бухгалтерии',
+            title: 'Аналитика и дашборды',
+            desc: 'KPI, графики выручки, топ-клиники, ремейки, экспорт в Excel',
         },
         {
-            icon: <Truck className="w-8 h-8 text-orange-400" />,
-            title: 'Логистика и доставка',
-            desc: 'Отслеживание отгрузок, статусы доставки и интеграция с курьерскими службами',
+            icon: <Bot className="w-8 h-8 text-violet-400" />,
+            title: 'Чат-бот и автоворонка',
+            desc: 'Автоматические сценарии в WhatsApp: приветствие, запись, напоминания',
         },
         {
-            icon: <Users className="w-8 h-8 text-indigo-400" />,
-            title: 'Управление персоналом',
-            desc: 'Роли для врачей, бухгалтеров, инженеров, логистов — каждый видит только своё',
+            icon: <Smartphone className="w-8 h-8 text-rose-400" />,
+            title: 'Вход через WhatsApp',
+            desc: 'Авторизация по номеру телефона с OTP — без паролей, быстро и удобно',
+        },
+        {
+            icon: <Scan className="w-8 h-8 text-teal-400" />,
+            title: 'Сканер штрих-кодов',
+            desc: 'Сканирование заказов камерой телефона для быстрого поиска и отгрузки',
         },
         {
             icon: <Banknote className="w-8 h-8 text-yellow-400" />,
             title: 'Финансовый модуль',
-            desc: 'Контроль оплат, частичная оплата, счета-фактуры и финансовая отчётность',
+            desc: 'Оплаты, частичная оплата, счета-фактуры, отчётность для бухгалтера',
+        },
+        {
+            icon: <Shield className="w-8 h-8 text-indigo-400" />,
+            title: '10+ ролей доступа',
+            desc: 'Врач, менеджер, инженер, бухгалтер, логист, QC — каждый видит только своё',
         },
     ];
 
     const stats = [
-        { value: '2', label: 'Модуля' },
-        { value: '8+', label: 'Ролей' },
-        { value: '∞', label: 'Заказов' },
+        { value: '3', label: 'Модуля' },
+        { value: '30+', label: 'Клиник' },
+        { value: '10+', label: 'Ролей' },
         { value: '24/7', label: 'Доступ' },
     ];
 
+    const modules = {
+        optic: [
+            'Конструктор заказов с параметрами линз OD/OS',
+            'Карточки пациентов и история рецептов',
+            'Дашборд с аналитикой по клинике',
+            'Каталог продукции с ценами',
+            'POS-терминал для продаж',
+            'Склад: остатки, приход, расход',
+            'Управление персоналом клиники',
+        ],
+        lab: [
+            'Канбан-доска производства (drag-and-drop)',
+            'Контроль качества и регистрация браков',
+            'Управление каталогом и ценообразованием',
+            'Бухгалтерия: оплаты, счета, Excel-экспорт',
+            'Дашборд с KPI и аналитикой',
+            'Контрагенты и управление клиниками',
+            'Настройки лаборатории',
+        ],
+        sales: [
+            'WhatsApp-интеграция через QR-код',
+            'Воронка продаж (канбан лидов)',
+            'Автоматический чат-бот с сценариями',
+            'Календарь записей и консультаций',
+            'Удержание: повторные визиты и напоминания',
+            'Тарифы и подписки для клиник',
+        ],
+    };
+
     const roles = [
-        { role: 'Руководитель клиники', desc: 'Полный контроль: заказы, сотрудники, профиль компании, аналитика' },
-        { role: 'Врач клиники', desc: 'Создание и отслеживание заказов, работа с пациентами' },
+        { role: 'Руководитель клиники', desc: 'Полный контроль: заказы, персонал, пациенты, аналитика, склад' },
+        { role: 'Врач', desc: 'Создание заказов, рецепты, карточки пациентов' },
         { role: 'Бухгалтер клиники', desc: 'Финансовая отчётность и контроль оплат' },
         { role: 'Руководитель лаборатории', desc: 'Дашборд, производство, каталог, персонал, аналитика' },
-        { role: 'Инженер', desc: 'Работа с заказами на производстве, канбан-доска' },
+        { role: 'Инженер', desc: 'Производство линз, канбан-доска, параметры' },
         { role: 'Контроль качества', desc: 'Проверка готовых линз, регистрация браков' },
         { role: 'Логист', desc: 'Отгрузка и отслеживание доставки заказов' },
-        { role: 'Бухгалтер лаборатории', desc: 'Управление платежами, экспорт финансовых отчётов' },
+        { role: 'Бухгалтер лаборатории', desc: 'Управление платежами, экспорт отчётов' },
+        { role: 'Менеджер продаж', desc: 'WhatsApp-лиды, воронка, календарь записей' },
+        { role: 'Администратор', desc: 'Настройка бота, тарифов, сценариев автоворонки' },
     ];
 
     return (
@@ -94,29 +154,29 @@ export default async function HomePage() {
 
             {/* Hero */}
             <section className="relative pt-32 pb-24 px-6">
-                {/* Glow */}
                 <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
                 <div className="absolute top-40 right-1/4 w-[300px] h-[300px] bg-purple-600/15 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute top-60 left-1/4 w-[250px] h-[250px] bg-green-600/10 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="max-w-5xl mx-auto text-center relative z-10">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm font-medium mb-8">
                         <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                        CRM для производства ортокератологических линз
+                        CRM + WhatsApp + Производство для оптик и лабораторий
                     </div>
 
                     <h1 className="text-5xl sm:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
                         Управляйте
                         <br />
                         <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                            производством линз
+                            клиникой и производством
                         </span>
                         <br />
-                        от заказа до доставки
+                        в одной системе
                     </h1>
 
                     <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        LensFlow объединяет оптики и лаборатории в единую систему.
-                        Конструктор заказов, канбан-доска, аналитика и финансы — всё в одном месте.
+                        LensFlow объединяет оптики, лаборатории и продажи.
+                        WhatsApp-бот, конструктор заказов, канбан, пациенты, аналитика и финансы — всё в одном месте.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -145,12 +205,12 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            {/* Features */}
+            {/* Features Grid */}
             <section className="py-24 px-6">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl sm:text-4xl font-bold mb-4">Всё, что нужно для <span className="text-blue-400">бизнеса</span></h2>
-                        <p className="text-gray-500 max-w-xl mx-auto">Полный цикл управления заказами — от оформления в оптике до отгрузки из лаборатории</p>
+                        <p className="text-gray-500 max-w-xl mx-auto">12 модулей для полного управления оптикой, лабораторией и продажами</p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {features.map((f, i) => (
@@ -164,39 +224,53 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            {/* How it works */}
+            {/* Three Modules */}
             <section className="py-24 px-6 bg-gradient-to-b from-transparent via-blue-950/20 to-transparent">
-                <div className="max-w-5xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Два модуля — <span className="text-blue-400">одна система</span></h2>
+                        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Три модуля — <span className="text-blue-400">одна система</span></h2>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {/* Optic Module */}
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Optic */}
                         <div className="p-8 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20 rounded-3xl">
                             <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-5 text-blue-400">
                                 <Eye className="w-7 h-7" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">Модуль оптики</h3>
+                            <h3 className="text-xl font-bold mb-4">Модуль оптики</h3>
                             <ul className="space-y-2.5 text-gray-400 text-sm">
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Конструктор заказов с полной параметризацией линз</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Управление пациентами и историей заказов</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Отслеживание статусов в реальном времени</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Управление сотрудниками и ролями (врач, бухгалтер)</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> Профиль компании с реквизитами</li>
+                                {modules.optic.map((item, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                        <Check className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" /> {item}
+                                    </li>
+                                ))}
                             </ul>
                         </div>
-                        {/* Lab Module */}
+                        {/* Lab */}
                         <div className="p-8 bg-gradient-to-br from-purple-500/10 to-pink-500/5 border border-purple-500/20 rounded-3xl">
                             <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-5 text-purple-400">
                                 <Factory className="w-7 h-7" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">Производственный хаб</h3>
+                            <h3 className="text-xl font-bold mb-4">Производственный хаб</h3>
                             <ul className="space-y-2.5 text-gray-400 text-sm">
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Канбан-доска с drag-and-drop управлением</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Контроль качества и регистрация браков</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Управление каталогом продукции</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Финансы: оплаты, счета, экспорт в Excel</li>
-                                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> Дашборд с KPI, выручкой и аналитикой</li>
+                                {modules.lab.map((item, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                        <Check className="w-4 h-4 text-purple-400 mt-0.5 shrink-0" /> {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        {/* Sales */}
+                        <div className="p-8 bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 rounded-3xl">
+                            <div className="w-14 h-14 bg-green-500/20 rounded-2xl flex items-center justify-center mb-5 text-green-400">
+                                <MessageSquare className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-4">Продажи и WhatsApp</h3>
+                            <ul className="space-y-2.5 text-gray-400 text-sm">
+                                {modules.sales.map((item, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                        <Check className="w-4 h-4 text-green-400 mt-0.5 shrink-0" /> {item}
+                                    </li>
+                                ))}
                             </ul>
                         </div>
                     </div>
@@ -210,13 +284,68 @@ export default async function HomePage() {
                         <h2 className="text-3xl sm:text-4xl font-bold mb-4">Роли и <span className="text-blue-400">доступы</span></h2>
                         <p className="text-gray-500 max-w-xl mx-auto">Каждый сотрудник видит только тот функционал, который нужен для его работы</p>
                     </div>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         {roles.map((r, i) => (
                             <div key={i} className="p-5 bg-white/[0.03] border border-white/[0.06] rounded-2xl hover:bg-white/[0.06] transition-colors">
                                 <h4 className="font-semibold text-white text-sm mb-1.5">{r.role}</h4>
                                 <p className="text-xs text-gray-500 leading-relaxed">{r.desc}</p>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* WhatsApp Integration Highlight */}
+            <section className="py-24 px-6 bg-gradient-to-b from-transparent via-green-950/15 to-transparent">
+                <div className="max-w-5xl mx-auto">
+                    <div className="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-sm font-medium mb-6">
+                                <MessageSquare className="w-4 h-4" /> Новинка
+                            </div>
+                            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
+                                Свой <span className="text-green-400">WhatsApp</span> для каждой клиники
+                            </h2>
+                            <p className="text-gray-400 mb-8 leading-relaxed">
+                                Каждая клиника сканирует QR-код и подключает свой WhatsApp.
+                                Все сообщения попадают в CRM, менеджеры отвечают прямо из системы.
+                                Чат-бот автоматически приветствует, записывает и напоминает о визитах.
+                            </p>
+                            <ul className="space-y-3 text-gray-400">
+                                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-green-400" /> Подключение через QR за 30 секунд</li>
+                                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-green-400" /> Воронка продаж с этапами</li>
+                                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-green-400" /> Автоматические сценарии бота</li>
+                                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-green-400" /> Календарь записей и напоминания</li>
+                            </ul>
+                        </div>
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/10 rounded-3xl blur-2xl" />
+                            <div className="relative p-8 bg-white/[0.03] border border-green-500/20 rounded-3xl">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-xl">
+                                        <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400">📱</div>
+                                        <div>
+                                            <div className="text-sm font-medium">Новый лид из WhatsApp</div>
+                                            <div className="text-xs text-gray-500">Автоматическое создание карточки</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-blue-500/10 rounded-xl">
+                                        <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400">🤖</div>
+                                        <div>
+                                            <div className="text-sm font-medium">Бот отвечает автоматически</div>
+                                            <div className="text-xs text-gray-500">Приветствие, меню, запись на приём</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-purple-500/10 rounded-xl">
+                                        <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-400">📊</div>
+                                        <div>
+                                            <div className="text-sm font-medium">Лид в воронке продаж</div>
+                                            <div className="text-xs text-gray-500">Перемещение по этапам конверсии</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -228,7 +357,7 @@ export default async function HomePage() {
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5" />
                         <div className="relative z-10">
                             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Готовы начать?</h2>
-                            <p className="text-gray-400 mb-8 max-w-md mx-auto">Зарегистрируйтесь как руководитель оптики и начните управлять заказами уже сегодня</p>
+                            <p className="text-gray-400 mb-8 max-w-md mx-auto">Подключите свою клинику к LensFlow и начните принимать заказы через WhatsApp уже сегодня</p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Link href="/register" className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl font-semibold text-lg transition-all hover:shadow-lg hover:shadow-blue-500/25 flex items-center gap-2">
                                     <FileEdit className="w-5 h-5" /> Зарегистрироваться
@@ -250,7 +379,7 @@ export default async function HomePage() {
                         <span className="text-xs text-gray-600 ml-2 font-normal">CRM</span>
                     </div>
                     <p className="text-sm text-gray-600">
-                        © {new Date().getFullYear()} LensFlow. Управление заказами линз от создания до доставки.
+                        © {new Date().getFullYear()} LensFlow. CRM для оптик и лабораторий ортокератологических линз.
                     </p>
                 </div>
             </footer>
