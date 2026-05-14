@@ -1,11 +1,4 @@
 {
-    "framework": "nextjs",
-    "buildCommand": "next build",
-    "outputDirectory": ".next",
-    "crons": [
-        {
-            "path": "/api/cron/whatsapp-followup",
-            "schedule": "0 * * * *"
-        }
-    ]
+  "buildCommand": "npx prisma generate && next build",
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet ./"
 }

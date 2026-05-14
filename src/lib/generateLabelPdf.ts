@@ -77,8 +77,8 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
         });
     }
 
-    const od = order.config.eyes.od || ({} as EyeData);
-    const os = order.config.eyes.os || ({} as EyeData);
+    const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) || ({} as EyeData);
+    const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) || ({} as EyeData);
 
     // Label dimensions (mm)
     const W = 130;

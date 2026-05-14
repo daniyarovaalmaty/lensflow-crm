@@ -13,8 +13,8 @@ import { formatDate } from '@/lib/dateUtils';
 const PRICE_PER_LENS = 17500; // fallback
 
 function generateInvoiceHTML(order: Order): string {
-    const od = order.config.eyes.od;
-    const os = order.config.eyes.os;
+    const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+    const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
     const odQty = Number(od.qty) || 0;
     const osQty = Number(os.qty) || 0;
     const additionalProducts = order.products || [];
@@ -259,8 +259,8 @@ export default function NewOrderPage() {
 
     // ===== SUCCESS STATE =====
     if (createdOrder) {
-        const odQty = Number(createdOrder.config.eyes.od.qty) || 0;
-        const osQty = Number(createdOrder.config.eyes.os.qty) || 0;
+        const odQty = Number((createdOrder.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).qty) || 0;
+        const osQty = Number((createdOrder.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).qty) || 0;
         const totalPrice = createdOrder.total_price || (odQty + osQty) * PRICE_PER_LENS;
 
         return (

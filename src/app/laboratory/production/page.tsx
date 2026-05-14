@@ -286,14 +286,14 @@ export default function ProductionHubPage() {
                 'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
                 'Врач': o.meta.doctor || '—',
                 'Оптика': o.meta.optic_name || '—',
-                'OD Km': o.config.eyes.od.km || '',
-                'OD DIA': o.config.eyes.od.dia || '',
-                'OD Dk': o.config.eyes.od.dk || '',
-                'OD Qty': o.config.eyes.od.qty || 1,
-                'OS Km': o.config.eyes.os.km || '',
-                'OS DIA': o.config.eyes.os.dia || '',
-                'OS Dk': o.config.eyes.os.dk || '',
-                'OS Qty': o.config.eyes.os.qty || 1,
+                'OD Km': (o.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).km || '',
+                'OD DIA': (o.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).dia || '',
+                'OD Dk': (o.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).dk || '',
+                'OD Qty': (o.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).qty || 1,
+                'OS Km': (o.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).km || '',
+                'OS DIA': (o.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).dia || '',
+                'OS Dk': (o.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).dk || '',
+                'OS Qty': (o.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).qty || 1,
                 'Сумма (₸)': o.total_price || 0,
             }));
             const ws = XLSX.utils.json_to_sheet(rows);
@@ -317,7 +317,7 @@ export default function ProductionHubPage() {
             const materialMap: Record<string, { type: string; dk: string; qty: number }> = {};
             filteredOrders.forEach(o => {
                 ['od', 'os'].forEach(side => {
-                    const eye = (o.config.eyes as any)[side];
+                    const eye = ((o.config?.eyes || {}) as any)[side];
                     if (!eye?.characteristic || !eye?.qty) return;
                     const char = CharacteristicLabels[eye.characteristic as keyof typeof CharacteristicLabels] || eye.characteristic;
                     const dk = eye.dk || '—';
@@ -404,7 +404,7 @@ export default function ProductionHubPage() {
             ${order.delivery_method ? `<p style="font-size:14px;margin:8px 0;color:#333"><b>Доставка:</b> ${order.delivery_method}${order.delivery_address ? ' — ' + order.delivery_address : ''}</p>` : ''}
             ${order.notes ? `<div style="font-size:14px;margin:10px 0;padding:10px 14px;background:#fefce8;border:1px solid #fde68a;border-radius:6px"><b>Комментарии:</b> ${order.notes}</div>` : ''}
             <div class="lens-type">Тип линз: Ортокератологическая</div>
-            ${renderEyeTable(order.config.eyes.od, order.config.eyes.os)}
+            ${renderEyeTable((order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }), (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }))}
             </body></html>`;
         const w = window.open('', '_blank');
         if (w) { w.document.write(html); w.document.close(); w.focus(); w.print(); }
@@ -436,7 +436,7 @@ export default function ProductionHubPage() {
                 <tr><th>Оптика</th><td>${order.meta.optic_name || '—'}</td></tr>
             </table></div>
             <div class="lens-type">Тип линз: Ортокератологическая</div>
-            ${renderEyeTable(order.config.eyes.od, order.config.eyes.os)}
+            ${renderEyeTable((order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }), (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }))}
             <div class="footer"><p style="font-size:13px;color:#666">Дата печати: ${new Date().toLocaleString('ru-RU')}</p>
             <div class="sig"><div>Ответственный</div><div>Принял</div></div></div></body></html>`;
         const w = window.open('', '_blank');
@@ -541,8 +541,8 @@ export default function ProductionHubPage() {
     };
 
     const OrderCard = ({ order }: { order: Order }) => {
-        const od = order.config.eyes.od;
-        const os = order.config.eyes.os;
+        const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+        const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
         const charLabel = od.characteristic
             ? CharacteristicLabels[od.characteristic as Characteristic]
             : '—';
@@ -693,8 +693,8 @@ export default function ProductionHubPage() {
     const OrderModal = () => {
         if (!selectedOrder) return null;
         const order = selectedOrder;
-        const od = order.config.eyes.od;
-        const os = order.config.eyes.os;
+        const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+        const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
         const canAddDefect = order.status === 'in_production' || order.status === 'ready' || order.status === 'rework';
 
         return (
@@ -1613,7 +1613,7 @@ export default function ProductionHubPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {[{ label: 'OD', eye: order.config.eyes.od }, { label: 'OS', eye: order.config.eyes.os }].map(({ label, eye }) => (
+                                        {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) }].map(({ label, eye }) => (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
                                                 <td className="px-3 py-2 text-gray-700">

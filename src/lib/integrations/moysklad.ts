@@ -173,7 +173,7 @@ export class MoySkladClient {
 
         // Add OD position
         positions.push({
-            quantity: order.config.eyes.od.qty,
+            quantity: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).qty,
             price: product.price || 0,
             assortment: {
                 meta: product.meta,
@@ -182,7 +182,7 @@ export class MoySkladClient {
 
         // Add OS position
         positions.push({
-            quantity: order.config.eyes.os.qty,
+            quantity: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).qty,
             price: product.price || 0,
             assortment: {
                 meta: product.meta,

@@ -21,8 +21,8 @@ const FALLBACK_PRICE_PER_LENS = 17_500;
 
 function calcOrderTotal(order: Order, urgentPct: number = 0): number {
     if (order.total_price && order.total_price > 0) return order.total_price;
-    const od = order.config.eyes.od?.qty ?? 0;
-    const os = order.config.eyes.os?.qty ?? 0;
+    const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 })?.qty ?? 0;
+    const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 })?.qty ?? 0;
     const base = (Number(od) + Number(os)) * FALLBACK_PRICE_PER_LENS;
     const pct = (order as any).discount_percent ?? 0;
     const disc = Math.round(base * pct / 100);
@@ -39,8 +39,8 @@ function getLensPrice(order: Order, char: string | undefined, eye: 'od' | 'os'):
 }
 
 async function generateInvoice(order: Order, urgentPct: number = 0) {
-    const od = order.config.eyes.od;
-    const os = order.config.eyes.os;
+    const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+    const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
     const odQty = Number(od?.qty) || 0;
     const osQty = Number(os?.qty) || 0;
     const odChar = od?.characteristic as string | undefined;
@@ -614,8 +614,8 @@ export default function AccountantPage() {
                                         const total = calcOrderTotal(order);
                                         const payStatus = (order.payment_status ?? 'unpaid') as PaymentStatus;
                                         const isExpanded = expandedId === order.order_id;
-                                        const od = order.config.eyes.od;
-                                        const os = order.config.eyes.os;
+                                        const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+                                        const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
                                         const odQty = Number(od?.qty) || 0;
                                         const osQty = Number(os?.qty) || 0;
                                         const odChar = od?.characteristic as Characteristic | undefined;

@@ -22,8 +22,8 @@ function calcOrderPrice(order: Order, urgentPct: number = 0): number {
     // Use stored total_price if available
     if (order.total_price && order.total_price > 0) return order.total_price;
     // Fallback for old orders
-    const od = order.config.eyes.od;
-    const os = order.config.eyes.os;
+    const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+    const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
     const odQty = Number(od.qty) || 0;
     const osQty = Number(os.qty) || 0;
     const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
@@ -133,7 +133,7 @@ export default function LabHeadDashboard() {
 
         // Defects
         const totalDefects = filteredOrders.reduce((s, o) => s + (o.defects || []).reduce((d: number, def: DefectRecord) => d + def.qty, 0), 0);
-        const totalLenses = filteredOrders.reduce((s, o) => s + (Number(o.config.eyes.od.qty) || 1) + (Number(o.config.eyes.os.qty) || 1), 0);
+        const totalLenses = filteredOrders.reduce((s, o) => s + (Number((o.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).qty) || 1) + (Number((o.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).qty) || 1), 0);
         const defectRate = totalLenses > 0 ? ((totalDefects / totalLenses) * 100).toFixed(1) : '0';
 
         // Urgent orders
@@ -252,8 +252,8 @@ export default function LabHeadDashboard() {
                 'Срочность': o.is_urgent ? 'Срочный' : 'Обычный',
                 'Врач': o.meta.doctor || '—',
                 'Оптика': o.meta.optic_name || '—',
-                'OD Qty': Number(o.config.eyes.od.qty) || 1,
-                'OS Qty': Number(o.config.eyes.os.qty) || 1,
+                'OD Qty': Number((o.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }).qty) || 1,
+                'OS Qty': Number((o.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }).qty) || 1,
                 'Стоимость': calcOrderPrice(o),
             }));
             const ws = XLSX.utils.json_to_sheet(rows);

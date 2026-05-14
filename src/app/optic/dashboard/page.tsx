@@ -559,8 +559,8 @@ export default function OpticDashboard() {
                     <div className="grid gap-4">
                         {filteredOrders.map((order) => {
                             const isExpanded = expandedOrders.has(order.order_id);
-                            const od = order.config.eyes.od;
-                            const os = order.config.eyes.os;
+                            const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+                            const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
                             const odQty = Number(od.qty) || 0;
                             const osQty = Number(os.qty) || 0;
                             const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
