@@ -134,6 +134,9 @@ export default async function HomePage() {
                         Lens<span className="text-blue-400">Flow</span>
                     </div>
                     <div className="flex items-center gap-3">
+                        <Link href="/guide" className="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors hidden sm:block">
+                            Руководство
+                        </Link>
                         {isLoggedIn ? (
                             <Link href={dashboardUrl} className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
                                 Перейти в систему →
