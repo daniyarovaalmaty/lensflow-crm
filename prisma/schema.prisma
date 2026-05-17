@@ -30,6 +30,7 @@ model Organization {
   contactPhone     String?  // Телефон контактного лица
   discountPercent  Float    @default(0)  // Персональная скидка (%), по умолчанию 0%
   logo             String?  @db.Text     // URL логотипа организации
+  metadata         Json?    // Integrations config (ITIGRIS, etc.)
 
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())
@@ -137,6 +138,11 @@ model Patient {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   doctorId       String?
   doctor         User?    @relation("DoctorPatients", fields: [doctorId], references: [id])
+
+  // External integrations (ITIGRIS, etc.)
+  externalId     String?  // e.g. "itigris:12345"
+  externalSource String?  // e.g. "itigris"
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
 
@@ -147,6 +153,7 @@ model Patient {
   @@index([organizationId])
   @@index([phone])
   @@index([medmundusId])
+  @@index([externalId])
   @@map("patients")
 }
 

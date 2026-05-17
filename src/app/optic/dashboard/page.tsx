@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit } from 'lucide-react';
+import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -283,6 +283,9 @@ export default function OpticDashboard() {
                                     <Link href="/optic/staff" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Сотрудники">
                                         <Users className="w-4 h-4" />
                                     </Link>
+                                    <Link href="/optic/settings/itigris" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors" title="ITIGRIS">
+                                        <Link2 className="w-4 h-4" />
+                                    </Link>
                                     <div className="w-px h-6 bg-gray-200" />
                                 </>
                             )}
@@ -355,6 +358,14 @@ export default function OpticDashboard() {
                                     >
                                         <Users className="w-4 h-4" />
                                         Сотрудники
+                                    </Link>
+                                    <Link
+                                        href="/optic/settings/itigris"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-orange-600 hover:bg-orange-50"
+                                    >
+                                        <Link2 className="w-4 h-4" />
+                                        ITIGRIS
                                     </Link>
                                 </>
                             )}
