@@ -264,16 +264,43 @@ export class ItigrisApiClient {
 
     /**
      * Search clients by query.
-     * clientSearchType: FIO | PHONE | CARD_NUMBER | PRESCRIPTIONS
+     * clientSearchType: FULL_NAME | PHONE_NUMBER | CARD_NUMBER | PRESCRIPTIONS
+     * Returns paginated response { content: [...], totalElements, ... }
+     * IMPORTANT: deleted param is required by the API
      */
-    async searchClients(query: string, searchType: 'FIO' | 'PHONE' | 'CARD_NUMBER' = 'FIO'): Promise<ItigrisClient[]> {
-        const resp = await this.http.get('/clients/list', {
+    async searchClients(
+        query: string,
+        searchType: 'FULL_NAME' | 'PHONE_NUMBER' | 'CARD_NUMBER' = 'FULL_NAME',
+        page: number = 0,
+        size: number = 100,
+    ): Promise<ItigrisClient[]> {
+        const resp = await this.http.get('/clients', {
             params: {
                 clientSearchType: searchType,
                 searchQuery: query,
+                deleted: false,
+                page,
+                size,
             },
         });
-        return resp.data || [];
+        // API returns paginated: { content: [...], totalElements, ... }
+        if (resp.data?.content) return resp.data.content;
+        if (Array.isArray(resp.data)) return resp.data;
+        return [];
+    }
+
+    /** Get total number of clients matching search */
+    async countClients(query: string = ''): Promise<number> {
+        const resp = await this.http.get('/clients', {
+            params: {
+                clientSearchType: 'FULL_NAME',
+                searchQuery: query || 'А',
+                deleted: false,
+                page: 0,
+                size: 1,
+            },
+        });
+        return resp.data?.totalElements || 0;
     }
 
     /** Get client info by ID */
@@ -288,10 +315,13 @@ export class ItigrisApiClient {
         return resp.data;
     }
 
-    /** Get client orders history */
+    /** Get client orders history (paginated response) */
     async getClientOrders(clientId: number): Promise<ItigrisOrder[]> {
         const resp = await this.http.get(`/clients/${clientId}/orders`);
-        return resp.data || [];
+        // Paginated response
+        if (resp.data?.content) return resp.data.content;
+        if (Array.isArray(resp.data)) return resp.data;
+        return [];
     }
 
     /**
@@ -307,28 +337,27 @@ export class ItigrisApiClient {
 
     // ----- Orders -----
 
-    /** Get orders journal with filters */
-    async getOrdersJournal(params?: ItigrisOrderJournalParams): Promise<ItigrisOrder[]> {
-        const resp = await this.http.get('/orders/journal', { params });
-        return resp.data || [];
+    /**
+     * Get all orders across all clients.
+     * Uses per-client iteration since /orders path doesn't have a journal endpoint.
+     */
+    async getAllOrders(clientIds: number[]): Promise<ItigrisOrder[]> {
+        const allOrders: ItigrisOrder[] = [];
+        for (const clientId of clientIds) {
+            try {
+                const orders = await this.getClientOrders(clientId);
+                allOrders.push(...orders);
+            } catch {
+                // Client may not have orders — skip
+            }
+        }
+        return allOrders;
     }
 
     /** Get single order details */
     async getOrder(orderId: number): Promise<ItigrisOrder> {
         const resp = await this.http.get(`/orders/${orderId}`);
         return resp.data;
-    }
-
-    /** Get order statuses dictionary */
-    async getOrderStatuses(): Promise<Array<{ id: number; name: string }>> {
-        const resp = await this.http.get('/orders/statuses');
-        return resp.data || [];
-    }
-
-    /** Get order types dictionary */
-    async getOrderTypes(): Promise<Array<{ id: number; name: string }>> {
-        const resp = await this.http.get('/orders/types');
-        return resp.data || [];
     }
 
     // ----- Prescriptions -----

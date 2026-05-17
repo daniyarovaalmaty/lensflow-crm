@@ -66,12 +66,14 @@ export class ItigrisSyncService {
 
                 for (const letter of searchLetters) {
                     try {
-                        const clients = await this.api.searchClients(letter, 'FIO');
+                        const clients = await this.api.searchClients(letter, 'FULL_NAME');
                         for (const client of clients) {
                             if (seenIds.has(client.id)) continue;
                             seenIds.add(client.id);
                             try {
-                                await this.upsertPatient(client, result);
+                                // List doesn't include phone — get full client info
+                                const fullClient = await this.api.getClient(client.id);
+                                await this.upsertPatient(fullClient, result);
                             } catch (err: any) {
                                 result.errors++;
                                 result.details.push(`Ошибка клиента ${client.id}: ${err.message}`);
@@ -162,7 +164,25 @@ export class ItigrisSyncService {
         };
 
         try {
-            const orders = await this.api.getOrdersJournal();
+            // Get all synced patients with ITIGRIS external IDs
+            const patients = await (this.prisma as any).patient.findMany({
+                where: {
+                    organizationId: this.orgId,
+                    externalSource: 'itigris',
+                    externalId: { startsWith: 'itigris:' },
+                },
+                select: { externalId: true },
+            });
+
+            // Extract ITIGRIS client IDs
+            const clientIds = patients
+                .map((p: any) => parseInt(p.externalId.replace('itigris:', ''), 10))
+                .filter((id: number) => !isNaN(id));
+
+            result.details.push(`Загрузка заказов для ${clientIds.length} клиентов...`);
+
+            // Get orders for each client
+            const orders = await this.api.getAllOrders(clientIds);
 
             for (const order of orders) {
                 try {
