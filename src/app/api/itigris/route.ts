@@ -1,9 +1,10 @@
 /**
  * ITIGRIS Integration API Routes
  *
- * POST /api/itigris/test     — Test connection to ITIGRIS
- * POST /api/itigris/sync     — Run full sync
- * GET  /api/itigris/status   — Get sync status
+ * POST /api/itigris — Actions: test, save, sync, disconnect
+ * GET  /api/itigris — Get connection status
+ *
+ * Auth: company + login + password + departmentId (ITIGRIS Optima v.2 API)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,28 +13,28 @@ import prisma from '@/lib/db/prisma';
 import { ItigrisApiClient, ItigrisSyncService } from '@/lib/itigris';
 
 async function getOrgConfig(orgId: string) {
-    // Read ITIGRIS config from organization settings
     const org = await prisma.organization.findUnique({
         where: { id: orgId },
     });
 
     if (!org) return null;
 
-    // ITIGRIS config stored in organization metadata
     const meta = (org as any).metadata || {};
     const itigris = meta.itigris;
 
-    if (!itigris?.baseUrl || !itigris?.apiToken) return null;
+    if (!itigris?.company || !itigris?.login || !itigris?.password) return null;
 
     return {
-        baseUrl: itigris.baseUrl as string,
-        apiToken: itigris.apiToken as string,
+        company: itigris.company as string,
+        login: itigris.login as string,
+        password: itigris.password as string,
+        departmentId: Number(itigris.departmentId) || 0,
         organizationId: orgId,
-        branchId: itigris.branchId as string | undefined,
     };
 }
 
-// Test ITIGRIS connection
+// ----- POST: Actions -----
+
 export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session?.user) {
@@ -50,19 +51,20 @@ export async function POST(req: NextRequest) {
 
     // ----- Test Connection -----
     if (action === 'test') {
-        const baseUrl = body.baseUrl as string;
-        const apiToken = body.apiToken as string;
+        const { company, login, password, departmentId } = body;
 
-        if (!baseUrl || !apiToken) {
+        if (!company || !login || !password) {
             return NextResponse.json(
-                { error: 'Укажите URL и токен ITIGRIS' },
+                { error: 'Заполните все поля: приложение, логин и пароль' },
                 { status: 400 }
             );
         }
 
         const client = new ItigrisApiClient({
-            baseUrl,
-            apiToken,
+            company,
+            login,
+            password,
+            departmentId: Number(departmentId) || 0,
             organizationId: orgId,
         });
 
@@ -72,18 +74,15 @@ export async function POST(req: NextRequest) {
 
     // ----- Save Config -----
     if (action === 'save') {
-        const baseUrl = body.baseUrl as string;
-        const apiToken = body.apiToken as string;
-        const branchId = body.branchId as string | undefined;
+        const { company, login, password, departmentId } = body;
 
-        if (!baseUrl || !apiToken) {
+        if (!company || !login || !password) {
             return NextResponse.json(
-                { error: 'Укажите URL и токен ITIGRIS' },
+                { error: 'Заполните все поля: приложение, логин и пароль' },
                 { status: 400 }
             );
         }
 
-        // Save to organization metadata
         const org = await prisma.organization.findUnique({ where: { id: orgId } });
         const existingMeta = (org as any)?.metadata || {};
 
@@ -92,7 +91,13 @@ export async function POST(req: NextRequest) {
             data: {
                 metadata: {
                     ...existingMeta,
-                    itigris: { baseUrl, apiToken, branchId, connectedAt: new Date().toISOString() },
+                    itigris: {
+                        company,
+                        login,
+                        password,
+                        departmentId: Number(departmentId) || 0,
+                        connectedAt: new Date().toISOString(),
+                    },
                 },
             } as any,
         });
@@ -113,8 +118,8 @@ export async function POST(req: NextRequest) {
         const client = new ItigrisApiClient(config);
         const syncService = new ItigrisSyncService(client, prisma as any, orgId);
 
-        const updatedAfter = body.updatedAfter as string | undefined;
-        const results = await syncService.fullSync(updatedAfter);
+        const since = body.since as string | undefined;
+        const results = await syncService.fullSync(since);
 
         return NextResponse.json({
             ok: true,
@@ -140,7 +145,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
 
-// Get ITIGRIS connection status
+// ----- GET: Connection Status -----
+
 export async function GET() {
     const session = await auth();
     if (!session?.user) {
@@ -157,8 +163,9 @@ export async function GET() {
     const itigris = meta.itigris;
 
     return NextResponse.json({
-        connected: !!itigris?.apiToken,
-        baseUrl: itigris?.baseUrl || null,
+        connected: !!itigris?.company,
+        company: itigris?.company || null,
+        login: itigris?.login || null,
         connectedAt: itigris?.connectedAt || null,
     });
 }

@@ -1,13 +1,10 @@
 /**
- * ITIGRIS Sync Service
+ * ITIGRIS Sync Service — Real API v.2
  *
- * Handles bidirectional data synchronization between ITIGRIS Optima and LensFlow CRM.
- * Supports incremental sync via updatedAfter timestamps.
- *
- * Sync strategy:
- *   1. Clients → Patients (ITIGRIS → LensFlow, matched by phone)
- *   2. Orders → Orders (ITIGRIS → LensFlow, matched by external ID)
- *   3. Prescriptions → Prescriptions (ITIGRIS → LensFlow, linked to patients)
+ * Sync strategy (one-directional, ITIGRIS → LensFlow):
+ *   1. Clients → Patients (matched by phone or externalId)
+ *   2. Client Orders → view only (linked to patients)
+ *   3. Client changes → incremental sync
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -15,9 +12,7 @@ import {
     ItigrisApiClient,
     ItigrisClient,
     ItigrisOrder,
-    ItigrisPrescription,
     ItigrisSyncResult,
-    ItigrisConfig,
 } from './client';
 
 // ===================== Sync Service =====================
@@ -35,7 +30,11 @@ export class ItigrisSyncService {
 
     // ----- Sync Clients → Patients -----
 
-    async syncClients(updatedAfter?: string): Promise<ItigrisSyncResult> {
+    /**
+     * Search all clients by phone numbers from our patients
+     * and update/create mappings. Or use changes endpoint for delta sync.
+     */
+    async syncClientChanges(since?: string): Promise<ItigrisSyncResult> {
         const result: ItigrisSyncResult = {
             entity: 'clients',
             created: 0,
@@ -44,17 +43,10 @@ export class ItigrisSyncService {
             details: [],
         };
 
-        let page = 1;
-        let hasMore = true;
-
-        while (hasMore) {
-            try {
-                const { data: clients, total } = await this.api.getClients({
-                    page,
-                    limit: 50,
-                    updatedAfter,
-                });
-
+        try {
+            // If we have a `since` date, use incremental changes endpoint
+            if (since) {
+                const clients = await this.api.getClientChanges(since);
                 for (const client of clients) {
                     try {
                         await this.upsertPatient(client, result);
@@ -63,14 +55,37 @@ export class ItigrisSyncService {
                         result.details.push(`Ошибка клиента ${client.id}: ${err.message}`);
                     }
                 }
+            } else {
+                // Full sync: search by common letter patterns to get all clients
+                // ITIGRIS search requires at least a query — we search by common letters
+                const searchLetters = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К',
+                    'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф',
+                    'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Э', 'Ю', 'Я'];
 
-                hasMore = clients.length === 50 && page * 50 < total;
-                page++;
-            } catch (err: any) {
-                result.errors++;
-                result.details.push(`Ошибка загрузки страницы ${page}: ${err.message}`);
-                hasMore = false;
+                const seenIds = new Set<number>();
+
+                for (const letter of searchLetters) {
+                    try {
+                        const clients = await this.api.searchClients(letter, 'FIO');
+                        for (const client of clients) {
+                            if (seenIds.has(client.id)) continue;
+                            seenIds.add(client.id);
+                            try {
+                                await this.upsertPatient(client, result);
+                            } catch (err: any) {
+                                result.errors++;
+                                result.details.push(`Ошибка клиента ${client.id}: ${err.message}`);
+                            }
+                        }
+                    } catch (err: any) {
+                        // Some letters may return empty — ok
+                        result.details.push(`Поиск "${letter}": ${err.message}`);
+                    }
+                }
             }
+        } catch (err: any) {
+            result.errors++;
+            result.details.push(`Ошибка загрузки клиентов: ${err.message}`);
         }
 
         return result;
@@ -80,13 +95,23 @@ export class ItigrisSyncService {
         client: ItigrisClient,
         result: ItigrisSyncResult
     ): Promise<void> {
-        const phone = this.normalizePhone(client.phone);
-        const fullName = [client.lastName, client.firstName, client.middleName]
+        // Skip deleted clients
+        if (client.deleted) return;
+
+        const fullName = [client.familyName, client.firstName, client.patronymicName]
             .filter(Boolean)
             .join(' ')
             .trim();
 
         if (!fullName) return;
+
+        const phone = this.normalizePhone(client.tel1);
+
+        // Build birthDate from day/month/year
+        let birthDate: Date | undefined;
+        if (client.birthdayYear && client.birthdayMonth && client.birthdayDay) {
+            birthDate = new Date(client.birthdayYear, client.birthdayMonth - 1, client.birthdayDay);
+        }
 
         // Try to find existing patient by ITIGRIS external ID or phone
         const existing = await (this.prisma as any).patient.findFirst({
@@ -101,9 +126,10 @@ export class ItigrisSyncService {
 
         const patientData = {
             name: fullName,
-            phone: phone || undefined,
+            phone: phone || client.tel1 || '',
             email: client.email || undefined,
-            birthDate: client.birthDate ? new Date(client.birthDate) : undefined,
+            birthDate: birthDate || undefined,
+            gender: client.gender === true ? 'male' : client.gender === false ? 'female' : undefined,
             notes: client.comment || undefined,
             externalId: `itigris:${client.id}`,
             externalSource: 'itigris',
@@ -126,7 +152,7 @@ export class ItigrisSyncService {
 
     // ----- Sync Orders -----
 
-    async syncOrders(updatedAfter?: string): Promise<ItigrisSyncResult> {
+    async syncOrders(): Promise<ItigrisSyncResult> {
         const result: ItigrisSyncResult = {
             entity: 'orders',
             created: 0,
@@ -135,33 +161,20 @@ export class ItigrisSyncService {
             details: [],
         };
 
-        let page = 1;
-        let hasMore = true;
+        try {
+            const orders = await this.api.getOrdersJournal();
 
-        while (hasMore) {
-            try {
-                const { data: orders, total } = await this.api.getOrders({
-                    page,
-                    limit: 50,
-                    updatedAfter,
-                });
-
-                for (const order of orders) {
-                    try {
-                        await this.upsertOrder(order, result);
-                    } catch (err: any) {
-                        result.errors++;
-                        result.details.push(`Ошибка заказа ${order.number}: ${err.message}`);
-                    }
+            for (const order of orders) {
+                try {
+                    await this.upsertOrder(order, result);
+                } catch (err: any) {
+                    result.errors++;
+                    result.details.push(`Ошибка заказа ${order.id}: ${err.message}`);
                 }
-
-                hasMore = orders.length === 50 && page * 50 < total;
-                page++;
-            } catch (err: any) {
-                result.errors++;
-                result.details.push(`Ошибка загрузки страницы ${page}: ${err.message}`);
-                hasMore = false;
             }
+        } catch (err: any) {
+            result.errors++;
+            result.details.push(`Ошибка загрузки заказов: ${err.message}`);
         }
 
         return result;
@@ -172,19 +185,14 @@ export class ItigrisSyncService {
         result: ItigrisSyncResult
     ): Promise<void> {
         // Find the patient linked to this order
-        const patient = await (this.prisma as any).patient.findFirst({
-            where: {
-                organizationId: this.orgId,
-                externalId: `itigris:${order.clientId}`,
-            },
-        });
-
-        if (!patient) {
-            result.details.push(
-                `Заказ ${order.number}: пациент itigris:${order.clientId} не найден — сначала синхронизируйте клиентов`
-            );
-            result.errors++;
-            return;
+        let patient: any = null;
+        if (order.clientId) {
+            patient = await (this.prisma as any).patient.findFirst({
+                where: {
+                    organizationId: this.orgId,
+                    externalId: `itigris:${order.clientId}`,
+                },
+            });
         }
 
         const existing = await (this.prisma as any).order.findFirst({
@@ -194,108 +202,42 @@ export class ItigrisSyncService {
             },
         });
 
-        const lensflowStatus = this.mapOrderStatus(order.status);
-
-        const orderData = {
-            externalId: `itigris:${order.id}`,
-            externalSource: 'itigris',
-            orderNumber: order.number,
-            patientId: patient.id,
-            organizationId: this.orgId,
-            status: lensflowStatus,
-            totalPrice: order.totalAmount,
-            notes: `Импорт из ITIGRIS. Тип: ${order.type}`,
-        };
+        const lensflowStatus = this.mapOrderStatus(order.status || order.statusName || '');
 
         if (existing) {
             await (this.prisma as any).order.update({
                 where: { id: existing.id },
-                data: { status: lensflowStatus },
+                data: {
+                    status: lensflowStatus,
+                    notes: order.comment ? `ITIGRIS: ${order.comment}` : undefined,
+                },
             });
             result.updated++;
         } else {
-            await (this.prisma as any).order.create({
-                data: orderData,
+            // Create a new order requires lensConfig
+            const orderNumber = `ITG-${order.id}`;
+
+            // Check if orderNumber exists
+            const existingByNumber = await (this.prisma as any).order.findUnique({
+                where: { orderNumber },
             });
-            result.created++;
-        }
-    }
-
-    // ----- Sync Prescriptions -----
-
-    async syncPrescriptions(updatedAfter?: string): Promise<ItigrisSyncResult> {
-        const result: ItigrisSyncResult = {
-            entity: 'prescriptions',
-            created: 0,
-            updated: 0,
-            errors: 0,
-            details: [],
-        };
-
-        try {
-            const { data: prescriptions } = await this.api.getPrescriptions({ updatedAfter });
-
-            for (const rx of prescriptions) {
-                try {
-                    await this.upsertPrescription(rx, result);
-                } catch (err: any) {
-                    result.errors++;
-                    result.details.push(`Ошибка рецепта ${rx.id}: ${err.message}`);
-                }
+            if (existingByNumber) {
+                result.updated++;
+                return;
             }
-        } catch (err: any) {
-            result.errors++;
-            result.details.push(`Ошибка загрузки рецептов: ${err.message}`);
-        }
 
-        return result;
-    }
-
-    private async upsertPrescription(
-        rx: ItigrisPrescription,
-        result: ItigrisSyncResult
-    ): Promise<void> {
-        const patient = await (this.prisma as any).patient.findFirst({
-            where: {
-                organizationId: this.orgId,
-                externalId: `itigris:${rx.clientId}`,
-            },
-        });
-
-        if (!patient) return;
-
-        const existing = await (this.prisma as any).prescription.findFirst({
-            where: {
-                patientId: patient.id,
-                externalId: `itigris:${rx.id}`,
-            },
-        });
-
-        const rxData = {
-            externalId: `itigris:${rx.id}`,
-            externalSource: 'itigris',
-            patientId: patient.id,
-            doctorName: rx.doctorName,
-            date: new Date(rx.date),
-            odSph: rx.od?.sph,
-            odCyl: rx.od?.cyl,
-            odAx: rx.od?.ax,
-            odAdd: rx.od?.add,
-            osSph: rx.os?.sph,
-            osCyl: rx.os?.cyl,
-            osAx: rx.os?.ax,
-            osAdd: rx.os?.add,
-        };
-
-        if (existing) {
-            await (this.prisma as any).prescription.update({
-                where: { id: existing.id },
-                data: rxData,
-            });
-            result.updated++;
-        } else {
-            await (this.prisma as any).prescription.create({
-                data: rxData,
+            await (this.prisma as any).order.create({
+                data: {
+                    externalId: `itigris:${order.id}`,
+                    source: 'itigris',
+                    orderNumber,
+                    patientId: patient?.id || undefined,
+                    organizationId: this.orgId,
+                    status: lensflowStatus,
+                    totalPrice: Math.round(order.totalAmount || 0),
+                    lensConfig: {}, // Empty — ITIGRIS orders have different structure
+                    notes: `Импорт из ITIGRIS. ${order.type || ''} ${order.comment || ''}`.trim(),
+                },
             });
             result.created++;
         }
@@ -303,20 +245,19 @@ export class ItigrisSyncService {
 
     // ----- Full Sync -----
 
-    async fullSync(updatedAfter?: string): Promise<ItigrisSyncResult[]> {
+    async fullSync(since?: string): Promise<ItigrisSyncResult[]> {
         const results: ItigrisSyncResult[] = [];
 
-        // Order matters: clients first, then orders and prescriptions
-        results.push(await this.syncClients(updatedAfter));
-        results.push(await this.syncOrders(updatedAfter));
-        results.push(await this.syncPrescriptions(updatedAfter));
+        // Order matters: clients first, then orders
+        results.push(await this.syncClientChanges(since));
+        results.push(await this.syncOrders());
 
         return results;
     }
 
     // ----- Helpers -----
 
-    private normalizePhone(phone?: string): string | null {
+    private normalizePhone(phone?: string | null): string | null {
         if (!phone) return null;
         const digits = phone.replace(/\D/g, '');
         if (digits.length === 11 && digits.startsWith('8')) {
@@ -332,19 +273,24 @@ export class ItigrisSyncService {
     }
 
     private mapOrderStatus(itigrisStatus: string): string {
+        const s = (itigrisStatus || '').toLowerCase();
         const statusMap: Record<string, string> = {
-            'new': 'new',
-            'новый': 'new',
-            'in_progress': 'in_production',
+            'новый': 'new_order',
+            'new': 'new_order',
             'в работе': 'in_production',
-            'ready': 'ready',
+            'in_progress': 'in_production',
+            'в производстве': 'in_production',
             'готов': 'ready',
-            'issued': 'delivered',
+            'ready': 'ready',
+            'готов к выдаче': 'ready',
             'выдан': 'delivered',
-            'cancelled': 'cancelled',
+            'issued': 'delivered',
+            'отправлен': 'shipped',
+            'shipped': 'shipped',
             'отменен': 'cancelled',
             'отменён': 'cancelled',
+            'cancelled': 'cancelled',
         };
-        return statusMap[itigrisStatus.toLowerCase()] || 'new';
+        return statusMap[s] || 'new_order';
     }
 }

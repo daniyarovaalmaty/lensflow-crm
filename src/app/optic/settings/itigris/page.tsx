@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, ArrowLeft } from 'lucide-react';
+import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, ArrowLeft, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 interface SyncResult {
@@ -13,12 +13,14 @@ interface SyncResult {
 }
 
 export default function ItigrisSettingsPage() {
-    const [baseUrl, setBaseUrl] = useState('');
-    const [apiToken, setApiToken] = useState('');
-    const [branchId, setBranchId] = useState('');
+    const [company, setCompany] = useState('');
+    const [login, setLogin] = useState('');
+    const [password, setPassword] = useState('');
+    const [departmentId, setDepartmentId] = useState('');
 
     const [connected, setConnected] = useState(false);
     const [connectedAt, setConnectedAt] = useState<string | null>(null);
+    const [connectedLogin, setConnectedLogin] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [testing, setTesting] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -36,7 +38,9 @@ export default function ItigrisSettingsPage() {
             .then((data) => {
                 setConnected(data.connected);
                 setConnectedAt(data.connectedAt);
-                if (data.baseUrl) setBaseUrl(data.baseUrl);
+                setConnectedLogin(data.login);
+                if (data.company) setCompany(data.company);
+                if (data.login) setLogin(data.login);
             })
             .catch(() => {})
             .finally(() => setLoading(false));
@@ -50,7 +54,7 @@ export default function ItigrisSettingsPage() {
             const resp = await fetch('/api/itigris', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'test', baseUrl, apiToken }),
+                body: JSON.stringify({ action: 'test', company, login, password, departmentId }),
             });
             const data = await resp.json();
             setTestResult(data);
@@ -67,12 +71,13 @@ export default function ItigrisSettingsPage() {
             const resp = await fetch('/api/itigris', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'save', baseUrl, apiToken, branchId }),
+                body: JSON.stringify({ action: 'save', company, login, password, departmentId }),
             });
             const data = await resp.json();
             if (data.ok) {
                 setConnected(true);
                 setConnectedAt(new Date().toISOString());
+                setConnectedLogin(login);
             } else {
                 setError(data.error || 'Ошибка сохранения');
             }
@@ -105,7 +110,7 @@ export default function ItigrisSettingsPage() {
     };
 
     const handleDisconnect = async () => {
-        if (!confirm('Отключить ITIGRIS? Данные не будут удалены.')) return;
+        if (!confirm('Отключить ITIGRIS? Импортированные данные не будут удалены.')) return;
         setDisconnecting(true);
         try {
             await fetch('/api/itigris', {
@@ -115,9 +120,11 @@ export default function ItigrisSettingsPage() {
             });
             setConnected(false);
             setConnectedAt(null);
-            setBaseUrl('');
-            setApiToken('');
-            setBranchId('');
+            setConnectedLogin(null);
+            setCompany('');
+            setLogin('');
+            setPassword('');
+            setDepartmentId('');
             setSyncResults(null);
         } catch {}
         setDisconnecting(false);
@@ -127,7 +134,6 @@ export default function ItigrisSettingsPage() {
         clients: 'Пациенты',
         orders: 'Заказы',
         prescriptions: 'Рецепты',
-        products: 'Товары',
     };
 
     if (loading) {
@@ -149,8 +155,8 @@ export default function ItigrisSettingsPage() {
                     <Link2 className="w-6 h-6 text-orange-600" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Интеграция с ITIGRIS</h1>
-                    <p className="text-sm text-gray-500">Синхронизация пациентов, заказов и рецептов</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Интеграция с ITIGRIS Optima</h1>
+                    <p className="text-sm text-gray-500">Синхронизация пациентов и заказов с Оптимой</p>
                 </div>
             </div>
 
@@ -164,6 +170,11 @@ export default function ItigrisSettingsPage() {
                     <>
                         <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
                         <span className="text-green-700 font-medium">Подключено</span>
+                        {connectedLogin && (
+                            <span className="text-green-600 text-sm">
+                                ({connectedLogin})
+                            </span>
+                        )}
                         {connectedAt && (
                             <span className="text-green-600 text-sm ml-auto">
                                 с {new Date(connectedAt).toLocaleDateString('ru-RU')}
@@ -178,6 +189,15 @@ export default function ItigrisSettingsPage() {
                 )}
             </div>
 
+            {/* Auth Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+                <Shield className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+                <div className="text-sm text-blue-800">
+                    <p className="font-medium mb-1">Как получить доступ к API</p>
+                    <p>Создайте пользователя в Оптиме с ролью <strong>Секретарь</strong> (для клиентов и заказов). У пользователя должен быть <strong>отключён доступ по сертификату</strong>. ID департамента можно найти в настройках Оптимы.</p>
+                </div>
+            </div>
+
             {/* Config Form */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Параметры подключения</h2>
@@ -185,40 +205,54 @@ export default function ItigrisSettingsPage() {
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            URL ITIGRIS API
-                        </label>
-                        <input
-                            type="url"
-                            value={baseUrl}
-                            onChange={(e) => setBaseUrl(e.target.value)}
-                            placeholder="https://myoptika.itigris.cloud/api/v2"
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        />
-                        <p className="text-xs text-gray-400 mt-1">Получите у менеджера ITIGRIS</p>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            API-токен
-                        </label>
-                        <input
-                            type="password"
-                            value={apiToken}
-                            onChange={(e) => setApiToken(e.target.value)}
-                            placeholder="Bearer токен"
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            ID филиала <span className="text-gray-400">(опционально)</span>
+                            Приложение (company)
                         </label>
                         <input
                             type="text"
-                            value={branchId}
-                            onChange={(e) => setBranchId(e.target.value)}
-                            placeholder="ID центрального офиса"
+                            value={company}
+                            onChange={(e) => setCompany(e.target.value)}
+                            placeholder="neweye"
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Название вашего приложения в ITIGRIS</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Логин
+                            </label>
+                            <input
+                                type="text"
+                                value={login}
+                                onChange={(e) => setLogin(e.target.value)}
+                                placeholder="api_user"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Пароль
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            ID департамента <span className="text-gray-400">(число из настроек Оптимы)</span>
+                        </label>
+                        <input
+                            type="number"
+                            value={departmentId}
+                            onChange={(e) => setDepartmentId(e.target.value)}
+                            placeholder="1000000001"
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                         />
                     </div>
@@ -248,16 +282,16 @@ export default function ItigrisSettingsPage() {
                 <div className="flex gap-3 mt-6">
                     <button
                         onClick={handleTest}
-                        disabled={!baseUrl || !apiToken || testing}
+                        disabled={!company || !login || !password || testing}
                         className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
                     >
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plug className="w-4 h-4" />}
-                        Проверить подключение
+                        Проверить
                     </button>
 
                     <button
                         onClick={handleSave}
-                        disabled={!baseUrl || !apiToken || saving}
+                        disabled={!company || !login || !password || saving}
                         className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium text-white disabled:opacity-50 flex items-center gap-2 transition-colors"
                     >
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
@@ -288,12 +322,13 @@ export default function ItigrisSettingsPage() {
                             className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm font-medium text-white disabled:opacity-50 flex items-center gap-2 transition-colors"
                         >
                             {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                            {syncing ? 'Синхронизация...' : 'Синхронизировать сейчас'}
+                            {syncing ? 'Синхронизация...' : 'Синхронизировать'}
                         </button>
                     </div>
 
                     <p className="text-sm text-gray-500 mb-4">
-                        Импортирует пациентов, заказы и рецепты из ITIGRIS в LensFlow. Существующие данные обновятся, новые — создадутся.
+                        Импортирует клиентов и заказы из ITIGRIS Optima в LensFlow.
+                        Существующие данные обновятся по телефону или ID, новые — создадутся.
                     </p>
 
                     {/* Sync Results */}

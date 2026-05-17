@@ -4,9 +4,8 @@ export type {
     ItigrisConfig,
     ItigrisClient,
     ItigrisOrder,
-    ItigrisOrderItem,
     ItigrisPrescription,
     ItigrisEyeRx,
-    ItigrisProduct,
     ItigrisSyncResult,
+    ItigrisOrderJournalParams,
 } from './client';
