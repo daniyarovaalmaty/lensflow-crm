@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan } from 'lucide-react';
 import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
+import { useUsbScanner } from '@/hooks/useUsbScanner';
 import { formatDateTime } from '@/lib/dateUtils';
 
 interface Product {
@@ -47,6 +48,8 @@ export default function POSPage() {
     const [showHistory, setShowHistory] = useState(false);
     const [sales, setSales] = useState<Sale[]>([]);
     const [lastSale, setLastSale] = useState<Sale | null>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [scanFeedback, setScanFeedback] = useState<string | null>(null);
 
     // Checkout form
     const [customerName, setCustomerName] = useState('');
@@ -54,6 +57,44 @@ export default function POSPage() {
     const [discount, setDiscount] = useState('0');
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [saving, setSaving] = useState(false);
+
+    // USB Scanner — auto-detects barcode scanner input (keyboard emulation)
+    const handleUsbScan = useCallback((code: string) => {
+        const product = products.find(p => p.barcode === code || p.sku === code);
+        if (product) {
+            const stock = product.type === 'service' ? 999 : (product._count?.stockItems ?? product.currentStock);
+            const existing = cart.find(c => c.productId === product.id);
+            if (existing) {
+                if (product.type === 'product' && existing.quantity >= stock) {
+                    setScanFeedback(`⚠️ ${product.name} — нет на складе`);
+                } else {
+                    setCart(prev => prev.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c));
+                    setScanFeedback(`✅ ${product.name} (${existing.quantity + 1} шт)`);
+                }
+            } else {
+                setCart(prev => [...prev, {
+                    productId: product.id, name: product.name, category: product.category,
+                    type: product.type, unitPrice: product.retailPrice, quantity: 1, maxStock: stock,
+                }]);
+                setScanFeedback(`✅ ${product.name} добавлен`);
+            }
+        } else {
+            setScanFeedback(`❌ Товар "${code}" не найден`);
+        }
+        setTimeout(() => setScanFeedback(null), 3000);
+    }, [products, cart]);
+    useUsbScanner(handleUsbScan);
+
+    // Fullscreen toggle for monoblock
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            setIsFullscreen(true);
+        } else {
+            document.exitFullscreen();
+            setIsFullscreen(false);
+        }
+    };
 
     useEffect(() => { loadProducts(); }, []);
 
@@ -177,22 +218,40 @@ export default function POSPage() {
                         </h1>
                     </div>
                     <div className="flex items-center gap-2">
+                        <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 rounded-xl text-xs font-medium">
+                            <Scan className="w-3.5 h-3.5" />
+                            <span className="hidden md:inline">USB-сканер активен</span>
+                        </div>
                         <button onClick={() => setShowScanner(!showScanner)}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                                 showScanner ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}>
-                            <Camera className="w-4 h-4" /> Сканер
+                            <Camera className="w-4 h-4" /> <span className="hidden sm:inline">Камера</span>
                         </button>
                         <button onClick={() => { setShowHistory(true); loadSales(); }}
                             className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors">
-                            <Receipt className="w-4 h-4" /> История
+                            <Receipt className="w-4 h-4" /> <span className="hidden sm:inline">История</span>
+                        </button>
+                        <button onClick={toggleFullscreen}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-xl text-sm font-medium transition-colors">
+                            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
                         </button>
                     </div>
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-                {/* Scanner */}
+                {/* USB Scanner feedback toast */}
+                <AnimatePresence>
+                    {scanFeedback && (
+                        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+                            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-gray-900 text-white rounded-2xl shadow-2xl text-base font-medium">
+                            {scanFeedback}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Camera Scanner */}
                 {showScanner && (
                     <div className="mb-4">
                         <BarcodeScanner onScan={handleScanResult} onClose={() => setShowScanner(false)} />
