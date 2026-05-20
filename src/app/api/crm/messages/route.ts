@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { sendWhatsAppMessage } from '@/lib/greenApi';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/crm/messages?leadId=xxx — get message history for a lead
 export async function GET(req: NextRequest) {
     const leadId = new URL(req.url).searchParams.get('leadId');

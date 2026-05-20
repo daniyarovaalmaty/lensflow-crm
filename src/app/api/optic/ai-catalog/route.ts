@@ -3,6 +3,8 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import OpenAI from 'openai';
 
+export const dynamic = 'force-dynamic';
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const SYSTEM_PROMPT = `Ты — ИИ-помощник менеджера оптики. Твоя задача — парсить текстовые запросы менеджера и извлекать товары/услуги для добавления в каталог.

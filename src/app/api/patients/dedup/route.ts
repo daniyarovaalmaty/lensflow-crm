@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/patients/dedup — merge duplicate patients by phone number
 export async function POST() {
     const session = await auth();

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { LeadStage } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/crm/leads — list leads with filters
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);

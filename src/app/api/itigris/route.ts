@@ -12,6 +12,8 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import { ItigrisApiClient, ItigrisSyncService } from '@/lib/itigris';
 
+export const dynamic = 'force-dynamic';
+
 async function getOrgConfig(orgId: string) {
     const org = await prisma.organization.findUnique({
         where: { id: orgId },

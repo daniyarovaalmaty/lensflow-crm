@@ -9,6 +9,8 @@ import { NextResponse } from 'next/server';
 import { sendWhatsAppMessage } from '@/lib/greenApi';
 import prisma from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // In-memory OTP store (for serverless, consider Redis in production)
 // Map<phone, { code: string, expiresAt: number, attempts: number }>
 const otpStore = new Map<string, { code: string; expiresAt: number; attempts: number }>();

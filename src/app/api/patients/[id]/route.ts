@@ -3,6 +3,8 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import { mmUpdatePatient } from '@/lib/mm-patient-bridge';
 
+export const dynamic = 'force-dynamic';
+
 
 // GET /api/patients/[id]
 export async function GET(_: Request, { params }: { params: { id: string } }) {

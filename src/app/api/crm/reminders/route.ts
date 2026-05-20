@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { sendWhatsAppMessage } from '@/lib/greenApi';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/crm/reminders — list pending reminders
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);

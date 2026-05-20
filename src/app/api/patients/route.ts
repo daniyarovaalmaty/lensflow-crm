@@ -3,6 +3,8 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import { mmGetPatients, mmCreatePatient, mmPatientToLF } from '@/lib/mm-patient-bridge';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/patients — list patients (local + pull from MedMundus on first load)
 export async function GET(request: Request) {
     const session = await auth();

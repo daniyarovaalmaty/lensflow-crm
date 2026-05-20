@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 function normalizePhone(phone: string): string {
     if (!phone) return phone;
     let digits = phone.replace(/\D/g, '');

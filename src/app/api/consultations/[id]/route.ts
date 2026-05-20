@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // DELETE /api/consultations/[id]
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
     const session = await auth();
