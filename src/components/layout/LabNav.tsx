@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { BarChart3, Columns3, FileText, LogOut, User, Package, Users, Building2, Menu, X, Settings, Archive, MessageSquarePlus, Target } from 'lucide-react';
+import { BarChart3, Columns3, FileText, LogOut, User, Package, Users, Building2, Menu, X, Settings, Archive, MessageSquarePlus, Target, UserPlus } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
@@ -17,6 +17,7 @@ const navItems = [
     { href: '/laboratory/analytics', label: 'Старые заказы', icon: Archive, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/counterparties', label: 'Контрагенты', icon: Building2, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/sales/pipeline', label: 'CRM Продажи', icon: Target, subRoles: ['lab_head', 'lab_admin', 'sales_manager'] },
+    { href: '/laboratory/partner-leads', label: 'Заявки', icon: UserPlus, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/staff', label: 'Сотрудники', icon: Users, subRoles: ['lab_head'] },
     { href: '/laboratory/settings', label: 'Настройки', icon: Settings, subRoles: ['lab_head'] },
     { href: '/support', label: 'Поддержка', icon: MessageSquarePlus, subRoles: ['lab_head', 'lab_admin', 'lab_engineer', 'lab_quality', 'lab_logistics', 'lab_accountant'] },
