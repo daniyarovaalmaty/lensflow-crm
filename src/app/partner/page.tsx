@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, Send, Eye, Clock, Users, TrendingUp, Phone, Mail, MapPin, Building2 } from 'lucide-react';
+import { CheckCircle, Send, Eye, Clock, Users, TrendingUp, Phone, MapPin, Building2 } from 'lucide-react';
+import type { Metadata } from 'next';
 
 export default function PartnerLandingPage() {
-    const [form, setForm] = useState({ name: '', phone: '', email: '', city: '', clinicName: '', message: '' });
+    const [form, setForm] = useState({ name: '', phone: '', city: '', clinicName: '', message: '' });
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
     const [error, setError] = useState('');
@@ -30,10 +31,11 @@ export default function PartnerLandingPage() {
 
     return (
         <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#fff', fontFamily: "'Inter', system-ui, sans-serif" }}>
+            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
             {/* Hero */}
-            <div style={{ padding: '60px 24px 40px', textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
+            <div style={{ padding: '48px 20px 32px', textAlign: 'center', maxWidth: 700, margin: '0 auto' }}>
                 <div style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 100, fontSize: 12, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: 1.5, background: 'rgba(20,184,166,.15)', color: '#14b8a6', border: '1px solid rgba(20,184,166,.3)', marginBottom: 20 }}>
                     MedInvision Lab × LensFlow
                 </div>
@@ -46,7 +48,7 @@ export default function PartnerLandingPage() {
             </div>
 
             {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, maxWidth: 600, margin: '0 auto 32px', padding: '0 24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, maxWidth: 600, margin: '0 auto 28px', padding: '0 20px' }}>
                 {[
                     { icon: <Clock size={20} />, num: '2 ч', label: 'изготовление' },
                     { icon: <Eye size={20} />, num: '20 000+', label: 'линз' },
@@ -62,7 +64,7 @@ export default function PartnerLandingPage() {
             </div>
 
             {/* What you get */}
-            <div style={{ maxWidth: 600, margin: '0 auto 32px', padding: '0 24px' }}>
+            <div style={{ maxWidth: 600, margin: '0 auto 28px', padding: '0 20px' }}>
                 <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#e2e8f0', textAlign: 'center', marginBottom: 16 }}>Что вы получаете</h2>
                 {[
                     'Обучение подбору ночных линз (3 дня)',
@@ -81,8 +83,8 @@ export default function PartnerLandingPage() {
             </div>
 
             {/* Form */}
-            <div style={{ maxWidth: 500, margin: '0 auto', padding: '0 24px 60px' }}>
-                <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 20, padding: 28 }}>
+            <div style={{ maxWidth: 500, margin: '0 auto', padding: '0 20px 60px' }}>
+                <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 20, padding: '24px 20px' }}>
                     {sent ? (
                         <div style={{ textAlign: 'center', padding: '20px 0' }}>
                             <CheckCircle size={56} color="#14b8a6" style={{ margin: '0 auto 12px' }} />
@@ -105,11 +107,7 @@ export default function PartnerLandingPage() {
                                     <input placeholder="Телефон *" value={form.phone} onChange={e => set('phone', e.target.value)}
                                         style={inputStyle} />
                                 </div>
-                                <div style={{ position: 'relative' }}>
-                                    <Mail size={16} style={{ position: 'absolute', left: 14, top: 14, color: '#475569' }} />
-                                    <input placeholder="Email" value={form.email} onChange={e => set('email', e.target.value)}
-                                        style={inputStyle} />
-                                </div>
+
                                 <div style={{ position: 'relative' }}>
                                     <MapPin size={16} style={{ position: 'absolute', left: 14, top: 14, color: '#475569' }} />
                                     <input placeholder="Город" value={form.city} onChange={e => set('city', e.target.value)}
@@ -144,11 +142,12 @@ export default function PartnerLandingPage() {
 
 const inputStyle: React.CSSProperties = {
     width: '100%',
-    padding: '12px 14px 12px 40px',
+    padding: '14px 14px 14px 42px',
     background: 'rgba(255,255,255,.06)',
     border: '1px solid rgba(255,255,255,.1)',
     borderRadius: 12,
     color: '#e2e8f0',
-    fontSize: '.95rem',
+    fontSize: '16px',
     outline: 'none',
+    WebkitAppearance: 'none',
 };
