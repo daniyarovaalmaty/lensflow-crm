@@ -9,6 +9,8 @@ import {
     FileText, User, Info, Smartphone, RefreshCw, X, Check, HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { getEffectiveClinicPermissions } from '@/types/user';
+import AccessDenied from '@/components/ui/AccessDenied';
 
 // ==================== Interfaces ====================
 interface Register {
@@ -46,6 +48,13 @@ const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 export default function CashShiftsPage() {
     const { data: session } = useSession();
+
+    // permissions visibility check
+    const clinicPerms = session?.user ? getEffectiveClinicPermissions({
+        subRole: session.user.subRole,
+        permissions: session.user.permissions,
+    }) : null;
+
     const [loading, setLoading] = useState(true);
     const [registers, setRegisters] = useState<Register[]>([]);
     const [activeShift, setActiveShift] = useState<Shift | null>(null);
@@ -273,6 +282,10 @@ export default function CashShiftsPage() {
             setKaspiStatus('failed');
         }
     };
+
+    if (session?.user && clinicPerms && !clinicPerms.canViewCash) {
+        return <AccessDenied />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 pb-12">

@@ -3,14 +3,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle } from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
+import { getEffectiveClinicPermissions } from '@/types/user';
+import AccessDenied from '@/components/ui/AccessDenied';
 
 // ==================== Types ====================
 interface Product {
     id: string; name: string; category: string; brand: string | null;
-    sku: string | null; currentStock: number; minStock: number; unit: string;
+    sku: string | null; barcode?: string | null; currentStock: number; minStock: number; unit: string;
     purchasePrice: number; retailPrice: number; trackSerials: boolean;
     _count?: { stockItems: number };
 }
@@ -59,6 +61,13 @@ type Tab = 'stock' | 'receive' | 'movements' | 'documents';
 
 export default function WarehousePage() {
     const { data: session } = useSession();
+
+    // permissions visibility check
+    const clinicPerms = session?.user ? getEffectiveClinicPermissions({
+        subRole: session.user.subRole,
+        permissions: session.user.permissions,
+    }) : null;
+
     const [tab, setTab] = useState<Tab>('stock');
     const [products, setProducts] = useState<Product[]>([]);
     const [movements, setMovements] = useState<Movement[]>([]);
@@ -80,6 +89,191 @@ export default function WarehousePage() {
     const [woProduct, setWoProduct] = useState('');
     const [woQty, setWoQty] = useState('1');
     const [woReason, setWoReason] = useState('');
+
+    // Batch Print state
+    const [printBatchItems, setPrintBatchItems] = useState<Array<{
+        name: string; brand: string | null; barcode: string | null; sku: string | null;
+        retailPrice: number; quantity: number;
+    }>>([]);
+    const [showBatchPrintSettings, setShowBatchPrintSettings] = useState(false);
+    const [labelWidth, setLabelWidth] = useState(58); // default 58mm
+    const [labelHeight, setLabelHeight] = useState(30); // default 30mm
+    const [includePrice, setIncludePrice] = useState(true);
+    const [includeBrand, setIncludeBrand] = useState(true);
+
+    const handlePrintBatch = (
+        items: Array<{ name: string; brand: string | null; barcode: string | null; sku: string | null; retailPrice: number; quantity: number }>,
+        widthMm: number = 58,
+        heightMm: number = 30,
+        incPrice: boolean = true,
+        incBrand: boolean = true
+    ) => {
+        // Flatten the items according to their quantities to get the final array of stickers
+        const labelList: any[] = [];
+        items.forEach(item => {
+            const barcodeToPrint = item.barcode || item.sku;
+            if (!barcodeToPrint) return; // skip if no barcode or SKU
+            
+            for (let i = 0; i < item.quantity; i++) {
+                labelList.push({
+                    name: item.name,
+                    brand: item.brand,
+                    barcode: barcodeToPrint,
+                    retailPrice: item.retailPrice
+                });
+            }
+        });
+
+        if (labelList.length === 0) {
+            alert('⚠️ Нет товаров со штрихкодами или артикулами для печати.');
+            return;
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) {
+            alert('Ошибка инициализации печати');
+            document.body.removeChild(iframe);
+            return;
+        }
+
+        // Write content
+        const labelsHtml = labelList.map((label, idx) => `
+            <div class="label-container">
+                ${incBrand ? `<div class="brand">${label.brand || 'ОПТИКА'}</div>` : ''}
+                <div class="name">${label.name}</div>
+                <svg id="barcode-${idx}"></svg>
+                ${incPrice ? `<div class="price">${label.retailPrice.toLocaleString('ru-RU')} ₸</div>` : ''}
+            </div>
+        `).join('');
+
+        iframeDoc.write(`
+            <html>
+                <head>
+                    <title>Печать партии</title>
+                    <style>
+                        @page {
+                            size: ${widthMm}mm ${heightMm}mm;
+                            margin: 0;
+                        }
+                        html, body {
+                            margin: 0;
+                            padding: 0;
+                            background: white;
+                        }
+                        .label-container {
+                            width: ${widthMm}mm;
+                            height: ${heightMm}mm;
+                            page-break-after: always;
+                            break-after: page;
+                            box-sizing: border-box;
+                            padding: 2mm;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: space-between;
+                            align-items: center;
+                            overflow: hidden;
+                        }
+                        .label-container:last-child {
+                            page-break-after: avoid;
+                            break-after: avoid;
+                        }
+                        .brand {
+                            font-size: ${heightMm > 25 ? '8px' : '6px'};
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            color: #555;
+                            margin-bottom: 1px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            width: 100%;
+                            text-align: center;
+                        }
+                        .name {
+                            font-size: ${heightMm > 25 ? '9px' : '7.5px'};
+                            font-weight: bold;
+                            color: black;
+                            text-align: center;
+                            line-height: 1.1;
+                            height: 2.2em;
+                            overflow: hidden;
+                            width: 100%;
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                        }
+                        .price {
+                            font-size: ${heightMm > 25 ? '11px' : '9px'};
+                            font-weight: 900;
+                            color: black;
+                            margin-top: 1px;
+                        }
+                        svg {
+                            width: 100%;
+                            max-height: ${heightMm - 19}mm;
+                        }
+                    </style>
+                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+                </head>
+                <body>
+                    ${labelsHtml}
+                </body>
+            </html>
+        `);
+        iframeDoc.close();
+
+        let printed = false;
+        const triggerPrint = () => {
+            if (printed) return;
+            try {
+                const win = iframe.contentWindow as any;
+                if (!win) return;
+                
+                if (win.JsBarcode) {
+                    labelList.forEach((label, idx) => {
+                        win.JsBarcode(`#barcode-${idx}`, label.barcode, {
+                            format: "CODE128",
+                            width: widthMm > 45 ? 1.2 : 0.9,
+                            height: heightMm > 25 ? 30 : 18,
+                            displayValue: heightMm > 25,
+                            fontSize: 8,
+                            margin: 0
+                        });
+                    });
+                    printed = true;
+                }
+                
+                setTimeout(() => {
+                    try {
+                        win.focus();
+                        win.print();
+                    } catch (e) {
+                        console.error('Focus/print failed:', e);
+                    }
+                }, 200);
+            } catch (e) {
+                console.error('Print trigger failed:', e);
+            }
+        };
+
+        iframe.onload = triggerPrint;
+        setTimeout(triggerPrint, 800);
+
+        setTimeout(() => {
+            if (iframe && iframe.parentNode) {
+                document.body.removeChild(iframe);
+            }
+        }, 8000);
+    };
 
     useEffect(() => { loadData(); }, [tab]);
 
@@ -188,6 +382,10 @@ export default function WarehousePage() {
         return products.filter(p => p.name.toLowerCase().includes(s) || p.sku?.toLowerCase().includes(s));
     }, [products, search]);
 
+    const lowStockProducts = useMemo(() => {
+        return products.filter(p => p.minStock > 0 && (p._count?.stockItems ?? p.currentStock) <= p.minStock);
+    }, [products]);
+
     // ---- Excel export ----
     const exportExcel = () => {
         const header = 'Товар\tБренд\tАртикул\tОстаток\tЕд.\tМин.\tЗакуп. цена\tРозн. цена\tСтоимость на складе\tСерийные';
@@ -210,9 +408,9 @@ export default function WarehousePage() {
     };
 
     // ---- Low stock items ----
-    const lowStockProducts = useMemo(() => {
-        return products.filter(p => p.minStock > 0 && (p._count?.stockItems ?? p.currentStock) <= p.minStock);
-    }, [products]);
+    if (session?.user && clinicPerms && !clinicPerms.canViewWarehouse) {
+        return <AccessDenied />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -334,6 +532,7 @@ export default function WarehousePage() {
                                             <th className="text-right px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Закуп.</th>
                                             <th className="text-right px-4 py-3 font-medium text-gray-500">Розн.</th>
                                             <th className="text-center px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Серийный</th>
+                                            <th className="text-right px-4 py-3 font-medium text-gray-500 w-16">Печать</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -359,6 +558,26 @@ export default function WarehousePage() {
                                                     <td className="px-4 py-3 text-right font-medium text-gray-900">{fmt(p.retailPrice)} ₸</td>
                                                     <td className="px-4 py-3 text-center hidden sm:table-cell">
                                                         {p.trackSerials ? <Hash className="w-4 h-4 text-blue-500 mx-auto" /> : <span className="text-gray-300">—</span>}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setPrintBatchItems([{
+                                                                    name: p.name,
+                                                                    brand: p.brand,
+                                                                    barcode: p.barcode || null,
+                                                                    sku: p.sku,
+                                                                    retailPrice: p.retailPrice,
+                                                                    quantity: 1
+                                                                }]);
+                                                                setShowBatchPrintSettings(true);
+                                                            }}
+                                                            title="Печать этикетки"
+                                                            className="p-1.5 hover:bg-gray-50 rounded-xl text-gray-500 hover:text-primary-600 transition-colors inline-flex items-center justify-center border border-transparent hover:border-gray-200/50 active:scale-95"
+                                                        >
+                                                            <Printer className="w-3.5 h-3.5" />
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             );
@@ -556,6 +775,30 @@ export default function WarehousePage() {
                                         {doc.performedByName && (
                                             <div className="text-xs text-gray-400 mt-1"> {doc.performedByName}</div>
                                         )}
+                                        {doc.type === 'receipt' && (
+                                            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
+                                                <button
+                                                    onClick={() => {
+                                                        const batch = (doc.items as any[]).map(it => {
+                                                            const prod = products.find(p => p.id === it.productId);
+                                                            return {
+                                                                name: it.name,
+                                                                brand: prod?.brand || null,
+                                                                barcode: prod?.barcode || null,
+                                                                sku: prod?.sku || null,
+                                                                retailPrice: it.price || prod?.retailPrice || 0,
+                                                                quantity: it.qty || 1
+                                                            };
+                                                        });
+                                                        setPrintBatchItems(batch);
+                                                        setShowBatchPrintSettings(true);
+                                                    }}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-xl text-xs font-semibold transition-colors active:scale-95"
+                                                >
+                                                    <Printer className="w-3.5 h-3.5" /> Печать этикеток партии ({doc.items.reduce((acc, it) => acc + (it.qty || 1), 0)} шт)
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -608,6 +851,216 @@ export default function WarehousePage() {
                                 <button onClick={handleWriteOff} disabled={!woProduct || saving}
                                     className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium">
                                     {saving ? 'Оформление...' : 'Списать'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ==================== BATCH PRINT SETTINGS MODAL ==================== */}
+            <AnimatePresence>
+                {showBatchPrintSettings && printBatchItems.length > 0 && (
+                    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[8vh] overflow-y-auto" onClick={() => setShowBatchPrintSettings(false)}>
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+                            onClick={e => e.stopPropagation()}
+                            className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100"
+                        >
+                            {/* Sticky Header */}
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+                                <div>
+                                    <h2 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                                        <Printer className="w-5 h-5 text-primary-600 animate-pulse" /> Пакетная печать этикеток
+                                    </h2>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">
+                                        Всего к печати: {printBatchItems.reduce((acc, it) => acc + it.quantity, 0)} шт
+                                    </p>
+                                </div>
+                                <button onClick={() => setShowBatchPrintSettings(false)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center">
+                                    <X className="w-4 h-4 text-gray-500" />
+                                </button>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                                {/* Label Live Preview */}
+                                <div className="flex flex-col items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200/80 mb-2">
+                                    <span className="text-[9px] font-bold text-gray-400 mb-3 uppercase tracking-widest">Макет этикетки (Интерактивный)</span>
+                                    
+                                    {/* The interactive label container */}
+                                    <div
+                                        style={{
+                                            width: '260px',
+                                            height: `${Math.max(70, Math.round(260 * (labelHeight / labelWidth)))}px`,
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        }}
+                                        className="bg-white border border-gray-300 rounded shadow-lg p-3 flex flex-col justify-between items-center overflow-hidden box-border select-none relative"
+                                    >
+                                        {includeBrand && (
+                                            <div className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate w-full text-center">
+                                                {printBatchItems[0].brand || 'ОПТИКА'}
+                                            </div>
+                                        )}
+                                        <div className="text-[10px] font-bold text-black text-center line-clamp-2 leading-tight w-full my-0.5">
+                                            {printBatchItems[0].name}
+                                        </div>
+                                        
+                                        {/* Simulated Barcode */}
+                                        <div className="w-full flex flex-col items-center justify-center my-1">
+                                            <div className="w-[85%] h-5 flex justify-between items-stretch">
+                                                {[1,3,2,1,4,2,1,3,2,1,4,1,2,3,1,2,1,4,2,1,3,2,1,2].map((w, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="bg-black"
+                                                        style={{
+                                                            width: `${w * 0.7}px`,
+                                                            opacity: idx % 2 === 0 ? 1 : 0
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                            {labelHeight > 25 && (
+                                                <div className="text-[7.5px] font-mono text-gray-700 mt-0.5 tracking-[1.5px]">
+                                                    {printBatchItems[0].barcode || printBatchItems[0].sku || '1234567890'}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {includePrice && (
+                                            <div className="text-xs font-black text-black tracking-tight">
+                                                {printBatchItems[0].retailPrice?.toLocaleString('ru-RU')} ₸
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 mt-3 font-semibold">Размер на печати: {labelWidth} x {labelHeight} мм</span>
+                                </div>
+
+                                {/* Size selection */}
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-semibold text-gray-900">1. Выберите стандартный размер или укажите свой:</label>
+                                    
+                                    {/* Presets */}
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { w: 58, h: 30, label: '58 x 30 мм' },
+                                            { w: 40, h: 30, label: '40 x 30 мм' },
+                                            { w: 30, h: 20, label: '30 x 20 мм' },
+                                        ].map((preset, idx) => (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                onClick={() => {
+                                                    setLabelWidth(preset.w);
+                                                    setLabelHeight(preset.h);
+                                                }}
+                                                className={`py-2 px-1 text-center rounded-xl text-xs font-medium border transition-all ${
+                                                    labelWidth === preset.w && labelHeight === preset.h
+                                                        ? 'bg-primary-50 border-primary-500 text-primary-700 ring-1 ring-primary-500 shadow-sm'
+                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {preset.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Custom inputs */}
+                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                        <div>
+                                            <span className="block text-[11px] text-gray-400 font-medium mb-1">Ширина (мм)</span>
+                                            <input
+                                                type="number"
+                                                value={labelWidth}
+                                                onChange={e => setLabelWidth(Math.max(15, Number(e.target.value)))}
+                                                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent font-medium"
+                                                placeholder="58"
+                                            />
+                                        </div>
+                                        <div>
+                                            <span className="block text-[11px] text-gray-400 font-medium mb-1">Высота (мм)</span>
+                                            <input
+                                                type="number"
+                                                value={labelHeight}
+                                                onChange={e => setLabelHeight(Math.max(10, Number(e.target.value)))}
+                                                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent font-medium"
+                                                placeholder="30"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Custom Toggles */}
+                                <div className="space-y-2.5 pt-1">
+                                    <label className="block text-sm font-semibold text-gray-900">2. Дополнительные опции:</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors border border-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={includeBrand}
+                                                onChange={e => setIncludeBrand(e.target.checked)}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                            />
+                                            <div>
+                                                <span className="text-xs font-semibold text-gray-800">Выводить бренд</span>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors border border-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={includePrice}
+                                                onChange={e => setIncludePrice(e.target.checked)}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                            />
+                                            <div>
+                                                <span className="text-xs font-semibold text-gray-800">Выводить цену</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Batch items preview list */}
+                                <div className="space-y-2 pt-1">
+                                    <span className="block text-sm font-semibold text-gray-900">3. Содержимое партии печати:</span>
+                                    <div className="border border-gray-100 rounded-2xl overflow-hidden max-h-[160px] overflow-y-auto bg-gray-50/50 p-2 space-y-1.5">
+                                        {printBatchItems.map((item, idx) => {
+                                            const code = item.barcode || item.sku;
+                                            return (
+                                                <div key={idx} className="bg-white rounded-xl p-2.5 border border-gray-200/50 flex items-center justify-between text-xs">
+                                                    <div className="truncate max-w-[70%]">
+                                                        <span className="font-semibold text-gray-900 block truncate">{item.name}</span>
+                                                        <span className="text-[10px] text-gray-400 font-mono">Код: {code || 'отсутствует'}</span>
+                                                    </div>
+                                                    <div className="text-right whitespace-nowrap">
+                                                        <span className="font-bold text-gray-900 block">{item.quantity} шт</span>
+                                                        <span className="text-[10px] text-gray-400">{item.retailPrice.toLocaleString('ru-RU')} ₸</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Sticky Footer */}
+                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 z-10">
+                                <button
+                                    onClick={() => setShowBatchPrintSettings(false)}
+                                    className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        handlePrintBatch(printBatchItems, labelWidth, labelHeight, includePrice, includeBrand);
+                                        setShowBatchPrintSettings(false);
+                                    }}
+                                    className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md shadow-primary-100"
+                                >
+                                    <Printer className="w-4 h-4" /> Распечатать ({printBatchItems.reduce((acc, it) => acc + it.quantity, 0)} шт)
                                 </button>
                             </div>
                         </motion.div>

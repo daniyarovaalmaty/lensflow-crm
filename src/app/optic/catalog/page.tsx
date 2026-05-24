@@ -8,9 +8,11 @@ import {
     Package, Plus, Search, X, Eye, Edit2, Trash2,
     Tag, ShoppingBag, Droplets, Glasses, Wrench, Star,
     Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon, ArrowLeft,
-    Sparkles, Send, Bot, Loader2, MessageSquare, Printer
+    Sparkles, Send, Bot, Loader2, MessageSquare, Printer, Upload
 } from 'lucide-react';
 import Link from 'next/link';
+import { getEffectiveClinicPermissions } from '@/types/user';
+import AccessDenied from '@/components/ui/AccessDenied';
 
 // ==================== Types ====================
 interface OpticProduct {
@@ -66,6 +68,12 @@ export default function OpticCatalogPage() {
     const { data: session } = useSession();
     const router = useRouter();
 
+    // permissions visibility check
+    const clinicPerms = session?.user ? getEffectiveClinicPermissions({
+        subRole: session.user.subRole,
+        permissions: session.user.permissions,
+    }) : null;
+
     const [products, setProducts] = useState<OpticProduct[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -73,6 +81,20 @@ export default function OpticCatalogPage() {
     const [showForm, setShowForm] = useState(false);
     const [editProduct, setEditProduct] = useState<OpticProduct | null>(null);
     const [detailProduct, setDetailProduct] = useState<OpticProduct | null>(null);
+
+    // Print Settings state
+    const [printProduct, setPrintProduct] = useState<OpticProduct | null>(null);
+    const [labelWidth, setLabelWidth] = useState(58); // default 58mm
+    const [labelHeight, setLabelHeight] = useState(30); // default 30mm
+    const [includePrice, setIncludePrice] = useState(true);
+    const [includeBrand, setIncludeBrand] = useState(true);
+
+    // Bulk Import state
+    const [showImport, setShowImport] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [parsedProducts, setParsedProducts] = useState<any[]>([]);
+    const [autoGenBarcodes, setAutoGenBarcodes] = useState(true);
+    const [importError, setImportError] = useState<string | null>(null);
 
     // Form state
     const [form, setForm] = useState({
@@ -105,40 +127,64 @@ export default function OpticCatalogPage() {
         }
     };
 
-    const handlePrintLabel = (product: OpticProduct) => {
+    const handlePrintLabel = (
+        product: OpticProduct,
+        widthMm: number = 58,
+        heightMm: number = 30,
+        incPrice: boolean = true,
+        incBrand: boolean = true
+    ) => {
         const barcodeToPrint = product.barcode || product.sku;
         if (!barcodeToPrint) {
             alert('⚠️ Чтобы распечатать этикетку, сначала укажите Штрих-код или Артикул (SKU) в карточке товара (нажмите кнопку "Редактировать").');
             return;
         }
         
-        const printWindow = window.open('', '_blank', 'width=600,height=400');
-        if (!printWindow) return;
+        // Create a hidden iframe to bypass browser popup blockers (Safari/Chrome on iPads)
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) {
+            alert('Ошибка инициализации печати');
+            document.body.removeChild(iframe);
+            return;
+        }
         
-        printWindow.document.write(`
+        iframeDoc.write(`
             <html>
                 <head>
-                    <title>Печать этикетки - ${product.name}</title>
+                    <title>Печать</title>
                     <style>
                         @page {
-                            size: 58mm 30mm;
+                            size: ${widthMm}mm ${heightMm}mm;
                             margin: 0;
                         }
-                        body {
+                        html, body {
                             margin: 0;
+                            padding: 0;
+                            background: white;
+                            width: ${widthMm}mm;
+                            height: ${heightMm}mm;
+                            overflow: hidden;
+                        }
+                        body {
                             padding: 2mm;
                             font-family: Arial, sans-serif;
-                            width: 54mm;
-                            height: 26mm;
                             box-sizing: border-box;
                             display: flex;
                             flex-direction: column;
                             justify-content: space-between;
                             align-items: center;
-                            background: white;
                         }
                         .brand {
-                            font-size: 8px;
+                            font-size: ${heightMm > 25 ? '8px' : '6px'};
                             font-weight: bold;
                             text-transform: uppercase;
                             color: #555;
@@ -150,7 +196,7 @@ export default function OpticCatalogPage() {
                             text-align: center;
                         }
                         .name {
-                            font-size: 9px;
+                            font-size: ${heightMm > 25 ? '9px' : '7.5px'};
                             font-weight: bold;
                             color: black;
                             text-align: center;
@@ -163,45 +209,83 @@ export default function OpticCatalogPage() {
                             -webkit-box-orient: vertical;
                         }
                         .price {
-                            font-size: 11px;
+                            font-size: ${heightMm > 25 ? '11px' : '9px'};
                             font-weight: 900;
                             color: black;
                             margin-top: 1px;
                         }
                         svg#barcode {
                             width: 100%;
-                            max-height: 11mm;
+                            max-height: ${heightMm - 19}mm;
                         }
                     </style>
                     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
                 </head>
                 <body>
-                    <div class="brand">${product.brand || 'ОПТИКА'}</div>
+                    ${incBrand ? `<div class="brand">${product.brand || 'ОПТИКА'}</div>` : ''}
                     <div class="name">${product.name}</div>
                     <svg id="barcode"></svg>
-                    <div class="price">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>
-                    <script>
-                        try {
-                            JsBarcode("#barcode", "${barcodeToPrint}", {
-                                format: "CODE128",
-                                width: 1.2,
-                                height: 32,
-                                displayValue: true,
-                                fontSize: 8,
-                                margin: 0
-                            });
-                        } catch(e) {
-                            console.error(e);
-                        }
-                        setTimeout(function() {
-                            window.print();
-                            window.close();
-                        }, 500);
-                    </script>
+                    ${incPrice ? `<div class="price">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>` : ''}
                 </body>
             </html>
         `);
-        printWindow.document.close();
+        iframeDoc.close();
+
+        let printed = false;
+        const triggerPrint = () => {
+            if (printed) return;
+            try {
+                const win = iframe.contentWindow as any;
+                if (!win) return;
+                
+                if (win.JsBarcode) {
+                    win.JsBarcode("#barcode", barcodeToPrint, {
+                        format: "CODE128",
+                        width: widthMm > 45 ? 1.2 : 0.9,
+                        height: heightMm > 25 ? 30 : 18,
+                        displayValue: heightMm > 25,
+                        fontSize: 8,
+                        margin: 0
+                    });
+                    printed = true;
+                }
+                
+                setTimeout(() => {
+                    try {
+                        win.focus();
+                        win.print();
+                    } catch (e) {
+                        console.error('Focus/print failed:', e);
+                    }
+                }, 200);
+            } catch (e) {
+                console.error('Print trigger failed:', e);
+            }
+        };
+
+        // Bind onload
+        iframe.onload = triggerPrint;
+
+        // Fallback safety timeout if onload doesn't trigger
+        setTimeout(() => {
+            triggerPrint();
+        }, 600);
+
+        // Remove the iframe after printing dialog is shown
+        setTimeout(() => {
+            if (iframe && iframe.parentNode) {
+                document.body.removeChild(iframe);
+            }
+        }, 5000);
+    };
+
+    const openPrintSettings = (product: OpticProduct) => {
+        const barcodeToPrint = product.barcode || product.sku;
+        if (!barcodeToPrint) {
+            alert('⚠️ Чтобы распечатать этикетку, сначала укажите Штрих-код или Артикул (SKU) в карточке товара (нажмите кнопку "Редактировать").');
+            return;
+        }
+        setPrintProduct(product);
     };
 
     const handlePrintLabelFromForm = () => {
@@ -235,7 +319,7 @@ export default function OpticCatalogPage() {
             isActive: true,
             createdAt: new Date().toISOString()
         };
-        handlePrintLabel(tempProduct);
+        openPrintSettings(tempProduct);
     };
 
     const filteredProducts = useMemo(() => {
@@ -304,6 +388,179 @@ export default function OpticCatalogPage() {
         if (res.ok) await loadProducts();
     };
 
+    // ==================== CSV Bulk Import Handlers ====================
+    const handleDownloadTemplate = () => {
+        // UTF-8 BOM helps MS Excel open Russian columns correctly
+        const csvContent = "\uFEFFНаименование;Бренд;Модель;Категория;Артикул;Штрихкод;Цена закупки;Цена продажи;Мин. остаток\nОправа Ray-Ban RX5228;Ray-Ban;RX5228;frame;RB-5228;5901234123457;15000;25000;5\nМягкие дневные линзы ArtMost;ArtMost;Dailies;contact_lens;;234567876543;8000;14000;10\nСалфетки микрофибра;;;accessory;CL-CLOTH;;300;800;50\n";
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "lensflow_catalog_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setImportError(null);
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const text = event.target?.result as string;
+                if (!text) return;
+
+                const lines = text.split(/\r?\n/);
+                if (lines.length === 0 || !lines[0].trim()) {
+                    setImportError("Выбран пустой файл.");
+                    return;
+                }
+
+                // Delimiter auto-detection: semi-colon (Excel default) or comma
+                let delimiter = ',';
+                if (lines[0].includes(';')) {
+                    delimiter = ';';
+                }
+
+                const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+                
+                // Mappings
+                const mapping: Record<string, string> = {
+                    'наименование': 'name',
+                    'name': 'name',
+                    'товар': 'name',
+                    'название': 'name',
+                    'бренд': 'brand',
+                    'brand': 'brand',
+                    'модель': 'model',
+                    'model': 'model',
+                    'категория': 'category',
+                    'category': 'category',
+                    'артикул': 'sku',
+                    'sku': 'sku',
+                    'штрихкод': 'barcode',
+                    'barcode': 'barcode',
+                    'штрих-код': 'barcode',
+                    'цена закупки': 'purchasePrice',
+                    'purchase_price': 'purchasePrice',
+                    'закуп': 'purchasePrice',
+                    'цена продажи': 'retailPrice',
+                    'retail_price': 'retailPrice',
+                    'розница': 'retailPrice',
+                    'мин. остаток': 'minStock',
+                    'min_stock': 'minStock',
+                    'остаток': 'minStock'
+                };
+
+                const keys = headers.map(h => mapping[h.toLowerCase().trim()] || null);
+
+                // Parse rows
+                const productsList: any[] = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+
+                    // Support quoted fields split safely
+                    const values: string[] = [];
+                    let current = '';
+                    let inQuotes = false;
+                    for (let j = 0; j < line.length; j++) {
+                        const char = line[j];
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === delimiter && !inQuotes) {
+                            values.push(current.trim().replace(/^"|"$/g, ''));
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    values.push(current.trim().replace(/^"|"$/g, ''));
+
+                    const p: Record<string, any> = {};
+                    keys.forEach((key, index) => {
+                        if (key) {
+                            let val: any = values[index];
+                            if (key === 'purchasePrice' || key === 'retailPrice' || key === 'minStock') {
+                                val = Number(val) || 0;
+                            }
+                            p[key] = val;
+                        }
+                    });
+
+                    // Auto-detect category mapping
+                    if (p.category) {
+                        const catLower = p.category.toLowerCase().trim();
+                        if (['оправа', 'оправы', 'frame'].includes(catLower)) p.category = 'frame';
+                        else if (['линза', 'линзы', 'контактные линзы', 'contact_lens'].includes(catLower)) p.category = 'contact_lens';
+                        else if (['очковые линзы', 'стекла', 'spectacle_lens'].includes(catLower)) p.category = 'spectacle_lens';
+                        else if (['раствор', 'растворы', 'solution'].includes(catLower)) p.category = 'solution';
+                        else if (['аксессуар', 'аксессуары', 'accessory'].includes(catLower)) p.category = 'accessory';
+                        else if (['солнцезащитные', 'очки', 'sun_glasses'].includes(catLower)) p.category = 'sun_glasses';
+                    }
+
+                    if (p.name) {
+                        productsList.push(p);
+                    }
+                }
+
+                if (productsList.length === 0) {
+                    setImportError("Не найдено корректных строк с наименованием товаров.");
+                } else {
+                    setParsedProducts(productsList);
+                }
+            } catch (err: any) {
+                setImportError("Ошибка парсинга CSV файла: " + err.message);
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    };
+
+    const handleImportSubmit = async () => {
+        if (parsedProducts.length === 0 || importing) return;
+        setImporting(true);
+        setImportError(null);
+
+        // Pre-processing for auto barcode generation
+        const preparedList = parsedProducts.map(p => {
+            const hasCode = p.barcode || p.sku;
+            if (!hasCode && autoGenBarcodes) {
+                // Generate a randomized Code 128 compliant barcode for frames
+                return {
+                    ...p,
+                    barcode: `LF-${Date.now().toString().substring(4)}-${Math.floor(100 + Math.random() * 900)}`
+                };
+            }
+            return p;
+        });
+
+        try {
+            const res = await fetch('/api/optic/products/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ products: preparedList }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                alert(`🎉 Успех: ${data.message}`);
+                setShowImport(false);
+                setParsedProducts([]);
+                loadProducts(); // Reload catalog grid
+            } else {
+                const data = await res.json();
+                setImportError(data.error || 'Ошибка при сохранении товаров.');
+            }
+        } catch {
+            setImportError('Ошибка сети. Не удалось отправить запрос.');
+        } finally {
+            setImporting(false);
+        }
+    };
+
     const isService = form.category.startsWith('service_');
 
     // ==================== AI Handler ====================
@@ -358,6 +615,10 @@ export default function OpticCatalogPage() {
         return { totalProducts, totalServices, lowStock, totalValue };
     }, [products]);
 
+    if (session?.user && clinicPerms && !clinicPerms.canViewCatalog) {
+        return <AccessDenied />;
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -379,24 +640,37 @@ export default function OpticCatalogPage() {
                             <h1 className="text-2xl font-bold text-gray-900">Каталог товаров и услуг</h1>
                             <p className="text-sm text-gray-500 mt-1">Управление ассортиментом вашей оптики</p>
                         </div>
-                        <button
-                            onClick={openCreateForm}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-colors shadow-sm"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Добавить
-                        </button>
-                        <button
-                            onClick={() => setShowAI(!showAI)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm ${
-                                showAI
-                                    ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white ring-2 ring-purple-300'
-                                    : 'bg-gradient-to-r from-violet-500 to-purple-500 text-white hover:from-violet-600 hover:to-purple-600'
-                            }`}
-                        >
-                            <Sparkles className="w-4 h-4" />
-                            ИИ-ассистент
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    setParsedProducts([]);
+                                    setImportError(null);
+                                    setShowImport(true);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl font-medium transition-colors shadow-sm"
+                            >
+                                <Upload className="w-4 h-4 text-gray-500" />
+                                Импорт CSV
+                            </button>
+                            <button
+                                onClick={openCreateForm}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium transition-colors shadow-sm"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Добавить
+                            </button>
+                            <button
+                                onClick={() => setShowAI(!showAI)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm ${
+                                    showAI
+                                        ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white ring-2 ring-purple-300'
+                                        : 'bg-gradient-to-r from-violet-500 to-purple-500 text-white hover:from-violet-600 hover:to-purple-600'
+                                }`}
+                            >
+                                <Sparkles className="w-4 h-4" />
+                                ИИ-ассистент
+                            </button>
+                        </div>
                     </div>
 
                     {/* AI Assistant Panel */}
@@ -649,7 +923,7 @@ export default function OpticCatalogPage() {
                                     <div className="border-t border-gray-50 px-4 py-2.5 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         {product.type === 'product' && (
                                             <button
-                                                onClick={e => { e.stopPropagation(); handlePrintLabel(product); }}
+                                                onClick={e => { e.stopPropagation(); openPrintSettings(product); }}
                                                 className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors border border-primary-100"
                                             >
                                                 <Printer className="w-3.5 h-3.5" /> Печать
@@ -958,7 +1232,7 @@ export default function OpticCatalogPage() {
                                 <div className="mt-6 flex gap-3">
                                     {detailProduct.type === 'product' && (
                                         <button
-                                            onClick={() => handlePrintLabel(detailProduct)}
+                                            onClick={() => openPrintSettings(detailProduct)}
                                             className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-sm"
                                         >
                                             <Printer className="w-4 h-4" /> Печать этикетки
@@ -977,6 +1251,397 @@ export default function OpticCatalogPage() {
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ==================== CSV BULK IMPORT MODAL ==================== */}
+            <AnimatePresence>
+                {showImport && (
+                    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[5vh] overflow-y-auto" onClick={() => setShowImport(false)}>
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                            className="relative bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl max-w-3xl w-full border border-white/20 mb-[5vh] max-h-[90vh] flex flex-col overflow-hidden"
+                        >
+                            {/* Sticky Header */}
+                            <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-5 flex items-center justify-between z-10">
+                                <div>
+                                    <h2 className="text-xl font-black text-gray-900 flex items-center gap-2.5">
+                                        <Upload className="w-5 h-5 text-primary-600 animate-pulse" /> Импорт каталога товаров и оправ
+                                    </h2>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Загрузите Excel CSV-файл для быстрого наполнения каталога сотнями оправ
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowImport(false)}
+                                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+                                >
+                                    <X className="w-4 h-4 text-gray-500" />
+                                </button>
+                            </div>
+
+                            {/* Main Body */}
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                {/* Instruction Card */}
+                                <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border border-blue-100/70 rounded-2xl p-5 flex items-start gap-4">
+                                    <div className="p-3 bg-blue-500/10 rounded-xl text-blue-600">
+                                        <Bot className="w-5 h-5 animate-bounce" />
+                                    </div>
+                                    <div className="space-y-1.5 flex-1">
+                                        <h3 className="text-sm font-bold text-blue-900">Инструкция по заполнению:</h3>
+                                        <p className="text-xs text-blue-700/80 leading-relaxed">
+                                            Скачайте готовый шаблон, добавьте ваши оправы, линзы или услуги и сохраните как <strong>CSV (разделители - точки с запятой)</strong>. 
+                                            Наша умная система автоматически распознает кодировки Cyrillic (BOM), разделители и применит нужные категории.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={handleDownloadTemplate}
+                                            className="inline-flex items-center gap-2 mt-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-100 transition-all active:scale-95"
+                                        >
+                                            <Upload className="w-3.5 h-3.5 rotate-180" /> Скачать CSV Шаблон
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Drag-and-drop / File Selector */}
+                                {parsedProducts.length === 0 ? (
+                                    <label className="relative flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-300 hover:border-primary-500 bg-gray-50/50 hover:bg-primary-50/20 rounded-2xl cursor-pointer transition-all group">
+                                        <input
+                                            type="file"
+                                            accept=".csv"
+                                            onChange={handleFileUpload}
+                                            className="hidden"
+                                        />
+                                        <div className="w-16 h-16 rounded-2xl bg-white shadow-md border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                            <Upload className="w-8 h-8 text-primary-500" />
+                                        </div>
+                                        <span className="text-sm font-bold text-gray-700 mt-4 group-hover:text-primary-700 transition-colors">
+                                            Выберите или перетащите CSV-файл
+                                        </span>
+                                        <span className="text-xs text-gray-400 mt-1">
+                                            Поддерживаются файлы .csv объёмом до 10 МБ
+                                        </span>
+                                    </label>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {/* Loaded file indicator */}
+                                        <div className="flex items-center justify-between p-4 bg-emerald-50/60 border border-emerald-100 rounded-2xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                                                    <Package className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <span className="text-sm font-bold text-gray-900">Успешно распознано: {parsedProducts.length} строк</span>
+                                                    <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">Все данные валидированы и готовы к импорту</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => setParsedProducts([])}
+                                                className="px-3.5 py-1.5 bg-white hover:bg-red-50 hover:text-red-600 border border-gray-200 hover:border-red-100 rounded-xl text-xs font-semibold text-gray-600 transition-colors"
+                                            >
+                                                Сбросить файл
+                                            </button>
+                                        </div>
+
+                                        {/* Barcode Autogen Options */}
+                                        <div className="p-4 bg-gray-50/80 rounded-2xl border border-gray-200/50">
+                                            <label className="flex items-start gap-3 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={autoGenBarcodes}
+                                                    onChange={e => setAutoGenBarcodes(e.target.checked)}
+                                                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 mt-0.5"
+                                                />
+                                                <div>
+                                                    <span className="text-xs font-bold text-gray-800">Авто-генерация штрихкодов для оправ без кодов</span>
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">
+                                                        Для всех оправ и товаров без готовых штрихкодов в CSV мы автоматически сгенерируем уникальные коды в формате LF-EAN для последующей печати.
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        {/* Live Validation Grid */}
+                                        <div className="space-y-2">
+                                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest block">Предварительный просмотр данных</span>
+                                            <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm max-h-[250px] overflow-y-auto">
+                                                <table className="w-full text-left border-collapse bg-white">
+                                                    <thead>
+                                                        <tr className="bg-gray-50/80 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                                                            <th className="px-4 py-2.5">Наименование</th>
+                                                            <th className="px-4 py-2.5">Бренд / Модель</th>
+                                                            <th className="px-4 py-2.5">Категория</th>
+                                                            <th className="px-4 py-2.5 text-right">Штрихкод</th>
+                                                            <th className="px-4 py-2.5 text-right">Цены (Закуп/Рознич)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-50 text-xs">
+                                                        {parsedProducts.map((p, idx) => (
+                                                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                                                <td className="px-4 py-3 font-semibold text-gray-900 truncate max-w-[200px]" title={p.name}>
+                                                                    {p.name}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-gray-500">
+                                                                    {p.brand || '—'} {p.model ? `/ ${p.model}` : ''}
+                                                                </td>
+                                                                <td className="px-4 py-3">
+                                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 uppercase">
+                                                                        {CATEGORIES[p.category]?.label || p.category || 'оправа'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-right font-mono text-[10px]">
+                                                                    {p.barcode ? (
+                                                                        <span className="text-gray-900 font-semibold">{p.barcode}</span>
+                                                                    ) : autoGenBarcodes ? (
+                                                                        <span className="text-violet-600 font-semibold italic flex items-center justify-end gap-1">
+                                                                            <Sparkles className="w-3 h-3 text-violet-500 animate-spin" /> Автокод
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-amber-500 font-medium italic">нет кода</span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-right whitespace-nowrap">
+                                                                    <span className="text-gray-400">{p.purchasePrice ? fmt(p.purchasePrice) : '0'} ₸</span>
+                                                                    <span className="text-gray-300 mx-1">/</span>
+                                                                    <span className="font-bold text-gray-900">{fmt(p.retailPrice)} ₸</span>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Error Card */}
+                                {importError && (
+                                    <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex gap-3 text-red-700">
+                                        <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500" />
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-bold">Не удалось загрузить данные</span>
+                                            <p className="text-xs leading-relaxed text-red-600/90">{importError}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Sticky Footer */}
+                            <div className="sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-100 px-6 py-4 flex gap-3 z-10">
+                                <button
+                                    onClick={() => setShowImport(false)}
+                                    className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-600 transition-colors"
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={handleImportSubmit}
+                                    disabled={parsedProducts.length === 0 || importing}
+                                    className="flex-1 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-primary-100 flex items-center justify-center gap-2"
+                                >
+                                    {importing ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" /> Импорт...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="w-4 h-4" /> Начать импорт ({parsedProducts.length})
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ==================== PRINT SETTINGS MODAL ==================== */}
+            <AnimatePresence>
+                {printProduct && (
+                    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[8vh] overflow-y-auto" onClick={() => setPrintProduct(null)}>
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+                            onClick={e => e.stopPropagation()}
+                            className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100"
+                        >
+                            {/* Sticky Header */}
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+                                <div>
+                                    <h2 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                                        <Printer className="w-5 h-5 text-primary-600 animate-pulse" /> Настройки печати этикетки
+                                    </h2>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">Укажите размеры и включите нужные поля</p>
+                                </div>
+                                <button onClick={() => setPrintProduct(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center">
+                                    <X className="w-4 h-4 text-gray-500" />
+                                </button>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6 space-y-6">
+                                {/* Label Live Preview */}
+                                <div className="flex flex-col items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200/80 mb-2">
+                                    <span className="text-[9px] font-bold text-gray-400 mb-3 uppercase tracking-widest">Макет этикетки (Интерактивный)</span>
+                                    
+                                    {/* The interactive label container */}
+                                    <div
+                                        style={{
+                                            width: '260px',
+                                            height: `${Math.max(70, Math.round(260 * (labelHeight / labelWidth)))}px`,
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        }}
+                                        className="bg-white border border-gray-300 rounded shadow-lg p-3 flex flex-col justify-between items-center overflow-hidden box-border select-none relative"
+                                    >
+                                        {includeBrand && (
+                                            <div className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate w-full text-center">
+                                                {printProduct.brand || 'ОПТИКА'}
+                                            </div>
+                                        )}
+                                        <div className="text-[10px] font-bold text-black text-center line-clamp-2 leading-tight w-full my-0.5">
+                                            {printProduct.name}
+                                        </div>
+                                        
+                                        {/* Simulated Barcode */}
+                                        <div className="w-full flex flex-col items-center justify-center my-1">
+                                            <div className="w-[85%] h-5 flex justify-between items-stretch">
+                                                {[1,3,2,1,4,2,1,3,2,1,4,1,2,3,1,2,1,4,2,1,3,2,1,2].map((w, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="bg-black"
+                                                        style={{
+                                                            width: `${w * 0.7}px`,
+                                                            opacity: idx % 2 === 0 ? 1 : 0
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                            {labelHeight > 25 && (
+                                                <div className="text-[7.5px] font-mono text-gray-700 mt-0.5 tracking-[1.5px]">
+                                                    {printProduct.barcode || printProduct.sku || '1234567890'}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {includePrice && (
+                                            <div className="text-xs font-black text-black tracking-tight">
+                                                {printProduct.retailPrice?.toLocaleString('ru-RU')} ₸
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 mt-3 font-semibold">Размер на печати: {labelWidth} x {labelHeight} мм</span>
+                                </div>
+
+                                {/* Size selection */}
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-semibold text-gray-900">1. Выберите стандартный размер или укажите свой:</label>
+                                    
+                                    {/* Presets */}
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { w: 58, h: 30, label: '58 x 30 мм (Стандарт)' },
+                                            { w: 40, h: 30, label: '40 x 30 мм' },
+                                            { w: 30, h: 20, label: '30 x 20 мм (Мини)' },
+                                        ].map((preset, idx) => (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                onClick={() => {
+                                                    setLabelWidth(preset.w);
+                                                    setLabelHeight(preset.h);
+                                                }}
+                                                className={`py-2 px-1 text-center rounded-xl text-xs font-medium border transition-all ${
+                                                    labelWidth === preset.w && labelHeight === preset.h
+                                                        ? 'bg-primary-50 border-primary-500 text-primary-700 ring-1 ring-primary-500 shadow-sm'
+                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {preset.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Custom inputs */}
+                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                        <div>
+                                            <span className="block text-[11px] text-gray-400 font-medium mb-1">Ширина (мм)</span>
+                                            <input
+                                                type="number"
+                                                value={labelWidth}
+                                                onChange={e => setLabelWidth(Math.max(15, Number(e.target.value)))}
+                                                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent font-medium"
+                                                placeholder="58"
+                                            />
+                                        </div>
+                                        <div>
+                                            <span className="block text-[11px] text-gray-400 font-medium mb-1">Высота (мм)</span>
+                                            <input
+                                                type="number"
+                                                value={labelHeight}
+                                                onChange={e => setLabelHeight(Math.max(10, Number(e.target.value)))}
+                                                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent font-medium"
+                                                placeholder="30"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Custom Toggles */}
+                                <div className="space-y-2.5 pt-1">
+                                    <label className="block text-sm font-semibold text-gray-900">2. Дополнительные опции:</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors border border-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={includeBrand}
+                                                onChange={e => setIncludeBrand(e.target.checked)}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                            />
+                                            <div>
+                                                <span className="text-xs font-semibold text-gray-800">Выводить бренд</span>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors border border-gray-100">
+                                            <input
+                                                type="checkbox"
+                                                checked={includePrice}
+                                                onChange={e => setIncludePrice(e.target.checked)}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                            />
+                                            <div>
+                                                <span className="text-xs font-semibold text-gray-800">Выводить цену</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Sticky Footer */}
+                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 z-10">
+                                <button
+                                    onClick={() => setPrintProduct(null)}
+                                    className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                                        setPrintProduct(null);
+                                    }}
+                                    className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md shadow-primary-100"
+                                >
+                                    <Printer className="w-4 h-4" /> Распечатать
+                                </button>
                             </div>
                         </motion.div>
                     </div>

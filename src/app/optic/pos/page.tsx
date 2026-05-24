@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
 import { formatDateTime } from '@/lib/dateUtils';
+import { getEffectiveClinicPermissions } from '@/types/user';
+import AccessDenied from '@/components/ui/AccessDenied';
 
 interface Product {
     id: string; name: string; category: string; type: string;
@@ -38,6 +40,13 @@ const PAYMENT_METHODS = [
 
 export default function POSPage() {
     const { data: session } = useSession();
+
+    // permissions visibility check
+    const clinicPerms = session?.user ? getEffectiveClinicPermissions({
+        subRole: session.user.subRole,
+        permissions: session.user.permissions,
+    }) : null;
+
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [search, setSearch] = useState('');
@@ -203,6 +212,10 @@ export default function POSPage() {
             }
         } finally { setSaving(false); }
     };
+
+    if (session?.user && clinicPerms && !clinicPerms.canViewPos) {
+        return <AccessDenied />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col overflow-hidden">
