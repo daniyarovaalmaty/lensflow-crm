@@ -306,7 +306,7 @@ export default function POSPage() {
                                         return (
                                             <button key={p.id} onClick={() => !outOfStock && addToCart(p)}
                                                 disabled={outOfStock}
-                                                className={`text-left p-4.5 rounded-3xl border transition-all flex flex-col justify-between min-h-[130px] relative overflow-hidden group active:scale-[0.97] duration-150 ${
+                                                className={`text-left p-5 rounded-2xl border transition-all flex flex-col justify-between min-h-[130px] relative overflow-hidden group active:scale-[0.97] duration-150 ${
                                                     inCart 
                                                         ? 'border-primary-500 bg-primary-50/40 shadow-sm shadow-primary-50' 
                                                         : outOfStock 
@@ -549,7 +549,7 @@ export default function POSPage() {
                                         <p className="text-sm font-bold">История продаж пуста</p>
                                     </div>
                                 ) : sales.map(sale => (
-                                    <div key={sale.id} className="border border-gray-100 rounded-2xl p-4.5 bg-gray-50/30 hover:border-gray-200 transition-all">
+                                    <div key={sale.id} className="border border-gray-100 rounded-2xl p-5 bg-gray-50/30 hover:border-gray-200 transition-all">
                                         <div className="flex items-center justify-between mb-1.5">
                                             <span className="font-extrabold text-gray-900 text-sm md:text-base">{sale.saleNumber}</span>
                                             <span className="text-lg font-black text-green-600">{fmt(sale.total)} ₸</span>
