@@ -86,6 +86,7 @@ model User {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   discountPercent Float?        // Персональная скидка для независимых врачей (%)
+  permissions    Json?          // Настройки прав видимости модулей клиники
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -607,10 +608,20 @@ model Lead {
   doctorId               String?
   doctor                 User?     @relation("DoctorLeads", fields: [doctorId], references: [id])
 
+  // Marketing & UTMs
+  campaignId    String?
+  campaign      MarketingCampaign? @relation(fields: [campaignId], references: [id])
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmContent    String?
+  utmTerm       String?
+
   // Metrics
-  lostReason    String?
-  convertedAt   DateTime?
-  revenue       Float?
+  lostReason      String?
+  convertedAt     DateTime?
+  revenue         Float?
+  acquisitionCost Int       @default(0) // Стоимость привлечения лида (в тенге)
 
   // LTV & Retention Dates
   lastLensPurchaseDate     DateTime?
@@ -636,6 +647,35 @@ model Lead {
   @@index([phone])
   @@map("leads")
 }
+
+model MarketingCampaign {
+  id           String      @id @default(cuid())
+  campaignId   String      @unique // ID из Meta Ads / Google Ads
+  name         String
+  source       String      // "facebook" | "google" | "yandex"
+  status       String      @default("active") // "active" | "paused" | "completed"
+  dailyBudget  Int         @default(0) // Дневной бюджет в тенге
+  totalSpend   Int         @default(0) // Всего потрачено
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  leads        Lead[]
+  spends       AdSpend[]
+
+  @@map("marketing_campaigns")
+}
+
+model AdSpend {
+  id           String            @id @default(cuid())
+  campaignId   String
+  campaign     MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  spendDate    DateTime          // Дата расхода
+  amount       Int               // Потраченная сумма в тенге
+  createdAt    DateTime          @default(now())
+
+  @@unique([campaignId, spendDate])
+  @@map("ad_spends")
+}
+
 
 model ChatMessage {
   id          String   @id @default(cuid())

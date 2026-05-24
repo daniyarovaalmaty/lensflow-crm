@@ -10,7 +10,7 @@ import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
-import { getPermissions, SubRoleLabels } from '@/types/user';
+import { getPermissions, SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
 
 const PRICE_PER_LENS = 17500; // fallback for print/expanded details
@@ -29,7 +29,14 @@ export default function OpticDashboard() {
     const router = useRouter();
     const subRole = (session?.user?.subRole || 'optic_manager') as SubRole;
     const perms = getPermissions(subRole);
-    const canSeePrices = subRole !== 'optic_doctor';
+    
+    // Dynamic clinic permissions override
+    const clinicPerms = getEffectiveClinicPermissions({
+        subRole,
+        permissions: session?.user?.permissions,
+    });
+    
+    const canSeePrices = clinicPerms.canViewFinance;
 
     // Redirect laboratory roles to their proper pages
     useEffect(() => {
@@ -244,54 +251,69 @@ export default function OpticDashboard() {
                         {/* Desktop nav */}
                         <div className="hidden md:flex items-center gap-2">
                             {/* Primary actions */}
-                            {perms.canCreateOrders && (
+                            {clinicPerms.canViewOrders && perms.canCreateOrders && (
                                 <Link href="/optic/orders/new" className="btn btn-primary gap-2 text-sm">
                                     <Plus className="w-4 h-4" />
                                     Создать заказ
                                 </Link>
                             )}
-                            <Link
-                                href="/sales/pipeline"
-                                className="flex items-center gap-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
-                            >
-                                <Target className="w-4 h-4" />
-                                CRM
-                            </Link>
-                            <Link
-                                href="/optic/patients"
-                                className="flex items-center gap-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors py-2 px-3 rounded-lg"
-                            >
-                                <Users className="w-4 h-4" />
-                                Пациенты
-                            </Link>
+                            {clinicPerms.canViewFinance && (
+                                <Link
+                                    href="/sales/pipeline"
+                                    className="flex items-center gap-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
+                                >
+                                    <Target className="w-4 h-4" />
+                                    CRM
+                                </Link>
+                            )}
+                            {clinicPerms.canViewPatients && (
+                                <Link
+                                    href="/optic/patients"
+                                    className="flex items-center gap-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors py-2 px-3 rounded-lg"
+                                >
+                                    <Users className="w-4 h-4" />
+                                    Пациенты
+                                </Link>
+                            )}
 
                             {/* Divider */}
-                            <div className="w-px h-6 bg-gray-200 mx-1" />
-
-                            {/* Manager extras */}
-                            {subRole === 'optic_manager' && (
-                                <>
-                                    <Link href="/optic/catalog" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Каталог">
-                                        <Package className="w-4 h-4" />
-                                    </Link>
-                                    <Link href="/optic/warehouse" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Склад">
-                                        <Warehouse className="w-4 h-4" />
-                                    </Link>
-                                    <Link href="/optic/pos" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса POS">
-                                        <ShoppingCart className="w-4 h-4" />
-                                    </Link>
-                                    <Link href="/optic/cash-shifts" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса и Смены">
-                                        <Banknote className="w-4 h-4" />
-                                    </Link>
-                                    <Link href="/optic/staff" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Сотрудники">
-                                        <Users className="w-4 h-4" />
-                                    </Link>
-                                    <Link href="/optic/settings/itigris" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors" title="ITIGRIS">
-                                        <Link2 className="w-4 h-4" />
-                                    </Link>
-                                    <div className="w-px h-6 bg-gray-200" />
-                                </>
+                            {(clinicPerms.canViewCatalog || clinicPerms.canViewWarehouse || clinicPerms.canViewPos || clinicPerms.canViewCash || subRole === 'optic_manager') && (
+                                <div className="w-px h-6 bg-gray-200 mx-1" />
                             )}
+
+                            {/* Dynamically gated extra modules */}
+                            {clinicPerms.canViewCatalog && (
+                                <Link href="/optic/catalog" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Каталог">
+                                    <Package className="w-4 h-4" />
+                                </Link>
+                            )}
+                            {clinicPerms.canViewWarehouse && (
+                                <Link href="/optic/warehouse" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Склад">
+                                    <Warehouse className="w-4 h-4" />
+                                </Link>
+                            )}
+                            {clinicPerms.canViewPos && (
+                                <Link href="/optic/pos" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса POS">
+                                    <ShoppingCart className="w-4 h-4" />
+                                </Link>
+                            )}
+                            {clinicPerms.canViewCash && (
+                                <Link href="/optic/cash-shifts" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса и Смены">
+                                    <Banknote className="w-4 h-4" />
+                                </Link>
+                            )}
+                            {subRole === 'optic_manager' && (
+                                <Link href="/optic/staff" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Сотрудники">
+                                    <Users className="w-4 h-4" />
+                                </Link>
+                            )}
+                            {subRole === 'optic_manager' && (
+                                <Link href="/optic/settings/itigris" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors" title="ITIGRIS">
+                                    <Link2 className="w-4 h-4" />
+                                </Link>
+                            )}
+
+                            <div className="w-px h-6 bg-gray-200 mx-1" />
 
                             <Link href="/profile" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Профиль">
                                 <User className="w-4 h-4" />
@@ -310,7 +332,7 @@ export default function OpticDashboard() {
 
                         {/* Mobile: create + hamburger */}
                         <div className="flex md:hidden items-center gap-2">
-                            {perms.canCreateOrders && (
+                            {clinicPerms.canViewOrders && perms.canCreateOrders && (
                                 <Link href="/optic/orders/new" className="btn btn-primary gap-1.5 text-sm px-3 py-2">
                                     <Plus className="w-4 h-4" />
                                     <span className="hidden xs:inline">Заказ</span>
@@ -328,57 +350,65 @@ export default function OpticDashboard() {
                     {/* Mobile dropdown menu */}
                     {mobileMenuOpen && (
                         <div className="md:hidden border-t border-gray-100 mt-3 pt-3 space-y-1">
+                            {clinicPerms.canViewCatalog && (
+                                <Link
+                                    href="/optic/catalog"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    <Package className="w-4 h-4" />
+                                    Каталог
+                                </Link>
+                            )}
+                            {clinicPerms.canViewWarehouse && (
+                                <Link
+                                    href="/optic/warehouse"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    <Warehouse className="w-4 h-4" />
+                                    Склад
+                                </Link>
+                            )}
+                            {clinicPerms.canViewPos && (
+                                <Link
+                                    href="/optic/pos"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    <ShoppingCart className="w-4 h-4" />
+                                    Касса POS
+                                </Link>
+                            )}
+                            {clinicPerms.canViewCash && (
+                                <Link
+                                    href="/optic/cash-shifts"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    <Banknote className="w-4 h-4" />
+                                    Касса и Смены
+                                </Link>
+                            )}
                             {subRole === 'optic_manager' && (
-                                <>
-                                    <Link
-                                        href="/optic/catalog"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                                    >
-                                        <Package className="w-4 h-4" />
-                                        Каталог
-                                    </Link>
-                                    <Link
-                                        href="/optic/warehouse"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                                    >
-                                        <Warehouse className="w-4 h-4" />
-                                        Склад
-                                    </Link>
-                                    <Link
-                                        href="/optic/pos"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                                    >
-                                        <ShoppingCart className="w-4 h-4" />
-                                        Касса POS
-                                    </Link>
-                                    <Link
-                                        href="/optic/cash-shifts"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                                    >
-                                        <Banknote className="w-4 h-4" />
-                                        Касса и Смены
-                                    </Link>
-                                    <Link
-                                        href="/optic/staff"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                                    >
-                                        <Users className="w-4 h-4" />
-                                        Сотрудники
-                                    </Link>
-                                    <Link
-                                        href="/optic/settings/itigris"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-orange-600 hover:bg-orange-50"
-                                    >
-                                        <Link2 className="w-4 h-4" />
-                                        ITIGRIS
-                                    </Link>
-                                </>
+                                <Link
+                                    href="/optic/staff"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                >
+                                    <Users className="w-4 h-4" />
+                                    Сотрудники
+                                </Link>
+                            )}
+                            {subRole === 'optic_manager' && (
+                                <Link
+                                    href="/optic/settings/itigris"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-orange-600 hover:bg-orange-50"
+                                >
+                                    <Link2 className="w-4 h-4" />
+                                    ITIGRIS
+                                </Link>
                             )}
                             <Link
                                 href="/sales/pipeline"
@@ -423,7 +453,7 @@ export default function OpticDashboard() {
                     )}
 
                     {/* Stats */}
-                    {perms.canViewStats && (
+                    {clinicPerms.canViewFinance && perms.canViewStats && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mt-4 sm:mt-6">
                             {[
                                 { label: 'Всего', value: stats.total, icon: Package, bg: 'bg-gray-100', text: 'text-gray-600' },
@@ -450,18 +480,20 @@ export default function OpticDashboard() {
             </div>
 
             {/* === PATIENT QUICK ACCESS - compact ===  */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-1">
-                <div className="flex items-center gap-3 flex-wrap">
-                    <Link href="/optic/patients"
-                        className="group inline-flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-sm font-medium py-2 px-4 rounded-xl transition-all hover:shadow-sm"
-                    >
-                        <Users className="w-4 h-4 text-emerald-600" />
-                        Мои пациенты
-                        <span className="text-emerald-400 group-hover:text-emerald-600 transition-colors">→</span>
-                    </Link>
-                    <span className="text-xs text-gray-400">Карточки, рецепты, консультации · синхронизация с MedMundus</span>
+            {clinicPerms.canViewPatients && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-1">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <Link href="/optic/patients"
+                            className="group inline-flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-sm font-medium py-2 px-4 rounded-xl transition-all hover:shadow-sm"
+                        >
+                            <Users className="w-4 h-4 text-emerald-600" />
+                            Мои пациенты
+                            <span className="text-emerald-400 group-hover:text-emerald-600 transition-colors">→</span>
+                        </Link>
+                        <span className="text-xs text-gray-400">Карточки, рецепты, консультации · синхронизация с MedMundus</span>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Filters & Orders */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">

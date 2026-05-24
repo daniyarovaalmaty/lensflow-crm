@@ -25,6 +25,8 @@ interface LeadCard {
     appointmentAt: string | null;
     createdAt: string;
     updatedAt: string;
+    acquisitionCost: number;
+    revenue: number | null;
 }
 
 const STAGES = [
@@ -70,6 +72,12 @@ export default function SalesPipelinePage() {
     const [waMessage, setWaMessage] = useState('');
     const [waSending, setWaSending] = useState(false);
     const [waSent, setWaSent] = useState(false);
+    const [showIntegrationsModal, setShowIntegrationsModal] = useState(false);
+    const [metaConnected, setMetaConnected] = useState(false);
+    const [googleConnected, setGoogleConnected] = useState(false);
+    const [syncing, setSyncing] = useState(false);
+    const [analytics, setAnalytics] = useState<any>(null);
+
 
     const handleSendWA = async (lead: LeadCard) => {
         if (!waMessage.trim() || waSending) return;
@@ -100,12 +108,19 @@ export default function SalesPipelinePage() {
             const data = await res.json();
             setLeads(data.leads || []);
             setStageCounts(data.stagesCounts || {});
+
+            const analyticsRes = await fetch('/api/crm/analytics');
+            if (analyticsRes.ok) {
+                const analyticsData = await analyticsRes.json();
+                setAnalytics(analyticsData);
+            }
         } catch (err) {
             console.error('Failed to fetch leads:', err);
         } finally {
             setLoading(false);
         }
     }, [search]);
+
 
     useEffect(() => { fetchLeads(); }, [fetchLeads]);
     useEffect(() => {
@@ -123,6 +138,30 @@ export default function SalesPipelinePage() {
 
     const activeLeads = leads.filter(l => !['converted', 'lost'].includes(l.stage)).length;
     const convertedCount = stageCounts['converted'] || 0;
+
+    const marketingStats = useMemo(() => {
+        let totalCost = analytics?.kpi?.totalBudgetSpent || 0;
+        let totalRevenue = analytics?.kpi?.totalRevenue || 0;
+        let convertedLeads = analytics?.kpi?.totalConverted || 0;
+        
+        if (!analytics) {
+            leads.forEach(l => {
+                totalCost += l.acquisitionCost || 0;
+                if (l.stage === 'converted') {
+                    convertedLeads++;
+                    totalRevenue += l.revenue || 0;
+                }
+            });
+        }
+        
+        const cpl = leads.length > 0 ? Math.round(totalCost / leads.length) : 0;
+        const cac = convertedLeads > 0 ? Math.round(totalCost / convertedLeads) : 0;
+        const conversionRate = leads.length > 0 ? ((convertedLeads / leads.length) * 100).toFixed(1) : '0';
+        const romi = totalCost > 0 ? Math.round(((totalRevenue - totalCost) / totalCost) * 100) : 0;
+        
+        return { totalCost, totalRevenue, convertedLeads, cpl, cac, conversionRate, romi };
+    }, [leads, analytics]);
+
 
     const selectedLead = useMemo(() =>
         leads.find(l => l.id === selectedLeadId) || null,
@@ -156,6 +195,7 @@ export default function SalesPipelinePage() {
     const [newPhone, setNewPhone] = useState('');
     const [newName, setNewName] = useState('');
     const [newCity, setNewCity] = useState('');
+    const [newAcquisitionCost, setNewAcquisitionCost] = useState('');
     const [addingLead, setAddingLead] = useState(false);
 
     const handleAddLead = async () => {
@@ -165,9 +205,15 @@ export default function SalesPipelinePage() {
             await fetch('/api/crm/leads', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: newPhone, name: newName || null, city: newCity || null, source: 'manual' }),
+                body: JSON.stringify({
+                    phone: newPhone,
+                    name: newName || null,
+                    city: newCity || null,
+                    source: 'manual',
+                    acquisitionCost: Number(newAcquisitionCost) || 0
+                }),
             });
-            setNewPhone(''); setNewName(''); setNewCity('');
+            setNewPhone(''); setNewName(''); setNewCity(''); setNewAcquisitionCost('');
             setShowAddModal(false);
             fetchLeads();
         } catch (err) {
@@ -179,10 +225,11 @@ export default function SalesPipelinePage() {
 
     // Lock body scroll for modals
     useEffect(() => {
-        if (selectedLeadId || showAddModal) document.body.style.overflow = 'hidden';
+        if (selectedLeadId || showAddModal || showIntegrationsModal) document.body.style.overflow = 'hidden';
         else document.body.style.overflow = '';
         return () => { document.body.style.overflow = ''; };
-    }, [selectedLeadId, showAddModal]);
+    }, [selectedLeadId, showAddModal, showIntegrationsModal]);
+
 
     // ── Lead Card (matches OrderCard style) ──
     const LeadCard = ({ lead }: { lead: LeadCard }) => {
@@ -325,12 +372,45 @@ export default function SalesPipelinePage() {
                             )}
                         </div>
                         <button
+                            onClick={() => setShowIntegrationsModal(true)}
+                            className="btn btn-outline border-blue-200 text-blue-600 hover:bg-blue-50 gap-2 font-semibold"
+                        >
+                            <Target className="w-5 h-5 text-blue-600" />
+                            Интеграция рекламы
+                        </button>
+                        <button
                             onClick={() => setShowAddModal(true)}
                             className="btn btn-primary gap-2"
                         >
                             <Plus className="w-5 h-5" />
                             Добавить лид
                         </button>
+                    </div>
+                </div>
+
+                {/* Marketing & CAC Dashboard */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 bg-gradient-to-br from-slate-50 to-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Рекламный бюджет</span>
+                        <div className="text-xl font-black text-gray-900">{marketingStats.totalCost.toLocaleString('ru-RU')} ₸</div>
+                        <span className="text-[10px] text-gray-400 mt-2 block font-medium">Всего инвестировано</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">CPL (Цена за лид)</span>
+                        <div className="text-xl font-black text-gray-900">{marketingStats.cpl.toLocaleString('ru-RU')} ₸</div>
+                        <span className="text-[10px] text-emerald-600 font-semibold mt-2 block">Конверсия: {marketingStats.conversionRate}%</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">CAC (Цена клиента)</span>
+                        <div className="text-xl font-black text-gray-900">{marketingStats.cac.toLocaleString('ru-RU')} ₸</div>
+                        <span className="text-[10px] text-gray-400 mt-2 block font-medium">Закрытый договор</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col justify-between">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Окупаемость ROMI</span>
+                        <div className="text-xl font-black text-gray-900">{marketingStats.totalRevenue.toLocaleString('ru-RU')} ₸</div>
+                        <span className={`text-[10px] font-bold mt-2 block ${marketingStats.romi > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            Возврат: {marketingStats.romi}%
+                        </span>
                     </div>
                 </div>
 
@@ -578,6 +658,131 @@ export default function SalesPipelinePage() {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Рекламный Трафик & Интеграции Modal */}
+            <AnimatePresence>
+                {showIntegrationsModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-2xl p-6 max-w-lg w-full border border-gray-100 shadow-xl"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-gray-900">Интеграция трафика (Meta / Google)</h3>
+                                <button onClick={() => setShowIntegrationsModal(false)} className="btn btn-ghost btn-sm btn-circle">
+                                    <X className="w-5 h-5 text-gray-500" />
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-6">
+                                {/* Meta panel */}
+                                <div className="p-4 rounded-xl border border-gray-100 bg-slate-50/50 flex justify-between items-center">
+                                    <div>
+                                        <h4 className="font-bold text-gray-900">Meta Ads (Facebook & Instagram)</h4>
+                                        <p className="text-xs text-gray-500">Синхронизация рекламного бюджета и лид-форм Meta</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setMetaConnected(!metaConnected);
+                                            alert(metaConnected ? 'Meta Ads отключен' : 'Meta Ads успешно подключен!');
+                                        }}
+                                        className={`btn btn-sm ${metaConnected ? 'btn-success text-white' : 'btn-outline'}`}
+                                    >
+                                        {metaConnected ? 'Подключено' : 'Подключить'}
+                                    </button>
+                                </div>
+
+                                {/* Google panel */}
+                                <div className="p-4 rounded-xl border border-gray-100 bg-slate-50/50 flex justify-between items-center">
+                                    <div>
+                                        <h4 className="font-bold text-gray-900">Google Ads</h4>
+                                        <p className="text-xs text-gray-500">Импорт суточных бюджетов из Google Search & GDN</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setGoogleConnected(!googleConnected);
+                                            alert(googleConnected ? 'Google Ads отключен' : 'Google Ads API подключен успешно!');
+                                        }}
+                                        className={`btn btn-sm ${googleConnected ? 'btn-success text-white' : 'btn-outline'}`}
+                                    >
+                                        {googleConnected ? 'Подключено' : 'Подключить'}
+                                    </button>
+                                </div>
+
+                                {/* Demo traffic trigger */}
+                                <div className="p-6 rounded-xl border border-dashed border-blue-200 bg-blue-50/50 text-center">
+                                    <h4 className="font-bold text-blue-900 mb-2">Симуляция рекламного трафика</h4>
+                                    <p className="text-xs text-blue-700 mb-4">
+                                        Запустите демо-генератор, чтобы автоматически начислить рекламный бюджет в Google Ads и Meta Ads, а также привлечь 2 новых лида из Instagram и Google Webhook.
+                                    </p>
+                                    <button
+                                        onClick={async () => {
+                                            setSyncing(true);
+                                            try {
+                                                // Sync Meta spend
+                                                await fetch('/api/crm/webhook/sync-spend', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        campaignId: 'meta_spring_1',
+                                                        name: 'Весеннее промо Линзы (Instagram)',
+                                                        source: 'facebook',
+                                                        dailyBudget: 5000,
+                                                        spendDate: new Date().toISOString(),
+                                                        amount: 15000
+                                                    })
+                                                });
+
+                                                // Sync Google spend
+                                                await fetch('/api/crm/webhook/sync-spend', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        campaignId: 'google_search_1',
+                                                        name: 'Контекст Ночные Линзы',
+                                                        source: 'google',
+                                                        dailyBudget: 8000,
+                                                        spendDate: new Date().toISOString(),
+                                                        amount: 24000
+                                                    })
+                                                });
+
+                                                // Ingest leads via webhook
+                                                const leadsPayloads = [
+                                                    { name: 'Анель Куралова', phone: '+77073335566', city: 'Алматы', source: 'instagram', campaignId: 'meta_spring_1', utmSource: 'instagram', utmMedium: 'cpc', utmCampaign: 'lens_conversion' },
+                                                    { name: 'Тимур Рахимов', phone: '+77019998877', city: 'Астана', source: 'google', campaignId: 'google_search_1', utmSource: 'google', utmMedium: 'cpc', utmCampaign: 'night_lenses' }
+                                                ];
+
+                                                for (const lead of leadsPayloads) {
+                                                    await fetch('/api/crm/webhook/incoming', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify(lead)
+                                                    });
+                                                }
+
+                                                alert('Рекламный трафик и суточные бюджеты успешно синхронизированы!');
+                                                fetchLeads();
+                                            } catch (err) {
+                                                alert('Ошибка симуляции.');
+                                            } finally {
+                                                setSyncing(false);
+                                            }
+                                        }}
+                                        disabled={syncing}
+                                        className="btn btn-primary w-full"
+                                    >
+                                        {syncing ? 'Синхронизация...' : 'Запустить рекламный трафик'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
+

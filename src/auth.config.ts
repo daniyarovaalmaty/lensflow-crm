@@ -29,6 +29,7 @@ export const authConfig = {
                 token.role = user.role;
                 token.subRole = user.subRole;
                 token.organizationId = user.organizationId;
+                token.permissions = user.permissions;
                 token.profile = user.profile;
             }
             return token;
@@ -40,6 +41,7 @@ export const authConfig = {
                 session.user.role = token.role as "doctor" | "optic" | "laboratory";
                 session.user.subRole = token.subRole as any;
                 session.user.organizationId = token.organizationId as string | undefined;
+                session.user.permissions = token.permissions as any;
                 session.user.profile = token.profile as any;
             }
             return session;

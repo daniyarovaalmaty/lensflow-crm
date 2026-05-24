@@ -67,10 +67,12 @@ export async function GET(req: NextRequest) {
     });
 }
 
-// POST /api/crm/leads — create a new lead
 export async function POST(req: NextRequest) {
     const body = await req.json();
-    const { phone, name, city, source, assigneeId, clinicId, notes, tags, funnel } = body;
+    const {
+        phone, name, city, source, assigneeId, clinicId, notes, tags, funnel,
+        acquisitionCost, campaignId, utmSource, utmMedium, utmCampaign, utmContent, utmTerm
+    } = body;
     const targetFunnel = funnel || 'sales';
 
     if (!phone) {
@@ -101,12 +103,20 @@ export async function POST(req: NextRequest) {
             clinicId,
             notes,
             tags: tags || [],
+            acquisitionCost: Number(acquisitionCost) || 0,
+            campaignId: campaignId || null,
+            utmSource: utmSource || '',
+            utmMedium: utmMedium || '',
+            utmCampaign: utmCampaign || '',
+            utmContent: utmContent || '',
+            utmTerm: utmTerm || ''
         },
         include: {
             assignee: { select: { id: true, fullName: true } },
             clinic: { select: { id: true, name: true } },
         },
     });
+
 
     // Log activity
     await prisma.leadActivity.create({

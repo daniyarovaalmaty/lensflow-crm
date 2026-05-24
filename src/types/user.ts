@@ -287,6 +287,91 @@ export function getPermissions(subRole: SubRole): PermissionSet {
     return PermissionsBySubRole[subRole];
 }
 
+// ==================== Dynamic Clinic Module Permissions ====================
+export interface ClinicPermissions {
+    canViewPos: boolean;
+    canViewWarehouse: boolean;
+    canViewCatalog: boolean;
+    canViewCash: boolean;
+    canViewPatients: boolean;
+    canViewFinance: boolean;
+    canViewOrders: boolean;
+}
+
+export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
+    optic_manager: {
+        canViewPos: true,
+        canViewWarehouse: true,
+        canViewCatalog: true,
+        canViewCash: true,
+        canViewPatients: true,
+        canViewFinance: true,
+        canViewOrders: true,
+    },
+    optic_doctor: {
+        canViewPos: false,
+        canViewWarehouse: false,
+        canViewCatalog: true,
+        canViewCash: false,
+        canViewPatients: true,
+        canViewFinance: false,
+        canViewOrders: true,
+    },
+    optic_accountant: {
+        canViewPos: false,
+        canViewWarehouse: true,
+        canViewCatalog: true,
+        canViewCash: true,
+        canViewPatients: false,
+        canViewFinance: true,
+        canViewOrders: false,
+    },
+    // Fallbacks for other roles to be fully typed and safe
+    lab_engineer: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    lab_quality: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    lab_logistics: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    lab_head: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    lab_admin: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    lab_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    doctor: {
+        canViewPos: false,
+        canViewWarehouse: false,
+        canViewCatalog: true,
+        canViewCash: false,
+        canViewPatients: true,
+        canViewFinance: false,
+        canViewOrders: true,
+    },
+    sales_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+};
+
+export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {
+    const roleDefault = DefaultClinicPermissions[user.subRole as SubRole] || {
+        canViewPos: false,
+        canViewWarehouse: false,
+        canViewCatalog: false,
+        canViewCash: false,
+        canViewPatients: false,
+        canViewFinance: false,
+        canViewOrders: false,
+    };
+
+    if (!user.permissions || typeof user.permissions !== 'object') {
+        return roleDefault;
+    }
+
+    const p = user.permissions;
+    return {
+        canViewPos: typeof p.canViewPos === 'boolean' ? p.canViewPos : roleDefault.canViewPos,
+        canViewWarehouse: typeof p.canViewWarehouse === 'boolean' ? p.canViewWarehouse : roleDefault.canViewWarehouse,
+        canViewCatalog: typeof p.canViewCatalog === 'boolean' ? p.canViewCatalog : roleDefault.canViewCatalog,
+        canViewCash: typeof p.canViewCash === 'boolean' ? p.canViewCash : roleDefault.canViewCash,
+        canViewPatients: typeof p.canViewPatients === 'boolean' ? p.canViewPatients : roleDefault.canViewPatients,
+        canViewFinance: typeof p.canViewFinance === 'boolean' ? p.canViewFinance : roleDefault.canViewFinance,
+        canViewOrders: typeof p.canViewOrders === 'boolean' ? p.canViewOrders : roleDefault.canViewOrders,
+    };
+}
+
 // ==================== User Profile ====================
 export const UserProfileSchema = z.object({
     fullName: z.string().min(2, 'Имя должно содержать минимум 2 символа'),

@@ -7,6 +7,7 @@ declare module 'next-auth' {
         role: 'doctor' | 'optic' | 'laboratory';
         subRole: string;
         organizationId?: string | null;
+        permissions?: any;
         profile: {
             fullName: string;
             phone?: string | null;
@@ -22,6 +23,7 @@ declare module 'next-auth' {
             role: 'doctor' | 'optic' | 'laboratory';
             subRole: string;
             organizationId?: string | null;
+            permissions?: any;
             profile: {
                 fullName: string;
                 phone?: string | null;
@@ -39,6 +41,7 @@ declare module 'next-auth/jwt' {
         role: 'doctor' | 'optic' | 'laboratory';
         subRole: string;
         organizationId?: string | null;
+        permissions?: any;
         profile: {
             fullName: string;
             phone?: string | null;
