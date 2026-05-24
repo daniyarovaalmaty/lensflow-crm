@@ -106,6 +106,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, bot: 'skipped (blacklist)' });
     }
 
+    // Check if session is paused by manager
+    const botSession = await prisma.botSession.findUnique({
+        where: { phone: normalizedPhone }
+    });
+    if (botSession?.state === 'paused') {
+        return NextResponse.json({ ok: true, bot: 'skipped (paused by manager)' });
+    }
+
     // Run AI bot asynchronously (don't block webhook response)
     // Vercel has 30s timeout so we run it synchronously but catch errors
     try {
