@@ -494,8 +494,8 @@ export default function POSPage() {
                                     Отмена
                                 </button>
                                 <button onClick={handleCheckout} disabled={saving}
-                                    className="flex-1 py-3.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-2xl text-xs md:text-sm font-black transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5">
-                                    {saving ? 'Оформление...' : <>Подтвердить</>}
+                                    className="flex-1 py-3.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-2xl text-xs md:text-sm font-black transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+                                    {saving ? 'Оформление...' : <><CheckCircle className="w-4 h-4" /> Подтвердить</>}
                                 </button>
                             </div>
                         </motion.div>
