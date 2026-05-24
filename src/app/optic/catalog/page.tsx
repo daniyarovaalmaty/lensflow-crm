@@ -204,6 +204,40 @@ export default function OpticCatalogPage() {
         printWindow.document.close();
     };
 
+    const handlePrintLabelFromForm = () => {
+        const barcodeToPrint = form.barcode || form.sku;
+        if (!barcodeToPrint) {
+            alert('⚠️ Чтобы распечатать этикетку, сначала укажите Штрих-код или Артикул (SKU) в форме.');
+            return;
+        }
+
+        const tempProduct: OpticProduct = {
+            id: editProduct?.id || 'temp',
+            name: form.name,
+            slug: null,
+            category: form.category,
+            type: 'product',
+            brand: form.brand || null,
+            model: form.model || null,
+            sku: form.sku || null,
+            barcode: form.barcode || null,
+            shortDescription: form.shortDescription || null,
+            fullDescription: form.fullDescription || null,
+            images: form.images || null,
+            specs: form.specs || null,
+            purchasePrice: Number(form.purchasePrice) || 0,
+            retailPrice: Number(form.retailPrice) || 0,
+            minStock: Number(form.minStock) || 0,
+            currentStock: 0,
+            unit: form.unit,
+            trackSerials: form.trackSerials,
+            isPublic: form.isPublic,
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+        handlePrintLabel(tempProduct);
+    };
+
     const filteredProducts = useMemo(() => {
         let result = products.filter(p => p.isActive);
         if (categoryFilter === 'products') result = result.filter(p => p.type === 'product');
@@ -613,6 +647,14 @@ export default function OpticCatalogPage() {
 
                                     {/* Actions */}
                                     <div className="border-t border-gray-50 px-4 py-2.5 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {product.type === 'product' && (
+                                            <button
+                                                onClick={e => { e.stopPropagation(); handlePrintLabel(product); }}
+                                                className="flex-1 flex items-center justify-center gap-1 text-xs py-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors border border-primary-100"
+                                            >
+                                                <Printer className="w-3.5 h-3.5" /> Печать
+                                            </button>
+                                        )}
                                         <button
                                             onClick={e => { e.stopPropagation(); openEditForm(product); }}
                                             className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
@@ -794,10 +836,19 @@ export default function OpticCatalogPage() {
                             </div>
 
                             {/* Footer */}
-                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 rounded-b-2xl">
+                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 rounded-b-2xl z-10">
                                 <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
                                     Отмена
                                 </button>
+                                {!isService && editProduct && (
+                                    <button
+                                        type="button"
+                                        onClick={handlePrintLabelFromForm}
+                                        className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
+                                    >
+                                        <Printer className="w-4 h-4 text-gray-500" /> Печать
+                                    </button>
+                                )}
                                 <button
                                     onClick={handleSave}
                                     disabled={!form.name || saving}
