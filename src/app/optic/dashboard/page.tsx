@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2 } from 'lucide-react';
+import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -277,8 +277,11 @@ export default function OpticDashboard() {
                                     <Link href="/optic/warehouse" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Склад">
                                         <Warehouse className="w-4 h-4" />
                                     </Link>
-                                    <Link href="/optic/pos" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса">
+                                    <Link href="/optic/pos" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса POS">
                                         <ShoppingCart className="w-4 h-4" />
+                                    </Link>
+                                    <Link href="/optic/cash-shifts" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Касса и Смены">
+                                        <Banknote className="w-4 h-4" />
                                     </Link>
                                     <Link href="/optic/staff" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Сотрудники">
                                         <Users className="w-4 h-4" />
@@ -349,7 +352,15 @@ export default function OpticDashboard() {
                                         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
                                     >
                                         <ShoppingCart className="w-4 h-4" />
-                                        Касса
+                                        Касса POS
+                                    </Link>
+                                    <Link
+                                        href="/optic/cash-shifts"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
+                                    >
+                                        <Banknote className="w-4 h-4" />
+                                        Касса и Смены
                                     </Link>
                                     <Link
                                         href="/optic/staff"

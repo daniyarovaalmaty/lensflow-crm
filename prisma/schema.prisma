@@ -51,6 +51,8 @@ model Organization {
   clinicLeads         Lead[]               @relation("ClinicLeads")
   clinicSubscription  ClinicSubscription[]  @relation("ClinicSubscription")
 
+  cashRegisters CashRegister[]
+
   @@map("organizations")
 }
 
@@ -94,6 +96,10 @@ model User {
   patients       Patient[] @relation("DoctorPatients")
   prescriptions  Prescription[] @relation("DoctorPrescriptions")
   consultations  Consultation[] @relation("DoctorConsultations")
+
+  openedShifts      CashShift[]       @relation("OpenedShifts")
+  closedShifts      CashShift[]       @relation("ClosedShifts")
+  cashTransactions  CashTransaction[] @relation("CreatedTransactions")
 
   @@map("users")
 }
@@ -748,5 +754,62 @@ model BotSession {
 
   @@index([phone])
   @@map("bot_sessions")
+}
+
+// ==================== Cash Register & Shift Operations ====================
+model CashRegister {
+  id              String            @id @default(cuid())
+  name            String
+  organizationId  String
+  organization    Organization      @relation(fields: [organizationId], references: [id])
+  currentBalance  Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  shifts          CashShift[]
+  transactions    CashTransaction[]
+
+  @@map("cash_registers")
+}
+
+model CashShift {
+  id             String            @id @default(cuid())
+  cashRegisterId String
+  cashRegister   CashRegister      @relation(fields: [cashRegisterId], references: [id])
+  openedById     String
+  openedBy       User              @relation("OpenedShifts", fields: [openedById], references: [id])
+  closedById     String?
+  closedBy       User?             @relation("ClosedShifts", fields: [closedById], references: [id])
+  openedAt       DateTime          @default(now())
+  closedAt       DateTime?
+  status         String            @default("open")
+  startingCash   Int
+  expectedCash   Int               @default(0)
+  actualCash     Int?
+  difference     Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  transactions   CashTransaction[]
+
+  @@map("cash_shifts")
+}
+
+model CashTransaction {
+  id                 String       @id @default(cuid())
+  shiftId            String
+  shift              CashShift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  cashRegisterId     String
+  cashRegister       CashRegister @relation(fields: [cashRegisterId], references: [id])
+  transType          String
+  paymentMethod      String
+  category           String
+  amount             Int
+  kaspiTransactionId String?
+  kaspiStatus        String?
+  createdById        String
+  createdBy          User         @relation("CreatedTransactions", fields: [createdById], references: [id])
+  description        String?
+  createdAt          DateTime     @default(now())
+
+  @@map("cash_transactions")
 }
 
