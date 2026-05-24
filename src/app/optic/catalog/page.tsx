@@ -8,7 +8,7 @@ import {
     Package, Plus, Search, X, Eye, Edit2, Trash2,
     Tag, ShoppingBag, Droplets, Glasses, Wrench, Star,
     Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon, ArrowLeft,
-    Sparkles, Send, Bot, Loader2, MessageSquare
+    Sparkles, Send, Bot, Loader2, MessageSquare, Printer
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -103,6 +103,104 @@ export default function OpticCatalogPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePrintLabel = (product: OpticProduct) => {
+        if (!product.barcode) {
+            alert('У этого товара нет штрих-кода');
+            return;
+        }
+        
+        const printWindow = window.open('', '_blank', 'width=600,height=400');
+        if (!printWindow) return;
+        
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Печать этикетки - ${product.name}</title>
+                    <style>
+                        @page {
+                            size: 58mm 30mm;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 2mm;
+                            font-family: Arial, sans-serif;
+                            width: 54mm;
+                            height: 26mm;
+                            box-sizing: border-box;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: space-between;
+                            align-items: center;
+                            background: white;
+                        }
+                        .brand {
+                            font-size: 8px;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            color: #555;
+                            margin-bottom: 1px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            width: 100%;
+                            text-align: center;
+                        }
+                        .name {
+                            font-size: 9px;
+                            font-weight: bold;
+                            color: black;
+                            text-align: center;
+                            line-height: 1.1;
+                            height: 2.2em;
+                            overflow: hidden;
+                            width: 100%;
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                        }
+                        .price {
+                            font-size: 11px;
+                            font-weight: 900;
+                            color: black;
+                            margin-top: 1px;
+                        }
+                        svg#barcode {
+                            width: 100%;
+                            max-height: 11mm;
+                        }
+                    </style>
+                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+                </head>
+                <body>
+                    <div class="brand">${product.brand || 'ОПТИКА'}</div>
+                    <div class="name">${product.name}</div>
+                    <svg id="barcode"></svg>
+                    <div class="price">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>
+                    <script>
+                        try {
+                            JsBarcode("#barcode", "${product.barcode}", {
+                                format: "CODE128",
+                                width: 1.2,
+                                height: 32,
+                                displayValue: true,
+                                fontSize: 8,
+                                margin: 0
+                            });
+                        } catch(e) {
+                            console.error(e);
+                        }
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
     };
 
     const filteredProducts = useMemo(() => {
@@ -806,6 +904,14 @@ export default function OpticCatalogPage() {
 
                                 {/* Actions */}
                                 <div className="mt-6 flex gap-3">
+                                    {detailProduct.barcode && (
+                                        <button
+                                            onClick={() => handlePrintLabel(detailProduct)}
+                                            className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-sm"
+                                        >
+                                            <Printer className="w-4 h-4" /> Печать этикетки
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => { setDetailProduct(null); openEditForm(detailProduct); }}
                                         className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
