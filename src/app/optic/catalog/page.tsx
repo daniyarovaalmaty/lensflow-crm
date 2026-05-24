@@ -106,8 +106,9 @@ export default function OpticCatalogPage() {
     };
 
     const handlePrintLabel = (product: OpticProduct) => {
-        if (!product.barcode) {
-            alert('У этого товара нет штрих-кода');
+        const barcodeToPrint = product.barcode || product.sku;
+        if (!barcodeToPrint) {
+            alert('⚠️ Чтобы распечатать этикетку, сначала укажите Штрих-код или Артикул (SKU) в карточке товара (нажмите кнопку "Редактировать").');
             return;
         }
         
@@ -181,7 +182,7 @@ export default function OpticCatalogPage() {
                     <div class="price">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>
                     <script>
                         try {
-                            JsBarcode("#barcode", "${product.barcode}", {
+                            JsBarcode("#barcode", "${barcodeToPrint}", {
                                 format: "CODE128",
                                 width: 1.2,
                                 height: 32,
@@ -904,7 +905,7 @@ export default function OpticCatalogPage() {
 
                                 {/* Actions */}
                                 <div className="mt-6 flex gap-3">
-                                    {detailProduct.barcode && (
+                                    {detailProduct.type === 'product' && (
                                         <button
                                             onClick={() => handlePrintLabel(detailProduct)}
                                             className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-sm"
