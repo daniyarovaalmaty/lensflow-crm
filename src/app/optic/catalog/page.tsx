@@ -94,6 +94,8 @@ export default function OpticCatalogPage() {
     const [printerLanguage, setPrinterLanguage] = useState<'tspl' | 'zpl'>('tspl');
     const [usbError, setUsbError] = useState<string | null>(null);
     const [usbConnecting, setUsbConnecting] = useState(false);
+    const [serialPort, setSerialPort] = useState<any | null>(null);
+    const [serialConnecting, setSerialConnecting] = useState(false);
 
     // Bulk Import state
     const [showImport, setShowImport] = useState(false);
@@ -641,6 +643,62 @@ export default function OpticCatalogPage() {
             console.error('WebUSB Printing Error:', err);
             setUsbError(err.message || 'Ошибка отправки на печать');
             alert(`❌ Ошибка печати: ${err.message || 'Ошибка отправки на печать'}`);
+        }
+    };
+
+    const connectSerialPrinter = async () => {
+        setUsbError(null);
+        setSerialConnecting(true);
+        try {
+            if (typeof window === 'undefined' || !(navigator as any).serial) {
+                throw new Error('Web Serial API не поддерживается в этом браузере. Используйте Google Chrome или Microsoft Edge.');
+            }
+            const port = await (navigator as any).serial.requestPort();
+            await port.open({ baudRate: 9600 });
+            setSerialPort(port);
+            alert(`🎉 Успешно подключен принтер по последовательному порту Serial!`);
+        } catch (err: any) {
+            console.error('Web Serial Connection Error:', err);
+            setUsbError(err.message || 'Не удалось подключиться к Serial-принтеру');
+            alert(`❌ Ошибка подключения по Serial: ${err.message || 'Не удалось подключиться к Serial-принтеру'}`);
+        } finally {
+            setSerialConnecting(false);
+        }
+    };
+
+    const printViaSerial = async () => {
+        if (!printProduct) return;
+        if (!serialPort) {
+            alert('⚠️ Сначала подключите принтер по Serial!');
+            return;
+        }
+        
+        setUsbError(null);
+        try {
+            const isTail = labelWidth === 72 && labelHeight === 10;
+            let commandString = '';
+            
+            if (printerLanguage === 'zpl') {
+                commandString = isTail 
+                    ? generateZpl(printProduct, includePrice, includeBrand)
+                    : generateZplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+            } else {
+                commandString = isTail
+                    ? generateTspl(printProduct, includePrice, includeBrand)
+                    : generateTsplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+            }
+            
+            const encoder = new TextEncoder();
+            const data = encoder.encode(commandString);
+            
+            const writer = serialPort.writable.getWriter();
+            await writer.write(data);
+            writer.releaseLock();
+            alert('⚡️ Этикетка успешно отправлена на печать по Serial!');
+        } catch (err: any) {
+            console.error('Serial Printing Error:', err);
+            setUsbError(err.message || 'Ошибка отправки на печать по Serial');
+            alert(`❌ Ошибка печати по Serial: ${err.message || 'Ошибка отправки на печать по Serial'}`);
         }
     };
 
@@ -2037,32 +2095,105 @@ export default function OpticCatalogPage() {
                                     </div>
                                 </div>
 
-                                {/* Direct WebUSB Print Block */}
+                                {/* Direct WebUSB & Web Serial Print Block */}
                                 <div className="space-y-3 pt-4 border-t border-gray-100">
                                     <div className="flex items-center justify-between">
                                         <label className="block text-sm font-semibold text-gray-900">
-                                            3. Прямая печать (WebUSB без драйверов):
+                                            3. Прямая печать (Без драйверов и ОС):
                                         </label>
                                         <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">
                                             Premium
                                         </span>
                                     </div>
+
+                                    {usbError && (
+                                        <div className="p-3.5 bg-rose-50 border border-rose-100 rounded-2xl text-[11px] text-rose-700 font-medium space-y-1.5 animate-fadeIn">
+                                            <div className="font-bold flex items-center gap-1">
+                                                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                                                Ошибка принтера: {usbError}
+                                            </div>
+                                            <p className="text-rose-600/90 leading-normal">
+                                                {usbError.includes('claimInterface') || usbError.includes('Access denied') || usbError.includes('security') || usbError.includes('transferOut') ? (
+                                                    <>
+                                                        <strong>Причина:</strong> Операционная система macOS/Windows заблокировала прямое USB-подключение (CUPS драйвер удерживает принтер).<br />
+                                                        <strong>Решение:</strong> Попробуйте <strong>Способ Б (Serial/COM)</strong> ниже, который легко обходит блокировку ОС, либо удалите принтер из системных настроек Printers.
+                                                    </>
+                                                ) : (
+                                                    'Убедитесь, что принтер включен, кабель USB подключен надежно, и вы используете Chrome/Edge.'
+                                                )}
+                                            </p>
+                                        </div>
+                                    )}
                                     
-                                    <div className="p-4 bg-gray-50 border border-gray-200/65 rounded-2xl space-y-3">
-                                        <div className="flex items-center justify-between">
+                                    <div className="p-4 bg-gray-50 border border-gray-200/65 rounded-2xl space-y-4">
+                                        {/* Status info */}
+                                        <div className="flex items-center justify-between border-b border-gray-200/60 pb-2">
                                             <span className="text-xs text-gray-500 font-medium">Статус принтера:</span>
                                             {usbDevice ? (
                                                 <span className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
                                                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                                                    Подключен: {usbDevice.productName || 'USB Printer'}
+                                                    USB-соединение установлено: {usbDevice.productName || 'Printer'}
+                                                </span>
+                                            ) : serialPort ? (
+                                                <span className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                                                    Serial-соединение установлено (COM)
                                                 </span>
                                             ) : (
                                                 <span className="text-xs text-amber-500 font-bold">Не подключен</span>
                                             )}
                                         </div>
-                                        
-                                        {usbDevice ? (
-                                            <div className="grid grid-cols-2 gap-3">
+
+                                        {/* Option buttons */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {/* Way A: WebUSB */}
+                                            <div className="space-y-1.5">
+                                                <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Способ А (Прямой USB)</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={connectUsbPrinter}
+                                                    disabled={usbConnecting}
+                                                    className={`w-full py-2 px-2 text-xs font-bold rounded-xl transition-all border shadow-sm flex items-center justify-center gap-1.5 ${
+                                                        usbDevice 
+                                                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                                                            : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
+                                                    }`}
+                                                >
+                                                    {usbConnecting ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Printer className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {usbDevice ? 'USB Подключен' : 'Найти USB'}
+                                                </button>
+                                            </div>
+
+                                            {/* Way B: Web Serial */}
+                                            <div className="space-y-1.5">
+                                                <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Способ Б (Serial/COM)</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={connectSerialPrinter}
+                                                    disabled={serialConnecting}
+                                                    className={`w-full py-2 px-2 text-xs font-bold rounded-xl transition-all border shadow-sm flex items-center justify-center gap-1.5 ${
+                                                        serialPort 
+                                                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                                                            : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
+                                                    }`}
+                                                >
+                                                    {serialConnecting ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Bot className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {serialPort ? 'Serial Подключен' : 'Найти Serial'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Language selector (only visible if any is connected) */}
+                                        {(usbDevice || serialPort) && (
+                                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200/50">
                                                 <div>
                                                     <span className="block text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-wider">Язык принтера</span>
                                                     <select
@@ -2077,30 +2208,17 @@ export default function OpticCatalogPage() {
                                                 <div className="flex items-end">
                                                     <button
                                                         type="button"
-                                                        onClick={connectUsbPrinter}
-                                                        className="w-full py-1.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors bg-white shadow-sm"
+                                                        onClick={() => {
+                                                            setUsbDevice(null);
+                                                            setSerialPort(null);
+                                                            setUsbError(null);
+                                                        }}
+                                                        className="w-full py-1.5 border border-rose-200 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors bg-white shadow-sm"
                                                     >
-                                                        Сменить принтер
-                                                     </button>
+                                                        Отключить
+                                                    </button>
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={connectUsbPrinter}
-                                                disabled={usbConnecting}
-                                                className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 disabled:opacity-50 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-indigo-100/50 shadow-sm"
-                                            >
-                                                {usbConnecting ? (
-                                                    <>
-                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Подключение...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Printer className="w-3.5 h-3.5" /> Найти и подключить USB-принтер
-                                                    </>
-                                                )}
-                                            </button>
                                         )}
                                     </div>
                                 </div>
@@ -2133,6 +2251,27 @@ export default function OpticCatalogPage() {
                                             className="flex-1 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-primary-100 flex items-center justify-center gap-2"
                                         >
                                             <Printer className="w-4 h-4" /> По USB
+                                        </button>
+                                    </>
+                                ) : serialPort ? (
+                                    <>
+                                        <button
+                                            onClick={() => {
+                                                handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                                                setPrintProduct(null);
+                                            }}
+                                            className="flex-1 py-3 border border-indigo-100 hover:bg-indigo-50/50 text-indigo-700 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            Через браузер
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                printViaSerial();
+                                                setPrintProduct(null);
+                                            }}
+                                            className="flex-1 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-primary-100 flex items-center justify-center gap-2"
+                                        >
+                                            <Printer className="w-4 h-4" /> По Serial
                                         </button>
                                     </>
                                 ) : (
