@@ -3,11 +3,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles } from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
+import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 
 // ==================== Types ====================
 interface Product {
@@ -100,6 +101,50 @@ export default function WarehousePage() {
     const [labelHeight, setLabelHeight] = useState(30); // default 30mm
     const [includePrice, setIncludePrice] = useState(true);
     const [includeBrand, setIncludeBrand] = useState(true);
+
+    const [showScanner, setShowScanner] = useState(false);
+    const [scannerMode, setScannerMode] = useState<'search' | 'receive' | 'writeoff'>('search');
+
+    const handleScanResult = (code: string) => {
+        // Find product matching code (either by barcode or sku)
+        const found = products.find(p => p.sku === code || p.barcode === code);
+        if (!found) {
+            alert(`⚠️ Товар с кодом или артикулом "${code}" не найден в системе.`);
+            return;
+        }
+
+        if (scannerMode === 'search') {
+            setSearch(code);
+            setShowScanner(false);
+        } else if (scannerMode === 'writeoff') {
+            setWoProduct(found.id);
+            alert(`✅ Товар выбран для списания: ${found.name}`);
+            setShowScanner(false);
+        } else if (scannerMode === 'receive') {
+            // Append to receive items or increment if already exists
+            const existingIdx = receiveItems.findIndex(ri => ri.productId === found.id);
+            if (existingIdx > -1) {
+                const updated = [...receiveItems];
+                const newQty = (Number(updated[existingIdx].quantity) || 0) + 1;
+                updated[existingIdx].quantity = String(newQty);
+                setReceiveItems(updated);
+            } else {
+                setReceiveItems(prev => [
+                    ...prev,
+                    {
+                        productId: found.id,
+                        quantity: '1',
+                        serialMode: 'auto',
+                        manualSerials: '',
+                        purchasePrice: String(found.purchasePrice),
+                        color: '',
+                        size: '',
+                    }
+                ]);
+            }
+            alert(`✅ Товар добавлен в приходную накладную: ${found.name} (1 шт.)`);
+        }
+    };
 
     const handlePrintBatch = (
         items: Array<{ name: string; brand: string | null; barcode: string | null; sku: string | null; retailPrice: number; quantity: number }>,
@@ -507,11 +552,20 @@ export default function WarehousePage() {
                 {/* ==================== TAB: STOCK ==================== */}
                 {tab === 'stock' && (
                     <div>
-                        <div className="mb-4 relative max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input type="text" placeholder="Поиск по названию, артикулу..."
-                                value={search} onChange={e => setSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500" />
+                        <div className="flex gap-2 mb-4">
+                            <div className="relative flex-1 max-w-md">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input type="text" placeholder="Поиск по названию, артикулу..."
+                                    value={search} onChange={e => setSearch(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500" />
+                            </div>
+                            <button 
+                                onClick={() => { setScannerMode('search'); setShowScanner(true); }}
+                                className="flex items-center justify-center p-3 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+                                title="Сканировать штрихкод товара"
+                            >
+                                <Camera className="w-4 h-4 text-primary-600" />
+                            </button>
                         </div>
 
                         {loading ? (
@@ -593,9 +647,17 @@ export default function WarehousePage() {
                 {tab === 'receive' && (
                     <div className="max-w-2xl">
                         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <ArrowDownToLine className="w-5 h-5 text-green-600" /> Приходная накладная
-                            </h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <ArrowDownToLine className="w-5 h-5 text-green-600" /> Приходная накладная
+                                </h2>
+                                <button 
+                                    onClick={() => { setScannerMode('receive'); setShowScanner(true); }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl text-xs font-bold transition-all"
+                                >
+                                    <Camera className="w-3.5 h-3.5 text-primary-500" /> Сканировать линзу
+                                </button>
+                            </div>
 
                             {/* Supplier */}
                             <div className="mb-4">
@@ -819,7 +881,15 @@ export default function WarehousePage() {
                             onClick={e => e.stopPropagation()}
                             className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
                         >
-                            <h2 className="text-lg font-bold text-gray-900 mb-4">Списание товара</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-gray-900">Списание товара</h2>
+                                <button 
+                                    onClick={() => { setScannerMode('writeoff'); setShowScanner(true); }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-250 text-gray-600 hover:bg-gray-50 rounded-xl text-xs font-bold transition-all"
+                                >
+                                    <Camera className="w-3.5 h-3.5 text-red-500" /> Сканировать штрихкод
+                                </button>
+                            </div>
                             <div className="space-y-3">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Товар</label>
