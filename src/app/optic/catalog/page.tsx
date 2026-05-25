@@ -88,6 +88,7 @@ export default function OpticCatalogPage() {
     const [labelHeight, setLabelHeight] = useState(30); // default 30mm
     const [includePrice, setIncludePrice] = useState(true);
     const [includeBrand, setIncludeBrand] = useState(true);
+    const [printAlignment, setPrintAlignment] = useState<'left' | 'center' | 'right'>('left');
 
     // WebUSB Printer State
     const [usbDevice, setUsbDevice] = useState<any | null>(null);
@@ -201,6 +202,9 @@ export default function OpticCatalogPage() {
         }
         
         const isTailLabel = widthMm === 72 && heightMm === 10;
+        const shiftStyle = printAlignment === 'right' 
+            ? 'margin-left: 8mm;' 
+            : (printAlignment === 'center' ? 'margin-left: 4mm;' : 'margin-left: 0;');
 
         if (isTailLabel) {
             iframeDoc.write(`
@@ -234,6 +238,7 @@ export default function OpticCatalogPage() {
                                 padding: 0.5mm 1mm;
                                 align-items: center;
                                 justify-content: space-between;
+                                ${shiftStyle}
                             }
                             .left-part {
                                 width: 29mm;
@@ -337,6 +342,7 @@ export default function OpticCatalogPage() {
                                 flex-direction: column;
                                 justify-content: space-between;
                                 align-items: center;
+                                ${shiftStyle}
                             }
                             .brand {
                                 font-size: ${heightMm > 25 ? '8px' : '6px'};
@@ -502,6 +508,11 @@ export default function OpticCatalogPage() {
         const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
         
         let zpl = `^XA\r\n`;
+        if (printAlignment === 'right') {
+            zpl += `^LS64\r\n`;
+        } else if (printAlignment === 'center') {
+            zpl += `^LS32\r\n`;
+        }
         zpl += `^PW576\r\n`;
         zpl += `^LL80\r\n`;
         zpl += `^CI28\r\n`;
@@ -533,6 +544,11 @@ export default function OpticCatalogPage() {
         
         let tspl = `SIZE 72 mm, 10 mm\r\n`;
         tspl += `GAP 2 mm, 0 mm\r\n`;
+        if (printAlignment === 'right') {
+            tspl += `SHIFT 64\r\n`;
+        } else if (printAlignment === 'center') {
+            tspl += `SHIFT 32\r\n`;
+        }
         tspl += `DIRECTION 1\r\n`;
         tspl += `CODEPAGE UTF-8\r\n`;
         tspl += `CLS\r\n`;
@@ -562,6 +578,11 @@ export default function OpticCatalogPage() {
         const heightDots = heightMm * 8;
         
         let zpl = `^XA\r\n`;
+        if (printAlignment === 'right') {
+            zpl += `^LS64\r\n`;
+        } else if (printAlignment === 'center') {
+            zpl += `^LS32\r\n`;
+        }
         zpl += `^PW${widthDots}\r\n`;
         zpl += `^LL${heightDots}\r\n`;
         zpl += `^CI28\r\n`;
@@ -594,6 +615,11 @@ export default function OpticCatalogPage() {
         
         let tspl = `SIZE ${widthMm} mm, ${heightMm} mm\r\n`;
         tspl += `GAP 2 mm, 0 mm\r\n`;
+        if (printAlignment === 'right') {
+            tspl += `SHIFT 64\r\n`;
+        } else if (printAlignment === 'center') {
+            tspl += `SHIFT 32\r\n`;
+        }
         tspl += `DIRECTION 1\r\n`;
         tspl += `CODEPAGE UTF-8\r\n`;
         tspl += `CLS\r\n`;
@@ -2128,6 +2154,20 @@ export default function OpticCatalogPage() {
                                                 <span className="text-xs font-semibold text-gray-800">Выводить цену</span>
                                             </div>
                                         </label>
+                                    </div>
+                                    
+                                    {/* Print Alignment selector */}
+                                    <div className="mt-3">
+                                        <span className="block text-[11px] text-gray-400 font-bold mb-1 uppercase tracking-wider">Корректировка сдвига (Для Gprinter/Xprinter)</span>
+                                        <select
+                                            value={printAlignment}
+                                            onChange={e => setPrintAlignment(e.target.value as 'left' | 'center' | 'right')}
+                                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white shadow-sm"
+                                        >
+                                            <option value="left">По умолчанию (Слева)</option>
+                                            <option value="center">Сдвинуть в центр (+4 мм вправо)</option>
+                                            <option value="right">Сдвинуть вправо (+8 мм вправо - Для Gprinter)</option>
+                                        </select>
                                     </div>
                                 </div>
 
