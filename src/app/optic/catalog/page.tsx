@@ -96,6 +96,7 @@ export default function OpticCatalogPage() {
     const [usbConnecting, setUsbConnecting] = useState(false);
     const [serialPort, setSerialPort] = useState<any | null>(null);
     const [serialConnecting, setSerialConnecting] = useState(false);
+    const [baudRate, setBaudRate] = useState(9600);
 
     // Bulk Import state
     const [showImport, setShowImport] = useState(false);
@@ -654,9 +655,15 @@ export default function OpticCatalogPage() {
                 throw new Error('Web Serial API не поддерживается в этом браузере. Используйте Google Chrome или Microsoft Edge.');
             }
             const port = await (navigator as any).serial.requestPort();
-            await port.open({ baudRate: 9600 });
+            await port.open({ baudRate: Number(baudRate) || 9600 });
+            
+            // Assert DTR and RTS signals (extremely important for thermal printers to react!)
+            if (port.setSignals) {
+                await port.setSignals({ dataTerminalReady: true, requestToSend: true });
+            }
+            
             setSerialPort(port);
-            alert(`🎉 Успешно подключен принтер по последовательному порту Serial!`);
+            alert(`🎉 Успешно подключен принтер по последовательному порту Serial (Скорость: ${baudRate})!`);
         } catch (err: any) {
             console.error('Web Serial Connection Error:', err);
             setUsbError(err.message || 'Не удалось подключиться к Serial-принтеру');
@@ -690,6 +697,11 @@ export default function OpticCatalogPage() {
             
             const encoder = new TextEncoder();
             const data = encoder.encode(commandString);
+            
+            // Re-assert signals to activate print receiver on printer
+            if (serialPort.setSignals) {
+                await serialPort.setSignals({ dataTerminalReady: true, requestToSend: true });
+            }
             
             const writer = serialPort.writable.getWriter();
             await writer.write(data);
@@ -2171,6 +2183,17 @@ export default function OpticCatalogPage() {
                                             {/* Way B: Web Serial */}
                                             <div className="space-y-1.5">
                                                 <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Способ Б (Serial/COM)</span>
+                                                {!serialPort && (
+                                                    <select
+                                                        value={baudRate}
+                                                        onChange={e => setBaudRate(Number(e.target.value))}
+                                                        className="w-full border border-gray-200 rounded-xl px-2 py-1 text-[10px] font-bold focus:ring-1 focus:ring-primary-500 bg-white mb-1 shadow-sm"
+                                                    >
+                                                        <option value={9600}>9600 (Стандарт Xprinter)</option>
+                                                        <option value={38400}>38400 (Стандарт Godex)</option>
+                                                        <option value={115200}>115200 (Zebra/Высокая)</option>
+                                                    </select>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={connectSerialPrinter}
@@ -2190,6 +2213,13 @@ export default function OpticCatalogPage() {
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Serial Troubleshooting Hint */}
+                                        {serialPort && (
+                                            <div className="text-[10px] text-blue-700 font-semibold leading-normal bg-blue-50/70 p-2.5 rounded-xl border border-blue-100/50 mt-1 animate-fadeIn">
+                                                💡 <strong>Принтер молчит?</strong> Нажмите кнопку «Отключить» ниже, измените скорость (например, выберите <strong>115200</strong>) и подключитесь заново!
+                                            </div>
+                                        )}
 
                                         {/* Language selector (only visible if any is connected) */}
                                         {(usbDevice || serialPort) && (
