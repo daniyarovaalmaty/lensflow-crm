@@ -245,31 +245,37 @@ export default function OpticCatalogPage() {
                                 overflow: hidden;
                             }
                             .brand-tail {
-                                font-size: 5px;
+                                font-size: 10px;
                                 font-weight: bold;
                                 text-transform: uppercase;
-                                color: #666;
+                                color: #000000;
                                 line-height: 1;
                                 white-space: nowrap;
                                 overflow: hidden;
                                 text-overflow: ellipsis;
-                                width: 100%;
+                                width: 180%;
+                                transform: scale(0.55);
+                                transform-origin: left top;
                             }
                             .name-tail {
-                                font-size: 5.5px;
+                                font-size: 10px;
                                 font-weight: bold;
-                                color: black;
+                                color: #000000;
                                 line-height: 1.1;
-                                width: 100%;
                                 white-space: nowrap;
                                 overflow: hidden;
                                 text-overflow: ellipsis;
+                                width: 150%;
+                                transform: scale(0.65);
+                                transform-origin: left top;
                             }
                             .price-tail {
-                                font-size: 6.5px;
+                                font-size: 11px;
                                 font-weight: 900;
-                                color: black;
+                                color: #000000;
                                 line-height: 1;
+                                transform: scale(0.75);
+                                transform-origin: left bottom;
                             }
                             .middle-tail {
                                 width: 12mm; /* Non-adhesive wrap tail bridge */
@@ -336,7 +342,7 @@ export default function OpticCatalogPage() {
                                 font-size: ${heightMm > 25 ? '8px' : '6px'};
                                 font-weight: bold;
                                 text-transform: uppercase;
-                                color: #555;
+                                color: black;
                                 margin-bottom: 1px;
                                 white-space: nowrap;
                                 overflow: hidden;
