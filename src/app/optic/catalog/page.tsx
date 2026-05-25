@@ -89,6 +89,12 @@ export default function OpticCatalogPage() {
     const [includePrice, setIncludePrice] = useState(true);
     const [includeBrand, setIncludeBrand] = useState(true);
 
+    // WebUSB Printer State
+    const [usbDevice, setUsbDevice] = useState<any | null>(null);
+    const [printerLanguage, setPrinterLanguage] = useState<'tspl' | 'zpl'>('tspl');
+    const [usbError, setUsbError] = useState<string | null>(null);
+    const [usbConnecting, setUsbConnecting] = useState(false);
+
     // Bulk Import state
     const [showImport, setShowImport] = useState(false);
     const [importing, setImporting] = useState(false);
@@ -117,6 +123,40 @@ export default function OpticCatalogPage() {
     const aiChatRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => { loadProducts(); }, []);
+
+    // WebUSB printer auto-reconnect
+    useEffect(() => {
+        if (typeof window !== 'undefined' && (navigator as any).usb) {
+            (navigator as any).usb.getDevices().then(async (devices: any[]) => {
+                if (devices.length > 0) {
+                    const device = devices[0];
+                    try {
+                        await device.open();
+                        if (device.configuration === null) {
+                            await device.selectConfiguration(1);
+                        }
+                        let interfaceNumber = 0;
+                        const interfaces = device.configuration?.interfaces || [];
+                        let found = false;
+                        for (const iface of interfaces) {
+                            for (const alt of iface.alternates) {
+                                if (alt.interfaceClass === 7) {
+                                    interfaceNumber = iface.interfaceNumber;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (found) break;
+                        }
+                        await device.claimInterface(interfaceNumber);
+                        setUsbDevice(device);
+                    } catch (e) {
+                        console.log('Auto-connect to USB printer failed:', e);
+                    }
+                }
+            });
+        }
+    }, []);
 
     const loadProducts = async () => {
         try {
@@ -385,6 +425,223 @@ export default function OpticCatalogPage() {
                 document.body.removeChild(iframe);
             }
         }, 5000);
+    };
+
+    const connectUsbPrinter = async () => {
+        setUsbError(null);
+        setUsbConnecting(true);
+        try {
+            if (typeof window === 'undefined' || !(navigator as any).usb) {
+                throw new Error('WebUSB API не поддерживается в этом браузере. Используйте Google Chrome или Microsoft Edge.');
+            }
+            const device = await (navigator as any).usb.requestDevice({ filters: [] });
+            await device.open();
+            if (device.configuration === null) {
+                await device.selectConfiguration(1);
+            }
+            
+            let interfaceNumber = 0;
+            let alternateSetting = 0;
+            const interfaces = device.configuration?.interfaces || [];
+            let found = false;
+            for (const iface of interfaces) {
+                for (const alt of iface.alternates) {
+                    if (alt.interfaceClass === 7) { // Printer Class
+                        interfaceNumber = iface.interfaceNumber;
+                        alternateSetting = alt.alternateSetting;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+            
+            await device.claimInterface(interfaceNumber);
+            if (alternateSetting !== 0) {
+                await device.selectAlternateInterface(interfaceNumber, alternateSetting);
+            }
+            
+            setUsbDevice(device);
+            alert(`🎉 Успешно подключен принтер: ${device.productName || 'USB Printer'}`);
+        } catch (err: any) {
+            console.error('WebUSB Connection Error:', err);
+            setUsbError(err.message || 'Не удалось подключиться к принтеру');
+            alert(`❌ Ошибка подключения: ${err.message || 'Не удалось подключиться к принтеру'}`);
+        } finally {
+            setUsbConnecting(false);
+        }
+    };
+
+    const findPrinterEndpoint = (device: any) => {
+        const interfaces = device.configuration?.interfaces || [];
+        for (const iface of interfaces) {
+            for (const alt of iface.alternates) {
+                for (const endpoint of alt.endpoints) {
+                    if (endpoint.direction === 'out' && endpoint.type === 'bulk') {
+                        return endpoint.endpointNumber;
+                    }
+                }
+            }
+        }
+        return 1; // Fallback Bulk Out endpoint
+    };
+
+    const generateZpl = (product: OpticProduct, incPrice: boolean, incBrand: boolean) => {
+        const barcode = product.barcode || product.sku || '1234567890';
+        const brand = (product.brand || 'ОПТИКА').substring(0, 15).toUpperCase();
+        const name = product.name.substring(0, 20);
+        const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
+        
+        let zpl = `^XA\r\n`;
+        zpl += `^PW576\r\n`;
+        zpl += `^LL80\r\n`;
+        zpl += `^CI28\r\n`;
+        
+        let textY = 15;
+        if (incBrand) {
+            zpl += `^FT10,${textY}^A0N,14,14^FD${brand}^FS\r\n`;
+            textY += 20;
+        }
+        zpl += `^FT10,${textY}^A0N,16,16^FD${name}^FS\r\n`;
+        textY += 22;
+        if (incPrice) {
+            zpl += `^FT10,${textY}^A0N,18,18^FD${price}^FS\r\n`;
+        }
+        
+        zpl += `^BY1,2,30\r\n`;
+        zpl += `^FT340,20^BCN,35,N,N,Y^FD${barcode}^FS\r\n`;
+        zpl += `^FT350,70^A0N,12,12^FD${barcode}^FS\r\n`;
+        
+        zpl += `^XZ\r\n`;
+        return zpl;
+    };
+
+    const generateTspl = (product: OpticProduct, incPrice: boolean, incBrand: boolean) => {
+        const barcode = product.barcode || product.sku || '1234567890';
+        const brand = (product.brand || 'ОПТИКА').substring(0, 15).toUpperCase();
+        const name = product.name.substring(0, 20);
+        const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
+        
+        let tspl = `SIZE 72 mm, 10 mm\r\n`;
+        tspl += `GAP 2 mm, 0 mm\r\n`;
+        tspl += `DIRECTION 1\r\n`;
+        tspl += `CODEPAGE UTF-8\r\n`;
+        tspl += `CLS\r\n`;
+        
+        let textY = 10;
+        if (incBrand) {
+            tspl += `TEXT 10,${textY},"1",0,1,1,"${brand}"\r\n`;
+            textY += 20;
+        }
+        tspl += `TEXT 10,${textY},"1",0,1,1,"${name}"\r\n`;
+        textY += 22;
+        if (incPrice) {
+            tspl += `TEXT 10,${textY},"2",0,1,1,"${price}"\r\n`;
+        }
+        
+        tspl += `BARCODE 340,15,"128",30,1,0,1,2,"${barcode}"\r\n`;
+        tspl += `PRINT 1,1\r\n`;
+        return tspl;
+    };
+
+    const generateZplStandard = (product: OpticProduct, widthMm: number, heightMm: number, incPrice: boolean, incBrand: boolean) => {
+        const barcode = product.barcode || product.sku || '1234567890';
+        const brand = (product.brand || 'ОПТИКА').substring(0, 20).toUpperCase();
+        const name = product.name.substring(0, 25);
+        const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
+        const widthDots = widthMm * 8;
+        const heightDots = heightMm * 8;
+        
+        let zpl = `^XA\r\n`;
+        zpl += `^PW${widthDots}\r\n`;
+        zpl += `^LL${heightDots}\r\n`;
+        zpl += `^CI28\r\n`;
+        
+        let currentY = 30;
+        if (incBrand) {
+            zpl += `^FT${Math.round(widthDots / 2)},${currentY}^A0N,20,20^FB${widthDots},1,0,C^FD${brand}^FS\r\n`;
+            currentY += 25;
+        }
+        zpl += `^FT${Math.round(widthDots / 2)},${currentY}^A0N,22,22^FB${widthDots},2,0,C^FD${name}^FS\r\n`;
+        currentY += 50;
+        
+        zpl += `^BY2,2,40\r\n`;
+        zpl += `^FT${Math.round(widthDots / 2) - 100},${currentY}^BCN,40,Y,N,N^FD${barcode}^FS\r\n`;
+        currentY += 60;
+        
+        if (incPrice) {
+            zpl += `^FT${Math.round(widthDots / 2)},${currentY}^A0N,26,26^FB${widthDots},1,0,C^FD${price}^FS\r\n`;
+        }
+        
+        zpl += `^XZ\r\n`;
+        return zpl;
+    };
+
+    const generateTsplStandard = (product: OpticProduct, widthMm: number, heightMm: number, incPrice: boolean, incBrand: boolean) => {
+        const barcode = product.barcode || product.sku || '1234567890';
+        const brand = (product.brand || 'ОПТИКА').substring(0, 20).toUpperCase();
+        const name = product.name.substring(0, 25);
+        const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
+        
+        let tspl = `SIZE ${widthMm} mm, ${heightMm} mm\r\n`;
+        tspl += `GAP 2 mm, 0 mm\r\n`;
+        tspl += `DIRECTION 1\r\n`;
+        tspl += `CODEPAGE UTF-8\r\n`;
+        tspl += `CLS\r\n`;
+        
+        let currentY = 20;
+        if (incBrand) {
+            tspl += `TEXT 30,${currentY},"1",0,1,1,"${brand}"\r\n`;
+            currentY += 25;
+        }
+        tspl += `TEXT 30,${currentY},"1",0,1,1,"${name}"\r\n`;
+        currentY += 30;
+        
+        tspl += `BARCODE 30,${currentY},"128",50,1,0,2,4,"${barcode}"\r\n`;
+        currentY += 75;
+        
+        if (incPrice) {
+            tspl += `TEXT 30,${currentY},"2",0,1,1,"${price}"\r\n`;
+        }
+        
+        tspl += `PRINT 1,1\r\n`;
+        return tspl;
+    };
+
+    const printViaUsb = async () => {
+        if (!printProduct) return;
+        if (!usbDevice) {
+            alert('⚠️ Сначала подключите принтер по USB!');
+            return;
+        }
+        
+        setUsbError(null);
+        try {
+            const isTail = labelWidth === 72 && labelHeight === 10;
+            let commandString = '';
+            
+            if (printerLanguage === 'zpl') {
+                commandString = isTail 
+                    ? generateZpl(printProduct, includePrice, includeBrand)
+                    : generateZplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+            } else {
+                commandString = isTail
+                    ? generateTspl(printProduct, includePrice, includeBrand)
+                    : generateTsplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+            }
+            
+            const encoder = new TextEncoder();
+            const data = encoder.encode(commandString);
+            
+            const endpointNumber = findPrinterEndpoint(usbDevice);
+            
+            await usbDevice.transferOut(endpointNumber, data);
+            alert('⚡️ Этикетка успешно отправлена на печать по USB!');
+        } catch (err: any) {
+            console.error('WebUSB Printing Error:', err);
+            setUsbError(err.message || 'Ошибка отправки на печать');
+            alert(`❌ Ошибка печати: ${err.message || 'Ошибка отправки на печать'}`);
+        }
     };
 
     const openPrintSettings = (product: OpticProduct) => {
@@ -1779,6 +2036,74 @@ export default function OpticCatalogPage() {
                                         </label>
                                     </div>
                                 </div>
+
+                                {/* Direct WebUSB Print Block */}
+                                <div className="space-y-3 pt-4 border-t border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                        <label className="block text-sm font-semibold text-gray-900">
+                                            3. Прямая печать (WebUSB без драйверов):
+                                        </label>
+                                        <span className="text-[10px] bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">
+                                            Premium
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="p-4 bg-gray-50 border border-gray-200/65 rounded-2xl space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-gray-500 font-medium">Статус принтера:</span>
+                                            {usbDevice ? (
+                                                <span className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                                                    Подключен: {usbDevice.productName || 'USB Printer'}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-amber-500 font-bold">Не подключен</span>
+                                            )}
+                                        </div>
+                                        
+                                        {usbDevice ? (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <span className="block text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-wider">Язык принтера</span>
+                                                    <select
+                                                        value={printerLanguage}
+                                                        onChange={e => setPrinterLanguage(e.target.value as 'tspl' | 'zpl')}
+                                                        className="w-full border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white shadow-sm"
+                                                    >
+                                                        <option value="tspl">TSPL (Xprinter, TSC)</option>
+                                                        <option value="zpl">ZPL (Zebra, Godex)</option>
+                                                    </select>
+                                                </div>
+                                                <div className="flex items-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={connectUsbPrinter}
+                                                        className="w-full py-1.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors bg-white shadow-sm"
+                                                    >
+                                                        Сменить принтер
+                                                     </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={connectUsbPrinter}
+                                                disabled={usbConnecting}
+                                                className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 disabled:opacity-50 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-indigo-100/50 shadow-sm"
+                                            >
+                                                {usbConnecting ? (
+                                                    <>
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Подключение...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Printer className="w-3.5 h-3.5" /> Найти и подключить USB-принтер
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Sticky Footer */}
@@ -1789,15 +2114,38 @@ export default function OpticCatalogPage() {
                                 >
                                     Отмена
                                 </button>
-                                <button
-                                    onClick={() => {
-                                        handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
-                                        setPrintProduct(null);
-                                    }}
-                                    className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md shadow-primary-100"
-                                >
-                                    <Printer className="w-4 h-4" /> Распечатать
-                                </button>
+                                {usbDevice ? (
+                                    <>
+                                        <button
+                                            onClick={() => {
+                                                handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                                                setPrintProduct(null);
+                                            }}
+                                            className="flex-1 py-3 border border-indigo-100 hover:bg-indigo-50/50 text-indigo-700 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            Через браузер
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                printViaUsb();
+                                                setPrintProduct(null);
+                                            }}
+                                            className="flex-1 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-primary-100 flex items-center justify-center gap-2"
+                                        >
+                                            <Printer className="w-4 h-4" /> По USB
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                                            setPrintProduct(null);
+                                        }}
+                                        className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md shadow-primary-100"
+                                    >
+                                        <Printer className="w-4 h-4" /> Распечатать
+                                    </button>
+                                )}
                             </div>
                         </motion.div>
                     </div>
