@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -626,7 +626,15 @@ export default function ProductionHubPage() {
                             return (
                                 <div className={`flex items-center gap-1 text-xs font-medium animate-comment-blink ${lastReq.type === 'request_cancel' ? 'text-red-600' : 'text-amber-600'}`}>
                                     <MessageCircle className="w-3 h-3" />
-                                    {lastReq.type === 'request_edit' ? '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос на ред.' : '<XCircle className="w-4 h-4 inline mr-1" /> Запрос на отмену'}
+                                    {lastReq.type === 'request_edit' ? (
+                                        <span className="inline-flex items-center gap-1">
+                                            <FileEdit className="w-4 h-4" /> Запрос на ред.
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1">
+                                            <XCircle className="w-4 h-4" /> Запрос на отмену
+                                        </span>
+                                    )}
                                 </div>
                             );
                         }
@@ -786,7 +794,15 @@ export default function ProductionHubPage() {
                             return (
                                 <div className={`mt-3 border rounded-xl p-4 space-y-3 ${isEditReq ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
                                     <p className={`text-sm font-medium flex items-center gap-2 ${isEditReq ? 'text-amber-800' : 'text-red-800'}`}>
-                                        {isEditReq ? '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос на редактирование' : '<XCircle className="w-4 h-4 inline mr-1" /> Запрос на отмену'}
+                                        {isEditReq ? (
+                                            <>
+                                                <FileEdit className="w-4 h-4" /> Запрос на редактирование
+                                            </>
+                                        ) : (
+                                            <>
+                                                <XCircle className="w-4 h-4" /> Запрос на отмену
+                                            </>
+                                        )}
                                     </p>
                                     <p className="text-sm text-gray-700">от <strong>{lastReq.authorName}</strong>: {lastReq.text}</p>
                                     <div className="flex gap-2">
@@ -898,12 +914,12 @@ export default function ProductionHubPage() {
                             {((order as any).comments?.length > 0) && (
                                 <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
                                     {((order as any).comments as any[]).map((c: any, i: number) => {
-                                        const typeLabels: Record<string, { label: string; cls: string }> = {
-                                            request_edit: { label: '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
-                                            request_cancel: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Запрос отмены', cls: 'bg-red-100 text-red-700' },
-                                            approve_edit: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Одобрено ред.', cls: 'bg-green-100 text-green-700' },
-                                            approve_cancel: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Отменён', cls: 'bg-red-100 text-red-700' },
-                                            reject_request: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Отклонено', cls: 'bg-gray-100 text-gray-700' },
+                                        const typeLabels: Record<string, { label: ReactNode; cls: string }> = {
+                                            request_edit: { label: <span className="inline-flex items-center gap-1"><FileEdit className="w-3.5 h-3.5" /> Запрос ред.</span>, cls: 'bg-amber-100 text-amber-700' },
+                                            request_cancel: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Запрос отмены</span>, cls: 'bg-red-100 text-red-700' },
+                                            approve_edit: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Одобрено ред.</span>, cls: 'bg-green-100 text-green-700' },
+                                            approve_cancel: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Отменён</span>, cls: 'bg-red-100 text-red-700' },
+                                            reject_request: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Отклонено</span>, cls: 'bg-gray-100 text-gray-700' },
                                         };
                                         const typeBadge = typeLabels[c.type];
                                         return (
@@ -1131,7 +1147,9 @@ export default function ProductionHubPage() {
                                                         Загрузка...
                                                     </span>
                                                 ) : (
-                                                    '<Download className="w-4 h-4 inline mr-1" /> Загрузить файлы'
+                                                    <span className="flex items-center justify-center gap-1.5">
+                                                        <Download className="w-4 h-4" /> Загрузить файлы
+                                                    </span>
                                                 )}
                                             </button>
                                         </div>
@@ -1647,7 +1665,13 @@ export default function ProductionHubPage() {
                                 className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
                             />
                             <span className={`text-sm font-medium ${defect.archived ? 'text-green-700' : 'text-gray-600'}`}>
-                                {defect.archived ? '<CheckCircle className="w-4 h-4 inline mr-1" /> Принято в архив' : 'Принято в архив'}
+                                {defect.archived ? (
+                                    <span className="inline-flex items-center gap-1">
+                                        <CheckCircle className="w-4 h-4" /> Принято в архив
+                                    </span>
+                                ) : (
+                                    'Принято в архив'
+                                )}
                             </span>
                         </label>
 

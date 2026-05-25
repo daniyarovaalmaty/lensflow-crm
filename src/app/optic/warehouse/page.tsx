@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera } from 'lucide-react';
@@ -40,13 +40,13 @@ interface StockDoc {
 }
 
 // ==================== Constants ====================
-const MOVEMENT_TYPES: Record<string, { label: string; color: string; icon: string }> = {
-    receipt: { label: 'Приход', color: 'text-green-700 bg-green-50', icon: '<Download className="w-4 h-4 inline mr-1" />' },
-    sale: { label: 'Продажа', color: 'text-blue-700 bg-blue-50', icon: '<Banknote className="w-4 h-4 inline mr-1" />' },
-    write_off: { label: 'Списание', color: 'text-red-700 bg-red-50', icon: '' },
+const MOVEMENT_TYPES: Record<string, { label: string; color: string; icon: ReactNode }> = {
+    receipt: { label: 'Приход', color: 'text-green-700 bg-green-50', icon: <Download className="w-4 h-4" /> },
+    sale: { label: 'Продажа', color: 'text-blue-700 bg-blue-50', icon: <Banknote className="w-4 h-4" /> },
+    write_off: { label: 'Списание', color: 'text-red-700 bg-red-50', icon: null },
     return_in: { label: 'Возврат (от покупателя)', color: 'text-amber-700 bg-amber-50', icon: '↩️' },
-    return_out: { label: 'Возврат поставщику', color: 'text-orange-700 bg-orange-50', icon: '<Upload className="w-4 h-4 inline mr-1" />' },
-    adjustment: { label: 'Корректировка', color: 'text-purple-700 bg-purple-50', icon: '' },
+    return_out: { label: 'Возврат поставщику', color: 'text-orange-700 bg-orange-50', icon: <Upload className="w-4 h-4" /> },
+    adjustment: { label: 'Корректировка', color: 'text-purple-700 bg-purple-50', icon: null },
 };
 
 const DOC_TYPES: Record<string, string> = {
@@ -389,7 +389,7 @@ export default function WarehousePage() {
 
             if (res.ok) {
                 const result = await res.json();
-                alert(`<CheckCircle className="w-4 h-4 inline mr-1" /> Приход оформлен: ${result.document.documentNumber}\n${result.serialNumbers?.length ? `Серийные номера: ${result.serialNumbers.join(', ')}` : ''}`);
+                alert(`🎉 Приход оформлен: ${result.document.documentNumber}\n${result.serialNumbers?.length ? `Серийные номера: ${result.serialNumbers.join(', ')}` : ''}`);
                 setReceiveItems([]);
                 setSupplier('');
                 setReceiveNotes('');
@@ -748,7 +748,14 @@ export default function WarehousePage() {
 
                             <button onClick={handleReceive} disabled={!receiveItems.length || saving}
                                 className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors">
-                                {saving ? 'Оформление...' : '<CheckCircle className="w-4 h-4 inline mr-1" /> Оформить приход'}
+                                {saving ? (
+                                    'Оформление...'
+                                ) : (
+                                    <span className="flex items-center justify-center gap-1.5">
+                                        <CheckCircle className="w-4 h-4" />
+                                        Оформить приход
+                                    </span>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -767,10 +774,10 @@ export default function WarehousePage() {
                         ) : (
                             <div className="space-y-2">
                                 {movements.map(m => {
-                                    const mt = MOVEMENT_TYPES[m.type] || { label: m.type, color: 'text-gray-700 bg-gray-50', icon: '<Package className="w-4 h-4 inline mr-1" />' };
+                                    const mt = MOVEMENT_TYPES[m.type] || { label: m.type, color: 'text-gray-700 bg-gray-50', icon: <Package className="w-4 h-4" /> };
                                     return (
                                         <div key={m.id} className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-4">
-                                            <div className="text-2xl">{mt.icon}</div>
+                                            <div className="text-gray-500 bg-gray-50 p-2 rounded-lg flex items-center justify-center min-w-8 min-h-8">{mt.icon}</div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${mt.color}`}>{mt.label}</span>

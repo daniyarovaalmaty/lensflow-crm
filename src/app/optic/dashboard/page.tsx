@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, ReactNode } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
@@ -856,7 +856,15 @@ export default function OpticDashboard() {
                                         {showRequestModal === order.order_id && (
                                             <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2" onClick={e => e.stopPropagation()}>
                                                 <p className="text-sm font-medium text-amber-800">
-                                                    {requestType === 'request_edit' ? '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос на редактирование' : '<XCircle className="w-4 h-4 inline mr-1" /> Запрос на отмену заказа'}
+                                                    {requestType === 'request_edit' ? (
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <FileEdit className="w-4 h-4" /> Запрос на редактирование
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <XCircle className="w-4 h-4" /> Запрос на отмену заказа
+                                                        </span>
+                                                    )}
                                                 </p>
                                                 <textarea
                                                     value={requestReason}
@@ -990,12 +998,12 @@ export default function OpticDashboard() {
                                                         {((order as any).comments?.length > 0) && (
                                                             <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
                                                                 {((order as any).comments as any[]).map((c: any, i: number) => {
-                                                                    const typeLabels: Record<string, { label: string; cls: string }> = {
-                                                                        request_edit: { label: '<FileEdit className="w-4 h-4 inline mr-1" /> Запрос ред.', cls: 'bg-amber-100 text-amber-700' },
-                                                                        request_cancel: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Запрос отмены', cls: 'bg-red-100 text-red-700' },
-                                                                        approve_edit: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Одобрено ред.', cls: 'bg-green-100 text-green-700' },
-                                                                        approve_cancel: { label: '<CheckCircle className="w-4 h-4 inline mr-1" /> Отменён', cls: 'bg-red-100 text-red-700' },
-                                                                        reject_request: { label: '<XCircle className="w-4 h-4 inline mr-1" /> Отклонено', cls: 'bg-gray-100 text-gray-700' },
+                                                                    const typeLabels: Record<string, { label: ReactNode; cls: string }> = {
+                                                                        request_edit: { label: <span className="inline-flex items-center gap-1"><FileEdit className="w-3.5 h-3.5" /> Запрос ред.</span>, cls: 'bg-amber-100 text-amber-700' },
+                                                                        request_cancel: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Запрос отмены</span>, cls: 'bg-red-100 text-red-700' },
+                                                                        approve_edit: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Одобрено ред.</span>, cls: 'bg-green-100 text-green-700' },
+                                                                        approve_cancel: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Отменён</span>, cls: 'bg-red-100 text-red-700' },
+                                                                        reject_request: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Отклонено</span>, cls: 'bg-gray-100 text-gray-700' },
                                                                     };
                                                                     const typeBadge = typeLabels[c.type];
                                                                     return (
