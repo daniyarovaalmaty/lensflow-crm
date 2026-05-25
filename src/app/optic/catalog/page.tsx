@@ -654,12 +654,26 @@ export default function OpticCatalogPage() {
             if (typeof window === 'undefined' || !(navigator as any).serial) {
                 throw new Error('Web Serial API не поддерживается в этом браузере. Используйте Google Chrome или Microsoft Edge.');
             }
+            
+            // Proactively close previous port if open to avoid InvalidStateError
+            if (serialPort) {
+                try {
+                    await serialPort.close();
+                } catch (e) {
+                    console.log('Close previous port ignored:', e);
+                }
+            }
+            
             const port = await (navigator as any).serial.requestPort();
             await port.open({ baudRate: Number(baudRate) || 9600 });
             
-            // Assert DTR and RTS signals (extremely important for thermal printers to react!)
-            if (port.setSignals) {
-                await port.setSignals({ dataTerminalReady: true, requestToSend: true });
+            // Assert DTR and RTS signals (nested try-catch to prevent driver-level crashes on cheaper chips!)
+            try {
+                if (port.setSignals) {
+                    await port.setSignals({ dataTerminalReady: true, requestToSend: true });
+                }
+            } catch (sigErr) {
+                console.warn('Hardware handshake signals are not supported by this printer driver:', sigErr);
             }
             
             setSerialPort(port);
@@ -698,9 +712,13 @@ export default function OpticCatalogPage() {
             const encoder = new TextEncoder();
             const data = encoder.encode(commandString);
             
-            // Re-assert signals to activate print receiver on printer
-            if (serialPort.setSignals) {
-                await serialPort.setSignals({ dataTerminalReady: true, requestToSend: true });
+            // Re-assert signals to activate print receiver on printer (nested try-catch to prevent crashes)
+            try {
+                if (serialPort.setSignals) {
+                    await serialPort.setSignals({ dataTerminalReady: true, requestToSend: true });
+                }
+            } catch (sigErr) {
+                console.warn('Hardware handshake signals not supported on write:', sigErr);
             }
             
             const writer = serialPort.writable.getWriter();
