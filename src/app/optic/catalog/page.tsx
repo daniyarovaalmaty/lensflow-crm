@@ -157,78 +157,186 @@ export default function OpticCatalogPage() {
             return;
         }
         
-        iframeDoc.write(`
-            <html>
-                <head>
-                    <title>Печать</title>
-                    <style>
-                        @page {
-                            size: ${widthMm}mm ${heightMm}mm;
-                            margin: 0;
-                        }
-                        html, body {
-                            margin: 0;
-                            padding: 0;
-                            background: white;
-                            width: ${widthMm}mm;
-                            height: ${heightMm}mm;
-                            overflow: hidden;
-                        }
-                        body {
-                            padding: 2mm;
-                            font-family: Arial, sans-serif;
-                            box-sizing: border-box;
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: space-between;
-                            align-items: center;
-                        }
-                        .brand {
-                            font-size: ${heightMm > 25 ? '8px' : '6px'};
-                            font-weight: bold;
-                            text-transform: uppercase;
-                            color: #555;
-                            margin-bottom: 1px;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            width: 100%;
-                            text-align: center;
-                        }
-                        .name {
-                            font-size: ${heightMm > 25 ? '9px' : '7.5px'};
-                            font-weight: bold;
-                            color: black;
-                            text-align: center;
-                            line-height: 1.1;
-                            height: 2.2em;
-                            overflow: hidden;
-                            width: 100%;
-                            display: -webkit-box;
-                            -webkit-line-clamp: 2;
-                            -webkit-box-orient: vertical;
-                        }
-                        .price {
-                            font-size: ${heightMm > 25 ? '11px' : '9px'};
-                            font-weight: 900;
-                            color: black;
-                            margin-top: 1px;
-                        }
-                        svg#barcode {
-                            width: 100%;
-                            max-height: ${heightMm - 19}mm;
-                        }
-                    </style>
-                    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-                </head>
-                <body>
-                    ${incBrand ? `<div class="brand">${product.brand || 'ОПТИКА'}</div>` : ''}
-                    <div class="name">${product.name}</div>
-                    <svg id="barcode"></svg>
-                    ${incPrice ? `<div class="price">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>` : ''}
-                </body>
-            </html>
-        `);
+        const isTailLabel = widthMm === 72 && heightMm === 10;
+
+        if (isTailLabel) {
+            iframeDoc.write(`
+                <html>
+                    <head>
+                        <title>Печать</title>
+                        <style>
+                            @page {
+                                size: 72mm 10mm;
+                                margin: 0;
+                            }
+                            html, body {
+                                margin: 0;
+                                padding: 0;
+                                background: white;
+                                width: 72mm;
+                                height: 10mm;
+                                overflow: hidden;
+                            }
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                font-family: Arial, sans-serif;
+                                box-sizing: border-box;
+                            }
+                            .tail-label {
+                                display: flex;
+                                width: 72mm;
+                                height: 10mm;
+                                box-sizing: border-box;
+                                padding: 0.5mm 1mm;
+                                align-items: center;
+                                justify-content: space-between;
+                            }
+                            .left-part {
+                                width: 29mm;
+                                height: 9mm;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: space-between;
+                                align-items: flex-start;
+                                overflow: hidden;
+                            }
+                            .brand-tail {
+                                font-size: 5px;
+                                font-weight: bold;
+                                text-transform: uppercase;
+                                color: #666;
+                                line-height: 1;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                width: 100%;
+                            }
+                            .name-tail {
+                                font-size: 5.5px;
+                                font-weight: bold;
+                                color: black;
+                                line-height: 1.1;
+                                width: 100%;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+                            .price-tail {
+                                font-size: 6.5px;
+                                font-weight: 900;
+                                color: black;
+                                line-height: 1;
+                            }
+                            .middle-tail {
+                                width: 12mm; /* Non-adhesive wrap tail bridge */
+                                height: 9mm;
+                            }
+                            .right-part {
+                                width: 29mm;
+                                height: 9mm;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                overflow: hidden;
+                            }
+                            .right-part svg#barcode {
+                                width: 100%;
+                                height: 8mm;
+                            }
+                        </style>
+                        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+                    </head>
+                    <body>
+                        <div class="tail-label">
+                            <div class="left-part">
+                                ${incBrand ? `<div class="brand-tail">${product.brand || 'ОПТИКА'}</div>` : ''}
+                                <div class="name-tail">${product.name}</div>
+                                ${incPrice ? `<div class="price-tail">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>` : ''}
+                            </div>
+                            <div class="middle-tail"></div>
+                            <div class="right-part">
+                                <svg id="barcode"></svg>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+            `);
+        } else {
+            iframeDoc.write(`
+                <html>
+                    <head>
+                        <title>Печать</title>
+                        <style>
+                            @page {
+                                size: ${widthMm}mm ${heightMm}mm;
+                                margin: 0;
+                            }
+                            html, body {
+                                margin: 0;
+                                padding: 0;
+                                background: white;
+                                width: ${widthMm}mm;
+                                height: ${heightMm}mm;
+                                overflow: hidden;
+                            }
+                            body {
+                                padding: 2mm;
+                                font-family: Arial, sans-serif;
+                                box-sizing: border-box;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: space-between;
+                                align-items: center;
+                            }
+                            .brand {
+                                font-size: ${heightMm > 25 ? '8px' : '6px'};
+                                font-weight: bold;
+                                text-transform: uppercase;
+                                color: #555;
+                                margin-bottom: 1px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                width: 100%;
+                                text-align: center;
+                            }
+                            .name {
+                                font-size: ${heightMm > 25 ? '9px' : '7.5px'};
+                                font-weight: bold;
+                                color: black;
+                                text-align: center;
+                                line-height: 1.1;
+                                height: 2.2em;
+                                overflow: hidden;
+                                width: 100%;
+                                display: -webkit-box;
+                                -webkit-line-clamp: 2;
+                                -webkit-box-orient: vertical;
+                            }
+                            .price {
+                                font-size: ${heightMm > 25 ? '11px' : '9px'};
+                                font-weight: 900;
+                                color: black;
+                                margin-top: 1px;
+                            }
+                            svg#barcode {
+                                width: 100%;
+                                max-height: ${Math.max(5, heightMm - 19)}mm;
+                            }
+                        </style>
+                        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+                    </head>
+                    <body>
+                        ${incBrand ? `<div class="brand">${product.brand || 'ОПТИКА'}</div>` : ''}
+                        <div class="name">${product.name}</div>
+                        <svg id="barcode"></svg>
+                        ${incPrice ? `<div class="price">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>` : ''}
+                    </body>
+                </html>
+            `);
+        }
+        
         iframeDoc.close();
 
         let printed = false;
@@ -241,9 +349,9 @@ export default function OpticCatalogPage() {
                 if (win.JsBarcode) {
                     win.JsBarcode("#barcode", barcodeToPrint, {
                         format: "CODE128",
-                        width: widthMm > 45 ? 1.2 : 0.9,
-                        height: heightMm > 25 ? 30 : 18,
-                        displayValue: heightMm > 25,
+                        width: isTailLabel ? 0.7 : (widthMm > 45 ? 1.2 : 0.9),
+                        height: isTailLabel ? 16 : (heightMm > 25 ? 30 : 18),
+                        displayValue: isTailLabel ? false : (heightMm > 25),
                         fontSize: 8,
                         margin: 0
                     });
@@ -1502,40 +1610,87 @@ export default function OpticCatalogPage() {
                                         }}
                                         className="bg-white border border-gray-300 rounded shadow-lg p-3 flex flex-col justify-between items-center overflow-hidden box-border select-none relative"
                                     >
-                                        {includeBrand && (
-                                            <div className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate w-full text-center">
-                                                {printProduct.brand || 'ОПТИКА'}
-                                            </div>
-                                        )}
-                                        <div className="text-[10px] font-bold text-black text-center line-clamp-2 leading-tight w-full my-0.5">
-                                            {printProduct.name}
-                                        </div>
-                                        
-                                        {/* Simulated Barcode */}
-                                        <div className="w-full flex flex-col items-center justify-center my-1">
-                                            <div className="w-[85%] h-5 flex justify-between items-stretch">
-                                                {[1,3,2,1,4,2,1,3,2,1,4,1,2,3,1,2,1,4,2,1,3,2,1,2].map((w, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className="bg-black"
-                                                        style={{
-                                                            width: `${w * 0.7}px`,
-                                                            opacity: idx % 2 === 0 ? 1 : 0
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                            {labelHeight > 25 && (
-                                                <div className="text-[7.5px] font-mono text-gray-700 mt-0.5 tracking-[1.5px]">
-                                                    {printProduct.barcode || printProduct.sku || '1234567890'}
+                                        {labelWidth === 72 && labelHeight === 10 ? (
+                                            <div className="w-full h-full flex justify-between items-stretch text-[5.5px]">
+                                                {/* Left zone: Info */}
+                                                <div className="w-[42%] flex flex-col justify-between items-start text-left overflow-hidden py-0.5">
+                                                    {includeBrand && (
+                                                        <div className="font-extrabold text-[4.5px] text-gray-500 uppercase tracking-wide truncate w-full">
+                                                            {printProduct.brand || 'ОПТИКА'}
+                                                        </div>
+                                                    )}
+                                                    <div className="font-bold text-black truncate w-full line-clamp-1">
+                                                        {printProduct.name}
+                                                    </div>
+                                                    {includePrice && (
+                                                        <div className="font-black text-black text-[6px]">
+                                                            {printProduct.retailPrice?.toLocaleString('ru-RU')} ₸
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
 
-                                        {includePrice && (
-                                            <div className="text-xs font-black text-black tracking-tight">
-                                                {printProduct.retailPrice?.toLocaleString('ru-RU')} ₸
+                                                {/* Middle bridge / non-adhesive tail */}
+                                                <div className="w-[16%] border-x border-dashed border-gray-200 flex items-center justify-center bg-gray-50/50">
+                                                    <span className="text-[3.5px] text-gray-400 font-bold uppercase tracking-tighter scale-75 whitespace-nowrap rotate-90">хвост</span>
+                                                </div>
+
+                                                {/* Right zone: Barcode */}
+                                                <div className="w-[42%] flex flex-col items-center justify-center py-0.5 overflow-hidden">
+                                                    <div className="w-[90%] h-4 flex justify-between items-stretch">
+                                                        {[1,2,1,3,1,2,1,4,1,2,1,2,1].map((w, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="bg-black"
+                                                                style={{
+                                                                    width: `${w * 0.45}px`,
+                                                                    opacity: idx % 2 === 0 ? 1 : 0
+                                                                }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <div className="text-[4px] font-mono text-gray-500 mt-0.5 scale-90 tracking-tighter">
+                                                        {printProduct.barcode || printProduct.sku || '1234567890'}
+                                                    </div>
+                                                </div>
                                             </div>
+                                        ) : (
+                                            <>
+                                                {includeBrand && (
+                                                    <div className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate w-full text-center">
+                                                        {printProduct.brand || 'ОПТИКА'}
+                                                    </div>
+                                                )}
+                                                <div className="text-[10px] font-bold text-black text-center line-clamp-2 leading-tight w-full my-0.5">
+                                                    {printProduct.name}
+                                                </div>
+                                                
+                                                {/* Simulated Barcode */}
+                                                <div className="w-full flex flex-col items-center justify-center my-1">
+                                                    <div className="w-[85%] h-5 flex justify-between items-stretch">
+                                                        {[1,3,2,1,4,2,1,3,2,1,4,1,2,3,1,2,1,4,2,1,3,2,1,2].map((w, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="bg-black"
+                                                                style={{
+                                                                    width: `${w * 0.7}px`,
+                                                                    opacity: idx % 2 === 0 ? 1 : 0
+                                                                }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    {labelHeight > 25 && (
+                                                        <div className="text-[7.5px] font-mono text-gray-700 mt-0.5 tracking-[1.5px]">
+                                                            {printProduct.barcode || printProduct.sku || '1234567890'}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {includePrice && (
+                                                    <div className="text-xs font-black text-black tracking-tight">
+                                                        {printProduct.retailPrice?.toLocaleString('ru-RU')} ₸
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <span className="text-[10px] text-gray-500 mt-3 font-semibold">Размер на печати: {labelWidth} x {labelHeight} мм</span>
@@ -1546,11 +1701,12 @@ export default function OpticCatalogPage() {
                                     <label className="block text-sm font-semibold text-gray-900">1. Выберите стандартный размер или укажите свой:</label>
                                     
                                     {/* Presets */}
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-4 gap-2">
                                         {[
-                                            { w: 58, h: 30, label: '58 x 30 мм (Стандарт)' },
-                                            { w: 40, h: 30, label: '40 x 30 мм' },
-                                            { w: 30, h: 20, label: '30 x 20 мм (Мини)' },
+                                            { w: 58, h: 30, label: '58x30 мм (Стандарт)' },
+                                            { w: 40, h: 30, label: '40x30 мм' },
+                                            { w: 30, h: 20, label: '30x20 мм (Мини)' },
+                                            { w: 72, h: 10, label: '72x10 мм (Оправы)' },
                                         ].map((preset, idx) => (
                                             <button
                                                 key={idx}
@@ -1559,7 +1715,7 @@ export default function OpticCatalogPage() {
                                                     setLabelWidth(preset.w);
                                                     setLabelHeight(preset.h);
                                                 }}
-                                                className={`py-2 px-1 text-center rounded-xl text-xs font-medium border transition-all ${
+                                                className={`py-2 px-1 text-center rounded-xl text-[10px] font-bold border transition-all ${
                                                     labelWidth === preset.w && labelHeight === preset.h
                                                         ? 'bg-primary-50 border-primary-500 text-primary-700 ring-1 ring-primary-500 shadow-sm'
                                                         : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
