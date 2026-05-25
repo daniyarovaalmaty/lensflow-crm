@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera } from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
@@ -83,6 +83,13 @@ export default function WarehousePage() {
     }>>([]);
     const [supplier, setSupplier] = useState('');
     const [receiveNotes, setReceiveNotes] = useState('');
+
+    // Edit Document State
+    const [editingDoc, setEditingDoc] = useState<StockDoc | null>(null);
+    const [editDocNum, setEditDocNum] = useState('');
+    const [editSupplier, setEditSupplier] = useState('');
+    const [editNotes, setEditNotes] = useState('');
+    const [editItems, setEditItems] = useState<any[]>([]);
     const [saving, setSaving] = useState(false);
 
     // Write-off modal
@@ -419,6 +426,37 @@ export default function WarehousePage() {
                 loadData();
             }
         } finally { setSaving(false); }
+    };
+
+    const handleUpdateDocument = async () => {
+        if (!editingDoc) return;
+        setSaving(true);
+        try {
+            const res = await fetch('/api/optic/stock', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: editingDoc.id,
+                    documentNumber: editDocNum,
+                    counterpartyName: editSupplier,
+                    notes: editNotes,
+                    items: editItems
+                })
+            });
+            if (res.ok) {
+                alert('🎉 Накладная успешно обновлена');
+                setEditingDoc(null);
+                loadData();
+            } else {
+                const data = await res.json();
+                alert(`❌ Ошибка: ${data.error || 'Не удалось обновить накладную'}`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('❌ Ошибка сети при обновлении накладной');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const filteredProducts = useMemo(() => {
@@ -845,7 +883,19 @@ export default function WarehousePage() {
                                             <div className="text-xs text-gray-400 mt-1"> {doc.performedByName}</div>
                                         )}
                                         {doc.type === 'receipt' && (
-                                            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
+                                            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingDoc(doc);
+                                                        setEditDocNum(doc.documentNumber);
+                                                        setEditSupplier(doc.counterpartyName || '');
+                                                        setEditNotes(doc.notes || '');
+                                                        setEditItems(JSON.parse(JSON.stringify(doc.items)));
+                                                    }}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-semibold transition-colors active:scale-95"
+                                                >
+                                                    <Pencil className="w-3.5 h-3.5" /> Редактировать
+                                                </button>
                                                 <button
                                                     onClick={() => {
                                                         const batch = (doc.items as any[]).map(it => {
@@ -1138,6 +1188,136 @@ export default function WarehousePage() {
                                     className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md shadow-primary-100"
                                 >
                                     <Printer className="w-4 h-4" /> Распечатать ({printBatchItems.reduce((acc, it) => acc + it.quantity, 0)} шт)
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ==================== EDIT STOCK DOCUMENT MODAL ==================== */}
+            <AnimatePresence>
+                {editingDoc && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEditingDoc(null)} />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[85vh] flex flex-col z-10"
+                        >
+                            {/* Sticky Header */}
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900">Редактирование накладной</h2>
+                                    <p className="text-xs text-gray-500">{editingDoc.documentNumber} • {DOC_TYPES[editingDoc.type] || editingDoc.type}</p>
+                                </div>
+                                <button
+                                    onClick={() => setEditingDoc(null)}
+                                    className="p-2 hover:bg-gray-100 rounded-xl transition-colors active:scale-95"
+                                >
+                                    <X className="w-5 h-5 text-gray-500" />
+                                </button>
+                            </div>
+
+                            {/* Scrollable Content */}
+                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5">Номер накладной *</label>
+                                        <input
+                                            type="text"
+                                            value={editDocNum}
+                                            onChange={e => setEditDocNum(e.target.value)}
+                                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                            placeholder="ПН-0001"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5">Поставщик</label>
+                                        <input
+                                            type="text"
+                                            value={editSupplier}
+                                            onChange={e => setEditSupplier(e.target.value)}
+                                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                            placeholder="Например, Kwon Danyang"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Примечания</label>
+                                    <textarea
+                                        value={editNotes}
+                                        onChange={e => setEditNotes(e.target.value)}
+                                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none"
+                                        placeholder="Комментарий..."
+                                        rows={2}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <span className="block text-xs font-semibold text-gray-500">Товары накладной:</span>
+                                    <div className="border border-gray-100 rounded-2xl overflow-hidden bg-gray-50/50 p-3 space-y-2">
+                                        {editItems.map((item, idx) => (
+                                            <div key={idx} className="bg-white rounded-xl p-3 border border-gray-200 flex flex-col gap-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-bold text-gray-900 text-sm">{item.name}</span>
+                                                    <button
+                                                        onClick={() => setEditItems(editItems.filter((_, i) => i !== idx))}
+                                                        className="text-red-500 hover:text-red-700 transition-colors text-xs flex items-center gap-1 font-semibold"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" /> Удалить
+                                                    </button>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Количество *</label>
+                                                        <input
+                                                            type="number"
+                                                            value={item.qty}
+                                                            onChange={e => {
+                                                                const updated = [...editItems];
+                                                                updated[idx].qty = Math.max(1, Number(e.target.value) || 1);
+                                                                setEditItems(updated);
+                                                            }}
+                                                            className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-primary-500"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-semibold text-gray-400 mb-1">Закупочная цена (₸)</label>
+                                                        <input
+                                                            type="number"
+                                                            value={item.price}
+                                                            onChange={e => {
+                                                                const updated = [...editItems];
+                                                                updated[idx].price = Math.max(0, Number(e.target.value) || 0);
+                                                                setEditItems(updated);
+                                                            }}
+                                                            className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:border-primary-500"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Sticky Footer */}
+                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 z-10 rounded-b-2xl">
+                                <button
+                                    onClick={() => setEditingDoc(null)}
+                                    className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={handleUpdateDocument}
+                                    disabled={!editDocNum || !editItems.length || saving}
+                                    className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md shadow-green-100"
+                                >
+                                    {saving ? 'Сохранение...' : 'Сохранить изменения'}
                                 </button>
                             </div>
                         </motion.div>
