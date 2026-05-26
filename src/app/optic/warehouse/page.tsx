@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, ReactNode } from 'react';
+import React, { useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil } from 'lucide-react';
@@ -59,6 +59,109 @@ const DOC_TYPES: Record<string, string> = {
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 type Tab = 'stock' | 'receive' | 'movements' | 'documents';
+
+// ==================== Product Search Select ====================
+function ProductSearchSelect({ products, value, onChange }: {
+    products: Product[];
+    value: string;
+    onChange: (id: string) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const [q, setQ] = useState('');
+    const ref = React.useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const filtered = useMemo(() => {
+        if (!q.trim()) return products;
+        const low = q.toLowerCase();
+        return products.filter(p =>
+            p.name.toLowerCase().includes(low) ||
+            (p.sku && p.sku.toLowerCase().includes(low)) ||
+            (p.barcode && p.barcode.toLowerCase().includes(low)) ||
+            (p.brand && p.brand.toLowerCase().includes(low))
+        );
+    }, [products, q]);
+
+    const selected = products.find(p => p.id === value);
+
+    return (
+        <div ref={ref} className="relative">
+            <button
+                type="button"
+                onClick={() => { setOpen(!open); setQ(''); }}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between hover:border-primary-400 transition-colors"
+            >
+                {selected ? (
+                    <span className="flex items-center gap-2 min-w-0">
+                        <span className="truncate font-medium">{selected.name}</span>
+                        {selected.sku && <span className="text-gray-400 text-xs shrink-0">({selected.sku})</span>}
+                        <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                            selected.currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                            {selected.currentStock} {selected.unit}
+                        </span>
+                    </span>
+                ) : (
+                    <span className="text-gray-400">Выберите товар...</span>
+                )}
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+
+            {open && (
+                <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                    <div className="p-2 border-b border-gray-100">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                            <input
+                                type="text"
+                                autoFocus
+                                value={q}
+                                onChange={e => setQ(e.target.value)}
+                                placeholder="Поиск по названию, артикулу, штрих-коду..."
+                                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-100 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                        {filtered.length === 0 ? (
+                            <div className="px-4 py-6 text-center text-sm text-gray-400">
+                                Товар не найден
+                            </div>
+                        ) : filtered.map(p => (
+                            <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => { onChange(p.id); setOpen(false); setQ(''); }}
+                                className={`w-full text-left px-3 py-2.5 hover:bg-primary-50 flex items-center justify-between gap-2 transition-colors ${
+                                    value === p.id ? 'bg-primary-50' : ''
+                                }`}
+                            >
+                                <div className="min-w-0">
+                                    <div className="text-sm font-medium text-gray-900 truncate">{p.name}</div>
+                                    <div className="text-[11px] text-gray-400 truncate">
+                                        {[p.brand, p.sku && `Арт: ${p.sku}`, p.barcode && `ШК: ${p.barcode}`].filter(Boolean).join(' • ')}
+                                    </div>
+                                </div>
+                                <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    p.currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                                }`}>
+                                    {p.currentStock} {p.unit}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function WarehousePage() {
     const { data: session } = useSession();
@@ -349,9 +452,9 @@ export default function WarehousePage() {
 
     // ---- Stats ----
     const stats = useMemo(() => {
-        const total = products.reduce((s, p) => s + (p._count?.stockItems ?? p.currentStock), 0);
-        const value = products.reduce((s, p) => s + (p._count?.stockItems ?? p.currentStock) * p.retailPrice, 0);
-        const low = products.filter(p => p.minStock > 0 && (p._count?.stockItems ?? p.currentStock) <= p.minStock).length;
+        const total = products.reduce((s, p) => s + p.currentStock, 0);
+        const value = products.reduce((s, p) => s + p.currentStock * p.retailPrice, 0);
+        const low = products.filter(p => p.minStock > 0 && p.currentStock <= p.minStock).length;
         return { total, value, low, categories: products.length };
     }, [products]);
 
@@ -466,14 +569,14 @@ export default function WarehousePage() {
     }, [products, search]);
 
     const lowStockProducts = useMemo(() => {
-        return products.filter(p => p.minStock > 0 && (p._count?.stockItems ?? p.currentStock) <= p.minStock);
+        return products.filter(p => p.minStock > 0 && p.currentStock <= p.minStock);
     }, [products]);
 
     // ---- Excel export ----
     const exportExcel = () => {
         const header = 'Товар\tБренд\tАртикул\tОстаток\tЕд.\tМин.\tЗакуп. цена\tРозн. цена\tСтоимость на складе\tСерийные';
         const rows = products.map(p => {
-            const stock = p._count?.stockItems ?? p.currentStock;
+            const stock = p.currentStock;
             return [
                 p.name, p.brand || '', p.sku || '', stock, p.unit, p.minStock,
                 p.purchasePrice, p.retailPrice, stock * p.retailPrice,
@@ -534,7 +637,7 @@ export default function WarehousePage() {
                             <div className="flex flex-wrap gap-2">
                                 {lowStockProducts.map(p => (
                                     <span key={p.id} className="px-2 py-1 bg-white rounded-lg text-xs text-red-600 border border-red-100">
-                                        {p.name}: <strong>{p._count?.stockItems ?? p.currentStock}</strong> {p.unit} (мин. {p.minStock})
+                                        {p.name}: <strong>{p.currentStock}</strong> {p.unit} (мин. {p.minStock})
                                     </span>
                                 ))}
                             </div>
@@ -629,7 +732,7 @@ export default function WarehousePage() {
                                     </thead>
                                     <tbody>
                                         {filteredProducts.map(p => {
-                                            const stock = p._count?.stockItems ?? p.currentStock;
+                                            const stock = p.currentStock;
                                             const isLow = p.minStock > 0 && stock <= p.minStock;
                                             return (
                                                 <tr key={p.id} className={`border-b border-gray-50 hover:bg-gray-50/50 ${isLow ? 'bg-red-50/30' : ''}`}>
@@ -715,12 +818,11 @@ export default function WarehousePage() {
                                         <div className="grid grid-cols-2 gap-3 mb-3">
                                             <div className="col-span-2">
                                                 <label className="block text-xs font-medium text-gray-500 mb-1">Товар *</label>
-                                                <select value={item.productId} onChange={e => updateReceiveItem(idx, 'productId', e.target.value)}
-                                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
-                                                    {products.map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ''}</option>
-                                                    ))}
-                                                </select>
+                                                <ProductSearchSelect
+                                                    products={products}
+                                                    value={item.productId}
+                                                    onChange={(pid) => updateReceiveItem(idx, 'productId', pid)}
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-500 mb-1">Количество</label>
@@ -954,7 +1056,7 @@ export default function WarehousePage() {
                                         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm">
                                         <option value="">Выберите товар</option>
                                         {products.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name} ({p._count?.stockItems ?? p.currentStock} {p.unit})</option>
+                                            <option key={p.id} value={p.id}>{p.name} ({p.currentStock} {p.unit})</option>
                                         ))}
                                     </select>
                                 </div>
