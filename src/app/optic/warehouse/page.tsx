@@ -1021,8 +1021,9 @@ export default function WarehousePage() {
                                         {doc.performedByName && (
                                             <div className="text-xs text-gray-400 mt-1"> {doc.performedByName}</div>
                                         )}
-                                        {doc.type === 'receipt' && (
-                                            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end gap-2">
+                                        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end gap-2">
+                                            {doc.type === 'receipt' && (
+                                                <>
                                                 <button
                                                     onClick={() => {
                                                         setEditingDoc(doc);
@@ -1055,8 +1056,29 @@ export default function WarehousePage() {
                                                 >
                                                     <Printer className="w-3.5 h-3.5" /> Печать этикеток партии ({doc.items.reduce((acc, it) => acc + (it.qty || 1), 0)} шт)
                                                 </button>
-                                            </div>
-                                        )}
+                                                </>
+                                            )}
+                                            <button
+                                                onClick={async () => {
+                                                    if (!confirm(`Удалить документ ${doc.documentNumber}? Остатки будут пересчитаны.`)) return;
+                                                    const res = await fetch('/api/optic/stock', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ action: 'delete_document', documentNumber: doc.documentNumber }),
+                                                    });
+                                                    if (res.ok) {
+                                                        alert(`✅ Документ ${doc.documentNumber} удалён`);
+                                                        loadData();
+                                                    } else {
+                                                        const err = await res.json();
+                                                        alert(`Ошибка: ${err.error}`);
+                                                    }
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition-colors active:scale-95"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" /> Удалить
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

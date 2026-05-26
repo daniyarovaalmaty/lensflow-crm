@@ -86,6 +86,8 @@ export async function POST(req: NextRequest) {
         return handleWriteOff(body, user);
     } else if (action === 'recalculate') {
         return handleRecalculate(user);
+    } else if (action === 'delete_document') {
+        return handleDeleteDocument(body, user);
     } else {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
@@ -307,6 +309,69 @@ async function handleWriteOff(body: any, user: any) {
     });
 
     return NextResponse.json({ ok: true, document: doc }, { status: 201 });
+}
+
+// ==================== DELETE DOCUMENT — Remove a stock document and reverse its effects ====================
+async function handleDeleteDocument(body: any, user: any) {
+    const { documentNumber } = body;
+    if (!documentNumber) return NextResponse.json({ error: 'Missing documentNumber' }, { status: 400 });
+
+    const orgId = user.organizationId;
+
+    const doc = await prisma.stockDocument.findFirst({
+        where: { organizationId: orgId, documentNumber }
+    });
+    if (!doc) return NextResponse.json({ error: `Document ${documentNumber} not found` }, { status: 404 });
+
+    const docItems = doc.items as any[];
+
+    await prisma.$transaction(async (tx) => {
+        // 1. Delete stock movements linked to this document
+        await tx.stockMovement.deleteMany({
+            where: { organizationId: orgId, documentNumber }
+        });
+
+        // 2. Delete stock items linked to this document
+        await tx.stockItem.deleteMany({
+            where: { organizationId: orgId, receiptDocId: documentNumber }
+        });
+
+        // 3. Delete the document itself
+        await tx.stockDocument.delete({ where: { id: doc.id } });
+
+        // 4. Recalculate currentStock for affected products from remaining documents
+        const affectedProductIds = Array.isArray(docItems)
+            ? [...new Set(docItems.map((i: any) => i.productId).filter(Boolean))]
+            : [];
+
+        const remainingDocs = await tx.stockDocument.findMany({
+            where: { organizationId: orgId, status: { not: 'cancelled' } }
+        });
+
+        for (const prodId of affectedProductIds) {
+            let correctStock = 0;
+            for (const rd of remainingDocs) {
+                const rdItems = rd.items as any[];
+                if (!Array.isArray(rdItems)) continue;
+                for (const ri of rdItems) {
+                    if (ri.productId === prodId) {
+                        const q = Number(ri.qty) || 0;
+                        if (rd.type === 'receipt') correctStock += q;
+                        else if (rd.type === 'write_off') correctStock -= q;
+                    }
+                }
+            }
+            await tx.opticProduct.update({
+                where: { id: prodId },
+                data: { currentStock: Math.max(0, correctStock) }
+            });
+        }
+    });
+
+    return NextResponse.json({
+        ok: true,
+        message: `Документ ${documentNumber} удалён, остатки пересчитаны`
+    });
 }
 
 // ==================== RECALCULATE — Fix all stock counters from document history ====================
