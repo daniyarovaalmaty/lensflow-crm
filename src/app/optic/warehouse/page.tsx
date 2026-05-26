@@ -531,6 +531,27 @@ export default function WarehousePage() {
         } finally { setSaving(false); }
     };
 
+    const handleRecalculate = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch('/api/optic/stock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'recalculate' }),
+            });
+            const result = await res.json();
+            if (res.ok) {
+                if (result.corrections?.length > 0) {
+                    const details = result.corrections.map((c: any) => `${c.name}: ${c.oldStock} → ${c.newStock}`).join('\n');
+                    alert(`✅ Остатки пересчитаны!\n\n${details}`);
+                } else {
+                    alert('✅ Все остатки уже корректны');
+                }
+                loadData();
+            }
+        } finally { setSaving(false); }
+    };
+
     const handleUpdateDocument = async () => {
         if (!editingDoc) return;
         setSaving(true);
@@ -615,6 +636,11 @@ export default function WarehousePage() {
                             <button onClick={exportExcel}
                                 className="flex items-center gap-2 px-3 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl text-sm font-medium transition-colors">
                                 <Download className="w-4 h-4" /> Excel
+                            </button>
+                            <button onClick={handleRecalculate} disabled={saving}
+                                className="flex items-center gap-2 px-3 py-2 border border-blue-200 text-blue-600 hover:bg-blue-50 rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                                title="Пересчитать остатки по накладным">
+                                <BarChart3 className="w-4 h-4" /> Пересчёт
                             </button>
                             <button onClick={() => setShowWriteOff(true)}
                                 className="flex items-center gap-2 px-3 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-sm font-medium transition-colors">

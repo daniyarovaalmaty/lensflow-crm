@@ -84,6 +84,8 @@ export async function POST(req: NextRequest) {
         return handleReceive(body, user);
     } else if (action === 'write_off') {
         return handleWriteOff(body, user);
+    } else if (action === 'recalculate') {
+        return handleRecalculate(user);
     } else {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
@@ -305,6 +307,42 @@ async function handleWriteOff(body: any, user: any) {
     });
 
     return NextResponse.json({ ok: true, document: doc }, { status: 201 });
+}
+
+// ==================== RECALCULATE — Fix all stock counters from movement history ====================
+async function handleRecalculate(user: any) {
+    const orgId = user.organizationId;
+
+    // Get all products for this org
+    const products = await prisma.opticProduct.findMany({
+        where: { organizationId: orgId, isActive: true, type: 'product' },
+    });
+
+    const results: Array<{ name: string; oldStock: number; newStock: number }> = [];
+
+    for (const product of products) {
+        // Sum all movements for this product
+        const movements = await prisma.stockMovement.findMany({
+            where: { organizationId: orgId, productId: product.id }
+        });
+
+        const correctStock = movements.reduce((sum, m) => sum + m.quantity, 0);
+        const newStock = Math.max(0, correctStock);
+
+        if (product.currentStock !== newStock) {
+            await prisma.opticProduct.update({
+                where: { id: product.id },
+                data: { currentStock: newStock }
+            });
+            results.push({ name: product.name, oldStock: product.currentStock, newStock });
+        }
+    }
+
+    return NextResponse.json({
+        ok: true,
+        message: `Пересчитано ${results.length} товаров`,
+        corrections: results
+    });
 }
 
 // ==================== PUT — Edit Stock Document (invoice adjustments) ====================
