@@ -6,9 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Key, Phone, Mail, Shield, X, Eye, EyeOff, Search, UserPlus, Trash2, Pencil
 } from 'lucide-react';
-import { SubRoleLabels } from '@/types/user';
+import { SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import Link from 'next/link';
+import { ShoppingCart, Warehouse, Package, Banknote, FileText, Target } from 'lucide-react';
 
 interface StaffMember {
     id: string;
@@ -17,6 +18,7 @@ interface StaffMember {
     phone: string | null;
     subRole: SubRole;
     status: string;
+    permissions?: any;
     createdAt: string;
 }
 
@@ -43,6 +45,15 @@ export default function ClinicStaffPage() {
     // Edit modal
     const [editModal, setEditModal] = useState<StaffMember | null>(null);
     const [editForm, setEditForm] = useState({ fullName: '', phone: '', subRole: 'optic_doctor' as SubRole });
+    const [editPermissions, setEditPermissions] = useState({
+        canViewPos: false,
+        canViewWarehouse: false,
+        canViewCatalog: false,
+        canViewCash: false,
+        canViewPatients: false,
+        canViewFinance: false,
+        canViewOrders: false,
+    });
     const [saving, setSaving] = useState(false);
     const [editError, setEditError] = useState('');
 
@@ -97,7 +108,7 @@ export default function ClinicStaffPage() {
             const res = await fetch(`/api/clinic-staff/${editModal.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editForm),
+                body: JSON.stringify({ ...editForm, permissions: editPermissions }),
             });
             if (res.ok) {
                 const updated = await res.json();
@@ -258,7 +269,7 @@ export default function ClinicStaffPage() {
                                         <td className="px-4 py-3 text-center">
                                             <div className="flex items-center justify-center gap-2">
                                                 <button
-                                                    onClick={() => { setEditModal(member); setEditForm({ fullName: member.fullName, phone: member.phone || '', subRole: member.subRole }); setEditError(''); }}
+                                                    onClick={() => { setEditModal(member); setEditForm({ fullName: member.fullName, phone: member.phone || '', subRole: member.subRole }); setEditPermissions(getEffectiveClinicPermissions(member)); setEditError(''); }}
                                                     className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors"
                                                 >
                                                     <Pencil className="w-3.5 h-3.5" />
@@ -341,20 +352,22 @@ export default function ClinicStaffPage() {
                 {editModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+                            className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6">
                             <div className="flex items-center justify-between mb-5">
                                 <h3 className="text-lg font-bold text-gray-900">Редактировать</h3>
                                 <button onClick={() => setEditModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
                             </div>
                             <p className="text-sm text-gray-400 mb-4">{editModal.email}</p>
                             <form onSubmit={handleEdit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ФИО</label>
-                                    <input type="text" required value={editForm.fullName} onChange={e => setEditForm(f => ({ ...f, fullName: e.target.value }))} className="input" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
-                                    <input type="tel" value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} className="input" placeholder="+7 777 123 45 67" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">ФИО</label>
+                                        <input type="text" required value={editForm.fullName} onChange={e => setEditForm(f => ({ ...f, fullName: e.target.value }))} className="input" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+                                        <input type="tel" value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} className="input" placeholder="+7 777 123 45 67" />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Роль</label>
@@ -363,6 +376,65 @@ export default function ClinicStaffPage() {
                                         {CLINIC_STAFF_ROLES.map(r => (<option key={r.value} value={r.value}>{r.label}</option>))}
                                     </select>
                                 </div>
+
+                                {/* Permissions Toggle Panel */}
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                        <Shield className="w-4 h-4 text-blue-500" />
+                                        Настройка доступов к модулям
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
+                                        {[
+                                            { key: 'canViewPos', label: 'Касса POS', desc: 'Продажи товаров и услуг', icon: ShoppingCart },
+                                            { key: 'canViewWarehouse', label: 'Склад и учет', desc: 'Приходы, списания и остатки', icon: Warehouse },
+                                            { key: 'canViewCatalog', label: 'Каталог товаров', desc: 'Управление номенклатурой', icon: Package },
+                                            { key: 'canViewCash', label: 'Кассовые смены', desc: 'Смены кассы, инкассация', icon: Banknote },
+                                            { key: 'canViewPatients', label: 'Мед. карты', desc: 'Пациенты, рецепты, приемы', icon: Users },
+                                            { key: 'canViewFinance', label: 'Цены и Финансы', desc: 'Показатели выручки и маржи', icon: Target },
+                                            { key: 'canViewOrders', label: 'Заказы линз', desc: 'Отправка бланков линз в лабу', icon: FileText },
+                                        ].map(p => {
+                                            const Icon = p.icon;
+                                            const isChecked = (editPermissions as any)[p.key] || false;
+                                            return (
+                                                <div 
+                                                    key={p.key}
+                                                    onClick={() => setEditPermissions(prev => ({ ...prev, [p.key]: !isChecked }))}
+                                                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                                                        isChecked 
+                                                            ? 'bg-blue-50/60 border-blue-200 hover:bg-blue-50' 
+                                                            : 'bg-gray-50/60 border-gray-100 hover:bg-gray-50 hover:border-gray-200'
+                                                    }`}
+                                                >
+                                                    <div className={`p-1.5 rounded-lg flex-shrink-0 ${isChecked ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                        <Icon className="w-3.5 h-3.5" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className={`text-xs font-semibold select-none leading-none ${isChecked ? 'text-blue-900' : 'text-gray-700'}`}>
+                                                            {p.label}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400 select-none mt-1 leading-snug truncate">
+                                                            {p.desc}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex-shrink-0 pt-0.5">
+                                                        <div className={`w-3.5 h-3.5 rounded-md border flex items-center justify-center transition-all ${
+                                                            isChecked 
+                                                                ? 'bg-blue-600 border-blue-600 text-white' 
+                                                                : 'border-gray-300 bg-white'
+                                                        }`}>
+                                                            {isChecked && (
+                                                                <svg className="w-2.5 h-2.5 stroke-2 stroke-current animate-scale-in" fill="none" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
                                 {editError && <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{editError}</div>}
                                 <div className="flex justify-end gap-3 pt-2">
                                     <button type="button" onClick={() => setEditModal(null)} className="btn btn-secondary">Отмена</button>

@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import Link from 'next/link';
+import LensFlowPresentationSection from '@/components/LensFlowPresentationSection';
 import { Microscope, Factory, BarChart2, Truck, Users, Banknote, Key, Eye, Check, FileEdit, MessageSquare, ShoppingCart, Scan, UserCheck, Stethoscope, Package, Shield, Smartphone, Bot, CalendarDays, PieChart, Warehouse, Globe, Link2, Zap, Gift, ArrowRight } from 'lucide-react';
 
 export default async function HomePage() {
@@ -226,6 +227,9 @@ export default async function HomePage() {
                     </div>
                 </div>
             </section>
+
+            {/* Interactive Presentation Section */}
+            <LensFlowPresentationSection />
 
             {/* Three Modules */}
             <section className="py-24 px-6 bg-gradient-to-b from-transparent via-blue-950/20 to-transparent">

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Users, Search, Plus, Phone, FileText, Eye, RefreshCw, ChevronRight, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { getEffectiveClinicPermissions } from '@/types/user';
+import AccessDenied from '@/components/ui/AccessDenied';
 
 interface Patient {
     id: string;
@@ -40,6 +42,13 @@ function calcAge(birthDate: string | null): string {
 export default function PatientsPage() {
     const { data: session } = useSession();
     const router = useRouter();
+
+    // permissions visibility check
+    const clinicPerms = session?.user ? getEffectiveClinicPermissions({
+        subRole: session.user.subRole,
+        permissions: session.user.permissions,
+    }) : null;
+
     const [patients, setPatients] = useState<Patient[]>([]);
     const [total, setTotal] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -109,6 +118,10 @@ export default function PatientsPage() {
             setSaving(false);
         }
     };
+
+    if (session?.user && clinicPerms && !clinicPerms.canViewPatients) {
+        return <AccessDenied />;
+    }
 
     return (
         <div className="min-h-screen bg-surface">

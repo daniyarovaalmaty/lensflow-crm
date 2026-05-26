@@ -75,6 +75,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                             role: localUser.role,
                             subRole: localUser.subRole,
                             organizationId: localUser.organizationId,
+                            permissions: localUser.permissions,
                             profile: {
                                 fullName: localUser.fullName,
                                 phone: localUser.phone,
@@ -109,6 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         role: newUser.role,
                         subRole: newUser.subRole,
                         organizationId: newUser.organizationId,
+                        permissions: newUser.permissions,
                         profile: {
                             fullName: '',
                             phone: normalizedPhone,
@@ -139,6 +141,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                             role: user.role,
                             subRole: user.subRole,
                             organizationId: user.organizationId,
+                            permissions: user.permissions,
                             profile: {
                                 fullName: user.fullName,
                                 phone: user.phone,
@@ -178,6 +181,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         role: existingLinked.role,
                         subRole: existingLinked.subRole,
                         organizationId: existingLinked.organizationId,
+                        permissions: existingLinked.permissions,
                         profile: {
                             fullName: existingLinked.fullName,
                             phone: existingLinked.phone,
@@ -235,6 +239,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     role: newUser.role,
                     subRole: newUser.subRole,
                     organizationId: newUser.organizationId,
+                    permissions: newUser.permissions,
                     profile: {
                         fullName: newUser.fullName,
                         phone: newUser.phone,
@@ -293,6 +298,7 @@ async function jitProvisionUser(mmProfile: any, _source: string) {
             role: existingLinked.role,
             subRole: existingLinked.subRole,
             organizationId: existingLinked.organizationId,
+            permissions: existingLinked.permissions,
             profile: {
                 fullName: existingLinked.fullName,
                 phone: existingLinked.phone,
@@ -344,6 +350,7 @@ async function jitProvisionUser(mmProfile: any, _source: string) {
         role: newUser.role,
         subRole: newUser.subRole,
         organizationId: newUser.organizationId,
+        permissions: newUser.permissions,
         profile: {
             fullName: newUser.fullName,
             phone: newUser.phone,

@@ -31,6 +31,7 @@ export async function GET() {
                 phone: true,
                 subRole: true,
                 status: true,
+                permissions: true,
                 createdAt: true,
             },
             orderBy: { createdAt: 'desc' },
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { email, password, fullName, phone, subRole } = body;
+        const { email, password, fullName, phone, subRole, permissions } = body;
 
         if (!email || !password || !fullName || !subRole) {
             return NextResponse.json({ error: 'email, password, fullName, subRole are required' }, { status: 400 });
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
                 subRole: subRole as any,
                 status: 'active',
                 organizationId: orgId,
+                permissions: permissions || undefined,
             },
             select: {
                 id: true,
@@ -99,6 +101,7 @@ export async function POST(request: NextRequest) {
                 phone: true,
                 subRole: true,
                 status: true,
+                permissions: true,
                 createdAt: true,
             },
         });

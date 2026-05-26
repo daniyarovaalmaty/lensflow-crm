@@ -27,7 +27,7 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const { password, fullName, phone, subRole } = body;
+        const { password, fullName, phone, subRole, permissions } = body;
         const data: any = {};
 
         if (password) {
@@ -40,6 +40,7 @@ export async function PATCH(
         if (fullName !== undefined) data.fullName = fullName;
         if (phone !== undefined) data.phone = phone || null;
         if (subRole !== undefined) data.subRole = subRole;
+        if (permissions !== undefined) data.permissions = permissions;
 
         if (Object.keys(data).length === 0) {
             return NextResponse.json({ error: 'Нечего обновлять' }, { status: 400 });
@@ -50,7 +51,7 @@ export async function PATCH(
             data,
             select: {
                 id: true, email: true, fullName: true, phone: true,
-                subRole: true, status: true, createdAt: true,
+                subRole: true, status: true, permissions: true, createdAt: true,
             },
         });
 

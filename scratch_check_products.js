@@ -4,8 +4,8 @@ const client = new Client({
 });
 async function main() {
   await client.connect();
-  const res = await client.query("UPDATE users SET \"subRole\" = 'optic_manager' WHERE email = 'doctor@neweye.kz';");
-  console.log('Update result:', res.rowCount, 'rows updated.');
+  const res = await client.query("SELECT id, name, category, type, sku, barcode, \"isActive\" FROM optic_products WHERE type = 'product' AND \"isActive\" = true;");
+  console.log('Active Products:', res.rows);
   await client.end();
 }
 main().catch(console.error);

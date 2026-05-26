@@ -64,6 +64,13 @@ export async function POST(req: NextRequest) {
         data: { updatedAt: new Date() },
     });
 
+    // Auto-pause AI bot when human manager answers
+    await prisma.botSession.upsert({
+        where: { phone: lead.phone.replace(/\D/g, '') },
+        create: { phone: lead.phone.replace(/\D/g, ''), state: 'paused' },
+        update: { state: 'paused' }
+    });
+
     // Log activity
     await prisma.leadActivity.create({
         data: {

@@ -306,3 +306,213 @@ async function handleWriteOff(body: any, user: any) {
 
     return NextResponse.json({ ok: true, document: doc }, { status: 201 });
 }
+
+// ==================== PUT — Edit Stock Document (invoice adjustments) ====================
+export async function PUT(req: NextRequest) {
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
+    if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
+
+    if (!['optic_manager', 'lab_head', 'lab_admin'].includes(user.subRole)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { id, documentNumber, counterpartyName, notes, items } = body;
+    // items: [{ productId, name, qty, price }]
+
+    if (!id) return NextResponse.json({ error: 'Missing document ID' }, { status: 400 });
+
+    const doc = await prisma.stockDocument.findFirst({
+        where: { id, organizationId: user.organizationId }
+    });
+    if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+
+    const orgId = user.organizationId;
+    const oldItems = doc.items as any[]; // [{ productId, name, qty, price, serialNumbers }]
+    const oldDocNum = doc.documentNumber;
+
+    // Use Prisma transaction to ensure atomicity
+    await prisma.$transaction(async (tx) => {
+        // 1. Update the document basic info
+        const totalAmount = items.reduce((s: number, i: any) => s + (Number(i.price) * (Number(i.qty) || 1)), 0);
+
+        await tx.stockDocument.update({
+            where: { id },
+            data: {
+                documentNumber: documentNumber || oldDocNum,
+                counterpartyName: counterpartyName || null,
+                notes: notes || null,
+                totalAmount,
+                items: items, // Save new items JSON
+            }
+        });
+
+        // If the document number changed, update all related StockItems and StockMovements references
+        if (documentNumber && documentNumber !== oldDocNum) {
+            await tx.stockItem.updateMany({
+                where: { organizationId: orgId, receiptDocId: oldDocNum },
+                data: { receiptDocId: documentNumber }
+            });
+            await tx.stockMovement.updateMany({
+                where: { organizationId: orgId, documentNumber: oldDocNum },
+                data: { documentNumber }
+            });
+        }
+
+        const activeDocNum = documentNumber || oldDocNum;
+
+        // 2. Align stock levels, StockItems, and StockMovements for each product
+        // Combine all product IDs from both old and new items
+        const allProductIds = Array.from(new Set([
+            ...oldItems.map(i => i.productId),
+            ...items.map((i: any) => i.productId)
+        ]));
+
+        for (const prodId of allProductIds) {
+            const oldItem = oldItems.find(i => i.productId === prodId);
+            const newItem = items.find((i: any) => i.productId === prodId);
+
+            const oldQty = oldItem ? Number(oldItem.qty) : 0;
+            const newQty = newItem ? Number(newItem.qty) : 0;
+            const diff = newQty - oldQty;
+
+            const product = await tx.opticProduct.findFirst({
+                where: { id: prodId, organizationId: orgId }
+            });
+            if (!product) continue;
+
+            const itemPrice = newItem ? Number(newItem.price) : (oldItem ? Number(oldItem.price) : product.purchasePrice);
+
+            // Update product stock level
+            if (diff !== 0) {
+                await tx.opticProduct.update({
+                    where: { id: prodId },
+                    data: { currentStock: { increment: diff } }
+                });
+            }
+
+            // Adjust StockItems
+            if (diff > 0) {
+                // We received more items. Create (diff) new StockItems.
+                if (product.trackSerials) {
+                    // Generate new serials
+                    const lastItem = await tx.stockItem.findFirst({
+                        where: { organizationId: orgId, serialNumber: { not: null } },
+                        orderBy: { receivedAt: 'desc' },
+                    });
+
+                    let serialCounter = 1;
+                    if (lastItem?.serialNumber) {
+                        const match = lastItem.serialNumber.match(/(\d+)$/);
+                        if (match) serialCounter = parseInt(match[1]) + 1;
+                    }
+
+                    for (let i = 0; i < diff; i++) {
+                        const catPrefix = product.category.substring(0, 2).toUpperCase();
+                        const sn = `${catPrefix}-${String(serialCounter).padStart(5, '0')}`;
+                        serialCounter++;
+
+                        await tx.stockItem.create({
+                            data: {
+                                productId: prodId,
+                                organizationId: orgId,
+                                serialNumber: sn,
+                                status: 'in_stock',
+                                purchasePrice: itemPrice,
+                                receiptDocId: activeDocNum,
+                            }
+                        });
+                    }
+                } else {
+                    // Non-serial items
+                    await tx.stockItem.create({
+                        data: {
+                            productId: prodId,
+                            organizationId: orgId,
+                            status: 'in_stock',
+                            purchasePrice: itemPrice,
+                            notes: `Кол-во: ${diff} (правка док.)`,
+                            receiptDocId: activeDocNum,
+                        }
+                    });
+                }
+            } else if (diff < 0) {
+                // We received fewer items. Delete N items that are in_stock.
+                const removeCount = Math.abs(diff);
+                const itemsToDelete = await tx.stockItem.findMany({
+                    where: {
+                        organizationId: orgId,
+                        productId: prodId,
+                        receiptDocId: activeDocNum,
+                        status: 'in_stock'
+                    },
+                    take: removeCount
+                });
+
+                for (const si of itemsToDelete) {
+                    await tx.stockItem.delete({ where: { id: si.id } });
+                }
+            }
+
+            // Always update purchasePrice of existing items from this doc if it has changed
+            if (newItem && oldItem && Number(newItem.price) !== Number(oldItem.price)) {
+                await tx.stockItem.updateMany({
+                    where: {
+                        organizationId: orgId,
+                        productId: prodId,
+                        receiptDocId: activeDocNum
+                    },
+                    data: {
+                        purchasePrice: Number(newItem.price)
+                    }
+                });
+            }
+
+            // 3. Adjust StockMovements record for this receipt
+            const existingMovement = await tx.stockMovement.findFirst({
+                where: {
+                    organizationId: orgId,
+                    productId: prodId,
+                    documentNumber: activeDocNum,
+                    type: 'receipt'
+                }
+            });
+
+            if (newQty === 0) {
+                // If quantity is now 0, delete the movement record completely
+                if (existingMovement) {
+                    await tx.stockMovement.delete({ where: { id: existingMovement.id } });
+                }
+            } else {
+                if (existingMovement) {
+                    await tx.stockMovement.update({
+                        where: { id: existingMovement.id },
+                        data: {
+                            quantity: newQty,
+                            supplier: counterpartyName || null,
+                        }
+                    });
+                } else {
+                    // Create movement record if it didn't exist
+                    await tx.stockMovement.create({
+                        data: {
+                            organizationId: orgId,
+                            productId: prodId,
+                            type: 'receipt',
+                            quantity: newQty,
+                            documentNumber: activeDocNum,
+                            supplier: counterpartyName || null,
+                            performedById: user.id,
+                            performedByName: user.fullName || user.email,
+                        }
+                    });
+                }
+            }
+        }
+    });
+
+    return NextResponse.json({ ok: true });
+}
