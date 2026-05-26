@@ -73,21 +73,25 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
+    const body = await req.json();
+    const action = body.action; // 'receive' | 'write_off' | 'recalculate' | 'delete_document'
+
+    // Admin actions (recalculate, delete) only need authenticated user with org
+    if (action === 'recalculate') {
+        return handleRecalculate(user);
+    } else if (action === 'delete_document') {
+        return handleDeleteDocument(body, user);
+    }
+
+    // Stock modification actions require specific roles
     if (!['optic_manager', 'lab_head', 'lab_admin'].includes(user.subRole)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
-
-    const body = await req.json();
-    const action = body.action; // 'receive' | 'write_off' | 'return_out'
 
     if (action === 'receive') {
         return handleReceive(body, user);
     } else if (action === 'write_off') {
         return handleWriteOff(body, user);
-    } else if (action === 'recalculate') {
-        return handleRecalculate(user);
-    } else if (action === 'delete_document') {
-        return handleDeleteDocument(body, user);
     } else {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
