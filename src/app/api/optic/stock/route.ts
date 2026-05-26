@@ -365,7 +365,6 @@ export async function PUT(req: NextRequest) {
         const activeDocNum = documentNumber || oldDocNum;
 
         // 2. Align stock levels, StockItems, and StockMovements for each product
-        // Combine all product IDs from both old and new items
         const allProductIds = Array.from(new Set([
             ...oldItems.map(i => i.productId),
             ...items.map((i: any) => i.productId)
@@ -386,19 +385,9 @@ export async function PUT(req: NextRequest) {
 
             const itemPrice = newItem ? Number(newItem.price) : (oldItem ? Number(oldItem.price) : product.purchasePrice);
 
-            // Update product stock level
-            if (diff !== 0) {
-                await tx.opticProduct.update({
-                    where: { id: prodId },
-                    data: { currentStock: { increment: diff } }
-                });
-            }
-
             // Adjust StockItems
             if (diff > 0) {
-                // We received more items. Create (diff) new StockItems.
                 if (product.trackSerials) {
-                    // Generate new serials
                     const lastItem = await tx.stockItem.findFirst({
                         where: { organizationId: orgId, serialNumber: { not: null } },
                         orderBy: { receivedAt: 'desc' },
@@ -427,7 +416,6 @@ export async function PUT(req: NextRequest) {
                         });
                     }
                 } else {
-                    // Non-serial items
                     await tx.stockItem.create({
                         data: {
                             productId: prodId,
@@ -440,7 +428,6 @@ export async function PUT(req: NextRequest) {
                     });
                 }
             } else if (diff < 0) {
-                // We received fewer items. Delete N items that are in_stock.
                 const removeCount = Math.abs(diff);
                 const itemsToDelete = await tx.stockItem.findMany({
                     where: {
@@ -471,7 +458,7 @@ export async function PUT(req: NextRequest) {
                 });
             }
 
-            // 3. Adjust StockMovements record for this receipt
+            // 3. Update StockMovement record for this receipt
             const existingMovement = await tx.stockMovement.findFirst({
                 where: {
                     organizationId: orgId,
@@ -482,7 +469,6 @@ export async function PUT(req: NextRequest) {
             });
 
             if (newQty === 0) {
-                // If quantity is now 0, delete the movement record completely
                 if (existingMovement) {
                     await tx.stockMovement.delete({ where: { id: existingMovement.id } });
                 }
@@ -496,7 +482,6 @@ export async function PUT(req: NextRequest) {
                         }
                     });
                 } else {
-                    // Create movement record if it didn't exist
                     await tx.stockMovement.create({
                         data: {
                             organizationId: orgId,
@@ -511,8 +496,24 @@ export async function PUT(req: NextRequest) {
                     });
                 }
             }
+
+            // 4. RECALCULATE currentStock from all movements (absolute truth)
+            const allMovements = await tx.stockMovement.findMany({
+                where: { organizationId: orgId, productId: prodId }
+            });
+            const correctStock = allMovements.reduce((sum, m) => {
+                // receipt movements have positive qty, write_off have negative qty
+                // sale movements also have negative qty
+                return sum + m.quantity;
+            }, 0);
+
+            await tx.opticProduct.update({
+                where: { id: prodId },
+                data: { currentStock: Math.max(0, correctStock) }
+            });
         }
     });
 
     return NextResponse.json({ ok: true });
 }
+
