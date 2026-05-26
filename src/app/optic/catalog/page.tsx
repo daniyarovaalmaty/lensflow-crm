@@ -1340,7 +1340,7 @@ export default function OpticCatalogPage() {
                         {filteredProducts.map(product => {
                             const cat = CATEGORIES[product.category];
                             const CatIcon = cat?.icon || Package;
-                            const stock = product._count?.stockItems ?? product.currentStock;
+                            const stock = product.currentStock;
                             const isLow = product.type === 'product' && product.minStock > 0 && stock <= product.minStock;
                             const margin = product.retailPrice - product.purchasePrice;
                             const marginPct = product.purchasePrice > 0 ? Math.round((margin / product.purchasePrice) * 100) : 0;
@@ -1691,9 +1691,20 @@ export default function OpticCatalogPage() {
                                         </div>
                                     )}
                                     {detailProduct.type === 'product' && (
-                                        <div className="bg-gray-50 rounded-lg px-3 py-2">
-                                            <span className="text-gray-400 text-xs">На складе</span>
-                                            <p className="font-medium text-gray-700">{detailProduct._count?.stockItems ?? detailProduct.currentStock} {detailProduct.unit}</p>
+                                        <div className={`rounded-lg px-3 py-2 ${
+                                            detailProduct.currentStock <= 0 ? 'bg-gray-50' :
+                                            detailProduct.minStock > 0 && detailProduct.currentStock <= detailProduct.minStock ? 'bg-red-50' :
+                                            'bg-green-50'
+                                        }`}>
+                                            <span className="text-gray-400 text-xs">Остаток на складе</span>
+                                            <p className={`text-lg font-bold ${
+                                                detailProduct.currentStock <= 0 ? 'text-gray-500' :
+                                                detailProduct.minStock > 0 && detailProduct.currentStock <= detailProduct.minStock ? 'text-red-600' :
+                                                'text-green-700'
+                                            }`}>
+                                                {detailProduct.currentStock} {detailProduct.unit}
+                                            </p>
+                                            <span className="text-[10px] text-gray-400">Изменяется через приход/списание</span>
                                         </div>
                                     )}
                                     {detailProduct.type === 'product' && detailProduct.purchasePrice > 0 && (
