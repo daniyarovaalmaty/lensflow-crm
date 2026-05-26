@@ -309,11 +309,38 @@ async function handleWriteOff(body: any, user: any) {
     return NextResponse.json({ ok: true, document: doc }, { status: 201 });
 }
 
-// ==================== RECALCULATE — Fix all stock counters from movement history ====================
+// ==================== RECALCULATE — Fix all stock counters from document history ====================
 async function handleRecalculate(user: any) {
     const orgId = user.organizationId;
 
-    // Get all products for this org
+    // Get all confirmed documents (receipts and write-offs)
+    const documents = await prisma.stockDocument.findMany({
+        where: { organizationId: orgId, status: { not: 'cancelled' } },
+    });
+
+    // Build a map: productId → total quantity from all documents
+    const stockMap: Record<string, number> = {};
+
+    for (const doc of documents) {
+        const docItems = doc.items as any[];
+        if (!Array.isArray(docItems)) continue;
+
+        for (const item of docItems) {
+            const pid = item.productId;
+            if (!pid) continue;
+            const qty = Number(item.qty) || 0;
+
+            if (!stockMap[pid]) stockMap[pid] = 0;
+
+            if (doc.type === 'receipt') {
+                stockMap[pid] += qty;
+            } else if (doc.type === 'write_off') {
+                stockMap[pid] -= qty;
+            }
+        }
+    }
+
+    // Get all products and update their currentStock
     const products = await prisma.opticProduct.findMany({
         where: { organizationId: orgId, isActive: true, type: 'product' },
     });
@@ -321,20 +348,60 @@ async function handleRecalculate(user: any) {
     const results: Array<{ name: string; oldStock: number; newStock: number }> = [];
 
     for (const product of products) {
-        // Sum all movements for this product
-        const movements = await prisma.stockMovement.findMany({
-            where: { organizationId: orgId, productId: product.id }
-        });
+        const correctStock = Math.max(0, stockMap[product.id] || 0);
 
-        const correctStock = movements.reduce((sum, m) => sum + m.quantity, 0);
-        const newStock = Math.max(0, correctStock);
-
-        if (product.currentStock !== newStock) {
+        if (product.currentStock !== correctStock) {
             await prisma.opticProduct.update({
                 where: { id: product.id },
-                data: { currentStock: newStock }
+                data: { currentStock: correctStock }
             });
-            results.push({ name: product.name, oldStock: product.currentStock, newStock });
+            results.push({ name: product.name, oldStock: product.currentStock, newStock: correctStock });
+        }
+
+        // Also fix StockMovement records to match documents
+        // Find all receipt documents that contain this product
+        const productDocs = documents.filter(d =>
+            d.type === 'receipt' && (d.items as any[]).some((i: any) => i.productId === product.id)
+        );
+
+        for (const pd of productDocs) {
+            const pdItem = (pd.items as any[]).find((i: any) => i.productId === product.id);
+            if (!pdItem) continue;
+            const docQty = Number(pdItem.qty) || 0;
+
+            // Check if movement exists
+            const existingMovement = await prisma.stockMovement.findFirst({
+                where: {
+                    organizationId: orgId,
+                    productId: product.id,
+                    documentNumber: pd.documentNumber,
+                    type: 'receipt'
+                }
+            });
+
+            if (existingMovement) {
+                // Fix quantity if wrong
+                if (existingMovement.quantity !== docQty) {
+                    await prisma.stockMovement.update({
+                        where: { id: existingMovement.id },
+                        data: { quantity: docQty }
+                    });
+                }
+            } else {
+                // Create missing movement
+                await prisma.stockMovement.create({
+                    data: {
+                        organizationId: orgId,
+                        productId: product.id,
+                        type: 'receipt',
+                        quantity: docQty,
+                        documentNumber: pd.documentNumber,
+                        supplier: pd.counterpartyName || null,
+                        performedById: pd.performedById || null,
+                        performedByName: pd.performedByName || null,
+                    }
+                });
+            }
         }
     }
 
@@ -535,15 +602,20 @@ export async function PUT(req: NextRequest) {
                 }
             }
 
-            // 4. RECALCULATE currentStock from all movements (absolute truth)
-            const allMovements = await tx.stockMovement.findMany({
-                where: { organizationId: orgId, productId: prodId }
+            // 4. RECALCULATE currentStock from all documents (absolute truth)
+            const allDocs = await tx.stockDocument.findMany({
+                where: { organizationId: orgId, status: { not: 'cancelled' } }
             });
-            const correctStock = allMovements.reduce((sum, m) => {
-                // receipt movements have positive qty, write_off have negative qty
-                // sale movements also have negative qty
-                return sum + m.quantity;
-            }, 0);
+            let correctStock = 0;
+            for (const d of allDocs) {
+                const dItems = d.items as any[];
+                if (!Array.isArray(dItems)) continue;
+                const found = dItems.find((di: any) => di.productId === prodId);
+                if (!found) continue;
+                const q = Number(found.qty) || 0;
+                if (d.type === 'receipt') correctStock += q;
+                else if (d.type === 'write_off') correctStock -= q;
+            }
 
             await tx.opticProduct.update({
                 where: { id: prodId },
