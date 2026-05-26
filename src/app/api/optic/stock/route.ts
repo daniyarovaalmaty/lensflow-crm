@@ -345,10 +345,31 @@ async function handleRecalculate(user: any) {
         where: { organizationId: orgId, isActive: true, type: 'product' },
     });
 
-    const results: Array<{ name: string; oldStock: number; newStock: number }> = [];
+    // Build diagnostic info: for each product show which docs contribute
+    const diagnostics: Array<{
+        productName: string; productId: string; retailPrice: number;
+        oldStock: number; newStock: number;
+        sources: Array<{ docNumber: string; qty: number; price: number; docType: string }>;
+    }> = [];
 
     for (const product of products) {
         const correctStock = Math.max(0, stockMap[product.id] || 0);
+        const sources: Array<{ docNumber: string; qty: number; price: number; docType: string }> = [];
+
+        for (const doc of documents) {
+            const docItems = doc.items as any[];
+            if (!Array.isArray(docItems)) continue;
+            for (const item of docItems) {
+                if (item.productId === product.id) {
+                    sources.push({
+                        docNumber: doc.documentNumber,
+                        qty: Number(item.qty) || 0,
+                        price: Number(item.price) || 0,
+                        docType: doc.type,
+                    });
+                }
+            }
+        }
 
         if (product.currentStock !== correctStock) {
             await prisma.opticProduct.update({
@@ -358,8 +379,18 @@ async function handleRecalculate(user: any) {
             results.push({ name: product.name, oldStock: product.currentStock, newStock: correctStock });
         }
 
+        if (sources.length > 0 || correctStock > 0) {
+            diagnostics.push({
+                productName: product.name,
+                productId: product.id,
+                retailPrice: product.retailPrice,
+                oldStock: product.currentStock,
+                newStock: correctStock,
+                sources,
+            });
+        }
+
         // Also fix StockMovement records to match documents
-        // Find all receipt documents that contain this product
         const productDocs = documents.filter(d =>
             d.type === 'receipt' && (d.items as any[]).some((i: any) => i.productId === product.id)
         );
@@ -369,7 +400,6 @@ async function handleRecalculate(user: any) {
             if (!pdItem) continue;
             const docQty = Number(pdItem.qty) || 0;
 
-            // Check if movement exists
             const existingMovement = await prisma.stockMovement.findFirst({
                 where: {
                     organizationId: orgId,
@@ -380,7 +410,6 @@ async function handleRecalculate(user: any) {
             });
 
             if (existingMovement) {
-                // Fix quantity if wrong
                 if (existingMovement.quantity !== docQty) {
                     await prisma.stockMovement.update({
                         where: { id: existingMovement.id },
@@ -388,7 +417,6 @@ async function handleRecalculate(user: any) {
                     });
                 }
             } else {
-                // Create missing movement
                 await prisma.stockMovement.create({
                     data: {
                         organizationId: orgId,
@@ -408,7 +436,8 @@ async function handleRecalculate(user: any) {
     return NextResponse.json({
         ok: true,
         message: `Пересчитано ${results.length} товаров`,
-        corrections: results
+        corrections: results,
+        diagnostics,
     });
 }
 

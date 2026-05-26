@@ -541,12 +541,23 @@ export default function WarehousePage() {
             });
             const result = await res.json();
             if (res.ok) {
+                let msg = '';
                 if (result.corrections?.length > 0) {
-                    const details = result.corrections.map((c: any) => `${c.name}: ${c.oldStock} → ${c.newStock}`).join('\n');
-                    alert(`✅ Остатки пересчитаны!\n\n${details}`);
+                    msg += '✅ Остатки пересчитаны:\n';
+                    msg += result.corrections.map((c: any) => `  ${c.name}: ${c.oldStock} → ${c.newStock}`).join('\n');
                 } else {
-                    alert('✅ Все остатки уже корректны');
+                    msg += '✅ Все остатки уже корректны';
                 }
+                if (result.diagnostics?.length > 0) {
+                    msg += '\n\n📋 Разбивка по накладным:\n';
+                    for (const d of result.diagnostics) {
+                        msg += `\n${d.productName} (розн: ${d.retailPrice}₸, ID: ${d.productId.slice(-6)}) → ${d.newStock} шт`;
+                        for (const s of d.sources) {
+                            msg += `\n  ${s.docNumber}: ${s.qty} шт × ${s.price}₸ [${s.docType}]`;
+                        }
+                    }
+                }
+                alert(msg);
                 loadData();
             }
         } finally { setSaving(false); }
