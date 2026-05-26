@@ -411,6 +411,7 @@ async function handleRecalculate(user: any) {
     });
 
     // Build diagnostic info: for each product show which docs contribute
+    const results: Array<{ name: string; oldStock: number; newStock: number }> = [];
     const diagnostics: Array<{
         productName: string; productId: string; retailPrice: number;
         oldStock: number; newStock: number;
