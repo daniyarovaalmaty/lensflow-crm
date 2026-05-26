@@ -34,9 +34,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-    if (!['optic_manager', 'lab_head', 'lab_admin'].includes(user.subRole)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+
 
     const existing = await prisma.opticProduct.findFirst({
         where: { id, organizationId: user.organizationId },
@@ -82,9 +80,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-    if (!['optic_manager', 'lab_head', 'lab_admin'].includes(user.subRole)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+
 
     const existing = await prisma.opticProduct.findFirst({
         where: { id, organizationId: user.organizationId },

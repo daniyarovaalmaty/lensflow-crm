@@ -11,9 +11,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-    // Only optic_manager or lab_head can manage products
-    if (!['optic_manager', 'lab_head', 'lab_admin'].includes(user.subRole)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     try {
