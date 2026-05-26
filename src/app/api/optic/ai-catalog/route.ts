@@ -60,8 +60,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-    if (!['optic_manager', 'lab_head', 'lab_admin'].includes(user.subRole)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { message } = await req.json();
