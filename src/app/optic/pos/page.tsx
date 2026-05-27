@@ -71,7 +71,7 @@ export default function POSPage() {
     const handleUsbScan = useCallback((code: string) => {
         const product = products.find(p => p.barcode === code || p.sku === code);
         if (product) {
-            const stock = product.type === 'service' ? 999 : (product._count?.stockItems ?? product.currentStock);
+            const stock = product.type === 'service' ? 999 : product.currentStock;
             const existing = cart.find(c => c.productId === product.id);
             if (existing) {
                 if (product.type === 'product' && existing.quantity >= stock) {
@@ -142,7 +142,7 @@ export default function POSPage() {
     // Cart operations
     const addToCart = (product: Product) => {
         const existing = cart.find(c => c.productId === product.id);
-        const stock = product.type === 'service' ? 999 : (product._count?.stockItems ?? product.currentStock);
+        const stock = product.type === 'service' ? 999 : product.currentStock;
         if (existing) {
             if (product.type === 'product' && existing.quantity >= stock) return;
             setCart(cart.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c));
@@ -312,7 +312,7 @@ export default function POSPage() {
                             ) : (
                                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                                     {filteredProducts.map(p => {
-                                        const stock = p.type === 'service' ? null : (p._count?.stockItems ?? p.currentStock);
+                                        const stock = p.type === 'service' ? null : p.currentStock;
                                         const inCart = cart.find(c => c.productId === p.id);
                                         const outOfStock = p.type === 'product' && (stock === 0);
 
