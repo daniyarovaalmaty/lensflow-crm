@@ -13,6 +13,7 @@ import type { PaymentStatus } from '@/types/order';
 import { getPermissions, SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import FullscreenButton from '@/components/ui/FullscreenButton';
+import QuickNav from '@/components/ui/QuickNav';
 
 const PRICE_PER_LENS = 17500; // fallback for print/expanded details
 
@@ -249,7 +250,7 @@ export default function OpticDashboard() {
                             <p className="text-sm sm:text-base text-gray-600 mt-0.5 sm:mt-1 truncate">{session?.user?.profile?.fullName || SubRoleLabels[subRole]}</p>
                         </div>
 
-                        {/* Desktop nav */}
+                        {/* Desktop nav - row 1: actions */}
                         <div className="hidden md:flex items-center gap-2">
                             {/* Primary actions */}
                             {clinicPerms.canViewOrders && perms.canCreateOrders && (
@@ -277,50 +278,7 @@ export default function OpticDashboard() {
                                 </Link>
                             )}
 
-                            {/* Divider */}
-                            {(clinicPerms.canViewCatalog || clinicPerms.canViewWarehouse || clinicPerms.canViewPos || clinicPerms.canViewCash || subRole === 'optic_manager') && (
-                                <div className="w-px h-8 bg-gray-200 mx-1" />
-                            )}
-
-                            {/* Module nav — labeled buttons */}
-                            {clinicPerms.canViewCatalog && (
-                                <Link href="/optic/catalog" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">
-                                    <Package className="w-4 h-4 text-blue-500" />
-                                    Каталог
-                                </Link>
-                            )}
-                            {clinicPerms.canViewWarehouse && (
-                                <Link href="/optic/warehouse" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">
-                                    <Warehouse className="w-4 h-4 text-amber-500" />
-                                    Склад
-                                </Link>
-                            )}
-                            {clinicPerms.canViewPos && (
-                                <Link href="/optic/pos" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">
-                                    <ShoppingCart className="w-4 h-4 text-green-500" />
-                                    Касса
-                                </Link>
-                            )}
-                            {clinicPerms.canViewCash && (
-                                <Link href="/optic/cash-shifts" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">
-                                    <Banknote className="w-4 h-4 text-purple-500" />
-                                    Смены
-                                </Link>
-                            )}
-                            {subRole === 'optic_manager' && (
-                                <Link href="/optic/staff" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">
-                                    <Users className="w-4 h-4 text-indigo-500" />
-                                    Персонал
-                                </Link>
-                            )}
-                            {subRole === 'optic_manager' && (
-                                <Link href="/optic/settings/itigris" className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all">
-                                    <Link2 className="w-4 h-4 text-orange-500" />
-                                    ITIGRIS
-                                </Link>
-                            )}
-
-                            <div className="w-px h-8 bg-gray-200 mx-1" />
+                            <div className="w-px h-6 bg-gray-200 mx-1" />
 
                             <Link href="/profile" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Профиль">
                                 <User className="w-4 h-4" />
@@ -459,6 +417,11 @@ export default function OpticDashboard() {
                             </button>
                         </div>
                     )}
+
+                    {/* Desktop nav - row 2: module navigation */}
+                    <div className="hidden md:block mt-4">
+                        <QuickNav />
+                    </div>
 
                     {/* Stats */}
                     {clinicPerms.canViewFinance && perms.canViewStats && (
