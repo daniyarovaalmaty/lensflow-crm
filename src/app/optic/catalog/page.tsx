@@ -870,6 +870,9 @@ export default function OpticCatalogPage() {
             if (res.ok) {
                 await loadProducts();
                 setShowForm(false);
+            } else {
+                const err = await res.json().catch(() => ({ error: res.statusText }));
+                alert(`Ошибка сохранения: ${err.error || res.statusText}`);
             }
         } finally {
             setSaving(false);
