@@ -1127,6 +1127,7 @@ export default function OpticCatalogPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <QuickNav />
             {/* Header */}
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -1330,7 +1331,6 @@ export default function OpticCatalogPage() {
                 </div>
             </div>
 
-            <QuickNav />
 
             {/* Product Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
