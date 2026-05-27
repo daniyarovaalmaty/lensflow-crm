@@ -1171,7 +1171,6 @@ export default function OpticCatalogPage() {
 
                         </div>
                     </div>
-                    <div className="mt-4"><QuickNav /></div>
 
                     {/* AI Assistant Panel */}
                     <AnimatePresence>
@@ -1330,6 +1329,8 @@ export default function OpticCatalogPage() {
                     </div>
                 </div>
             </div>
+
+            <QuickNav />
 
             {/* Product Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">

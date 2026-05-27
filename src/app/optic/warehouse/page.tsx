@@ -784,7 +784,7 @@ export default function WarehousePage() {
 
                         </div>
                     </div>
-                    <div className="mt-4"><QuickNav /></div>
+
 
                     {/* Low stock alert */}
                     {lowStockProducts.length > 0 && (
@@ -848,6 +848,8 @@ export default function WarehousePage() {
                     </div>
                 </div>
             </div>
+
+            <QuickNav />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
                 {/* ==================== TAB: STOCK ==================== */}

@@ -126,6 +126,7 @@ export default function PatientsPage() {
 
     return (
         <div className="min-h-screen bg-surface">
+            <QuickNav />
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
                 {/* Back button */}
                 <div className="mb-6">
@@ -178,7 +179,6 @@ export default function PatientsPage() {
 
                     </div>
                 </div>
-                <div className="mt-4"><QuickNav /></div>
 
                 {/* Dedup result message */}
                 {dedupMsg && (
