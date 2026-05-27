@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-    }
 
     const body = await req.json();
     const { items, customerName, customerPhone, discountPercent, paymentMethod, notes } = body;
