@@ -418,10 +418,6 @@ export default function OpticDashboard() {
                         </div>
                     )}
 
-                    {/* Desktop nav - row 2: module navigation */}
-                    <div className="hidden md:block mt-4">
-                        <QuickNav />
-                    </div>
 
                     {/* Stats */}
                     {clinicPerms.canViewFinance && perms.canViewStats && (
@@ -448,6 +444,10 @@ export default function OpticDashboard() {
                         </div>
                     )}
                 </div>
+            </div>
+
+            <div className="hidden md:block">
+                <QuickNav />
             </div>
 
             {/* === PATIENT QUICK ACCESS - compact ===  */}
