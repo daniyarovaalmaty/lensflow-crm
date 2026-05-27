@@ -239,6 +239,7 @@ export default function OpticDashboard() {
 
     return (
         <div className="min-h-screen bg-surface">
+            <QuickNav />
             {/* Header */}
             <div className="bg-surface-elevated border-b border-border">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
@@ -446,9 +447,6 @@ export default function OpticDashboard() {
                 </div>
             </div>
 
-            <div className="hidden md:block">
-                <QuickNav />
-            </div>
 
             {/* === PATIENT QUICK ACCESS - compact ===  */}
             {clinicPerms.canViewPatients && (
