@@ -213,7 +213,7 @@ export default function WarehousePage() {
     const [includeBrand, setIncludeBrand] = useState(true);
 
     const [showScanner, setShowScanner] = useState(false);
-    const [scannerMode, setScannerMode] = useState<'search' | 'receive' | 'writeoff'>('search');
+    const [scannerMode, setScannerMode] = useState<'search' | 'receive' | 'writeoff' | 'inventory'>('search');
 
     const [inventories, setInventories] = useState<any[]>([]);
     const [activeInventory, setActiveInventory] = useState<any>(null);
@@ -257,6 +257,18 @@ export default function WarehousePage() {
                 ]);
             }
             alert(`✅ Товар добавлен в приходную накладную: ${found.name} (1 шт.)`);
+        } else if (scannerMode === 'inventory') {
+            if (!activeInventory) return;
+            const items = activeInventory.items as any[];
+            const item = items.find((i: any) => i.productId === found.id);
+            if (!item) {
+                alert(`⚠️ Товар "${found.name}" не входит в текущую инвентаризацию`);
+                return;
+            }
+            const newQty = (item.actualQty !== null ? item.actualQty : 0) + 1;
+            handleUpdateInventoryItem(found.id, newQty);
+            setShowScanner(false);
+            alert(`✅ ${found.name}: факт = ${newQty} шт.`);
         }
     };
 
@@ -1313,6 +1325,12 @@ export default function WarehousePage() {
                                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                         />
                                     </div>
+                                    <button
+                                        onClick={() => { setScannerMode('inventory'); setShowScanner(true); }}
+                                        className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-sm font-medium transition-colors"
+                                    >
+                                        <Camera className="w-4 h-4" /> Сканер
+                                    </button>
                                 </div>
 
                                 <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
