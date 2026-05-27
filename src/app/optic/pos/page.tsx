@@ -226,7 +226,7 @@ export default function POSPage() {
                         <Link href="/optic/dashboard" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-xs font-bold text-gray-500 hover:text-primary-600 transition-all mb-1">
                             <ArrowLeft className="w-3.5 h-3.5" /> Назад
                         </Link>
-                        <h1 className="text-xl md:text-2xl font-black text-gray-900 flex items-center gap-2.5 tracking-tight">
+                        <h1 className="text-xl md:text-3xl font-black text-gray-900 flex items-center gap-2.5 tracking-tight">
                             <ShoppingCart className="w-5 h-5 md:w-6 h-6 text-primary-600" /> Касса
                         </h1>
                     </div>
@@ -283,12 +283,12 @@ export default function POSPage() {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                 <input type="text" placeholder="Поиск товара или услуги..."
                                     value={search} onChange={e => setSearch(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 md:py-4 border border-gray-200 rounded-2xl text-sm md:text-base focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 bg-white placeholder-gray-400 transition-all font-medium shadow-sm" />
+                                    className="w-full pl-12 pr-4 py-3.5 md:py-5 border border-gray-200 rounded-2xl text-sm md:text-lg focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 bg-white placeholder-gray-400 transition-all font-medium shadow-sm" />
                             </div>
                             <div className="flex gap-2">
                                 {[{ key: 'all', label: 'Все' }, { key: 'products', label: 'Товары' }, { key: 'services', label: 'Услуги' }].map(f => (
                                     <button key={f.key} onClick={() => setCategoryFilter(f.key)}
-                                        className={`flex-1 sm:flex-initial px-6 py-3.5 md:py-4 rounded-2xl text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-200 active:scale-[0.97] ${
+                                        className={`flex-1 sm:flex-initial px-6 py-3.5 md:py-5 rounded-2xl text-xs md:text-base font-bold whitespace-nowrap transition-all duration-200 active:scale-[0.97] ${
                                             categoryFilter === f.key 
                                                 ? 'bg-primary-600 text-white shadow-md shadow-primary-100' 
                                                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm'
@@ -310,7 +310,7 @@ export default function POSPage() {
                                     <p className="text-xs text-gray-400 mt-1">Попробуйте изменить запрос или категорию</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
                                     {filteredProducts.map(p => {
                                         const stock = p.type === 'service' ? null : p.currentStock;
                                         const inCart = cart.find(c => c.productId === p.id);
@@ -319,7 +319,7 @@ export default function POSPage() {
                                         return (
                                             <button key={p.id} onClick={() => !outOfStock && addToCart(p)}
                                                 disabled={outOfStock}
-                                                className={`text-left p-5 rounded-2xl border transition-all flex flex-col justify-between min-h-[130px] relative overflow-hidden group active:scale-[0.97] duration-150 ${
+                                                className={`text-left p-5 md:p-6 rounded-2xl border transition-all flex flex-col justify-between min-h-[130px] md:min-h-[160px] relative overflow-hidden group active:scale-[0.97] duration-150 ${
                                                     inCart 
                                                         ? 'border-primary-500 bg-primary-50/40 shadow-sm shadow-primary-50' 
                                                         : outOfStock 
@@ -328,23 +328,23 @@ export default function POSPage() {
                                                 }`}>
                                                 <div className="flex items-start justify-between gap-2.5 w-full">
                                                     <div className="flex-1 min-w-0">
-                                                        {p.brand && <p className="text-[10px] font-extrabold text-primary-500 uppercase tracking-wider mb-1">{p.brand}</p>}
-                                                        <p className="text-xs md:text-sm font-bold text-gray-800 leading-snug group-hover:text-primary-700 transition-colors line-clamp-2">{p.name}</p>
+                                                        {p.brand && <p className="text-[10px] md:text-xs font-extrabold text-primary-500 uppercase tracking-wider mb-1">{p.brand}</p>}
+                                                        <p className="text-xs md:text-base font-bold text-gray-800 leading-snug group-hover:text-primary-700 transition-colors line-clamp-2">{p.name}</p>
                                                     </div>
                                                     {inCart && (
-                                                        <span className="flex-shrink-0 w-6 h-6 bg-primary-600 text-white rounded-full text-xs font-black flex items-center justify-center shadow-md animate-bounce">
+                                                        <span className="flex-shrink-0 w-7 h-7 md:w-9 md:h-9 bg-primary-600 text-white rounded-full text-xs md:text-sm font-black flex items-center justify-center shadow-md animate-bounce">
                                                             {inCart.quantity}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-end justify-between mt-4 w-full border-t border-gray-100 pt-3">
-                                                    <span className="text-sm md:text-base font-black text-gray-900">{fmt(p.retailPrice)} ₸</span>
+                                                    <span className="text-sm md:text-lg font-black text-gray-900">{fmt(p.retailPrice)} ₸</span>
                                                     {stock !== null ? (
-                                                        <span className={`text-[10px] md:text-xs font-extrabold px-2.5 py-1 rounded-full ${stock > 5 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                                                        <span className={`text-[10px] md:text-sm font-extrabold px-2.5 py-1 md:px-3 md:py-1.5 rounded-full ${stock > 5 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
                                                             {stock > 0 ? `${stock} ${p.unit}` : 'Нет'}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-[10px] md:text-xs text-emerald-700 font-extrabold bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-0.5">
+                                                        <span className="text-[10px] md:text-sm text-emerald-700 font-extrabold bg-emerald-50 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full flex items-center gap-0.5">
                                                             Услуга
                                                         </span>
                                                     )}
@@ -358,9 +358,9 @@ export default function POSPage() {
                     </div>
 
                     {/* RIGHT: Cart - fixed split viewport */}
-                    <div className="w-full md:w-80 lg:w-96 flex-shrink-0 h-full flex flex-col bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-md">
+                    <div className="w-full md:w-96 lg:w-[420px] flex-shrink-0 h-full flex flex-col bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-md">
                         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0 bg-gray-50/50">
-                            <h2 className="font-extrabold text-gray-900 flex items-center gap-2 text-sm md:text-base">
+                            <h2 className="font-extrabold text-gray-900 flex items-center gap-2 text-sm md:text-lg">
                                 <ShoppingCart className="w-4 h-4 md:w-5 h-5 text-primary-600" />
                                 Корзина
                                 {itemCount > 0 && (
@@ -387,8 +387,8 @@ export default function POSPage() {
                                     {cart.map(item => (
                                         <div key={item.productId} className="flex items-center gap-3 py-4">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs md:text-sm font-bold text-gray-800 truncate leading-snug">{item.name}</p>
-                                                <p className="text-[10px] md:text-xs text-gray-500 font-semibold mt-0.5">{fmt(item.unitPrice)} ₸ × {item.quantity}</p>
+                                                <p className="text-xs md:text-base font-bold text-gray-800 truncate leading-snug">{item.name}</p>
+                                                <p className="text-[10px] md:text-sm text-gray-500 font-semibold mt-0.5">{fmt(item.unitPrice)} ₸ × {item.quantity}</p>
                                             </div>
                                             <div className="flex items-center gap-1.5 flex-shrink-0">
                                                 <button onClick={() => updateQty(item.productId, -1)}
@@ -405,7 +405,7 @@ export default function POSPage() {
                                                     <X className="w-4 h-4" />
                                                 </button>
                                             </div>
-                                            <div className="w-20 text-right text-xs md:text-sm font-black text-gray-900 flex-shrink-0">
+                                            <div className="w-24 text-right text-xs md:text-base font-black text-gray-900 flex-shrink-0">
                                                 {fmt(item.unitPrice * item.quantity)} ₸
                                             </div>
                                         </div>
@@ -430,9 +430,9 @@ export default function POSPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex justify-between text-base md:text-lg font-black text-gray-900 pt-3 border-t border-gray-200/80">
+                                    <div className="flex justify-between text-base md:text-xl font-black text-gray-900 pt-3 border-t border-gray-200/80">
                                         <span>ИТОГО:</span>
-                                        <span className="text-primary-700 text-lg md:text-xl">{fmt(total)} ₸</span>
+                                        <span className="text-primary-700 text-lg md:text-2xl">{fmt(total)} ₸</span>
                                     </div>
                                 </div>
 
@@ -452,7 +452,7 @@ export default function POSPage() {
                                         ))}
                                     </div>
                                     <button onClick={() => setShowCheckout(true)}
-                                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl text-xs md:text-sm font-extrabold uppercase tracking-wider transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer">
+                                        className="w-full py-4 md:py-5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl text-xs md:text-base font-extrabold uppercase tracking-wider transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer">
                                         <Banknote className="w-4 h-4 md:w-5 h-5" /> Оформить заказ — {fmt(total)} ₸
                                     </button>
                                 </div>
