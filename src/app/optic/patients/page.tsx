@@ -7,7 +7,7 @@ import { Users, Search, Plus, Phone, FileText, Eye, RefreshCw, ChevronRight, Loa
 import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
-import FullscreenButton from '@/components/ui/FullscreenButton';
+import QuickNav from '@/components/ui/QuickNav';
 
 interface Patient {
     id: string;
@@ -175,9 +175,10 @@ export default function PatientsPage() {
                         <button onClick={() => setShowModal(true)} className="btn btn-primary flex items-center gap-2">
                             <Plus className="w-4 h-4" /> Новый пациент
                         </button>
-                        <FullscreenButton />
+
                     </div>
                 </div>
+                <div className="mt-4"><QuickNav /></div>
 
                 {/* Dedup result message */}
                 {dedupMsg && (
