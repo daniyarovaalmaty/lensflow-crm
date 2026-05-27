@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil } from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
@@ -58,7 +58,7 @@ const DOC_TYPES: Record<string, string> = {
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
-type Tab = 'stock' | 'receive' | 'movements' | 'documents';
+type Tab = 'stock' | 'receive' | 'movements' | 'documents' | 'inventory';
 
 // ==================== Product Search Select ====================
 function ProductSearchSelect({ products, value, onChange }: {
@@ -214,6 +214,10 @@ export default function WarehousePage() {
 
     const [showScanner, setShowScanner] = useState(false);
     const [scannerMode, setScannerMode] = useState<'search' | 'receive' | 'writeoff'>('search');
+
+    const [inventories, setInventories] = useState<any[]>([]);
+    const [activeInventory, setActiveInventory] = useState<any>(null);
+    const [inventorySearch, setInventorySearch] = useState('');
 
     const handleScanResult = (code: string) => {
         // Find product matching code (either by barcode or sku)
@@ -447,6 +451,15 @@ export default function WarehousePage() {
                 const res = await fetch('/api/optic/stock?view=documents');
                 if (res.ok) setDocuments(await res.json());
             }
+            if (tab === 'inventory') {
+                const res = await fetch('/api/optic/inventory');
+                if (res.ok) {
+                    const data = await res.json();
+                    setInventories(data);
+                    const inProgress = data.find((inv: any) => inv.status === 'in_progress');
+                    if (inProgress) setActiveInventory(inProgress);
+                }
+            }
         } finally { setLoading(false); }
     };
 
@@ -561,6 +574,100 @@ export default function WarehousePage() {
                 loadData();
             }
         } finally { setSaving(false); }
+    };
+
+    const handleCreateInventory = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch('/api/optic/inventory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create' }),
+            });
+            const result = await res.json();
+            if (res.ok) {
+                setActiveInventory(result);
+                loadData();
+            } else {
+                alert(result.error || 'Ошибка');
+                if (result.existingId) {
+                    const inv = inventories.find(i => i.id === result.existingId);
+                    if (inv) setActiveInventory(inv);
+                }
+            }
+        } finally { setSaving(false); }
+    };
+
+    const handleUpdateInventoryItem = async (productId: string, actualQty: number | null, note?: string) => {
+        if (!activeInventory) return;
+        const res = await fetch('/api/optic/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'update_item',
+                inventoryId: activeInventory.id,
+                productId,
+                actualQty,
+                note,
+            }),
+        });
+        if (res.ok) {
+            const updated = await res.json();
+            setActiveInventory(updated);
+        }
+    };
+
+    const handleCompleteInventory = async () => {
+        if (!activeInventory) return;
+        const items = activeInventory.items as any[];
+        const discrepancies = items.filter((i: any) => i.actualQty !== null && i.diff !== 0);
+        const unchecked = items.filter((i: any) => i.actualQty === null).length;
+
+        let msg = `Завершить инвентаризацию ${activeInventory.inventoryNumber}?\n\n`;
+        if (unchecked > 0) msg += `⚠️ Не проверено: ${unchecked} позиций\n`;
+        msg += `Расхождений: ${discrepancies.length}\n`;
+        if (discrepancies.length > 0) {
+            msg += '\nКорректировки:\n';
+            discrepancies.slice(0, 10).forEach((d: any) => {
+                const sign = d.diff > 0 ? '+' : '';
+                msg += `  ${d.name}: ${d.systemQty} → ${d.actualQty} (${sign}${d.diff})\n`;
+            });
+            if (discrepancies.length > 10) msg += `  ...и ещё ${discrepancies.length - 10}`;
+        }
+
+        if (!confirm(msg)) return;
+
+        setSaving(true);
+        try {
+            const res = await fetch('/api/optic/inventory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'complete', inventoryId: activeInventory.id }),
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alert(`✅ ${result.message}`);
+                setActiveInventory(null);
+                loadData();
+            } else {
+                alert(result.error || 'Ошибка');
+            }
+        } finally { setSaving(false); }
+    };
+
+    const handleCancelInventory = async () => {
+        if (!activeInventory) return;
+        if (!confirm('Отменить инвентаризацию? Данные подсчёта будут потеряны.')) return;
+
+        const res = await fetch('/api/optic/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'cancel', inventoryId: activeInventory.id }),
+        });
+        if (res.ok) {
+            setActiveInventory(null);
+            loadData();
+        }
     };
 
     const handleUpdateDocument = async () => {
@@ -710,6 +817,7 @@ export default function WarehousePage() {
                             { key: 'receive', label: 'Приход', icon: ArrowDownToLine },
                             { key: 'movements', label: 'История', icon: Clock },
                             { key: 'documents', label: 'Документы', icon: FileText },
+                            { key: 'inventory', label: 'Инвентаризация', icon: ClipboardCheck },
                         ] as const).map(t => (
                             <button
                                 key={t.key}
@@ -1081,6 +1189,207 @@ export default function WarehousePage() {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ==================== TAB: INVENTORY ==================== */}
+                {tab === 'inventory' && (
+                    <div>
+                        {!activeInventory ? (
+                            <div>
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h2 className="text-lg font-bold text-gray-900">Инвентаризация</h2>
+                                        <p className="text-sm text-gray-500 mt-1">Сверка фактических остатков с учётными</p>
+                                    </div>
+                                    <button
+                                        onClick={handleCreateInventory}
+                                        disabled={saving}
+                                        className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-50"
+                                    >
+                                        <ClipboardCheck className="w-4 h-4" /> Новая инвентаризация
+                                    </button>
+                                </div>
+
+                                {loading ? (
+                                    <div className="text-center py-20"><div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full mx-auto" /></div>
+                                ) : inventories.length === 0 ? (
+                                    <div className="text-center py-20">
+                                        <ClipboardCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                                        <p className="text-gray-500">Нет проведённых инвентаризаций</p>
+                                        <p className="text-sm text-gray-400 mt-1">Создайте первую инвентаризацию для сверки остатков</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {inventories.map(inv => (
+                                            <div key={inv.id} className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-sm transition-shadow">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <ClipboardCheck className="w-4 h-4 text-gray-400" />
+                                                        <span className="font-bold text-gray-900">{inv.inventoryNumber}</span>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                                            inv.status === 'completed' ? 'bg-green-50 text-green-700' :
+                                                            inv.status === 'in_progress' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'
+                                                        }`}>
+                                                            {inv.status === 'completed' ? 'Завершена' : inv.status === 'in_progress' ? 'В процессе' : 'Отменена'}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-xs text-gray-400">{formatDateTime(inv.createdAt)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                                    <span>Позиций: {inv.totalProducts}</span>
+                                                    <span>Проверено: {inv.checkedProducts}</span>
+                                                    {inv.surplusCount > 0 && <span className="text-green-600">+Излишки: {inv.surplusCount}</span>}
+                                                    {inv.shortageCount > 0 && <span className="text-red-600">-Недостачи: {inv.shortageCount}</span>}
+                                                </div>
+                                                {inv.performedByName && <div className="text-xs text-gray-400 mt-1">👤 {inv.performedByName}</div>}
+                                                {inv.status === 'in_progress' && (
+                                                    <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
+                                                        <button
+                                                            onClick={() => setActiveInventory(inv)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-semibold transition-colors"
+                                                        >
+                                                            Продолжить
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <button onClick={() => setActiveInventory(null)} className="text-gray-400 hover:text-gray-600">
+                                                <ArrowLeft className="w-4 h-4" />
+                                            </button>
+                                            <h2 className="text-lg font-bold text-gray-900">{activeInventory.inventoryNumber}</h2>
+                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700">В процессе</span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mt-1">Введите фактическое количество для каждого товара</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={handleCancelInventory}
+                                            className="px-3 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl text-sm font-medium transition-colors">
+                                            Отменить
+                                        </button>
+                                        <button onClick={handleCompleteInventory} disabled={saving}
+                                            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-50">
+                                            <CheckCircle className="w-4 h-4" /> Завершить
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4">
+                                    <div className="flex items-center justify-between text-sm mb-2">
+                                        <span className="text-gray-600">Проверено {activeInventory.checkedProducts} из {activeInventory.totalProducts}</span>
+                                        <span className="font-semibold text-gray-900">{activeInventory.totalProducts > 0 ? Math.round(activeInventory.checkedProducts / activeInventory.totalProducts * 100) : 0}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2.5">
+                                        <div className="bg-primary-600 h-2.5 rounded-full transition-all duration-300"
+                                            style={{ width: `${activeInventory.totalProducts > 0 ? (activeInventory.checkedProducts / activeInventory.totalProducts * 100) : 0}%` }} />
+                                    </div>
+                                    <div className="flex gap-4 mt-2 text-xs">
+                                        {activeInventory.surplusCount > 0 && <span className="text-green-600">📈 Излишки: {activeInventory.surplusCount}</span>}
+                                        {activeInventory.shortageCount > 0 && <span className="text-red-600">📉 Недостачи: {activeInventory.shortageCount}</span>}
+                                        {activeInventory.checkedProducts - activeInventory.surplusCount - activeInventory.shortageCount > 0 && (
+                                            <span className="text-gray-500">✅ Совпадает: {activeInventory.checkedProducts - activeInventory.surplusCount - activeInventory.shortageCount}</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 mb-4">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            value={inventorySearch}
+                                            onChange={e => setInventorySearch(e.target.value)}
+                                            placeholder="Поиск по названию, артикулу, штрих-коду..."
+                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                                            <tr>
+                                                <th className="text-left px-4 py-3 font-medium">Товар</th>
+                                                <th className="text-center px-2 py-3 font-medium w-20">Учёт</th>
+                                                <th className="text-center px-2 py-3 font-medium w-28">Факт</th>
+                                                <th className="text-center px-2 py-3 font-medium w-20">Разница</th>
+                                                <th className="text-center px-2 py-3 font-medium w-8"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {(activeInventory.items as any[]).filter((item: any) => {
+                                                if (!inventorySearch) return true;
+                                                const q = inventorySearch.toLowerCase();
+                                                return item.name?.toLowerCase().includes(q) ||
+                                                    item.sku?.toLowerCase().includes(q) ||
+                                                    item.barcode?.toLowerCase().includes(q);
+                                            }).map((item: any) => {
+                                                const isChecked = item.actualQty !== null;
+                                                const hasDiff = isChecked && item.diff !== 0;
+                                                const rowBg = !isChecked ? '' : hasDiff ? (item.diff > 0 ? 'bg-green-50/50' : 'bg-red-50/50') : 'bg-emerald-50/30';
+                                                return (
+                                                    <tr key={item.productId} className={`${rowBg} hover:bg-gray-50/50 transition-colors`}>
+                                                        <td className="px-4 py-3">
+                                                            <div className="font-medium text-gray-900">{item.name}</div>
+                                                            <div className="text-xs text-gray-400">
+                                                                {item.sku && <span className="mr-2">SKU: {item.sku}</span>}
+                                                                {item.barcode && <span>🔖 {item.barcode}</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td className="text-center px-2 py-3 font-semibold text-gray-600">
+                                                            {item.systemQty} {item.unit}
+                                                        </td>
+                                                        <td className="text-center px-2 py-3">
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={item.actualQty ?? ''}
+                                                                onChange={e => {
+                                                                    const val = e.target.value === '' ? null : Number(e.target.value);
+                                                                    handleUpdateInventoryItem(item.productId, val);
+                                                                }}
+                                                                placeholder="—"
+                                                                className={`w-20 text-center px-2 py-1.5 border rounded-lg text-sm font-semibold transition-colors ${
+                                                                    !isChecked ? 'border-gray-200 text-gray-400' :
+                                                                    hasDiff ? (item.diff > 0 ? 'border-green-300 text-green-700 bg-green-50' : 'border-red-300 text-red-700 bg-red-50') :
+                                                                    'border-emerald-300 text-emerald-700 bg-emerald-50'
+                                                                }`}
+                                                            />
+                                                        </td>
+                                                        <td className="text-center px-2 py-3">
+                                                            {isChecked && (
+                                                                <span className={`font-bold text-sm ${
+                                                                    item.diff === 0 ? 'text-emerald-600' :
+                                                                    item.diff > 0 ? 'text-green-600' : 'text-red-600'
+                                                                }`}>
+                                                                    {item.diff === 0 ? '✓' : (item.diff > 0 ? `+${item.diff}` : item.diff)}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-2 py-3">
+                                                            {isChecked && (
+                                                                <span className={`w-2 h-2 rounded-full inline-block ${
+                                                                    item.diff === 0 ? 'bg-emerald-500' :
+                                                                    item.diff > 0 ? 'bg-green-500' : 'bg-red-500'
+                                                                }`} />
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         )}
                     </div>

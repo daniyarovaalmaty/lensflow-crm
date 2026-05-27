@@ -46,6 +46,7 @@ model Organization {
   stockDocuments  StockDocument[]
   stockMovements  StockMovement[]
   sales           Sale[]
+  inventories     Inventory[]
 
   // CRM Sales
   clinicLeads         Lead[]               @relation("ClinicLeads")
@@ -495,6 +496,34 @@ model StockDocument {
   updatedAt        DateTime @updatedAt
 
   @@map("stock_documents")
+}
+
+// ==================== Inventory (Stocktaking session) ====================
+model Inventory {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  inventoryNumber String            // ИНВ-0001
+  status          String @default("in_progress")  // in_progress | completed | cancelled
+
+  items           Json     // [{ productId, name, sku, barcode, systemQty, actualQty, diff, note }]
+
+  totalProducts   Int @default(0)
+  checkedProducts Int @default(0)
+  surplusCount    Int @default(0)
+  shortageCount   Int @default(0)
+
+  notes           String?
+
+  performedById   String?
+  performedByName String?
+
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("inventories")
 }
 
 // ==================== Sale (POS transaction) ====================
