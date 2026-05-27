@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
+import FullscreenButton from '@/components/ui/FullscreenButton';
 
 // ==================== Types ====================
 interface OpticProduct {
@@ -1167,6 +1168,7 @@ export default function OpticCatalogPage() {
                                 <Sparkles className="w-4 h-4" />
                                 ИИ-ассистент
                             </button>
+                            <FullscreenButton />
                         </div>
                     </div>
 

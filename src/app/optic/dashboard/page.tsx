@@ -12,6 +12,7 @@ import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStat
 import type { PaymentStatus } from '@/types/order';
 import { getPermissions, SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
+import FullscreenButton from '@/components/ui/FullscreenButton';
 
 const PRICE_PER_LENS = 17500; // fallback for print/expanded details
 
@@ -328,6 +329,7 @@ export default function OpticDashboard() {
                             >
                                 <LogOut className="w-4 h-4" />
                             </button>
+                            <FullscreenButton />
                         </div>
 
                         {/* Mobile: create + hamburger */}

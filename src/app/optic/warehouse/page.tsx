@@ -9,6 +9,7 @@ import { formatDate, formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
+import FullscreenButton from '@/components/ui/FullscreenButton';
 
 // ==================== Types ====================
 interface Product {
@@ -780,6 +781,7 @@ export default function WarehousePage() {
                                 className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
                                 <ArrowDownToLine className="w-4 h-4" /> Приход
                             </button>
+                            <FullscreenButton />
                         </div>
                     </div>
 
