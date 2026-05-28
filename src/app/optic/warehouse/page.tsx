@@ -14,7 +14,7 @@ import QuickNav from '@/components/ui/QuickNav';
 // ==================== Types ====================
 interface Product {
     id: string; name: string; category: string; brand: string | null;
-    sku: string | null; barcode?: string | null; currentStock: number; minStock: number; unit: string;
+    sku: string | null; barcode?: string | null; currentStock: number; availableStock: number; minStock: number; unit: string;
     purchasePrice: number; retailPrice: number; trackSerials: boolean;
     _count?: { stockItems: number };
 }
@@ -104,9 +104,9 @@ function ProductSearchSelect({ products, value, onChange }: {
                         <span className="truncate font-medium">{selected.name}</span>
                         {selected.sku && <span className="text-gray-400 text-xs shrink-0">({selected.sku})</span>}
                         <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                            selected.currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                            (selected.availableStock ?? selected.currentStock) > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                         }`}>
-                            {selected.currentStock} {selected.unit}
+                            {(selected.availableStock ?? selected.currentStock)} {selected.unit}
                         </span>
                     </span>
                 ) : (
@@ -151,9 +151,9 @@ function ProductSearchSelect({ products, value, onChange }: {
                                     </div>
                                 </div>
                                 <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                    p.currentStock > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                                    (p.availableStock ?? p.currentStock) > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                                 }`}>
-                                    {p.currentStock} {p.unit}
+                                    {(p.availableStock ?? p.currentStock)} {p.unit}
                                 </span>
                             </button>
                         ))}
@@ -479,8 +479,8 @@ export default function WarehousePage() {
     // ---- Stats ----
     const stats = useMemo(() => {
         const total = products.reduce((s, p) => s + p.currentStock, 0);
-        const value = products.reduce((s, p) => s + p.currentStock * p.retailPrice, 0);
-        const low = products.filter(p => p.minStock > 0 && p.currentStock <= p.minStock).length;
+        const value = products.reduce((s, p) => s + (p.availableStock ?? p.currentStock) * p.retailPrice, 0);
+        const low = products.filter(p => p.minStock > 0 && (p.availableStock ?? p.currentStock) <= p.minStock).length;
         return { total, value, low, categories: products.length };
     }, [products]);
 
@@ -721,14 +721,14 @@ export default function WarehousePage() {
     }, [products, search]);
 
     const lowStockProducts = useMemo(() => {
-        return products.filter(p => p.minStock > 0 && p.currentStock <= p.minStock);
+        return products.filter(p => p.minStock > 0 && (p.availableStock ?? p.currentStock) <= p.minStock);
     }, [products]);
 
     // ---- Excel export ----
     const exportExcel = () => {
         const header = 'Товар\tБренд\tАртикул\tОстаток\tЕд.\tМин.\tЗакуп. цена\tРозн. цена\tСтоимость на складе\tСерийные';
         const rows = products.map(p => {
-            const stock = p.currentStock;
+            const stock = (p.availableStock ?? p.currentStock);
             return [
                 p.name, p.brand || '', p.sku || '', stock, p.unit, p.minStock,
                 p.purchasePrice, p.retailPrice, stock * p.retailPrice,
@@ -797,7 +797,7 @@ export default function WarehousePage() {
                             <div className="flex flex-wrap gap-2">
                                 {lowStockProducts.map(p => (
                                     <span key={p.id} className="px-2 py-1 bg-white rounded-lg text-xs text-red-600 border border-red-100">
-                                        {p.name}: <strong>{p.currentStock}</strong> {p.unit} (мин. {p.minStock})
+                                        {p.name}: <strong>{(p.availableStock ?? p.currentStock)}</strong> {p.unit} (мин. {p.minStock})
                                     </span>
                                 ))}
                             </div>
@@ -894,7 +894,7 @@ export default function WarehousePage() {
                                     </thead>
                                     <tbody>
                                         {filteredProducts.map(p => {
-                                            const stock = p.currentStock;
+                                            const stock = (p.availableStock ?? p.currentStock);
                                             const isLow = p.minStock > 0 && stock <= p.minStock;
                                             return (
                                                 <tr key={p.id} className={`border-b border-gray-50 hover:bg-gray-50/50 ${isLow ? 'bg-red-50/30' : ''}`}>
@@ -1447,7 +1447,7 @@ export default function WarehousePage() {
                                         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm">
                                         <option value="">Выберите товар</option>
                                         {products.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name} ({p.currentStock} {p.unit})</option>
+                                            <option key={p.id} value={p.id}>{p.name} ({(p.availableStock ?? p.currentStock)} {p.unit})</option>
                                         ))}
                                     </select>
                                 </div>

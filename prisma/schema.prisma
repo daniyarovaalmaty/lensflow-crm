@@ -437,6 +437,7 @@ model StockItem {
 
   receivedAt      DateTime @default(now())
   soldAt          DateTime?
+  quantity        Int      @default(1)
   notes           String?
 
   @@unique([organizationId, serialNumber])
@@ -514,6 +515,7 @@ model Inventory {
   surplusCount    Int @default(0)
   shortageCount   Int @default(0)
 
+  quantity        Int      @default(1)
   notes           String?
 
   performedById   String?
@@ -551,6 +553,7 @@ model Sale {
 
   performedById   String?
   performedByName String?
+  quantity        Int      @default(1)
   notes           String?
 
   syncedTo1C      Boolean  @default(false)
