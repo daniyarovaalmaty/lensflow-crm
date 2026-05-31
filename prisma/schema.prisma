@@ -53,6 +53,7 @@ model Organization {
   clinicSubscription  ClinicSubscription[]  @relation("ClinicSubscription")
 
   cashRegisters CashRegister[]
+  suppliers     Supplier[]
 
   @@map("organizations")
 }
@@ -404,6 +405,7 @@ model OpticProduct {
   stockItems       StockItem[]
   movements        StockMovement[]
   saleItems        SaleItem[]
+  documentLines    StockDocumentLine[]
 
   @@unique([organizationId, sku])
   @@map("optic_products")
@@ -471,6 +473,28 @@ model StockMovement {
   @@map("stock_movements")
 }
 
+// ==================== Supplier ====================
+model Supplier {
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name           String
+  inn            String?
+  phone          String?
+  email          String?
+  contactPerson  String?
+  isActive       Boolean  @default(true)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  stockDocuments StockDocument[]
+
+  @@index([organizationId])
+  @@map("suppliers")
+}
+
 // ==================== Stock Document (invoices, acts) ====================
 model StockDocument {
   id               String   @id @default(cuid())
@@ -484,8 +508,12 @@ model StockDocument {
   counterpartyName String?
   counterpartyInn  String?
 
+  // Normalized supplier relation (new)
+  supplierId       String?
+  supplier         Supplier? @relation(fields: [supplierId], references: [id])
+
   totalAmount      Int      @default(0)
-  items            Json     // [{ productId, name, qty, price, serialNumbers }]
+  items            Json     // [{ productId, name, qty, price, serialNumbers }] — kept for backward compat
 
   notes            String?
 
@@ -496,7 +524,30 @@ model StockDocument {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  lines            StockDocumentLine[]
+
   @@map("stock_documents")
+}
+
+// ==================== Stock Document Line (structured items) ====================
+model StockDocumentLine {
+  id             String       @id @default(cuid())
+  documentId     String
+  document       StockDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  productId      String
+  product        OpticProduct @relation(fields: [productId], references: [id])
+
+  quantity       Int
+  unitPrice      Int          @default(0)
+  totalPrice     Int          @default(0)
+
+  serialNumbers  Json?        // ["SN-001", "SN-002"]
+  batchNumber    String?
+  expiryDate     DateTime?
+
+  createdAt      DateTime     @default(now())
+
+  @@map("stock_document_lines")
 }
 
 // ==================== Inventory (Stocktaking session) ====================

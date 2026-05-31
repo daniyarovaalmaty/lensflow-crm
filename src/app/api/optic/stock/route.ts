@@ -45,6 +45,13 @@ export async function GET(req: NextRequest) {
       where: { organizationId: user.organizationId },
       orderBy: { createdAt: 'desc' },
       take: 100,
+      include: {
+        supplier: { select: { id: true, name: true, inn: true } },
+        lines: {
+          include: { product: { select: { id: true, name: true, sku: true, category: true } } },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
     });
     return NextResponse.json(docs);
   }
@@ -81,7 +88,7 @@ export async function POST(req: NextRequest) {
 
 // ==================== RECEIVE ====================
 async function handleReceive(body: any, user: any) {
-  const { items, supplier, documentNumber, notes } = body;
+  const { items, supplier, supplierId, documentNumber, notes } = body;
   if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
   const orgId = user.organizationId;
@@ -90,6 +97,13 @@ async function handleReceive(body: any, user: any) {
   for (const item of items) {
     if ((Number(item.quantity) || 1) <= 0)
       return NextResponse.json({ error: 'Количество должно быть больше нуля' }, { status: 400 });
+  }
+
+  // Resolve supplier name for backward compat counterpartyName
+  let resolvedSupplierName = supplier || null;
+  if (supplierId && !resolvedSupplierName) {
+    const sup = await prisma.supplier.findFirst({ where: { id: supplierId }, select: { name: true } });
+    if (sup) resolvedSupplierName = sup.name;
   }
 
   const docCount = await prisma.stockDocument.count({ where: { organizationId: orgId, type: 'receipt' } });
@@ -114,11 +128,13 @@ async function handleReceive(body: any, user: any) {
   const result = await prisma.$transaction(async (tx) => {
     const allSerials: string[] = [];
     const docItems: any[] = [];
+    const docLines: any[] = [];
 
     for (const item of items) {
       const product = productMap[item.productId];
       if (!product) continue;
       const qty = Number(item.quantity) || 1;
+      const unitPrice = item.purchasePrice ? Number(item.purchasePrice) : product.purchasePrice;
       const createdSerials: string[] = [];
 
       if (product.trackSerials) {
@@ -129,7 +145,7 @@ async function handleReceive(body: any, user: any) {
             data: {
               productId: product.id, organizationId: orgId,
               serialNumber: sn, status: 'in_stock', quantity: 1,
-              purchasePrice: item.purchasePrice ? Number(item.purchasePrice) : product.purchasePrice,
+              purchasePrice: unitPrice,
               color: item.color || null, size: item.size || null,
               batchNumber: item.batchNumber || null,
               expiryDate: item.expiryDate ? new Date(item.expiryDate) : null,
@@ -144,7 +160,7 @@ async function handleReceive(body: any, user: any) {
           data: {
             productId: product.id, organizationId: orgId,
             status: 'in_stock', quantity: qty,
-            purchasePrice: item.purchasePrice ? Number(item.purchasePrice) : product.purchasePrice,
+            purchasePrice: unitPrice,
             batchNumber: item.batchNumber || null,
             expiryDate: item.expiryDate ? new Date(item.expiryDate) : null,
             receiptDocId: docNum,
@@ -157,23 +173,36 @@ async function handleReceive(body: any, user: any) {
         data: {
           organizationId: orgId, productId: product.id, type: 'receipt', quantity: qty,
           serialNumbers: createdSerials.length ? createdSerials : undefined,
-          documentNumber: docNum, supplier: supplier || null,
+          documentNumber: docNum, supplier: resolvedSupplierName,
           performedById: user.id, performedByName: user.fullName || user.email,
         },
       });
 
       allSerials.push(...createdSerials);
-      docItems.push({ productId: product.id, name: product.name, qty, price: item.purchasePrice || product.purchasePrice, serialNumbers: createdSerials });
+      docItems.push({ productId: product.id, name: product.name, qty, price: unitPrice, serialNumbers: createdSerials });
+      docLines.push({
+        productId: product.id,
+        quantity: qty,
+        unitPrice,
+        totalPrice: unitPrice * qty,
+        serialNumbers: createdSerials.length ? createdSerials : null,
+        batchNumber: item.batchNumber || null,
+        expiryDate: item.expiryDate ? new Date(item.expiryDate) : null,
+      });
     }
 
     const doc = await tx.stockDocument.create({
       data: {
         documentNumber: docNum, organizationId: orgId, type: 'receipt', status: 'confirmed',
-        counterpartyName: supplier || null,
+        counterpartyName: resolvedSupplierName,
+        supplierId: supplierId || null,
         totalAmount: docItems.reduce((s: number, i: any) => s + i.price * i.qty, 0),
         items: docItems, notes: notes || null,
         performedById: user.id, performedByName: user.fullName || user.email,
         confirmedAt: new Date(),
+        lines: {
+          create: docLines,
+        },
       },
     });
     return { doc, allSerials };
@@ -210,6 +239,7 @@ async function handleWriteOff(body: any, user: any) {
 
   const doc = await prisma.$transaction(async (tx) => {
     const docItems: any[] = [];
+    const docLines: any[] = [];
 
     for (const item of items) {
       const product = productMap[item.productId];
@@ -252,6 +282,13 @@ async function handleWriteOff(body: any, user: any) {
         },
       });
       docItems.push({ productId: product.id, name: product.name, qty, serialNumbers: item.serialNumbers || [] });
+      docLines.push({
+        productId: product.id,
+        quantity: qty,
+        unitPrice: 0,
+        totalPrice: 0,
+        serialNumbers: item.serialNumbers?.length ? item.serialNumbers : null,
+      });
     }
 
     return tx.stockDocument.create({
@@ -260,6 +297,9 @@ async function handleWriteOff(body: any, user: any) {
         totalAmount: 0, items: docItems, notes: reason || notes || null,
         performedById: user.id, performedByName: user.fullName || user.email,
         confirmedAt: new Date(),
+        lines: {
+          create: docLines,
+        },
       },
     });
   });

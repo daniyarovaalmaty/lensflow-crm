@@ -10,6 +10,7 @@ import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import QuickNav from '@/components/ui/QuickNav';
+import SupplierSelect from '@/components/warehouse/SupplierSelect';
 
 // ==================== Types ====================
 interface Product {
@@ -33,9 +34,24 @@ interface Movement {
     product: { name: string; category: string };
 }
 
+interface StockDocLine {
+    id: string;
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    serialNumbers: string[] | null;
+    batchNumber: string | null;
+    expiryDate: string | null;
+    product: { id: string; name: string; sku: string | null; category: string };
+}
+
 interface StockDoc {
     id: string; documentNumber: string; type: string; status: string;
     counterpartyName: string | null; totalAmount: number; items: any[];
+    supplierId: string | null;
+    supplier: { id: string; name: string; inn: string | null } | null;
+    lines: StockDocLine[];
     performedByName: string | null; confirmedAt: string | null; createdAt: string;
     notes: string | null;
 }
@@ -185,7 +201,7 @@ export default function WarehousePage() {
         productId: string; quantity: string; serialMode: 'auto' | 'manual';
         manualSerials: string; purchasePrice: string; color: string; size: string;
     }>>([]);
-    const [supplier, setSupplier] = useState('');
+    const [supplierId, setSupplierId] = useState('');
     const [receiveNotes, setReceiveNotes] = useState('');
 
     // Edit Document State
@@ -520,14 +536,14 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'receive', items, supplier, notes: receiveNotes }),
+                body: JSON.stringify({ action: 'receive', items, supplierId: supplierId || undefined, notes: receiveNotes }),
             });
 
             if (res.ok) {
                 const result = await res.json();
                 alert(`🎉 Приход оформлен: ${result.document.documentNumber}\n${result.serialNumbers?.length ? `Серийные номера: ${result.serialNumbers.join(', ')}` : ''}`);
                 setReceiveItems([]);
-                setSupplier('');
+                setSupplierId('');
                 setReceiveNotes('');
                 setTab('stock');
                 loadData();
@@ -965,8 +981,11 @@ export default function WarehousePage() {
                             {/* Supplier */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Поставщик</label>
-                                <input type="text" value={supplier} onChange={e => setSupplier(e.target.value)}
-                                    placeholder="Название поставщика" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
+                                <SupplierSelect
+                                    value={supplierId}
+                                    onChange={setSupplierId}
+                                    placeholder="Выберите поставщика..."
+                                />
                             </div>
 
                             {/* Items */}
@@ -1139,9 +1158,14 @@ export default function WarehousePage() {
                                             {doc.totalAmount > 0 && <span className="ml-2 font-semibold text-gray-900">{fmt(doc.totalAmount)} ₸</span>}
                                         </div>
                                         <div className="text-xs text-gray-400 mt-1">
-                                            {(doc.items as any[])?.map((it: any, i: number) => (
-                                                <span key={i} className="mr-3">{it.name} ×{it.qty}</span>
-                                            ))}
+                                            {(doc.lines?.length
+                                                ? doc.lines.map((ln: StockDocLine, i: number) => (
+                                                    <span key={i} className="mr-3">{ln.product?.name ?? ln.productId} ×{ln.quantity}</span>
+                                                ))
+                                                : (doc.items as any[])?.map((it: any, i: number) => (
+                                                    <span key={i} className="mr-3">{it.name} ×{it.qty}</span>
+                                                ))
+                                            )}
                                         </div>
                                         {doc.performedByName && (
                                             <div className="text-xs text-gray-400 mt-1"> {doc.performedByName}</div>
