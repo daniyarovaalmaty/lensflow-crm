@@ -36,17 +36,25 @@ export default function SupplierSelect({ value, onChange, placeholder = 'Выб�
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  function resetForm() {
+    setNewName('');
+    setNewInn('');
+    setNewPhone('');
+    setFormError('');
+    setShowNewForm(false);
+  }
+
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
-        setShowNewForm(false);
         resetForm();
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load suppliers on mount
@@ -65,14 +73,6 @@ export default function SupplierSelect({ value, onChange, placeholder = 'Выб�
     } finally {
       setLoading(false);
     }
-  }
-
-  function resetForm() {
-    setNewName('');
-    setNewInn('');
-    setNewPhone('');
-    setFormError('');
-    setShowNewForm(false);
   }
 
   async function handleCreateSupplier() {
@@ -110,7 +110,7 @@ export default function SupplierSelect({ value, onChange, placeholder = 'Выб�
       {/* Trigger button */}
       <button
         type="button"
-        onClick={() => { setOpen(!open); if (!open) setShowNewForm(false); }}
+        onClick={() => { if (open) { setOpen(false); resetForm(); } else { setOpen(true); } }}
         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-left flex items-center justify-between hover:border-primary-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors bg-white"
       >
         {selected ? (
@@ -179,7 +179,7 @@ export default function SupplierSelect({ value, onChange, placeholder = 'Выб�
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  + Новый поставщик
+                  Новый поставщик
                 </button>
               </div>
             </>

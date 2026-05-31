@@ -100,10 +100,19 @@ async function handleReceive(body: any, user: any) {
   }
 
   // Resolve supplier name for backward compat counterpartyName
+  // Always validate supplierId belongs to this org to prevent data leakage
   let resolvedSupplierName = supplier || null;
-  if (supplierId && !resolvedSupplierName) {
-    const sup = await prisma.supplier.findFirst({ where: { id: supplierId }, select: { name: true } });
-    if (sup) resolvedSupplierName = sup.name;
+  let validatedSupplierId: string | null = null;
+  if (supplierId) {
+    const sup = await prisma.supplier.findFirst({
+      where: { id: supplierId, organizationId: orgId, isActive: true },
+      select: { name: true },
+    });
+    if (!sup) {
+      return NextResponse.json({ error: 'Поставщик не найден' }, { status: 400 });
+    }
+    validatedSupplierId = supplierId;
+    resolvedSupplierName = sup.name; // always use DB name, not client-supplied string
   }
 
   const docCount = await prisma.stockDocument.count({ where: { organizationId: orgId, type: 'receipt' } });
@@ -195,7 +204,7 @@ async function handleReceive(body: any, user: any) {
       data: {
         documentNumber: docNum, organizationId: orgId, type: 'receipt', status: 'confirmed',
         counterpartyName: resolvedSupplierName,
-        supplierId: supplierId || null,
+        supplierId: validatedSupplierId,
         totalAmount: docItems.reduce((s: number, i: any) => s + i.price * i.qty, 0),
         items: docItems, notes: notes || null,
         performedById: user.id, performedByName: user.fullName || user.email,
