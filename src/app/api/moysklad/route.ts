@@ -1,32 +1,62 @@
 import { NextResponse } from 'next/server';
 
-// Имитация базы данных или ответа от МойСклад
-const mockProductsFromMoySклад = [
-  { id: '1', name: 'Оправа Ray-Ban Aviator', stock: 15, price: 55000 },
-  { id: '2', name: 'Линзы Crizal Alize 1.5', stock: 42, price: 12000 },
-  { id: '3', name: 'Солнцезащитные очки Polaroid', stock: 8, price: 28000 },
-];
-
 export async function GET() {
   try {
-    // Читаем токен из нашего защищенного файла .env
     const token = process.env.MOYSKLAD_API_TOKEN;
 
-    // Проверяем, есть ли доступ (симуляция безопасности)
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized: No API Token' }, { status: 401 });
+    // Проверяем, что токен подтянулся из файла .env
+    if (!token || token.includes('тестовый_токен')) {
+      return NextResponse.json(
+        { error: 'Укажите реальный токен в файле .env' },
+        { status: 401 }
+      );
     }
 
-    // Возвращаем данные в формате JSON
-    return NextResponse.json({
-      success: true,
-      source: 'МойСклад DEV-Среда',
-      lastSync: new Date().toISOString(),
-      productsCount: mockProductsFromMoySклад.length,
-      data: mockProductsFromMoySклад
+    // Официальный URL API МойСклад для получения ассортимента и остатков
+    const url = 'https://api.moysklad.ru/api/remap/1.2/entity/assortment?stockMode=all';
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store' // Получаем данные в реальном времени, без кэширования
     });
 
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+    if (!response.ok) {
+      const errorText = await response.text();
+      return NextResponse.json({ 
+        success: false, 
+        error: `Ошибка МойСклад API: ${response.status}`, 
+        details: errorText 
+      }, { status: response.status });
+    }
+
+    const json = await response.json();
+
+    // Форматируем полученные от МойСклад товары для нашей CRM
+    const realProducts = (json.rows || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      price: item.salePrice ? item.salePrice / 100 : 0, // Переводим из копеек в нормальную валюту
+      code: item.code || '—',
+      stock: typeof item.stock !== 'undefined' ? item.stock : 0 // Доступный остаток
+    }));
+
+    return NextResponse.json({
+      success: true,
+      source: 'Реальная синхронизация с МойСклад API',
+      lastSync: new Date().toISOString(),
+      productsCount: realProducts.length,
+      data: realProducts
+    });
+
+  } catch (error: any) {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Внутренняя ошибка сервера CRM', 
+      details: error.message 
+    }, { status: 500 });
   }
 }
