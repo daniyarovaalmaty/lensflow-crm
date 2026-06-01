@@ -23,7 +23,11 @@ export async function GET(request: NextRequest) {
         const where: any = {};
 
         if (session.user.role === 'laboratory') {
-            // Lab sees all orders
+            // Lab sees only orders sent directly to lab (no distributor assigned)
+            where.distributorOrgId = null;
+        } else if (session.user.role === 'distributor') {
+            // Distributor sees only orders assigned to them
+            where.distributorOrgId = session.user.organizationId;
         } else if (session.user.role === 'optic') {
             // Clinic sees only its org orders
             where.organizationId = session.user.organizationId;
@@ -373,6 +377,7 @@ export async function POST(request: NextRequest) {
                         products: additionalProducts || undefined,
                         totalPrice,
                         discountPercent: DISCOUNT_PCT,
+                        distributorOrgId: body.distributorOrgId || undefined,
                     },
                     include: {
                         patient: true,

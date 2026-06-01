@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { auth } from '@/auth';
 
 // GET /api/crm/leads/[id] — get single lead with full details
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -40,6 +41,90 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const existing = await prisma.lead.findUnique({ where: { id } });
     if (!existing) {
         return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+    }
+
+    // Convert lead to patient action
+    if (body.action === 'convert_to_patient') {
+        const targetName = body.name || existing.name || 'Новый Пациент';
+        const targetPhone = body.phone || existing.phone;
+
+        if (!targetPhone) {
+            return NextResponse.json({ error: 'Lead phone is required' }, { status: 400 });
+        }
+
+        const cleanPhone = targetPhone.replace(/[\s\-\+\(\)]/g, '').split('@')[0];
+        const last9 = cleanPhone.slice(-9);
+
+        let patient = null;
+        if (last9) {
+            patient = await prisma.patient.findFirst({
+                where: {
+                    phone: { contains: last9 }
+                }
+            });
+        }
+
+        const session = await auth().catch(() => null);
+
+        if (!patient) {
+            let medmundusId: number | null = null;
+            try {
+                const { mmCreatePatient } = await import('@/lib/mm-patient-bridge');
+                medmundusId = await mmCreatePatient({
+                    name: targetName.trim(),
+                    phone: targetPhone.trim(),
+                    doctorPhone: session?.user?.profile?.phone || undefined,
+                });
+            } catch (e) {
+                console.warn('[PatientSync] Could not push to MedMundus:', e);
+            }
+
+            patient = await prisma.patient.create({
+                data: {
+                    medmundusId: medmundusId || undefined,
+                    name: targetName.trim(),
+                    phone: targetPhone.trim(),
+                    organizationId: session?.user?.organizationId || existing.clinicId || null,
+                    doctorId: session?.user?.id || existing.assigneeId || null,
+                }
+            });
+        }
+
+        const updatedLead = await prisma.lead.update({
+            where: { id },
+            data: {
+                patientId: patient.id,
+                stage: 'converted',
+                convertedAt: new Date(),
+            }
+        });
+
+        await prisma.leadActivity.create({
+            data: {
+                leadId: id,
+                action: 'converted_to_patient',
+                details: `Лид успешно конвертирован в пациента ${patient.name} (${patient.phone})`,
+                userId: session?.user?.id || null,
+            }
+        });
+
+        const existingRetention = await prisma.lead.findFirst({ where: { phone: existing.phone, funnel: 'retention' } });
+        if (!existingRetention) {
+            await prisma.lead.create({
+                data: {
+                    phone: existing.phone,
+                    name: targetName,
+                    city: existing.city,
+                    source: existing.source,
+                    funnel: 'retention',
+                    stage: 'checkup',
+                    clinicId: existing.clinicId,
+                    lastLensPurchaseDate: new Date(),
+                }
+            });
+        }
+
+        return NextResponse.json({ success: true, lead: updatedLead, patient });
     }
 
     const {

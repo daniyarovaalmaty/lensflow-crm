@@ -70,9 +70,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'email, password, fullName, subRole are required' }, { status: 400 });
         }
 
-        // Only allow adding optic_doctor or optic_accountant
-        if (!['optic_doctor', 'optic_accountant'].includes(subRole)) {
-            return NextResponse.json({ error: 'Можно добавить только врача или бухгалтера' }, { status: 400 });
+        // Only allow adding optic_manager, optic_doctor, optic_accountant, or sales_manager
+        if (!['optic_manager', 'optic_doctor', 'optic_accountant', 'sales_manager'].includes(subRole)) {
+            return NextResponse.json({ error: 'Недопустимая роль сотрудника' }, { status: 400 });
         }
 
         const existing = await prisma.user.findUnique({ where: { email } });

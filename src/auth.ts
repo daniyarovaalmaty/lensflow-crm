@@ -12,6 +12,27 @@ function normalizePhone(phone: string): string {
     return digits;
 }
 
+function buildUserReturn(user: any, org: any | null) {
+    const orgName = org?.name;
+    return {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        subRole: user.subRole,
+        organizationId: user.organizationId,
+        orgType: org?.type || 'standalone',
+        parentOrgId: org?.parentId || null,
+        permissions: user.permissions,
+        profile: {
+            fullName: user.fullName,
+            phone: user.phone,
+            opticName: orgName,
+            labName: orgName,
+            clinic: orgName,
+        },
+    };
+}
+
 import { authConfig } from '@/auth.config';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -68,22 +89,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     }
 
                     if (localUser && localUser.status === 'active') {
-                        const orgName = localUser.organization?.name;
-                        return {
-                            id: localUser.id,
-                            email: localUser.email,
-                            role: localUser.role,
-                            subRole: localUser.subRole,
-                            organizationId: localUser.organizationId,
-                            permissions: localUser.permissions,
-                            profile: {
-                                fullName: localUser.fullName,
-                                phone: localUser.phone,
-                                opticName: orgName,
-                                labName: orgName,
-                                clinic: orgName,
-                            },
-                        };
+                        return buildUserReturn(localUser, localUser.organization);
                     }
 
                     // Try MedMundus bridge — use phone as username, 'otp' as dummy password
@@ -104,18 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         status: 'active',
                     });
 
-                    return {
-                        id: newUser.id,
-                        email: newUser.email,
-                        role: newUser.role,
-                        subRole: newUser.subRole,
-                        organizationId: newUser.organizationId,
-                        permissions: newUser.permissions,
-                        profile: {
-                            fullName: '',
-                            phone: normalizedPhone,
-                        },
-                    };
+                    return buildUserReturn(newUser, null);
                 }
 
                 // ======== EMAIL + PASSWORD PATH (fallback) ========
@@ -131,25 +126,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 if (user && user.status === 'active') {
                     const isValidPassword = await verifyPassword(user, password);
                     if (isValidPassword) {
-                        // Load org info
                         const userWithOrg = await findUserWithOrg(user.id);
-                        const orgName = userWithOrg?.organization?.name;
-
-                        return {
-                            id: user.id,
-                            email: user.email,
-                            role: user.role,
-                            subRole: user.subRole,
-                            organizationId: user.organizationId,
-                            permissions: user.permissions,
-                            profile: {
-                                fullName: user.fullName,
-                                phone: user.phone,
-                                opticName: orgName,
-                                labName: orgName,
-                                clinic: orgName,
-                            },
-                        };
+                        return buildUserReturn(user, userWithOrg?.organization);
                     }
                 }
 
@@ -173,23 +151,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 });
 
                 if (existingLinked && existingLinked.status === 'active') {
-                    // User already exists in Lens Flow — just log them in
-                    const orgName = existingLinked.organization?.name;
-                    return {
-                        id: existingLinked.id,
-                        email: existingLinked.email,
-                        role: existingLinked.role,
-                        subRole: existingLinked.subRole,
-                        organizationId: existingLinked.organizationId,
-                        permissions: existingLinked.permissions,
-                        profile: {
-                            fullName: existingLinked.fullName,
-                            phone: existingLinked.phone,
-                            opticName: orgName,
-                            labName: orgName,
-                            clinic: orgName,
-                        },
-                    };
+                    return buildUserReturn(existingLinked, existingLinked.organization);
                 }
 
                 // JIT Provision: Create organization + user in Lens Flow
@@ -232,22 +194,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     status: 'active',
                 });
 
-                const orgName = mmProfile.clinic?.name;
-                return {
-                    id: newUser.id,
-                    email: newUser.email,
-                    role: newUser.role,
-                    subRole: newUser.subRole,
-                    organizationId: newUser.organizationId,
-                    permissions: newUser.permissions,
-                    profile: {
-                        fullName: newUser.fullName,
-                        phone: newUser.phone,
-                        opticName: orgName,
-                        labName: orgName,
-                        clinic: orgName,
-                    },
-                };
+                const org = organizationId ? await prisma.organization.findUnique({ where: { id: organizationId } }) : null;
+                return buildUserReturn(newUser, org);
             },
         }),
     ],
@@ -291,22 +239,7 @@ async function jitProvisionUser(mmProfile: any, _source: string) {
     });
 
     if (existingLinked && existingLinked.status === 'active') {
-        const orgName = existingLinked.organization?.name;
-        return {
-            id: existingLinked.id,
-            email: existingLinked.email,
-            role: existingLinked.role,
-            subRole: existingLinked.subRole,
-            organizationId: existingLinked.organizationId,
-            permissions: existingLinked.permissions,
-            profile: {
-                fullName: existingLinked.fullName,
-                phone: existingLinked.phone,
-                opticName: orgName,
-                labName: orgName,
-                clinic: orgName,
-            },
-        };
+        return buildUserReturn(existingLinked, existingLinked.organization);
     }
 
     // Create organization if clinic info exists
@@ -343,20 +276,6 @@ async function jitProvisionUser(mmProfile: any, _source: string) {
         status: 'active',
     });
 
-    const orgName = mmProfile.clinic?.name;
-    return {
-        id: newUser.id,
-        email: newUser.email,
-        role: newUser.role,
-        subRole: newUser.subRole,
-        organizationId: newUser.organizationId,
-        permissions: newUser.permissions,
-        profile: {
-            fullName: newUser.fullName,
-            phone: newUser.phone,
-            opticName: orgName,
-            labName: orgName,
-            clinic: orgName,
-        },
-    };
+    const org = organizationId ? await prisma.organization.findUnique({ where: { id: organizationId } }) : null;
+    return buildUserReturn(newUser, org);
 }

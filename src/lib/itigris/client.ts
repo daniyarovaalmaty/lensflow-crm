@@ -75,10 +75,14 @@ export interface ItigrisOrder {
     status?: string;
     statusName?: string;
     totalAmount?: number;
+    sum?: number;
+    paidSum?: number;
     departmentId?: number;
+    departmentName?: string;
     createdAt?: string;
     updatedAt?: string;
     comment?: string;
+    client?: { id: number; familyName: string; firstName: string; patronymicName?: string };
 }
 
 export interface ItigrisOrderJournalParams {
@@ -89,6 +93,86 @@ export interface ItigrisOrderJournalParams {
     departmentId?: number;
     dateFrom?: string; // ISO date
     dateTo?: string;   // ISO date
+}
+
+// Full order detail from /orders/{id}/full
+export interface ItigrisOrderFull {
+    id: number;
+    type: string; // 'GLASSES' | 'CONTACT_LENS' | 'REPAIR' | 'SALE'
+    status: string; // 'WAIT' | 'READY' | 'ISSUED' | 'CANCELLED'
+    sum: number;
+    paidSum: number;
+    comment: string | null;
+    createdAt: string;
+    finishedAt: string | null;
+    client?: { id: number; familyName: string; firstName: string; patronymicName?: string };
+    department?: { id: number; name: string };
+    user?: { id: number; fullName: string };
+    medicalData?: {
+        prescriptions: Array<{
+            id: number;
+            sphOd: number | null;
+            sphOs: number | null;
+            cylOd: number | null;
+            cylOs: number | null;
+            axOd: number | null;
+            axOs: number | null;
+            addOd: number | null;
+            addOs: number | null;
+            dpp: number | null;    // total PD
+            dppOd: number | null;  // PD right
+            dppOs: number | null;  // PD left
+            visusOd: number | null;
+            visusOs: number | null;
+            purpose: string | null;
+            recommendedLenses: string | null;
+            comments: string | null;
+            date: string | null;
+            doctor?: { id: number; fullName: string } | null;
+        }>;
+    };
+    goods?: Array<{
+        isRight: boolean;
+        category: string;
+        quantity: number;
+        totalSoldPrice: number;
+        goodParams?: {
+            manufacturer?: string;
+            brand?: string;
+            color?: string;
+            cover?: string;
+            add?: number | null;
+            cylinderDioptre?: number | null;
+            dioptre?: number | null;
+            refractionIndex?: number | null;
+            diameter?: number | null;
+            material?: string;
+            geometry?: string;
+            type?: string;
+            sellableCategory?: string; // 'LENS' | 'FRAME' | etc
+        };
+    }>;
+    clientGoods?: {
+        frame?: {
+            id: number;
+            description: string | null;
+            type: string | null;
+            material: string | null;
+            estimatedPrice: number | null;
+        };
+    };
+    servicesInfo?: {
+        services: Array<{
+            serveType?: { name: string };
+            soldPrice: number;
+        }>;
+    };
+}
+
+export interface ItigrisDepartment {
+    id: number;
+    name: string;
+    type: string; // 'STORE' | 'PRODUCTION' | 'DEPOT' | 'OFFICE'
 }
 
 // ===================== Prescription Types =====================
@@ -335,6 +419,37 @@ export class ItigrisApiClient {
         return resp.data || [];
     }
 
+    // ----- Departments -----
+
+    /** Get all departments for this company */
+    async getDepartments(): Promise<ItigrisDepartment[]> {
+        const resp = await this.http.get('/departments', { params: { page: 0, size: 100 } });
+        if (resp.data?.content) return resp.data.content;
+        if (Array.isArray(resp.data)) return resp.data;
+        return [];
+    }
+
+    /**
+     * Re-authenticate with a different departmentId.
+     * Needed to access orders registered in other departments.
+     */
+    async signInToDepartment(departmentId: number): Promise<boolean> {
+        try {
+            const resp = await this.http.post('/sign/in', {
+                company: this.config.company,
+                login: this.config.login,
+                password: this.config.password,
+                departmentId,
+            });
+            this.tokens = resp.data;
+            this.tokenExpiresAt = new Date(resp.data.expiresAt);
+            this.config = { ...this.config, departmentId };
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     // ----- Orders -----
 
     /**
@@ -358,6 +473,34 @@ export class ItigrisApiClient {
     async getOrder(orderId: number): Promise<ItigrisOrder> {
         const resp = await this.http.get(`/orders/${orderId}`);
         return resp.data;
+    }
+
+    /**
+     * Get FULL order detail including prescription, lens params, frame.
+     * IMPORTANT: Must be signed in with the same departmentId as the order.
+     * Returns null if order belongs to a different department (409 error).
+     */
+    async getOrderFull(orderId: number): Promise<ItigrisOrderFull | null> {
+        try {
+            const resp = await this.http.get(`/orders/${orderId}/full`);
+            return resp.data;
+        } catch (err: any) {
+            // 409 = order belongs to different department
+            if (err.response?.status === 409) return null;
+            throw err;
+        }
+    }
+
+    /**
+     * Get orders for current department (paginated).
+     * Returns GLASSES orders with basic info.
+     */
+    async getDepartmentOrders(page: number = 0, size: number = 50): Promise<{ content: ItigrisOrder[]; totalElements: number }> {
+        const resp = await this.http.get('/orders', { params: { page, size } });
+        return {
+            content: resp.data?.content || [],
+            totalElements: resp.data?.totalElements || 0,
+        };
     }
 
     // ----- Prescriptions -----

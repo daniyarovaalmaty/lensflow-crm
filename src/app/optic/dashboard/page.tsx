@@ -377,6 +377,16 @@ export default function OpticDashboard() {
                                     ITIGRIS
                                 </Link>
                             )}
+                            {subRole === 'optic_manager' && (
+                                <Link
+                                    href="/clinic-manager/dashboard"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-violet-600 hover:bg-violet-50"
+                                >
+                                    <Link2 className="w-4 h-4" />
+                                    ЛК Менеджера
+                                </Link>
+                            )}
                             <Link
                                 href="/sales/pipeline"
                                 onClick={() => setMobileMenuOpen(false)}

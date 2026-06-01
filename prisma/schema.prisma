@@ -13,11 +13,18 @@ datasource db {
 model Organization {
   id        String   @id @default(cuid())
   name      String
+  type      OrgType  @default(standalone)
   inn       String?   // БИН/ИИН
   phone     String?
   email     String?
   address   String?   // Юридический адрес
   city      String?
+  crmPhone  String?   // Номер WhatsApp для CRM-интеграции филиала
+
+  // Multi-branch: self-relation
+  parentId  String?
+  parent    Organization?  @relation("OrgBranches", fields: [parentId], references: [id])
+  branches  Organization[] @relation("OrgBranches")
 
   // Дополнительные реквизиты
   actualAddress    String?  // Фактический адрес
@@ -53,8 +60,37 @@ model Organization {
   clinicSubscription  ClinicSubscription[]  @relation("ClinicSubscription")
 
   cashRegisters CashRegister[]
+  itigrisSyncLogs ItigrisSyncLog[]
+  userBranches UserBranch[]
+
+  // Distributor orders
+  distributorOrders Order[] @relation("DistributorOrders")
 
   @@map("organizations")
+}
+
+enum OrgType {
+  standalone
+  headquarters
+  branch
+  distributor
+}
+
+// ==================== Itigris Sync Log ====================
+model ItigrisSyncLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  syncedAt       DateTime     @default(now())
+  entity         String       // 'clients' | 'orders' | 'full'
+  created        Int          @default(0)
+  updated        Int          @default(0)
+  errors         Int          @default(0)
+  details        Json?
+  triggeredBy    String?      // userId or 'manual'
+  durationMs     Int?
+
+  @@map("itigris_sync_logs")
 }
 
 // ==================== Lab Settings (singleton) ====================
@@ -102,14 +138,29 @@ model User {
   openedShifts      CashShift[]       @relation("OpenedShifts")
   closedShifts      CashShift[]       @relation("ClosedShifts")
   cashTransactions  CashTransaction[] @relation("CreatedTransactions")
+  branches          UserBranch[]
 
   @@map("users")
+}
+
+// ==================== User ↔ Branch (M2M) ====================
+model UserBranch {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branchId  String
+  branch    Organization @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, branchId])
+  @@map("user_branches")
 }
 
 enum UserRole {
   doctor
   optic
   laboratory
+  distributor
 }
 
 enum SubRole {
@@ -124,6 +175,10 @@ enum SubRole {
   optic_accountant
   doctor
   sales_manager
+  dist_head
+  dist_admin
+  dist_manager
+  dist_accountant
 }
 
 enum UserStatus {
@@ -157,6 +212,8 @@ model Patient {
   orders        Order[]
   prescriptions Prescription[]
   consultations Consultation[]
+  sales         Sale[]
+  leads         Lead[]
 
   @@index([organizationId])
   @@index([phone])
@@ -311,6 +368,10 @@ model Order {
   // External integration (MedMundus)
   externalId String?  // MedMundus order ID for cross-referencing
   source     String?  // Origin: 'lensflow' | 'medmundus'
+
+  // Distributor assignment
+  distributorOrgId String?
+  distributorOrg   Organization? @relation("DistributorOrders", fields: [distributorOrgId], references: [id])
 
   // CRM Lead link
   lead       Lead?
@@ -556,6 +617,10 @@ model Sale {
   syncedTo1C      Boolean  @default(false)
   external1CId    String?
 
+  patientId       String?
+  patient         Patient?     @relation(fields: [patientId], references: [id])
+  leadId          String?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -657,7 +722,9 @@ model Lead {
   lastSolutionPurchaseDate DateTime?
   nextCheckupDate          DateTime?
 
-  // Link to order
+  // Link to patient & order
+  patientId     String?
+  patient       Patient?  @relation(fields: [patientId], references: [id])
   orderId       String?   @unique
   order         Order?    @relation(fields: [orderId], references: [id])
 

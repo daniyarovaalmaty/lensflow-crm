@@ -23,8 +23,10 @@ interface StaffMember {
 }
 
 const CLINIC_STAFF_ROLES: { value: SubRole; label: string }[] = [
+    { value: 'optic_manager', label: 'Руководитель' },
     { value: 'optic_doctor', label: 'Врач' },
     { value: 'optic_accountant', label: 'Бухгалтер' },
+    { value: 'sales_manager', label: 'Менеджер продаж' },
 ];
 
 export default function ClinicStaffPage() {
@@ -372,7 +374,6 @@ export default function ClinicStaffPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Роль</label>
                                     <select value={editForm.subRole} onChange={e => setEditForm(f => ({ ...f, subRole: e.target.value as SubRole }))} className="input">
-                                        <option value="optic_manager">Руководитель</option>
                                         {CLINIC_STAFF_ROLES.map(r => (<option key={r.value} value={r.value}>{r.label}</option>))}
                                     </select>
                                 </div>

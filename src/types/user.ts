@@ -1,13 +1,14 @@
 import { z } from 'zod';
 
 // ==================== User Roles (top-level groups) ====================
-export const UserRoleEnum = z.enum(['doctor', 'optic', 'laboratory']);
+export const UserRoleEnum = z.enum(['doctor', 'optic', 'laboratory', 'distributor']);
 export type UserRole = z.infer<typeof UserRoleEnum>;
 
 export const UserRoleLabels: Record<UserRole, string> = {
     doctor: 'Врач',
     optic: 'Клиника',
     laboratory: 'Лаборатория',
+    distributor: 'Дистрибьютор',
 };
 
 // ==================== Sub-Roles ====================
@@ -30,6 +31,12 @@ export const SubRoleEnum = z.enum([
 
     // Sales CRM
     'sales_manager',    // Менеджер по продажам
+
+    // Distributor sub-roles
+    'dist_head',        // Руководитель
+    'dist_admin',       // Администратор
+    'dist_manager',     // Менеджер
+    'dist_accountant',  // Бухгалтер
 ]);
 export type SubRole = z.infer<typeof SubRoleEnum>;
 
@@ -45,6 +52,10 @@ export const SubRoleLabels: Record<SubRole, string> = {
     optic_accountant: 'Бухгалтер',
     doctor: 'Врач',
     sales_manager: 'Менеджер по продажам',
+    dist_head: 'Руководитель',
+    dist_admin: 'Администратор',
+    dist_manager: 'Менеджер',
+    dist_accountant: 'Бухгалтер',
 };
 
 // Which sub-roles belong to which top-level role
@@ -52,12 +63,14 @@ export const SubRolesByRole: Record<UserRole, SubRole[]> = {
     laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_head', 'lab_admin', 'lab_accountant', 'sales_manager'],
     optic: ['optic_manager', 'optic_doctor', 'optic_accountant'],
     doctor: ['doctor'],
+    distributor: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'],
 };
 
 // Reverse: get top-level role from sub-role
 export function getRoleFromSubRole(subRole: SubRole): UserRole {
     if (subRole.startsWith('lab_') || subRole === 'sales_manager') return 'laboratory';
     if (subRole.startsWith('optic_')) return 'optic';
+    if (subRole.startsWith('dist_')) return 'distributor';
     return 'doctor';
 }
 
@@ -280,6 +293,30 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canSendToAccountant: false,
         canProcessDocs: false,
     },
+    dist_head: {
+        canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
+        canDeliver: false, canAddDefects: false, canViewPayments: true, canChangePayments: false,
+        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canViewAllOrders: false, canViewStats: true, canSendToAccountant: false, canProcessDocs: false,
+    },
+    dist_admin: {
+        canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
+        canDeliver: false, canAddDefects: false, canViewPayments: true, canChangePayments: false,
+        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canViewAllOrders: false, canViewStats: true, canSendToAccountant: false, canProcessDocs: false,
+    },
+    dist_manager: {
+        canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
+        canDeliver: false, canAddDefects: false, canViewPayments: false, canChangePayments: false,
+        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canViewAllOrders: false, canViewStats: false, canSendToAccountant: false, canProcessDocs: false,
+    },
+    dist_accountant: {
+        canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
+        canDeliver: false, canAddDefects: false, canViewPayments: true, canChangePayments: false,
+        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canViewAllOrders: false, canViewStats: false, canSendToAccountant: false, canProcessDocs: true,
+    },
 };
 
 // Helper to get permissions for a sub-role
@@ -343,6 +380,10 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewOrders: true,
     },
     sales_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    dist_head: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
+    dist_admin: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
+    dist_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
+    dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
 };
 
 export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {

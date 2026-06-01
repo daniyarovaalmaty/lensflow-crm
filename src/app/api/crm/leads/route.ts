@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { LeadStage } from '@prisma/client';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/crm/leads — list leads with filters
 export async function GET(req: NextRequest) {
+    const session = await auth();
     const { searchParams } = new URL(req.url);
     const stage = searchParams.get('stage');
     const funnel = searchParams.get('funnel') || 'sales';
@@ -16,6 +18,27 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     const where: any = { funnel };
+
+    // Scope leads to the user's organization
+    const orgId = session?.user?.organizationId;
+    if (orgId) {
+        const org = await prisma.organization.findUnique({
+            where: { id: orgId },
+            select: { type: true },
+        });
+
+        if (org?.type === 'headquarters') {
+            // HQ sees own + all branch leads
+            const branchIds = await prisma.organization.findMany({
+                where: { parentId: orgId, status: 'active' },
+                select: { id: true },
+            });
+            const allOrgIds = [orgId, ...branchIds.map(b => b.id)];
+            where.clinicId = { in: allOrgIds };
+        } else {
+            where.clinicId = orgId;
+        }
+    }
 
     if (stage) where.stage = stage;
     if (assigneeId) where.assigneeId = assigneeId;
@@ -48,10 +71,10 @@ export async function GET(req: NextRequest) {
         prisma.lead.count({ where }),
     ]);
 
-    // Group by stage for kanban
+    // Group by stage for kanban (scoped to same org filter)
     const stages = await prisma.lead.groupBy({
         by: ['stage'],
-        where: { funnel },
+        where,
         _count: { _all: true },
     });
 

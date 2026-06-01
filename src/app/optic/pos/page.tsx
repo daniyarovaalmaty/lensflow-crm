@@ -67,6 +67,32 @@ export default function POSPage() {
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [saving, setSaving] = useState(false);
 
+    // Patient integration state
+    const [patientId, setPatientId] = useState<string | null>(null);
+    const [leadId, setLeadId] = useState<string | null>(null);
+    const [patients, setPatients] = useState<any[]>([]);
+    const [patientSearch, setPatientSearch] = useState('');
+    const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+
+    useEffect(() => {
+        if (!patientSearch.trim()) {
+            setPatients([]);
+            return;
+        }
+        const delayDebounceFn = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/patients?q=${encodeURIComponent(patientSearch)}&noSync=1`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPatients(data.patients || []);
+                }
+            } catch (err) {
+                console.error('Error searching patients:', err);
+            }
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [patientSearch]);
+
     // USB Scanner — auto-detects barcode scanner input (keyboard emulation)
     const handleUsbScan = useCallback((code: string) => {
         const product = products.find(p => p.barcode === code || p.sku === code);
@@ -198,6 +224,8 @@ export default function POSPage() {
                     customerPhone: customerPhone || undefined,
                     discountPercent: discountPct,
                     paymentMethod,
+                    patientId: patientId || undefined,
+                    leadId: leadId || undefined,
                 }),
             });
             if (res.ok) {
@@ -207,6 +235,9 @@ export default function POSPage() {
                 setCustomerName('');
                 setCustomerPhone('');
                 setDiscount('0');
+                setPatientId(null);
+                setLeadId(null);
+                setPatientSearch('');
                 setShowCheckout(false);
                 loadProducts(); // refresh stock
             }
@@ -472,6 +503,64 @@ export default function POSPage() {
                             <h2 className="text-xl font-extrabold text-gray-900 mb-5">Оформление продажи</h2>
 
                             <div className="space-y-4 mb-6">
+                                <div>
+                                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Связать с пациентом (из базы/лидов)</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={patientSearch}
+                                            onChange={e => {
+                                                setPatientSearch(e.target.value);
+                                                setShowPatientDropdown(true);
+                                            }}
+                                            onFocus={() => setShowPatientDropdown(true)}
+                                            placeholder="Поиск по ФИО или телефону..."
+                                            className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white"
+                                        />
+                                        {patientId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setPatientId(null);
+                                                    setLeadId(null);
+                                                    setPatientSearch('');
+                                                    setCustomerName('');
+                                                    setCustomerPhone('');
+                                                }}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
+                                            >
+                                                Сбросить
+                                            </button>
+                                        )}
+                                        {showPatientDropdown && patientSearch.trim() && patients.length > 0 && (
+                                            <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-xl z-50 divide-y divide-gray-50">
+                                                {patients.map(p => (
+                                                    <button
+                                                        key={p.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setPatientId(p.id);
+                                                            setCustomerName(p.name);
+                                                            setCustomerPhone(p.phone);
+                                                            setPatientSearch(p.name);
+                                                            setShowPatientDropdown(false);
+                                                        }}
+                                                        className="w-full text-left px-4 py-2.5 hover:bg-primary-50 text-xs md:text-sm font-medium transition-colors"
+                                                    >
+                                                        <div className="font-bold text-gray-900">{p.name}</div>
+                                                        <div className="text-[10px] md:text-xs text-gray-400 mt-0.5">{p.phone}</div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {patientId && (
+                                        <div className="mt-1.5 px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                            Связано с пациентом из базы
+                                        </div>
+                                    )}
+                                </div>
                                 <div>
                                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Имя покупателя</label>
                                     <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)}

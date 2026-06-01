@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, paymentMethod, notes } = body;
+    const { items, customerName, customerPhone, discountPercent, paymentMethod, notes, patientId, leadId } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
@@ -42,6 +42,41 @@ export async function POST(req: NextRequest) {
     // Generate sale number
     const saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
     const saleNumber = `S-${String(saleCount + 1).padStart(4, '0')}`;
+
+    // Auto-attribute lead if patient is provided but no leadId is given
+    let finalLeadId = leadId;
+    if (!finalLeadId && patientId) {
+        try {
+            const activeLead = await prisma.lead.findFirst({
+                where: {
+                    patientId,
+                    stage: { notIn: ['converted', 'lost'] },
+                },
+            });
+            if (activeLead) {
+                finalLeadId = activeLead.id;
+            } else {
+                const patientObj = await prisma.patient.findUnique({ where: { id: patientId } });
+                if (patientObj?.phone) {
+                    const cleanPhone = patientObj.phone.replace(/[\s\-\+\(\)]/g, '').split('@')[0];
+                    const last9 = cleanPhone.slice(-9);
+                    if (last9) {
+                        const phoneLead = await prisma.lead.findFirst({
+                            where: {
+                                phone: { contains: last9 },
+                                stage: { notIn: ['converted', 'lost'] },
+                            },
+                        });
+                        if (phoneLead) {
+                            finalLeadId = phoneLead.id;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[SalePOS] Active lead look up failed:', e);
+        }
+    }
 
     // Calculate totals
     let subtotal = 0;
@@ -133,6 +168,8 @@ export async function POST(req: NextRequest) {
             organizationId: orgId,
             customerName: customerName || null,
             customerPhone: customerPhone || null,
+            patientId: patientId || null,
+            leadId: finalLeadId || null,
             subtotal,
             discountPercent: discount,
             discountAmount,
@@ -157,6 +194,30 @@ export async function POST(req: NextRequest) {
         },
         include: { items: true },
     });
+
+    // Attribute revenue and update lead stage
+    if (finalLeadId) {
+        try {
+            await prisma.lead.update({
+                where: { id: finalLeadId },
+                data: {
+                    revenue: { increment: totalAmount },
+                    stage: 'converted',
+                    convertedAt: new Date(),
+                },
+            });
+            await prisma.leadActivity.create({
+                data: {
+                    leadId: finalLeadId,
+                    action: 'stage_change',
+                    details: `Выручка лида увеличена на ${totalAmount} ₸ (продажа ${saleNumber}). Стадия обновлена на Конвертирован.`,
+                    userId: user.id,
+                },
+            });
+        } catch (e) {
+            console.warn('[SalePOS] Could not update lead revenue/stage:', e);
+        }
+    }
 
     return NextResponse.json(sale, { status: 201 });
 }

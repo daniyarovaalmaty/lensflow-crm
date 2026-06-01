@@ -7,14 +7,13 @@ import bcrypt from 'bcryptjs';
 
 /**
  * POST /api/users - Register a new user
- * Only clinic (optic) and doctor registration is allowed.
- * Laboratory users are created by seed/admin only.
+ * Allowed: optic, doctor, distributor
+ * Blocked: laboratory (admin-only via DB)
  */
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        // Validate input
         const parsed = RegisterUserSchema.safeParse(body);
         if (!parsed.success) {
             return NextResponse.json(
@@ -33,10 +32,18 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Block non-manager optic registration (only head/manager can self-register)
+        // Block non-manager optic registration
         if (role === 'optic' && subRole !== 'optic_manager') {
             return NextResponse.json(
                 { error: 'Регистрация доступна только руководителю клиники. Врачей и бухгалтеров добавляет руководитель.' },
+                { status: 403 }
+            );
+        }
+
+        // Block non-head distributor self-registration
+        if (role === 'distributor' && subRole !== 'dist_head') {
+            return NextResponse.json(
+                { error: 'Регистрация доступна только руководителю дистрибьютора.' },
                 { status: 403 }
             );
         }
@@ -50,18 +57,22 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         let organizationId: string | undefined;
 
-        // For optic (clinic) registration — create organization
+        // For optic — create organization immediately active
         if (role === 'optic' && profile.opticName) {
             const org = await prisma.organization.create({
-                data: {
-                    name: profile.opticName,
-                    status: 'active',
-                },
+                data: { name: profile.opticName, type: 'standalone', status: 'active' },
+            });
+            organizationId = org.id;
+        }
+
+        // For distributor — create organization pending approval
+        if (role === 'distributor' && profile.opticName) {
+            const org = await prisma.organization.create({
+                data: { name: profile.opticName, type: 'distributor', status: 'pending' },
             });
             organizationId = org.id;
         }
@@ -75,14 +86,16 @@ export async function POST(req: NextRequest) {
                 phone: profile.phone || undefined,
                 role,
                 subRole: subRole as any,
-                status: 'active',
+                status: role === 'distributor' ? 'pending' : 'active',
                 organizationId,
             },
         });
 
         return NextResponse.json(
             {
-                message: 'Пользователь успешно зарегистрирован',
+                message: role === 'distributor'
+                    ? 'Заявка принята. После проверки вы получите доступ к системе.'
+                    : 'Пользователь успешно зарегистрирован',
                 user: toPublicUser(newUser),
             },
             { status: 201 }

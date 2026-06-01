@@ -9,9 +9,10 @@ export const authConfig = {
             if (
                 pathname.startsWith('/optic') ||
                 pathname.startsWith('/laboratory') ||
+                pathname.startsWith('/distributor') ||
                 pathname.startsWith('/profile')
             ) {
-                if (!session) return false; // redirects to pages.signIn
+                if (!session) return false;
             }
 
             // Redirect lab_accountant from production to accountant page
@@ -22,25 +23,27 @@ export const authConfig = {
             return true;
         },
         async jwt({ token, user }) {
-            // On sign in, add user data to token
             if (user) {
                 token.id = user.id;
                 token.email = user.email;
                 token.role = user.role;
                 token.subRole = user.subRole;
                 token.organizationId = user.organizationId;
+                token.orgType = user.orgType;
+                token.parentOrgId = user.parentOrgId;
                 token.permissions = user.permissions;
                 token.profile = user.profile;
             }
             return token;
         },
         async session({ session, token }) {
-            // Add custom fields to session
             if (token && session.user) {
                 session.user.id = token.id as string;
-                session.user.role = token.role as "doctor" | "optic" | "laboratory";
+                session.user.role = token.role as 'doctor' | 'optic' | 'laboratory' | 'distributor';
                 session.user.subRole = token.subRole as any;
                 session.user.organizationId = token.organizationId as string | undefined;
+                session.user.orgType = token.orgType as any;
+                session.user.parentOrgId = token.parentOrgId as any;
                 session.user.permissions = token.permissions as any;
                 session.user.profile = token.profile as any;
             }
