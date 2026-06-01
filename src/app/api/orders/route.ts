@@ -23,7 +23,11 @@ export async function GET(request: NextRequest) {
         const where: any = {};
 
         if (session.user.role === 'laboratory') {
-            // Lab sees all orders
+            // Lab sees only orders created manually within LensFlow.
+            // Exclude any orders imported from external integrations (e.g. itigris sync).
+            // These are clinic-side historical imports and should not appear in the lab queue.
+            if (!where.AND) where.AND = [];
+            where.AND.push({ NOT: { source: 'itigris' } });
         } else if (session.user.role === 'optic') {
             // Clinic sees only its org orders
             where.organizationId = session.user.organizationId;
@@ -144,6 +148,7 @@ export async function GET(request: NextRequest) {
                 price_od: order.priceOd || undefined,
                 price_os: order.priceOs || undefined,
                 delivery_confirmed: (order as any).deliveryConfirmed ?? undefined,
+                source: order.source || undefined,
             };
         });
 

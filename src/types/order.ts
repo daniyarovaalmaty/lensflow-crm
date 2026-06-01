@@ -214,6 +214,7 @@ export const OrderSchema = z.object({
         qty: z.number(),
         price: z.number(),
     })).optional(),
+    source: z.string().optional(),  // 'lensflow' | 'itigris' | 'medmundus' — origin of the order
 });
 
 // ==================== Order Edit & Production Helpers ====================
