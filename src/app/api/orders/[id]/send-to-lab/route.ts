@@ -49,19 +49,16 @@ export async function POST(
         data: {
             labOrgId,
             // Add a comment about forwarding
-            comments: {
-                ...(Array.isArray(order.comments) ? {} : {}),
-                set: [
-                    ...(Array.isArray(order.comments) ? order.comments : []),
-                    {
-                        authorId: session.user.id,
-                        authorName: session.user.profile?.fullName || 'Дистрибьютор',
-                        role: 'distributor',
-                        text: `Заказ направлен в лабораторию: ${lab.name}`,
-                        createdAt: new Date().toISOString(),
-                    }
-                ],
-            },
+            comments: [
+                ...(Array.isArray(order.comments) ? (order.comments as any[]) : []),
+                {
+                    authorId: session.user.id,
+                    authorName: session.user.profile?.fullName || 'Дистрибьютор',
+                    role: 'distributor',
+                    text: `Заказ направлен в лабораторию: ${lab.name}`,
+                    createdAt: new Date().toISOString(),
+                }
+            ],
         },
         select: { id: true, orderNumber: true, labOrgId: true, status: true },
     });
