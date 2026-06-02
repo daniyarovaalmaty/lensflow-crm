@@ -827,7 +827,9 @@ export default function OpticCatalogPage() {
             result = result.filter(p =>
                 p.name.toLowerCase().includes(s) ||
                 p.brand?.toLowerCase().includes(s) ||
-                p.sku?.toLowerCase().includes(s)
+                p.sku?.toLowerCase().includes(s) ||
+                p.barcode?.toLowerCase().includes(s) ||
+                p.model?.toLowerCase().includes(s)
             );
         }
         return result;
@@ -1287,7 +1289,7 @@ export default function OpticCatalogPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Поиск по названию, бренду, артикулу..."
+                                placeholder="Поиск по названию, бренду, артикулу, штрихкоду..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
