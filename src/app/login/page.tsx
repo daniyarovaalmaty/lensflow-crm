@@ -54,10 +54,14 @@ function LoginContent() {
         } else if (role === 'laboratory') {
             const subRole = session?.user?.subRole;
             router.push(subRole === 'lab_accountant' ? '/laboratory/accountant' : '/laboratory/production');
+        } else if (role === 'distributor') {
+            router.push('/distributor');
+        } else if (role === 'clinic_manager') {
+            router.push('/clinic-manager/dashboard');
         } else if (role === 'optic' || role === 'doctor') {
             router.push('/optic/dashboard');
         } else {
-            router.push('/');
+            router.push('/optic/dashboard');
         }
         router.refresh();
     }, [router, searchParams]);
