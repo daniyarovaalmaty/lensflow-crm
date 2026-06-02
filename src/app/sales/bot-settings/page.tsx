@@ -8,7 +8,7 @@ import {
     Settings, HelpCircle, Briefcase, CheckCircle, Loader2,
     ChevronDown, ChevronUp, Sparkles, User, MessageCircle,
     Play, Pause, Zap, Clock, ShieldAlert, CheckCheck, Compass,
-    Sparkle
+    Sparkle, Check, Edit, Plus, X
 } from 'lucide-react';
 
 interface BotConfig {
@@ -61,8 +61,8 @@ const fmt = (n: number) => n.toLocaleString('ru-RU');
 export default function BotSettingsPage() {
     const { data: session } = useSession();
     
-    // Tabs: 'settings' | 'inbox'
-    const [activeTab, setActiveTab] = useState<'settings' | 'inbox'>('inbox');
+    // Tabs: 'settings' | 'inbox' | 'whatsapp'
+    const [activeTab, setActiveTab] = useState<'settings' | 'inbox' | 'whatsapp'>('inbox');
 
     // Tab 1: Config states
     const [configs, setConfigs] = useState<BotConfig[]>([]);
@@ -87,6 +87,13 @@ export default function BotSettingsPage() {
     const [togglingBot, setTogglingBot] = useState(false);
     const [manualText, setManualText] = useState('');
     const [sendingManual, setSendingManual] = useState(false);
+
+    // Tab 3: WhatsApp settings states
+    const [whatsappData, setWhatsappData] = useState<{ org: any; branches: any[] } | null>(null);
+    const [loadingWhatsapp, setLoadingWhatsapp] = useState(false);
+    const [editingWhatsappId, setEditingWhatsappId] = useState<string | null>(null);
+    const [whatsappInput, setWhatsappInput] = useState('');
+    const [savingWhatsapp, setSavingWhatsapp] = useState(false);
     
     // Polling refs & interval
     const inboxEndRef = useRef<HTMLDivElement>(null);
@@ -152,11 +159,47 @@ export default function BotSettingsPage() {
         }
     }, [leads]);
 
+    // Fetch WhatsApp data
+    const loadWhatsappData = useCallback(async () => {
+        setLoadingWhatsapp(true);
+        try {
+            const res = await fetch('/api/crm/whatsapp');
+            if (res.ok) {
+                const data = await res.json();
+                setWhatsappData(data);
+            }
+        } finally {
+            setLoadingWhatsapp(false);
+        }
+    }, []);
+
+    // Save WhatsApp number
+    const handleSaveWhatsapp = async (targetOrgId: string) => {
+        setSavingWhatsapp(true);
+        try {
+            const res = await fetch('/api/crm/whatsapp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetOrgId, crmPhone: whatsappInput }),
+            });
+            if (res.ok) {
+                setEditingWhatsappId(null);
+                await loadWhatsappData();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Ошибка сохранения');
+            }
+        } finally {
+            setSavingWhatsapp(false);
+        }
+    };
+
     // Initial loading
     useEffect(() => {
         loadConfig();
         loadLeads(true);
-    }, [loadLeads]);
+        loadWhatsappData();
+    }, [loadLeads, loadWhatsappData]);
 
     // Poll messages & leads in Inbox tab
     useEffect(() => {
@@ -310,6 +353,16 @@ export default function BotSettingsPage() {
                             }`}
                         >
                             <Settings className="w-4 h-4" /> Обучение & Sandbox
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('whatsapp')}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                                activeTab === 'whatsapp' 
+                                    ? 'bg-emerald-500 text-white shadow-md' 
+                                    : 'text-emerald-100 hover:text-white hover:bg-white/5'
+                            }`}
+                        >
+                            <MessageCircle className="w-4 h-4" /> WhatsApp CRM
                         </button>
                     </div>
                 </div>
@@ -670,6 +723,184 @@ export default function BotSettingsPage() {
                         )}
                     </div>
 
+                </div>
+            )}
+
+            {/* TAB 3: WHATSAPP INTEGRATION & SETTINGS */}
+            {activeTab === 'whatsapp' && (
+                <div className="max-w-4xl mx-auto animate-fadeIn space-y-6">
+                    {/* Intro card */}
+                    <div className="bg-white rounded-3xl border border-gray-200/80 p-6 shadow-sm">
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0">
+                                <MessageCircle className="w-6 h-6 text-emerald-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">Настройка WhatsApp CRM</h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Укажите номера WhatsApp для интеграции с Green-API. Входящие сообщения на эти номера будут мгновенно попадать в Чат-центр CRM, а наш ИИ-ассистент будет автоматически консультировать пациентов согласно сценариям.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {loadingWhatsapp ? (
+                        <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center flex items-center justify-center min-h-[300px]">
+                            <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+                        </div>
+                    ) : whatsappData ? (
+                        <div className="space-y-6">
+                            {/* Headquarters / Standalone CRM WhatsApp */}
+                            <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4.5 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                                        <span className="font-bold text-gray-900 text-sm">Основная клиника (Сеть)</span>
+                                    </div>
+                                    <span className="text-[11px] font-bold text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                                        {whatsappData.org.type === 'standalone' ? 'Одиночная клиника' : 'Головной офис'}
+                                    </span>
+                                </div>
+                                <div className="p-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div>
+                                            <h4 className="font-bold text-gray-800 text-sm">{whatsappData.org.name}</h4>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                Главный номер WhatsApp для приёма лидов и авторизации через OTP.
+                                            </p>
+                                        </div>
+                                        <div className="shrink-0">
+                                            {editingWhatsappId === whatsappData.org.id ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        value={whatsappInput}
+                                                        onChange={e => setWhatsappInput(e.target.value)}
+                                                        placeholder="+7 700 111 22 33"
+                                                        className="px-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none w-52"
+                                                        autoFocus
+                                                    />
+                                                    <button 
+                                                        onClick={() => handleSaveWhatsapp(whatsappData.org.id)}
+                                                        disabled={savingWhatsapp}
+                                                        className="p-2 text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors disabled:opacity-50"
+                                                    >
+                                                        {savingWhatsapp ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Check className="w-4.5 h-4.5" />}
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setEditingWhatsappId(null)}
+                                                        className="p-2 text-gray-400 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ) : whatsappData.org.crmPhone ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3.5 py-2 rounded-xl flex items-center gap-1.5">
+                                                        <MessageCircle className="w-4.5 h-4.5 text-emerald-500" /> {whatsappData.org.crmPhone}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => { setWhatsappInput(whatsappData.org.crmPhone || ''); setEditingWhatsappId(whatsappData.org.id); }}
+                                                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                                                        title="Изменить"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => { setWhatsappInput(''); setEditingWhatsappId(whatsappData.org.id); }}
+                                                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                                                >
+                                                    <Plus className="w-4.5 h-4.5" /> Подключить WhatsApp
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Branches CRM WhatsApp */}
+                            {whatsappData.org.type !== 'standalone' && (
+                                <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
+                                    <div className="px-6 py-4.5 bg-gray-50/50 border-b border-gray-100">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
+                                            <span className="font-bold text-gray-900 text-sm">Филиалы клиники</span>
+                                        </div>
+                                    </div>
+                                    {whatsappData.branches.length === 0 ? (
+                                        <div className="p-8 text-center">
+                                            <p className="text-sm text-gray-400">Филиалы не добавлены.</p>
+                                            <p className="text-xs text-gray-400 mt-1">Добавьте филиалы в разделе «Филиалы» на панели управления.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-gray-100">
+                                            {whatsappData.branches.map(branch => (
+                                                <div key={branch.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-800 text-sm">{branch.name}</h4>
+                                                        <p className="text-xs text-gray-400 mt-1">
+                                                            {branch.city || 'Город не указан'}{branch.address ? ` • ${branch.address}` : ''}
+                                                        </p>
+                                                    </div>
+                                                    <div className="shrink-0">
+                                                        {editingWhatsappId === branch.id ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <input
+                                                                    value={whatsappInput}
+                                                                    onChange={e => setWhatsappInput(e.target.value)}
+                                                                    placeholder="+7 700 111 22 33"
+                                                                    className="px-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none w-52"
+                                                                    autoFocus
+                                                                />
+                                                                <button 
+                                                                    onClick={() => handleSaveWhatsapp(branch.id)}
+                                                                    disabled={savingWhatsapp}
+                                                                    className="p-2 text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors disabled:opacity-50"
+                                                                >
+                                                                    {savingWhatsapp ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : <Check className="w-4.5 h-4.5" />}
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => setEditingWhatsappId(null)}
+                                                                    className="p-2 text-gray-400 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        ) : branch.crmPhone ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3.5 py-2 rounded-xl flex items-center gap-1.5">
+                                                                    <MessageCircle className="w-4.5 h-4.5 text-emerald-500" /> {branch.crmPhone}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => { setWhatsappInput(branch.crmPhone || ''); setEditingWhatsappId(branch.id); }}
+                                                                    className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                                                                    title="Изменить"
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => { setWhatsappInput(''); setEditingWhatsappId(branch.id); }}
+                                                                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                                                            >
+                                                                <Plus className="w-4.5 h-4.5" /> Подключить WhatsApp
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-white border border-gray-200 rounded-3xl p-12 text-center">
+                            <p className="text-sm text-gray-500">Не удалось загрузить данные WhatsApp.</p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

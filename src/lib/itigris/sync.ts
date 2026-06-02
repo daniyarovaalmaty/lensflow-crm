@@ -164,7 +164,49 @@ export class ItigrisSyncService {
         };
 
         try {
-            // Get all synced patients with ITIGRIS external IDs
+            // 1. Get all available departments
+            const departments = await this.api.getDepartments();
+            const storeDepts = departments.filter(d => d.type === 'STORE' || d.type === 'OFFICE');
+            result.details.push(`Найдено ${storeDepts.length} филиалов для синхронизации заказов`);
+
+            // 2. For each department — sign in, get orders with full params
+            for (const dept of storeDepts) {
+                try {
+                    const ok = await this.api.signInToDepartment(dept.id);
+                    if (!ok) {
+                        result.details.push(`Нет доступа к филиалу: ${dept.name}`);
+                        continue;
+                    }
+
+                    // Get all orders from this department (paginated)
+                    let page = 0;
+                    let hasMore = true;
+                    while (hasMore) {
+                        const { content, totalElements } = await this.api.getDepartmentOrders(page, 50);
+                        if (content.length === 0) break;
+
+                        for (const order of content) {
+                            try {
+                                // Get full details (prescription, lens, frame)
+                                const fullOrder = await this.api.getOrderFull(order.id);
+                                await this.upsertOrderFull(order, fullOrder, dept.id, result);
+                            } catch (err: any) {
+                                result.errors++;
+                                result.details.push(`Ошибка заказа ${order.id}: ${err.message}`);
+                            }
+                        }
+
+                        page++;
+                        hasMore = (page * 50) < totalElements;
+                    }
+
+                    result.details.push(`Филиал ${dept.name}: обработано`);
+                } catch (err: any) {
+                    result.details.push(`Ошибка филиала ${dept.name}: ${err.message}`);
+                }
+            }
+
+            // 3. Also sync orders per-client (for orders not appearing in dept journal)
             const patients = await (this.prisma as any).patient.findMany({
                 where: {
                     organizationId: this.orgId,
@@ -173,23 +215,26 @@ export class ItigrisSyncService {
                 },
                 select: { externalId: true },
             });
-
-            // Extract ITIGRIS client IDs
             const clientIds = patients
                 .map((p: any) => parseInt(p.externalId.replace('itigris:', ''), 10))
                 .filter((id: number) => !isNaN(id));
 
-            result.details.push(`Загрузка заказов для ${clientIds.length} клиентов...`);
+            // Re-sign in with default dept to get client orders
+            await this.api.signIn();
+            result.details.push(`Синхронизация заказов для ${clientIds.length} клиентов...`);
 
-            // Get orders for each client
-            const orders = await this.api.getAllOrders(clientIds);
-
-            for (const order of orders) {
+            const clientOrders = await this.api.getAllOrders(clientIds);
+            for (const order of clientOrders) {
                 try {
-                    await this.upsertOrder(order, result);
+                    // Check if already synced
+                    const existing = await (this.prisma as any).order.findFirst({
+                        where: { organizationId: this.orgId, externalId: `itigris:${order.id}` },
+                    });
+                    if (!existing) {
+                        await this.upsertOrderFull(order, null, undefined, result);
+                    }
                 } catch (err: any) {
                     result.errors++;
-                    result.details.push(`Ошибка заказа ${order.id}: ${err.message}`);
                 }
             }
         } catch (err: any) {
@@ -200,48 +245,126 @@ export class ItigrisSyncService {
         return result;
     }
 
-    private async upsertOrder(
+    private buildLensConfig(fullOrder: any): object {
+        if (!fullOrder) return {};
+
+        const rx = fullOrder.medicalData?.prescriptions?.[0];
+        const goods = fullOrder.goods || [];
+        const odLens = goods.find((g: any) => g.isRight === true);
+        const osLens = goods.find((g: any) => g.isRight === false);
+
+        return {
+            source: 'itigris',
+            orderType: fullOrder.type,
+            prescription: rx ? {
+                od: {
+                    sph: rx.sphOd,
+                    cyl: rx.cylOd,
+                    ax: rx.axOd,
+                    add: rx.addOd,
+                    pd: rx.dppOd,
+                    visus: rx.visusOd,
+                },
+                os: {
+                    sph: rx.sphOs,
+                    cyl: rx.cylOs,
+                    ax: rx.axOs,
+                    add: rx.addOs,
+                    pd: rx.dppOs,
+                    visus: rx.visusOs,
+                },
+                totalPd: rx.dpp,
+                purpose: rx.purpose,
+                recommendedLenses: rx.recommendedLenses,
+                notes: rx.comments,
+                date: rx.date,
+                doctor: rx.doctor?.fullName || null,
+            } : null,
+            lens: {
+                od: odLens?.goodParams ? {
+                    manufacturer: odLens.goodParams.manufacturer,
+                    brand: odLens.goodParams.brand,
+                    cover: odLens.goodParams.cover,
+                    color: odLens.goodParams.color,
+                    index: odLens.goodParams.refractionIndex,
+                    diameter: odLens.goodParams.diameter,
+                    material: odLens.goodParams.material,
+                    geometry: odLens.goodParams.geometry,
+                    dioptre: odLens.goodParams.dioptre,
+                    cyl: odLens.goodParams.cylinderDioptre,
+                    add: odLens.goodParams.add,
+                    price: odLens.totalSoldPrice,
+                } : null,
+                os: osLens?.goodParams ? {
+                    manufacturer: osLens.goodParams.manufacturer,
+                    brand: osLens.goodParams.brand,
+                    cover: osLens.goodParams.cover,
+                    color: osLens.goodParams.color,
+                    index: osLens.goodParams.refractionIndex,
+                    diameter: osLens.goodParams.diameter,
+                    material: osLens.goodParams.material,
+                    geometry: osLens.goodParams.geometry,
+                    dioptre: osLens.goodParams.dioptre,
+                    cyl: osLens.goodParams.cylinderDioptre,
+                    add: osLens.goodParams.add,
+                    price: osLens.totalSoldPrice,
+                } : null,
+            },
+            frame: fullOrder.clientGoods?.frame ? {
+                type: fullOrder.clientGoods.frame.type,
+                material: fullOrder.clientGoods.frame.material,
+                description: fullOrder.clientGoods.frame.description,
+            } : null,
+            department: fullOrder.department?.name || null,
+            seller: fullOrder.user?.fullName || null,
+        };
+    }
+
+    private async upsertOrderFull(
         order: ItigrisOrder,
+        fullOrder: any | null,
+        deptId: number | undefined,
         result: ItigrisSyncResult
     ): Promise<void> {
-        // Find the patient linked to this order
+        // Find patient linked to this order
         let patient: any = null;
-        if (order.clientId) {
+        const clientId = order.clientId || fullOrder?.clientCardOwnerId || fullOrder?.client?.id;
+        if (clientId) {
             patient = await (this.prisma as any).patient.findFirst({
-                where: {
-                    organizationId: this.orgId,
-                    externalId: `itigris:${order.clientId}`,
-                },
+                where: { organizationId: this.orgId, externalId: `itigris:${clientId}` },
             });
         }
 
+        const lensflowStatus = this.mapOrderStatus(order.status || fullOrder?.status || '');
+        const totalPrice = Math.round(order.sum || order.totalAmount || fullOrder?.sum || 0);
+        const lensConfig = this.buildLensConfig(fullOrder);
+        const orderNumber = `ITG-${order.id}`;
+
         const existing = await (this.prisma as any).order.findFirst({
-            where: {
-                organizationId: this.orgId,
-                externalId: `itigris:${order.id}`,
-            },
+            where: { organizationId: this.orgId, externalId: `itigris:${order.id}` },
         });
 
-        const lensflowStatus = this.mapOrderStatus(order.status || order.statusName || '');
-
         if (existing) {
+            // Update with new full data
             await (this.prisma as any).order.update({
                 where: { id: existing.id },
                 data: {
                     status: lensflowStatus,
+                    totalPrice,
+                    lensConfig,
                     notes: order.comment ? `ITIGRIS: ${order.comment}` : undefined,
+                    patientId: patient?.id || existing.patientId,
                 },
             });
             result.updated++;
         } else {
-            // Create a new order requires lensConfig
-            const orderNumber = `ITG-${order.id}`;
-
-            // Check if orderNumber exists
-            const existingByNumber = await (this.prisma as any).order.findUnique({
-                where: { orderNumber },
-            });
-            if (existingByNumber) {
+            // Check by orderNumber
+            const existingByNum = await (this.prisma as any).order.findUnique({ where: { orderNumber } });
+            if (existingByNum) {
+                await (this.prisma as any).order.update({
+                    where: { id: existingByNum.id },
+                    data: { status: lensflowStatus, totalPrice, lensConfig, patientId: patient?.id || existingByNum.patientId },
+                });
                 result.updated++;
                 return;
             }
@@ -254,9 +377,9 @@ export class ItigrisSyncService {
                     patientId: patient?.id || undefined,
                     organizationId: this.orgId,
                     status: lensflowStatus,
-                    totalPrice: Math.round(order.totalAmount || 0),
-                    lensConfig: {}, // Empty — ITIGRIS orders have different structure
-                    notes: `Импорт из ITIGRIS. ${order.type || ''} ${order.comment || ''}`.trim(),
+                    totalPrice,
+                    lensConfig,
+                    notes: order.comment ? `ITIGRIS: ${order.comment}` : undefined,
                 },
             });
             result.created++;
@@ -297,6 +420,7 @@ export class ItigrisSyncService {
         const statusMap: Record<string, string> = {
             'новый': 'new_order',
             'new': 'new_order',
+            'wait': 'new_order',
             'в работе': 'in_production',
             'in_progress': 'in_production',
             'в производстве': 'in_production',

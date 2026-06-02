@@ -7,6 +7,7 @@ export const config = {
     matcher: [
         '/optic/:path*',
         '/laboratory/:path*',
+        '/distributor/:path*',
         '/profile/:path*',
         '/api/orders/:path*',
         '/api/profile/:path*',
@@ -31,6 +32,13 @@ export default auth((request) => {
     // Role-based access for laboratory routes
     if (pathname.startsWith('/laboratory')) {
         if (session && session.user.role !== 'laboratory') {
+            return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+    }
+
+    // Role-based access for distributor routes
+    if (pathname.startsWith('/distributor')) {
+        if (session && session.user.role !== 'distributor') {
             return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
     }

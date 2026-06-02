@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RegisterUserSchema, type RegisterUserDTO, UserRoleLabels, SubRolesByRole, SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
-import { UserPlus, Mail, Lock, User, Building, Phone, AlertCircle, CheckCircle } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Building, Phone, AlertCircle, CheckCircle, Truck, Stethoscope, Building2, BadgeCheck, Info } from 'lucide-react';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -31,13 +31,16 @@ export default function RegisterPage() {
     const selectedRole = watch('role');
     const selectedSubRole = watch('subRole');
 
-    // Auto-set sub-role: doctor always 'doctor', optic always 'optic_manager' (only head can self-register)
+    // Auto-set sub-role
     const availableSubRoles = SubRolesByRole[selectedRole] || [];
     if (selectedRole === 'doctor' && selectedSubRole !== 'doctor') {
         setValue('subRole', 'doctor');
     }
     if (selectedRole === 'optic' && selectedSubRole !== 'optic_manager') {
         setValue('subRole', 'optic_manager');
+    }
+    if (selectedRole === 'distributor' && selectedSubRole !== 'dist_head') {
+        setValue('subRole', 'dist_head' as any);
     }
 
     // Phone mask: +7 XXX XXX XX XX
@@ -95,7 +98,11 @@ export default function RegisterPage() {
                         <CheckCircle className="w-10 h-10 text-green-600" />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Регистрация успешна!</h2>
-                    <p className="text-gray-600 mb-4">Перенаправление на страницу входа...</p>
+                    {selectedRole === 'distributor' ? (
+                        <p className="text-gray-600 mb-4">Ваша заявка принята. Мы активируем аккаунт после проверки данных.</p>
+                    ) : (
+                        <p className="text-gray-600 mb-4">Перенаправление на страницу входа...</p>
+                    )}
                 </div>
             </div>
         );
@@ -189,37 +196,89 @@ export default function RegisterPage() {
 
                         {/* Role Selection */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">
                                 Тип аккаунта *
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {(['doctor', 'optic'] as const).map((role) => (
-                                    <label
-                                        key={role}
-                                        className={`
-                                            p-4 border-2 rounded-lg cursor-pointer transition-all duration-ag text-center
-                                            ${selectedRole === role
-                                                ? 'border-primary-500 bg-primary-50'
-                                                : 'border-border hover:border-border-hover'
-                                            }
-                                        `}
-                                    >
-                                        <input
-                                            type="radio"
-                                            value={role}
-                                            {...register('role')}
-                                            className="sr-only"
-                                        />
-                                        <p className="font-medium text-gray-900">{UserRoleLabels[role]}</p>
-                                    </label>
-                                ))}
+                            <div className="grid grid-cols-3 gap-3">
+                                {([
+                                    {
+                                        role: 'doctor' as const,
+                                        label: 'Врач',
+                                        desc: 'Независимый',
+                                        icon: Stethoscope,
+                                        color: 'text-emerald-600',
+                                        bg: 'bg-emerald-50',
+                                        activeBorder: 'border-emerald-500',
+                                        activeBg: 'bg-emerald-50/60',
+                                    },
+                                    {
+                                        role: 'optic' as const,
+                                        label: 'Оптика',
+                                        desc: 'Салон / клиника',
+                                        icon: Building2,
+                                        color: 'text-blue-600',
+                                        bg: 'bg-blue-50',
+                                        activeBorder: 'border-blue-500',
+                                        activeBg: 'bg-blue-50/60',
+                                    },
+                                    {
+                                        role: 'distributor' as const,
+                                        label: 'Дистрибьютор',
+                                        desc: 'Поставщик',
+                                        icon: Truck,
+                                        color: 'text-indigo-600',
+                                        bg: 'bg-indigo-50',
+                                        activeBorder: 'border-indigo-500',
+                                        activeBg: 'bg-indigo-50/60',
+                                    },
+                                ]).map(({ role, label, desc, icon: Icon, color, bg, activeBorder, activeBg }) => {
+                                    const isActive = selectedRole === role;
+                                    return (
+                                        <label
+                                            key={role}
+                                            className={`
+                                                relative p-4 border-2 rounded-xl cursor-pointer transition-all text-center group
+                                                ${isActive
+                                                    ? `${activeBorder} ${activeBg} shadow-sm`
+                                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                                                }
+                                            `}
+                                        >
+                                            <input
+                                                type="radio"
+                                                value={role}
+                                                {...register('role')}
+                                                className="sr-only"
+                                            />
+                                            {isActive && (
+                                                <div className="absolute top-2 right-2">
+                                                    <BadgeCheck className={`w-4 h-4 ${color}`} />
+                                                </div>
+                                            )}
+                                            <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mx-auto mb-2.5 transition-transform group-hover:scale-105 ${isActive ? 'scale-105' : ''}`}>
+                                                <Icon className={`w-5 h-5 ${color}`} />
+                                            </div>
+                                            <p className={`font-semibold text-sm ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
+                                                {label}
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+                                        </label>
+                                    );
+                                })}
                             </div>
                         </div>
 
-                        {/* Sub-Role info for optic */}
+                        {/* Info banners */}
                         {selectedRole === 'optic' && (
-                            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                                Вы регистрируетесь как <strong>Руководитель клиники</strong>. После регистрации вы сможете добавить сотрудников (врач, бухгалтер) в разделе «Сотрудники».
+                            <div className="flex items-start gap-3 p-3.5 bg-blue-50 border-l-4 border-blue-400 rounded-r-xl rounded-l-sm text-sm text-blue-800">
+                                <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                                <p>Вы регистрируетесь как <strong>Руководитель клиники</strong>. Врачей и бухгалтера добавляете после регистрации в разделе «Сотрудники».</p>
+                            </div>
+                        )}
+                        {selectedRole === 'distributor' && (
+                            <div className="flex items-start gap-3 p-3.5 bg-indigo-50 border-l-4 border-indigo-400 rounded-r-xl rounded-l-sm text-sm text-indigo-800">
+                                <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-indigo-500" />
+                                <p>Вы регистрируетесь как <strong>Дистрибьютор</strong>. После проверки данных администратором вы получите доступ к личному кабинету.</p>
                             </div>
                         )}
 
@@ -286,10 +345,10 @@ export default function RegisterPage() {
                             </div>
                         )}
 
-                        {selectedRole === 'optic' && (
+                        {(selectedRole === 'optic' || selectedRole === 'distributor') && (
                             <div>
                                 <label htmlFor="opticName" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Название оптики
+                                    {selectedRole === 'optic' ? 'Название оптики' : 'Название компании'}
                                 </label>
                                 <div className="relative">
                                     <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -298,7 +357,7 @@ export default function RegisterPage() {
                                         type="text"
                                         {...register('profile.opticName')}
                                         className="input pl-10"
-                                        placeholder="Название салона оптики"
+                                        placeholder={selectedRole === 'optic' ? 'Название салона оптики' : 'Название вашей компании'}
                                     />
                                 </div>
                             </div>

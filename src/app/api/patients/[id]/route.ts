@@ -25,6 +25,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                     createdAt: true,
                     totalPrice: true,
                     isUrgent: true,
+                    source: true,
                 },
             },
             doctor: { select: { id: true, fullName: true } },

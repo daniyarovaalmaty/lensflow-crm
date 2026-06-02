@@ -69,6 +69,23 @@ export async function POST(req: NextRequest) {
     });
 
     if (!lead) {
+        // Determine clinic by matching the receiving WhatsApp number (crmPhone)
+        let clinicId: string | null = null;
+        const instanceWid = body?.instanceData?.wid;
+        if (instanceWid) {
+            const receivingNumber = instanceWid.toString().replace('@c.us', '').replace(/\D/g, '');
+            if (receivingNumber) {
+                const clinic = await prisma.organization.findFirst({
+                    where: {
+                        crmPhone: { contains: receivingNumber.slice(-10) },
+                        status: 'active',
+                    },
+                    select: { id: true },
+                });
+                if (clinic) clinicId = clinic.id;
+            }
+        }
+
         lead = await prisma.lead.create({
             data: {
                 phone: normalizedPhone,
@@ -76,6 +93,7 @@ export async function POST(req: NextRequest) {
                 source: 'whatsapp',
                 stage: 'new_lead',
                 funnel: 'sales',
+                clinicId,
             },
         });
     }

@@ -44,7 +44,7 @@ interface PatientDetail {
     prescriptions: Prescription[];
     orders: Array<{
         id: string; orderNumber: string; status: string; createdAt: string;
-        totalPrice: number | null; isUrgent: boolean;
+        totalPrice: number | null; isUrgent: boolean; source?: string | null;
     }>;
 }
 
@@ -454,13 +454,14 @@ export default function PatientDetailPage() {
                             <div className="space-y-2">
                                 {patient.orders.map(order => {
                                     const s = STATUS_LABELS[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-700' };
-                                    return (
-                                        <Link key={order.id} href={`/optic/orders/${order.id}`}
-                                            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all group">
+                                    const isItigris = order.source === 'itigris' || (order.orderNumber || '').startsWith('ITG-');
+                                    const inner = (
+                                        <>
                                             <div className="flex-1">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 flex-wrap">
                                                     <span className="font-semibold text-gray-900">{order.orderNumber || order.id}</span>
                                                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
+                                                    {isItigris && <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded-full font-semibold">ITIGRIS</span>}
                                                     {order.isUrgent && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">СРОЧНО</span>}
                                                 </div>
                                                 <p className="text-xs text-gray-500 mt-0.5">
@@ -468,7 +469,19 @@ export default function PatientDetailPage() {
                                                     {order.totalPrice ? ` · ${order.totalPrice.toLocaleString('ru-RU')} ₸` : ''}
                                                 </p>
                                             </div>
-                                            <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary-500 transition-colors" />
+                                            {!isItigris && <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary-500 transition-colors" />}
+                                        </>
+                                    );
+                                    return isItigris ? (
+                                        <Link key={order.id} href={`/optic/orders/itigris/${order.orderNumber || order.id}`}
+                                            className="flex items-center gap-3 bg-orange-50/40 rounded-xl border border-orange-100 p-4 hover:border-orange-300 hover:shadow-sm transition-all group cursor-pointer">
+                                            {inner}
+                                            <ChevronDown className="w-4 h-4 text-orange-300 -rotate-90 group-hover:text-orange-500 transition-colors" />
+                                        </Link>
+                                    ) : (
+                                        <Link key={order.id} href={`/optic/orders/${order.id}`}
+                                            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all group">
+                                            {inner}
                                         </Link>
                                     );
                                 })}
