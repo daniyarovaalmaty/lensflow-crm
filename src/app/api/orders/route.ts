@@ -148,6 +148,7 @@ export async function GET(request: NextRequest) {
                 price_od: order.priceOd || undefined,
                 price_os: order.priceOs || undefined,
                 delivery_confirmed: (order as any).deliveryConfirmed ?? undefined,
+                lab_org_id: (order as any).labOrgId || null,
             };
         });
 
