@@ -642,7 +642,12 @@ export default function POSPage() {
                             onClick={e => e.stopPropagation()} className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full mb-[5vh] overflow-hidden">
                             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
                                 <h2 className="text-lg font-black text-gray-900">История продаж</h2>
-                                <button onClick={() => setShowHistory(false)} className="p-1 rounded-lg hover:bg-gray-100 transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
+                                <div className="flex items-center gap-2">
+                                    <Link href="/optic/sales-history" className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors">
+                                        <Receipt className="w-3.5 h-3.5" /> Полный отчёт
+                                    </Link>
+                                    <button onClick={() => setShowHistory(false)} className="p-1 rounded-lg hover:bg-gray-100 transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
+                                </div>
                             </div>
                             <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
                                 {sales.length === 0 ? (
