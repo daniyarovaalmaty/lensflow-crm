@@ -20,8 +20,10 @@ async function findOrderWithAccess(idOrNumber: string, session: any) {
     }
     if (!order) return null;
 
-    // Lab sees everything
+    // Lab sees everything (direct + forwarded)
     if (session.user.role === 'laboratory') return order;
+    // Distributor sees orders assigned to them
+    if (session.user.role === 'distributor' && (order as any).distributorOrgId === session.user.organizationId) return order;
     // Clinic sees only its org's orders
     if (session.user.role === 'optic' && order.organizationId === session.user.organizationId) return order;
     // Doctor sees only their own orders
