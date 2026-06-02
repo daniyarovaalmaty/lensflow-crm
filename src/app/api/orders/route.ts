@@ -23,8 +23,11 @@ export async function GET(request: NextRequest) {
         const where: any = {};
 
         if (session.user.role === 'laboratory') {
-            // Lab sees only orders sent directly to lab (no distributor assigned)
-            where.distributorOrgId = null;
+            // Lab sees: direct orders (no distributor) OR orders forwarded to this lab by a distributor
+            where.OR = [
+                { distributorOrgId: null },
+                { labOrgId: session.user.organizationId },
+            ];
         } else if (session.user.role === 'distributor') {
             // Distributor sees only orders assigned to them
             where.distributorOrgId = session.user.organizationId;
