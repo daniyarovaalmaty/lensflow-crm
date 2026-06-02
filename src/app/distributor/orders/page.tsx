@@ -1,8 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Filter, ArrowRight, Package, Clock, CheckCircle2, Truck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Search, ArrowRight, Package, FlaskConical, CheckCircle2,
+    X, ChevronDown, Building2, Phone, AlertCircle
+} from 'lucide-react';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
     new: { label: 'Новый', color: 'bg-blue-100 text-blue-700' },
@@ -23,13 +27,25 @@ const STATUS_TABS = [
     { key: 'delivered', label: 'Выданы' },
 ];
 
+interface Lab { id: string; name: string; phone: string | null; city: string | null; }
+
 export default function DistributorOrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('');
 
-    useEffect(() => {
+    // Lab modal state
+    const [labs, setLabs] = useState<Lab[]>([]);
+    const [defaultLabId, setDefaultLabId] = useState<string | null>(null);
+    const [sendingOrder, setSendingOrder] = useState<any | null>(null);
+    const [selectedLabId, setSelectedLabId] = useState('');
+    const [showLabDropdown, setShowLabDropdown] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [sendError, setSendError] = useState<string | null>(null);
+    const [sentOrders, setSentOrders] = useState<Set<string>>(new Set());
+
+    const loadOrders = useCallback(() => {
         setLoading(true);
         const url = activeTab ? `/api/orders?status=${activeTab}` : '/api/orders';
         fetch(url)
@@ -37,6 +53,19 @@ export default function DistributorOrdersPage() {
             .then(data => setOrders(Array.isArray(data) ? data : []))
             .finally(() => setLoading(false));
     }, [activeTab]);
+
+    useEffect(() => { loadOrders(); }, [loadOrders]);
+
+    useEffect(() => {
+        // Load labs and default lab setting
+        Promise.all([
+            fetch('/api/labs').then(r => r.json()),
+            fetch('/api/distributors/settings').then(r => r.json()),
+        ]).then(([labsData, settings]) => {
+            setLabs(Array.isArray(labsData) ? labsData : []);
+            setDefaultLabId(settings?.defaultLabId || null);
+        }).catch(() => {});
+    }, []);
 
     const filtered = orders.filter(o => {
         if (!search) return true;
@@ -48,11 +77,51 @@ export default function DistributorOrdersPage() {
         );
     });
 
+    const openSendModal = (order: any) => {
+        setSendingOrder(order);
+        setSelectedLabId(defaultLabId || (labs[0]?.id || ''));
+        setSendError(null);
+        setShowLabDropdown(false);
+    };
+
+    const handleSendToLab = async () => {
+        if (!sendingOrder || !selectedLabId) return;
+        setSending(true);
+        setSendError(null);
+        try {
+            const res = await fetch(`/api/orders/${sendingOrder.order_id}/send-to-lab`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ labOrgId: selectedLabId }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Ошибка');
+            setSentOrders(prev => new Set([...prev, sendingOrder.order_id]));
+            setSendingOrder(null);
+        } catch (e: any) {
+            setSendError(e.message);
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const selectedLab = labs.find(l => l.id === selectedLabId);
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Заказы</h1>
-                <p className="text-gray-500 mt-1">Заказы оптик, назначенные вашей компании</p>
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h1 className="text-2xl font-extrabold text-gray-900">Заказы</h1>
+                    <p className="text-gray-500 mt-0.5 text-sm">Заказы оптик, назначенные вашей компании</p>
+                </div>
+                {defaultLabId && labs.find(l => l.id === defaultLabId) && (
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-xl">
+                        <FlaskConical className="w-3.5 h-3.5 text-indigo-500" />
+                        <span className="text-xs font-semibold text-indigo-700">
+                            Лаб: {labs.find(l => l.id === defaultLabId)?.name}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* Filters */}
@@ -108,6 +177,7 @@ export default function DistributorOrdersPage() {
                                     <th className="text-left px-4 py-3 font-semibold">Оптика</th>
                                     <th className="text-left px-4 py-3 font-semibold">Дата</th>
                                     <th className="text-left px-4 py-3 font-semibold">Сумма</th>
+                                    <th className="text-left px-4 py-3 font-semibold">Лаборатория</th>
                                     <th className="text-left px-4 py-3 font-semibold">Статус</th>
                                     <th className="px-4 py-3"></th>
                                 </tr>
@@ -115,8 +185,9 @@ export default function DistributorOrdersPage() {
                             <tbody className="divide-y divide-gray-50">
                                 {filtered.map(order => {
                                     const statusInfo = STATUS_MAP[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-600' };
+                                    const isSent = sentOrders.has(order.order_id) || !!order.lab_org_id;
                                     return (
-                                        <tr key={order.id} className="hover:bg-gray-50 transition-colors group">
+                                        <tr key={order.id || order.order_id} className="hover:bg-gray-50 transition-colors group">
                                             <td className="px-5 py-3.5">
                                                 <span className="font-mono text-sm font-semibold text-gray-800">{order.order_id}</span>
                                                 {order.is_urgent && <span className="ml-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">Срочно</span>}
@@ -130,13 +201,28 @@ export default function DistributorOrdersPage() {
                                                 {order.total_price > 0 ? `${order.total_price.toLocaleString('ru-RU')} ₸` : '—'}
                                             </td>
                                             <td className="px-4 py-3.5">
+                                                {isSent ? (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+                                                        <CheckCircle2 className="w-3 h-3" /> Отправлен
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => openSendModal(order)}
+                                                        className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+                                                    >
+                                                        <FlaskConical className="w-3 h-3" />
+                                                        В лабораторию
+                                                    </button>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3.5">
                                                 <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusInfo.color}`}>
                                                     {statusInfo.label}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3.5">
                                                 <Link
-                                                    href={`/distributor/orders/${order.id}`}
+                                                    href={`/distributor/orders/${order.order_id}`}
                                                     className="flex items-center gap-1 text-sm text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity font-medium"
                                                 >
                                                     Открыть <ArrowRight className="w-3.5 h-3.5" />
@@ -154,6 +240,128 @@ export default function DistributorOrdersPage() {
             <div className="mt-4 text-sm text-gray-400 text-right">
                 Найдено: {filtered.length} из {orders.length}
             </div>
+
+            {/* Send to Lab Modal */}
+            <AnimatePresence>
+                {sendingOrder && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                        onClick={() => setSendingOrder(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+                        >
+                            {/* Modal header */}
+                            <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
+                                        <FlaskConical className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-extrabold text-gray-900">Отправить в лабораторию</p>
+                                        <p className="text-xs text-gray-500">Заказ {sendingOrder.order_id}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSendingOrder(null)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/80 transition-colors">
+                                    <X className="w-4 h-4 text-gray-500" />
+                                </button>
+                            </div>
+
+                            <div className="p-6">
+                                {labs.length === 0 ? (
+                                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-700">
+                                        ⚠️ Лаборатории не найдены. Добавьте лабораторию в систему или проверьте настройки.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Выберите лабораторию</label>
+
+                                        {/* Lab dropdown */}
+                                        <div className="relative mb-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowLabDropdown(!showLabDropdown)}
+                                                className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-2xl text-left hover:border-indigo-400 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                                    <span className="text-sm font-medium text-gray-900">
+                                                        {selectedLab?.name || '— Выберите —'}
+                                                    </span>
+                                                    {selectedLabId === defaultLabId && (
+                                                        <span className="text-xs bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-semibold">по умолч.</span>
+                                                    )}
+                                                </div>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showLabDropdown ? 'rotate-180' : ''}`} />
+                                            </button>
+
+                                            {showLabDropdown && (
+                                                <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-xl z-20 overflow-hidden">
+                                                    {labs.map(lab => (
+                                                        <button
+                                                            key={lab.id}
+                                                            onClick={() => { setSelectedLabId(lab.id); setShowLabDropdown(false); }}
+                                                            className={`w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-gray-50 last:border-0 ${selectedLabId === lab.id ? 'bg-indigo-50' : ''}`}
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <p className="text-sm font-bold text-gray-900">{lab.name}</p>
+                                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                                        {lab.city && <span className="text-xs text-gray-400">{lab.city}</span>}
+                                                                        {lab.phone && <span className="flex items-center gap-1 text-xs text-gray-400"><Phone className="w-3 h-3" />{lab.phone}</span>}
+                                                                    </div>
+                                                                </div>
+                                                                {lab.id === defaultLabId && (
+                                                                    <span className="text-xs bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-semibold flex-shrink-0">по умолч.</span>
+                                                                )}
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {sendError && (
+                                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+                                                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                                                <p className="text-sm text-red-700">{sendError}</p>
+                                            </div>
+                                        )}
+
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setSendingOrder(null)}
+                                                className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                                            >
+                                                Отмена
+                                            </button>
+                                            <button
+                                                onClick={handleSendToLab}
+                                                disabled={!selectedLabId || sending}
+                                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-2xl text-sm font-bold transition-all shadow-md shadow-indigo-100"
+                                            >
+                                                {sending ? (
+                                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                ) : (
+                                                    <FlaskConical className="w-4 h-4" />
+                                                )}
+                                                {sending ? 'Отправка...' : 'Отправить'}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

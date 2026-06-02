@@ -66,6 +66,14 @@ model Organization {
   // Distributor orders
   distributorOrders Order[] @relation("DistributorOrders")
 
+  // Default lab for distributor (which lab they send orders to)
+  defaultLabId  String?
+  defaultLab    Organization?  @relation("DistributorDefaultLab", fields: [defaultLabId], references: [id])
+  distributorClients Organization[] @relation("DistributorDefaultLab")
+
+  // Lab orders (orders forwarded to this lab by a distributor)
+  labOrders Order[] @relation("LabOrders")
+
   @@map("organizations")
 }
 
@@ -74,6 +82,7 @@ enum OrgType {
   headquarters
   branch
   distributor
+  laboratory
 }
 
 // ==================== Itigris Sync Log ====================
@@ -372,6 +381,10 @@ model Order {
   // Distributor assignment
   distributorOrgId String?
   distributorOrg   Organization? @relation("DistributorOrders", fields: [distributorOrgId], references: [id])
+
+  // Lab assignment (distributor forwards order to lab)
+  labOrgId String?
+  labOrg   Organization? @relation("LabOrders", fields: [labOrgId], references: [id])
 
   // CRM Lead link
   lead       Lead?
