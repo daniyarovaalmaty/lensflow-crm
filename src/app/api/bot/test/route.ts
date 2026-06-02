@@ -5,12 +5,13 @@ import OpenAI from 'openai';
 import prisma from '@/lib/db/prisma';
 import { buildSystemPrompt } from '@/lib/whatsapp-bot';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
 
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const { message, history = [] } = await req.json();
 
   const systemPrompt = await buildSystemPrompt();
