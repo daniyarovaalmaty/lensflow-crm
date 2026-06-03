@@ -27,12 +27,28 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                     isUrgent: true,
                 },
             },
+            sales: {
+                orderBy: { createdAt: 'desc' },
+                take: 50,
+                select: {
+                    id: true,
+                    saleNumber: true,
+                    total: true,
+                    paymentMethod: true,
+                    createdAt: true,
+                    items: { select: { name: true, quantity: true, unitPrice: true, total: true } },
+                },
+            },
             doctor: { select: { id: true, fullName: true } },
         },
     });
 
     if (!patient) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(patient);
+
+    // Compute total spent across all POS sales linked to this patient
+    const totalSpent = (patient.sales || []).reduce((sum, s) => sum + (s.total || 0), 0);
+
+    return NextResponse.json({ ...patient, totalSpent });
 }
 
 // PUT /api/patients/[id]

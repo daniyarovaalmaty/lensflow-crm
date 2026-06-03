@@ -3,13 +3,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan, User } from 'lucide-react';
 import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
 import { formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
+import PatientSelect from '@/components/pos/PatientSelect';
 
 interface Product {
     id: string; name: string; category: string; type: string;
@@ -63,6 +64,7 @@ export default function POSPage() {
     // Checkout form
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
+    const [patientId, setPatientId] = useState('');
     const [discount, setDiscount] = useState('0');
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [saving, setSaving] = useState(false);
@@ -164,6 +166,16 @@ export default function POSPage() {
         }));
     };
 
+    const setQtyDirect = (productId: string, value: string) => {
+        const parsed = parseInt(value, 10);
+        if (isNaN(parsed) || parsed < 1) return;
+        setCart(cart.map(c => {
+            if (c.productId !== productId) return c;
+            const newQty = c.type === 'product' ? Math.min(parsed, c.maxStock) : parsed;
+            return { ...c, quantity: newQty };
+        }));
+    };
+
     const removeFromCart = (productId: string) => {
         setCart(cart.filter(c => c.productId !== productId));
     };
@@ -196,6 +208,7 @@ export default function POSPage() {
                     items: cart.map(c => ({ productId: c.productId, quantity: c.quantity, unitPrice: c.unitPrice })),
                     customerName: customerName || undefined,
                     customerPhone: customerPhone || undefined,
+                    patientId: patientId || undefined,
                     discountPercent: discountPct,
                     paymentMethod,
                 }),
@@ -206,6 +219,7 @@ export default function POSPage() {
                 setCart([]);
                 setCustomerName('');
                 setCustomerPhone('');
+                setPatientId('');
                 setDiscount('0');
                 setShowCheckout(false);
                 loadProducts(); // refresh stock
@@ -395,7 +409,14 @@ export default function POSPage() {
                                                     className="w-8 h-8 md:w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-90 flex items-center justify-center transition-all cursor-pointer">
                                                     <Minus className="w-3.5 h-3.5 text-gray-600" />
                                                 </button>
-                                                <span className="w-6 text-center text-xs md:text-sm font-black text-gray-800">{item.quantity}</span>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max={item.type === 'product' ? item.maxStock : undefined}
+                                                    value={item.quantity}
+                                                    onChange={e => setQtyDirect(item.productId, e.target.value)}
+                                                    className="w-12 text-center text-xs md:text-sm font-black text-gray-800 border border-gray-200 rounded-lg py-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                                                />
                                                 <button onClick={() => updateQty(item.productId, 1)}
                                                     className="w-8 h-8 md:w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-90 flex items-center justify-center transition-all cursor-pointer">
                                                     <Plus className="w-3.5 h-3.5 text-gray-600" />
@@ -472,6 +493,26 @@ export default function POSPage() {
                             <h2 className="text-xl font-extrabold text-gray-900 mb-5">Оформление продажи</h2>
 
                             <div className="space-y-4 mb-6">
+                                <div>
+                                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">
+                                        <User className="w-3.5 h-3.5 inline mr-1 text-primary-500" />
+                                        Пациент
+                                    </label>
+                                    <PatientSelect
+                                        value={patientId}
+                                        onChange={(id, patient) => {
+                                            setPatientId(id);
+                                            if (patient) {
+                                                setCustomerName(patient.name);
+                                                setCustomerPhone(patient.phone);
+                                            } else if (!id) {
+                                                setCustomerName('');
+                                                setCustomerPhone('');
+                                            }
+                                        }}
+                                        placeholder="Выберите пациента или введите вручную..."
+                                    />
+                                </div>
                                 <div>
                                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Имя покупателя</label>
                                     <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)}

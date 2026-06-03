@@ -11,6 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             assignee: { select: { id: true, fullName: true, avatar: true, email: true } },
             clinic: { select: { id: true, name: true, phone: true, city: true } },
             order: { select: { id: true, orderNumber: true, status: true, totalPrice: true } },
+            patient: { select: { id: true, name: true, phone: true } },
             messages: {
                 orderBy: { sentAt: 'asc' },
                 take: 100,
@@ -44,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const {
         name, city, stage, assigneeId, clinicId,
-        appointmentAt, appointmentNotes, lostReason, notes, tags, revenue, acquisitionCost,
+        appointmentAt, appointmentNotes, lostReason, notes, tags, revenue, acquisitionCost, patientId,
     } = body;
 
     const data: any = {};
@@ -59,13 +60,51 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (tags !== undefined) data.tags = tags;
     if (revenue !== undefined) data.revenue = revenue;
     if (acquisitionCost !== undefined) data.acquisitionCost = Number(acquisitionCost) || 0;
+    if (patientId !== undefined) data.patientId = patientId;
 
     // Stage change — log activity
     if (stage && stage !== existing.stage) {
         data.stage = stage;
+
+        // Auto-create patient only when lead reaches 'appointment' stage
+        // (if not already linked to a patient)
+        const shouldCreatePatient =
+            stage === 'appointment' &&
+            !existing.patientId &&
+            (existing.name || body.name);
+
+        if (shouldCreatePatient) {
+            const leadName = (body.name || existing.name || '').trim();
+            const leadPhone = existing.phone.replace('@c.us', '').trim();
+
+            // Check if patient with this phone already exists in this clinic
+            const existingPatient = await prisma.patient.findFirst({
+                where: {
+                    phone: { contains: leadPhone.slice(-9) },
+                    ...(existing.clinicId ? { organizationId: existing.clinicId } : {}),
+                },
+            });
+
+            if (existingPatient) {
+                // Link lead to existing patient
+                data.patientId = existingPatient.id;
+            } else if (leadName) {
+                // Create new patient from lead data
+                const newPatient = await prisma.patient.create({
+                    data: {
+                        name: leadName,
+                        phone: leadPhone,
+                        organizationId: existing.clinicId || null,
+                        notes: existing.notes || null,
+                    },
+                });
+                data.patientId = newPatient.id;
+            }
+        }
+
         if (stage === 'converted') {
             data.convertedAt = new Date();
-            
+
             // Auto-create retention lead
             if (existing.funnel === 'sales') {
                 const existingRetention = await prisma.lead.findFirst({ where: { phone: existing.phone, funnel: 'retention' } });

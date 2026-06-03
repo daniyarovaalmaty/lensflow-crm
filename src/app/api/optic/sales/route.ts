@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, paymentMethod, notes } = body;
+    const { items, customerName, customerPhone, patientId, discountPercent, paymentMethod, notes } = body;
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
     const orgId = user.organizationId;
@@ -158,6 +158,7 @@ export async function POST(req: NextRequest) {
             data: {
                 saleNumber,
                 organizationId: orgId,
+                patientId: patientId || null,
                 customerName: customerName || null,
                 customerPhone: customerPhone || null,
                 subtotal,

@@ -158,6 +158,8 @@ model Patient {
   orders        Order[]
   prescriptions Prescription[]
   consultations Consultation[]
+  sales         Sale[]         @relation("PatientSales")
+  leads         Lead[]         @relation("LeadPatient")
 
   @@index([organizationId])
   @@index([phone])
@@ -586,6 +588,9 @@ model Sale {
   organizationId  String
   organization    Organization @relation(fields: [organizationId], references: [id])
 
+  patientId       String?
+  patient         Patient? @relation("PatientSales", fields: [patientId], references: [id], onDelete: SetNull)
+
   customerName    String?
   customerPhone   String?
   customerInn     String?
@@ -616,6 +621,7 @@ model Sale {
   items           SaleItem[]
 
   @@map("sales")
+  @@index([patientId])
 }
 
 // ==================== Sale Item ====================
@@ -715,6 +721,10 @@ model Lead {
   orderId       String?   @unique
   order         Order?    @relation(fields: [orderId], references: [id])
 
+  // Link to patient (created when lead converts)
+  patientId     String?
+  patient       Patient?  @relation("LeadPatient", fields: [patientId], references: [id], onDelete: SetNull)
+
   // Meta
   tags          String[]
   notes         String?   @db.Text
@@ -728,6 +738,7 @@ model Lead {
   @@index([stage])
   @@index([assigneeId])
   @@index([phone])
+  @@index([patientId])
   @@map("leads")
 }
 

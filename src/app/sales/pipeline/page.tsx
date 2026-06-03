@@ -104,6 +104,7 @@ export default function SalesPipelinePage() {
             const params = new URLSearchParams();
             if (search) params.set('search', search);
             params.set('limit', '200');
+            params.set('funnel', 'sales');
             const res = await fetch(`/api/crm/leads?${params}`);
             const data = await res.json();
             setLeads(data.leads || []);
@@ -196,13 +197,15 @@ export default function SalesPipelinePage() {
     const [newName, setNewName] = useState('');
     const [newCity, setNewCity] = useState('');
     const [newAcquisitionCost, setNewAcquisitionCost] = useState('');
+    const [addLeadError, setAddLeadError] = useState('');
     const [addingLead, setAddingLead] = useState(false);
 
     const handleAddLead = async () => {
         if (!newPhone || addingLead) return;
         setAddingLead(true);
+        setAddLeadError('');
         try {
-            await fetch('/api/crm/leads', {
+            const res = await fetch('/api/crm/leads', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -210,14 +213,25 @@ export default function SalesPipelinePage() {
                     name: newName || null,
                     city: newCity || null,
                     source: 'manual',
-                    acquisitionCost: Number(newAcquisitionCost) || 0
+                    acquisitionCost: Number(newAcquisitionCost) || 0,
                 }),
             });
+            if (!res.ok) {
+                const err = await res.json();
+                if (res.status === 409 && err.existingLeadId) {
+                    setAddLeadError('Лид с этим номером уже существует');
+                } else {
+                    setAddLeadError(err.error || 'Ошибка создания лида');
+                }
+                return;
+            }
             setNewPhone(''); setNewName(''); setNewCity(''); setNewAcquisitionCost('');
+            setAddLeadError('');
             setShowAddModal(false);
             fetchLeads();
         } catch (err) {
             console.error('Failed to add lead:', err);
+            setAddLeadError('Сетевая ошибка, попробуйте снова');
         } finally {
             setAddingLead(false);
         }
@@ -621,7 +635,7 @@ export default function SalesPipelinePage() {
                                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                         <Plus className="w-5 h-5 text-blue-600" /> Новый лид
                                     </h2>
-                                    <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                    <button onClick={() => { setShowAddModal(false); setAddLeadError(''); }} className="p-2 hover:bg-gray-100 rounded-lg">
                                         <X className="w-5 h-5 text-gray-500" />
                                     </button>
                                 </div>
@@ -630,11 +644,13 @@ export default function SalesPipelinePage() {
                                 <div>
                                     <label className="text-xs text-gray-500 mb-1 block">Телефон *</label>
                                     <input type="tel" placeholder="+7 700 123 4567" value={newPhone}
-                                        onChange={e => setNewPhone(e.target.value)}
+                                        onChange={e => { setNewPhone(e.target.value); setAddLeadError(''); }}
                                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400" />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 mb-1 block">Имя</label>
+                                    <label className="text-xs text-gray-500 mb-1 block">
+                                        Имя <span className="text-gray-400">(рекомендуется — нужно для создания пациента)</span>
+                                    </label>
                                     <input type="text" placeholder="Имя клиента" value={newName}
                                         onChange={e => setNewName(e.target.value)}
                                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400" />
@@ -645,9 +661,14 @@ export default function SalesPipelinePage() {
                                         onChange={e => setNewCity(e.target.value)}
                                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400" />
                                 </div>
+                                {addLeadError && (
+                                    <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                        {addLeadError}
+                                    </p>
+                                )}
                             </div>
                             <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-                                <button onClick={() => setShowAddModal(false)}
+                                <button onClick={() => { setShowAddModal(false); setAddLeadError(''); }}
                                     className="btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4">Отмена</button>
                                 <button onClick={handleAddLead} disabled={!newPhone || addingLead}
                                     className="btn btn-primary px-6">

@@ -46,6 +46,12 @@ interface PatientDetail {
         id: string; orderNumber: string; status: string; createdAt: string;
         totalPrice: number | null; isUrgent: boolean;
     }>;
+    sales: Array<{
+        id: string; saleNumber: string; total: number; paymentMethod: string;
+        createdAt: string;
+        items: Array<{ name: string; quantity: number; unitPrice: number; total: number }>;
+    }>;
+    totalSpent: number;
 }
 
 const fmt = (v: number | null, plus = true) => {
@@ -293,6 +299,11 @@ export default function PatientDetailPage() {
                                 {patient.birthDate && <span>{new Date(patient.birthDate).toLocaleDateString('ru-RU')} ({calcAge(patient.birthDate)})</span>}
                                 <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" />{patient.orders.length} заказов</span>
                                 <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{patient.prescriptions.length} рецептов</span>
+                                {patient.totalSpent > 0 && (
+                                    <span className="flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-semibold text-xs">
+                                        💳 Потрачено: {patient.totalSpent.toLocaleString('ru-RU')} ₸
+                                    </span>
+                                )}
                             </div>
                         </div>
                         <div className="flex gap-2">
@@ -472,6 +483,50 @@ export default function PatientDetailPage() {
                                         </Link>
                                     );
                                 })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* POS Sales history */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-emerald-600" /> Покупки на кассе
+                                {patient.totalSpent > 0 && (
+                                    <span className="text-sm font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full ml-1">
+                                        {patient.totalSpent.toLocaleString('ru-RU')} ₸ всего
+                                    </span>
+                                )}
+                            </h2>
+                        </div>
+                        {(!patient.sales || patient.sales.length === 0) ? (
+                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                                <Clock className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm">Покупок на кассе пока нет</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {patient.sales.map(sale => (
+                                    <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-semibold text-gray-900 text-sm">{sale.saleNumber}</span>
+                                            <span className="font-bold text-emerald-700 text-base">{sale.total.toLocaleString('ru-RU')} ₸</span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 mb-2">
+                                            {new Date(sale.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            {' · '}
+                                            {sale.paymentMethod === 'cash' ? 'Наличные' : sale.paymentMethod === 'card' ? 'Карта' : 'Перевод'}
+                                        </p>
+                                        <div className="space-y-1">
+                                            {sale.items.map((item, i) => (
+                                                <div key={i} className="flex justify-between text-xs text-gray-500">
+                                                    <span>{item.name} ×{item.quantity}</span>
+                                                    <span className="font-medium text-gray-700">{item.total.toLocaleString('ru-RU')} ₸</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>

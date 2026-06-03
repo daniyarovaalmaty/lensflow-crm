@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
-import { LeadStage } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/crm/leads — list leads with filters
 export async function GET(req: NextRequest) {
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { searchParams } = new URL(req.url);
     const stage = searchParams.get('stage');
     const funnel = searchParams.get('funnel') || 'sales';
@@ -16,6 +19,11 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     const where: any = { funnel };
+
+    // Scope to the user's organisation (clinic)
+    if (session.user.organizationId) {
+        where.clinicId = session.user.organizationId;
+    }
 
     if (stage) where.stage = stage;
     if (assigneeId) where.assigneeId = assigneeId;
@@ -68,6 +76,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const {
         phone, name, city, source, assigneeId, clinicId, notes, tags, funnel,
@@ -76,32 +87,43 @@ export async function POST(req: NextRequest) {
     const targetFunnel = funnel || 'sales';
 
     if (!phone) {
-        return NextResponse.json({ error: 'Phone is required' }, { status: 400 });
+        return NextResponse.json({ error: 'Телефон обязателен' }, { status: 400 });
     }
 
-    // Check if lead with this phone already exists in the SAME funnel
+    // Normalize phone: strip spaces, dashes, brackets, leading +
+    // Store in plain digit format (77001234567) — no @c.us for manual leads
+    const normalizedPhone = phone.replace(/[\s\-\+\(\)]/g, '');
+
+    // Resolve clinicId — use session org if not explicitly provided
+    const resolvedClinicId = clinicId || session.user.organizationId || null;
+
+    // Check duplicate within same funnel AND same clinic
     const existing = await prisma.lead.findFirst({
-        where: { phone, funnel: targetFunnel },
+        where: {
+            phone: { contains: normalizedPhone.slice(-9) },
+            funnel: targetFunnel,
+            ...(resolvedClinicId ? { clinicId: resolvedClinicId } : {}),
+        },
     });
 
     if (existing) {
         return NextResponse.json({
-            error: `Lead with this phone already exists in ${targetFunnel} funnel`,
+            error: 'Лид с этим номером уже существует в этой воронке',
             existingLeadId: existing.id,
         }, { status: 409 });
     }
 
     const lead = await prisma.lead.create({
         data: {
-            phone,
-            name,
-            city,
+            phone: normalizedPhone,
+            name: name || null,
+            city: city || null,
             source: source || 'manual',
             funnel: targetFunnel,
             stage: targetFunnel === 'retention' ? 'checkup' : 'new_lead',
-            assigneeId,
-            clinicId,
-            notes,
+            assigneeId: assigneeId || session.user.id || null,
+            clinicId: resolvedClinicId,
+            notes: notes || null,
             tags: tags || [],
             acquisitionCost: Number(acquisitionCost) || 0,
             campaignId: campaignId || null,
@@ -109,7 +131,7 @@ export async function POST(req: NextRequest) {
             utmMedium: utmMedium || '',
             utmCampaign: utmCampaign || '',
             utmContent: utmContent || '',
-            utmTerm: utmTerm || ''
+            utmTerm: utmTerm || '',
         },
         include: {
             assignee: { select: { id: true, fullName: true } },
@@ -117,6 +139,8 @@ export async function POST(req: NextRequest) {
         },
     });
 
+    // NOTE: Patient record is NOT created here.
+    // It will be created automatically when the lead reaches the 'appointment' stage (PATCH handler).
 
     // Log activity
     await prisma.leadActivity.create({

@@ -520,6 +520,10 @@ export default function WarehousePage() {
 
     const handleReceive = async () => {
         if (!receiveItems.length) return;
+        if (!supplierId) {
+            alert('Пожалуйста, выберите поставщика перед оформлением прихода.');
+            return;
+        }
         setSaving(true);
         try {
             const items = receiveItems.map(ri => ({
@@ -980,12 +984,17 @@ export default function WarehousePage() {
 
                             {/* Supplier */}
                             <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Поставщик</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Поставщик <span className="text-red-500">*</span>
+                                </label>
                                 <SupplierSelect
                                     value={supplierId}
                                     onChange={setSupplierId}
                                     placeholder="Выберите поставщика..."
                                 />
+                                {!supplierId && (
+                                    <p className="text-xs text-amber-600 mt-1">Поставщик обязателен для оформления прихода</p>
+                                )}
                             </div>
 
                             {/* Items */}
@@ -1067,7 +1076,7 @@ export default function WarehousePage() {
                                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none" />
                             </div>
 
-                            <button onClick={handleReceive} disabled={!receiveItems.length || saving}
+                            <button onClick={handleReceive} disabled={!receiveItems.length || !supplierId || saving}
                                 className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors">
                                 {saving ? (
                                     'Оформление...'

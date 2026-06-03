@@ -5,6 +5,21 @@ import { mmGetPatients, mmCreatePatient, mmPatientToLF } from '@/lib/mm-patient-
 
 export const dynamic = 'force-dynamic';
 
+// Stages where a patient IS visible (lead has progressed past just being a lead)
+// Note: uses Prisma enum names, NOT the @map("new") DB values
+const APPOINTMENT_AND_BEYOND: string[] = [
+    'appointment',
+    'visited',
+    'converted',
+    'lost',
+    'checkup',
+    'supplies',
+    'renewal',
+    'retention_dialog',
+    'retention_success',
+    'retention_lost',
+];
+
 // GET /api/patients — list patients (local + pull from MedMundus on first load)
 export async function GET(request: Request) {
     const session = await auth();
@@ -13,25 +28,42 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q') || '';
     const page = parseInt(searchParams.get('page') || '1');
-    const noSync = searchParams.get('noSync') === '1'; // skip sync for subsequent pages
+    const noSync = searchParams.get('noSync') === '1';
     const limit = 30;
 
-    // Build base filter — show org patients OR doctor's own patients
-    const where: any = {
+    // Org/doctor ownership filter
+    const ownershipFilter = {
         OR: [
             { organizationId: session.user.organizationId || 'none' },
             { doctorId: session.user.id },
         ],
     };
 
-    if (q) {
-        where.AND = [{
-            OR: [
-                { name: { contains: q, mode: 'insensitive' } },
-                { phone: { contains: q, mode: 'insensitive' } },
-            ]
-        }];
-    }
+    // Visibility rule:
+    //   Show patient if they have NO leads (created manually)
+    //   OR if at least one of their leads has reached appointment stage or beyond.
+    //   Hide if ALL linked leads are still in new_lead / contacted / qualified.
+    const visibilityFilter = {
+        OR: [
+            // No leads at all → manually created, always show
+            { leads: { none: {} } },
+            // Has at least one lead that is at appointment stage or beyond
+            { leads: { some: { stage: { in: APPOINTMENT_AND_BEYOND } } } },
+        ],
+    };
+
+    const where: any = {
+        AND: [
+            ownershipFilter,
+            visibilityFilter,
+            ...(q ? [{
+                OR: [
+                    { name: { contains: q, mode: 'insensitive' } },
+                    { phone: { contains: q, mode: 'insensitive' } },
+                ],
+            }] : []),
+        ],
+    };
 
     // Sync from MedMundus on first page load (not on search/paginate to keep it fast)
     if (!noSync && page === 1) {
@@ -44,14 +76,12 @@ export async function GET(request: Request) {
                 const fullName = lf.name.trim();
                 if (!fullName || fullName === ' ') continue;
 
-                // Normalize phone for dedup comparison
                 const normalizedPhone = (lf.phone || '').replace(/[\s\-\+\(\)]/g, '');
 
-                // If phone exists, link medmundusId to that existing record (no duplicate)
                 if (normalizedPhone) {
                     const existing = await prisma.patient.findFirst({
                         where: {
-                            phone: { contains: normalizedPhone.slice(-9) }, // match last 9 digits
+                            phone: { contains: normalizedPhone.slice(-9) },
                             OR: [
                                 { organizationId: session.user.organizationId || 'none' },
                                 { doctorId: session.user.id },
@@ -61,12 +91,10 @@ export async function GET(request: Request) {
                     });
 
                     if (existing) {
-                        // Update existing record with MM data
                         await prisma.patient.update({
                             where: { id: existing.id },
                             data: {
                                 medmundusId: existing.medmundusId ?? mm.medmundus_patient_id,
-                                // Use the fuller name (longer = more complete)
                                 name: fullName.length > existing.name.length ? fullName : existing.name,
                                 email: existing.email || lf.email,
                                 birthDate: existing.birthDate || (lf.birthDate ? new Date(lf.birthDate) : null),
@@ -75,11 +103,10 @@ export async function GET(request: Request) {
                                 doctorId: existing.doctorId || session.user.id,
                             },
                         });
-                        continue; // don't create a new record
+                        continue;
                     }
                 }
 
-                // No match by phone — upsert by medmundusId
                 await prisma.patient.upsert({
                     where: { medmundusId: mm.medmundus_patient_id },
                     update: {
@@ -108,7 +135,6 @@ export async function GET(request: Request) {
         }
     }
 
-
     const [patients, total] = await Promise.all([
         prisma.patient.findMany({
             where,
@@ -121,12 +147,22 @@ export async function GET(request: Request) {
                     orderBy: { prescribedAt: 'desc' },
                     take: 1,
                 },
+                sales: {
+                    select: { total: true },
+                },
             },
         }),
         prisma.patient.count({ where }),
     ]);
 
-    return NextResponse.json({ patients, total, page, pages: Math.ceil(total / limit) });
+    // Compute totalSpent per patient from their sales
+    const enriched = patients.map((p: any) => {
+        const totalSpent = (p.sales || []).reduce((sum: number, s: any) => sum + (s.total || 0), 0);
+        const { sales, ...rest } = p;
+        return { ...rest, totalSpent };
+    });
+
+    return NextResponse.json({ patients: enriched, total, page, pages: Math.ceil(total / limit) });
 }
 
 // POST /api/patients — create patient locally AND push to MedMundus
@@ -141,7 +177,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'ФИО и телефон обязательны' }, { status: 400 });
     }
 
-    // Push to MedMundus first to get their ID
     let medmundusId: number | null = null;
     try {
         medmundusId = await mmCreatePatient({
@@ -172,4 +207,3 @@ export async function POST(request: Request) {
 
     return NextResponse.json(patient, { status: 201 });
 }
-

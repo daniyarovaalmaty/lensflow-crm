@@ -5,8 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import {
     ArrowLeft, Phone, MapPin, Clock, Send, Calendar, User,
     MessageCircle, Activity, Tag, Building2, AlertCircle, Check,
-    Bell, CheckCircle, Building, PartyPopper, XCircle, BarChart2, FileText, Pin, MessageSquare
+    Bell, CheckCircle, Building, PartyPopper, XCircle, BarChart2, FileText, Pin, MessageSquare, UserPlus, ExternalLink, Loader2
 } from 'lucide-react';
+import Link from 'next/link';
 
 // Types
 interface LeadDetail {
@@ -27,6 +28,7 @@ interface LeadDetail {
     assignee: { id: string; fullName: string; avatar: string | null; email: string } | null;
     clinic: { id: string; name: string; phone: string | null; city: string | null } | null;
     order: { id: string; orderNumber: string; status: string; totalPrice: number } | null;
+    patient: { id: string; name: string; phone: string } | null;
     messages: Array<{
         id: string;
         channel: string;
@@ -79,6 +81,7 @@ export default function LeadDetailPage() {
     const [messageText, setMessageText] = useState('');
     const [sending, setSending] = useState(false);
     const [activeTab, setActiveTab] = useState<'chat' | 'activity' | 'reminders'>('chat');
+    const [creatingPatient, setCreatingPatient] = useState(false);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
     const fetchLead = useCallback(async () => {
@@ -126,6 +129,39 @@ export default function LeadDetailPage() {
             console.error('Failed to send:', err);
         } finally {
             setSending(false);
+        }
+    };
+
+    const handleCreatePatient = async () => {
+        if (!lead || creatingPatient) return;
+        setCreatingPatient(true);
+        try {
+            const phone = lead.phone.replace('@c.us', '').trim();
+            // Create patient via patients API
+            const res = await fetch('/api/patients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: lead.name || phone,
+                    phone,
+                }),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                alert(err.error || 'Ошибка создания пациента');
+                return;
+            }
+            const patient = await res.json();
+
+            // Link patient to lead
+            await fetch(`/api/crm/leads/${leadId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patientId: patient.id }),
+            });
+            fetchLead();
+        } finally {
+            setCreatingPatient(false);
         }
     };
 
@@ -259,6 +295,43 @@ export default function LeadDetailPage() {
                         </div>
                     ) : (
                         <span className="text-sm text-gray-300">Не назначена</span>
+                    )}
+                </div>
+
+                {/* Patient */}
+                <div className="p-4 border-b border-gray-100">
+                    <label className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                        <User className="w-3 h-3" /> Пациент
+                    </label>
+                    {lead.patient ? (
+                        <Link
+                            href={`/optic/patients/${lead.patient.id}`}
+                            className="flex items-center justify-between gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors group"
+                        >
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-emerald-800 truncate">{lead.patient.name}</p>
+                                <p className="text-xs text-emerald-600">{lead.patient.phone}</p>
+                            </div>
+                            <ExternalLink className="w-3.5 h-3.5 text-emerald-500 shrink-0 group-hover:text-emerald-700" />
+                        </Link>
+                    ) : (
+                        <div>
+                            <p className="text-xs text-gray-400 mb-2">Пациент ещё не создан</p>
+                            <button
+                                onClick={handleCreatePatient}
+                                disabled={creatingPatient || !lead.name}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                            >
+                                {creatingPatient
+                                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    : <UserPlus className="w-3.5 h-3.5" />
+                                }
+                                {creatingPatient ? 'Создание...' : 'Создать пациента'}
+                            </button>
+                            {!lead.name && (
+                                <p className="text-[10px] text-amber-500 mt-1">Укажите имя лида для создания пациента</p>
+                            )}
+                        </div>
                     )}
                 </div>
 
