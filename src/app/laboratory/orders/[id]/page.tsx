@@ -82,7 +82,6 @@ export default function LabOrderDetailPage() {
         });
     };
 
-    /* ── Param row helper ── */
     const P = ({ label, val }: { label: string; val: any }) =>
         val != null && val !== '' ? (
             <div className="flex justify-between text-sm py-1.5">
@@ -99,7 +98,6 @@ export default function LabOrderDetailPage() {
                     <ArrowLeft className="w-4 h-4" /> Назад
                 </button>
 
-                {/* ══════════ SINGLE CARD ══════════ */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
                     {/* ── HEADER ── */}
@@ -136,9 +134,8 @@ export default function LabOrderDetailPage() {
                         </div>
                     </div>
 
-                    {/* ── INFO GRID: Patient + Clinic ── */}
+                    {/* ── INFO GRID ── */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                        {/* Patient */}
                         <div className="px-6 py-4">
                             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                 <User className="w-3.5 h-3.5" /> Пациент
@@ -147,7 +144,6 @@ export default function LabOrderDetailPage() {
                             {order.patient?.phone && <p className="text-sm text-gray-500 mt-0.5">{order.patient.phone}</p>}
                             {order.patient?.email && <p className="text-sm text-gray-500 mt-0.5">{order.patient.email}</p>}
                         </div>
-                        {/* Clinic */}
                         <div className="px-6 py-4">
                             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                 <Building2 className="w-3.5 h-3.5" /> Клиника / Врач
@@ -170,7 +166,6 @@ export default function LabOrderDetailPage() {
                             <Eye className="w-3.5 h-3.5" /> Параметры линз
                         </h3>
 
-                        {/* Desktop: side-by-side table */}
                         <div className="overflow-x-auto -mx-6 px-6">
                             <table className="w-full text-sm">
                                 <thead>
@@ -183,6 +178,7 @@ export default function LabOrderDetailPage() {
                                         <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">Dk</th>
                                         <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">e1</th>
                                         <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">e2</th>
+                                        <th className="text-center py-2.5 px-3 text-xs font-bold text-blue-600 uppercase">Fac</th>
                                         <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">Кол-во</th>
                                     </tr>
                                 </thead>
@@ -201,6 +197,9 @@ export default function LabOrderDetailPage() {
                                             <td className="py-2.5 px-3 text-center text-gray-700">{od.dk ?? '—'}</td>
                                             <td className="py-2.5 px-3 text-center text-gray-700">{od.e1 ?? '—'}</td>
                                             <td className="py-2.5 px-3 text-center text-gray-700">{od.e2 ?? '—'}</td>
+                                            <td className="py-2.5 px-3 text-center font-bold text-blue-600 bg-blue-50/40">
+                                                {od.compression_factor ?? od.cf ?? od.f ?? '—'}
+                                            </td>
                                             <td className="py-2.5 px-3 text-center font-semibold text-gray-900">{odQty}</td>
                                         </tr>
                                     )}
@@ -218,6 +217,9 @@ export default function LabOrderDetailPage() {
                                             <td className="py-2.5 px-3 text-center text-gray-700">{os.dk ?? '—'}</td>
                                             <td className="py-2.5 px-3 text-center text-gray-700">{os.e1 ?? '—'}</td>
                                             <td className="py-2.5 px-3 text-center text-gray-700">{os.e2 ?? '—'}</td>
+                                            <td className="py-2.5 px-3 text-center font-bold text-blue-600 bg-blue-50/40">
+                                                {os.compression_factor ?? os.cf ?? os.f ?? '—'}
+                                            </td>
                                             <td className="py-2.5 px-3 text-center font-semibold text-gray-900">{osQty}</td>
                                         </tr>
                                     )}
@@ -225,7 +227,7 @@ export default function LabOrderDetailPage() {
                             </table>
                         </div>
 
-                        {/* Toric params if applicable */}
+                        {/* Toric params */}
                         {((od.characteristic === 'toric' && odQty > 0) || (os.characteristic === 'toric' && osQty > 0)) && (
                             <div className="mt-4">
                                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Торические параметры</p>
@@ -286,7 +288,6 @@ export default function LabOrderDetailPage() {
                     {/* ── Additional Info ── */}
                     <div className="border-t border-gray-100" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                        {/* Payment / Price */}
                         <div className="px-6 py-4">
                             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                 <CreditCard className="w-3.5 h-3.5" /> Оплата
@@ -295,7 +296,6 @@ export default function LabOrderDetailPage() {
                             {order.discount_percent > 0 && <P label="Скидка" val={`${order.discount_percent}%`} />}
                             {order.tracking_number && <P label="Трек-номер" val={order.tracking_number} />}
                         </div>
-                        {/* Delivery / Timeline */}
                         <div className="px-6 py-4">
                             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                 <Clock className="w-3.5 h-3.5" /> Хронология
@@ -339,7 +339,7 @@ export default function LabOrderDetailPage() {
                             <div className="border-t border-red-100" />
                             <div className="px-6 py-4 bg-red-50/30">
                                 <h3 className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                    <AlertCircle className="w-3.5 h-3.5" /> Дефекты ({order.defects.length})
+                                    <AlertCircle className="w-3.5 h-3.5" /> Defects ({order.defects.length})
                                 </h3>
                                 <div className="space-y-2">
                                     {order.defects.map((d: any, i: number) => (
