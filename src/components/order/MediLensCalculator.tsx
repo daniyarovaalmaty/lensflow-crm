@@ -59,19 +59,22 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
         const fkRounded = Math.round(fk * 2) / 2;
 
         // Lens 1
-        const lens1 = { km: fkRounded, e1: 0.5, tor, dia, characteristic };
+        const lens1: any = { km: fkRounded, e1: 0.5, dia, characteristic };
+        if (characteristic === 'toric') lens1.tor = tor;
 
         // Lens 2
         let ex2 = 0.5;
         if (ex > 0.54) ex2 = 0.55;
         else if (ex < 0.46) ex2 = 0.42;
-        const lens2 = { km: fkRounded, e1: ex2, tor, dia, characteristic };
+        const lens2: any = { km: fkRounded, e1: ex2, dia, characteristic };
+        if (characteristic === 'toric') lens2.tor = tor;
 
         // Lens 3
         let fk3 = fkRounded;
         if (ex > 0.55) fk3 = fkRounded - 0.5;
         else if (ex < 0.45) fk3 = fkRounded + 0.5;
-        const lens3 = { km: fk3, e1: 0.5, tor, dia, characteristic };
+        const lens3: any = { km: fk3, e1: 0.5, dia, characteristic };
+        if (characteristic === 'toric') lens3.tor = tor;
 
         return { lens1, lens2, lens3 };
     };

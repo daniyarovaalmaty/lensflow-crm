@@ -53,6 +53,14 @@ export function EyeParametersCard({
     const isTrial = dkValue === '50';
     const isSpherical = characteristic === 'spherical';
 
+    // Clear toric-only fields when switching to spherical
+    useEffect(() => {
+        if (isSpherical) {
+            setValue(`config.eyes.${eye}.tor`, null as any);
+            setValue(`config.eyes.${eye}.e2`, null as any);
+        }
+    }, [isSpherical, eye, setValue]);
+
     // Track previous Dk value to only reset color on manual Dk changes
     const prevDkRef = useRef(dkValue);
 
