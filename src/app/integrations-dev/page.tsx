@@ -10,8 +10,24 @@ export default function IntegrationsDevPage() {
   const fetchIntegration = async (type: 'moysklad' | 'itigris') => {
     setLoading(type);
     try {
-      const res = await fetch(`/api/${type}`);
+      let res;
+      
+      if (type === 'moysklad') {
+        // МойСклад вызывается обычным GET-запросом
+        res = await fetch('/api/moysklad');
+      } else {
+        // Itigris требует POST-запрос с указанием конкретного действия (action)
+        res = await fetch('/api/itigris', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: 'sync' }), // Запускаем синхронизацию
+        });
+      }
+
       const json = await res.json();
+      
       if (type === 'moysklad') setMoyskladData(json);
       if (type === 'itigris') setItigrisData(json);
     } catch (err) {
@@ -79,7 +95,8 @@ export default function IntegrationsDevPage() {
                 <h2 className="text-xl font-semibold text-gray-900">Itigris ERP</h2>
                 <p className="text-xs text-gray-400">Импорт медицинских рецептов и визитов</p>
               </div>
-              <span className={`w-3 h-3 rounded-full ${itigrisData ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+              {/* Зеленая точка загорится, если бэкенд вернет успешный флаг ok или success */}
+              <span className={`w-3 h-3 rounded-full ${(itigrisData?.ok || itigrisData?.success) ? 'bg-green-500' : 'bg-gray-300'}`}></span>
             </div>
 
             <button
@@ -87,13 +104,27 @@ export default function IntegrationsDevPage() {
               disabled={loading === 'itigris'}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition duration-200 disabled:opacity-50"
             >
-              {loading === 'itigris' ? 'Загрузка данных...' : 'Проверить новые рецепты'}
+              {loading === 'itigris' ? 'Синхронизация...' : 'Проверить новые рецепты'}
             </button>
 
             {itigrisData && (
               <div className="mt-4 bg-gray-900 text-indigo-300 p-4 rounded-lg text-xs font-mono max-h-60 overflow-y-auto">
-                <p className="text-gray-400 mb-2">// Данные из {itigrisData.source}:</p>
-                <pre>{JSON.stringify(itigrisData.demoData, null, 2)}</pre>
+                <p className="text-gray-400 mb-2">
+                  // Статус: {itigrisData.ok || itigrisData.success ? 'Успешная операция' : 'Ошибка'}
+                </p>
+                
+                {/* Если бэкенд вернул ошибку (например, Итигрис не настроен в базе) */}
+                {itigrisData.error ? (
+                  <p className="text-red-400">Ошибка: {itigrisData.error}</p>
+                ) : (
+                  <>
+                    {itigrisData.syncedAt && (
+                      <p className="text-slate-400 mb-2">Синхронизировано: {new Date(itigrisData.syncedAt).toLocaleTimeString()}</p>
+                    )}
+                    {/* Выводим либо результаты синхронизации, либо данные */}
+                    <pre>{JSON.stringify(itigrisData.results || itigrisData.data || itigrisData, null, 2)}</pre>
+                  </>
+                )}
               </div>
             )}
           </div>
