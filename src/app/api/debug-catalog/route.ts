@@ -5,27 +5,36 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const fields = ['id','name','category','sku','name1c','code','description','price','priceByDk','unit','isActive','sortOrder','createdAt','updatedAt'];
-        const results: Record<string, string> = {};
-        
-        for (const field of fields) {
-            try {
-                await prisma.product.findFirst({ select: { [field]: true } });
-                results[field] = 'OK';
-            } catch (e: any) {
-                results[field] = e.message?.substring(0, 100);
-            }
+        // Test with explicit select (workaround)
+        let selectResult = 'not tested';
+        try {
+            const p = await prisma.product.findMany({
+                take: 2,
+                select: {
+                    id: true, name: true, category: true, sku: true, name1c: true,
+                    code: true, description: true, price: true, priceByDk: true,
+                    unit: true, isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
+                },
+            });
+            selectResult = `OK: ${p.length} products. Sample: ${p[0]?.name || 'none'}`;
+        } catch (e: any) {
+            selectResult = e.message?.substring(0, 200);
         }
 
-        let fullQuery = 'not tested';
+        // Test without select (known broken)
+        let noSelectResult = 'not tested';
         try {
             const p = await prisma.product.findMany({ take: 1 });
-            fullQuery = `OK: ${p.length} products`;
+            noSelectResult = `OK: ${p.length} products`;
         } catch (e: any) {
-            fullQuery = e.message?.substring(0, 200);
+            noSelectResult = e.message?.substring(0, 200);
         }
 
-        return NextResponse.json({ fieldTests: results, fullQuery });
+        return NextResponse.json({ 
+            withSelect: selectResult, 
+            withoutSelect: noSelectResult,
+            prismaVersion: require('@prisma/client').Prisma.prismaVersion?.client || 'unknown',
+        });
     } catch (e: any) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
