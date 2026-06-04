@@ -19,12 +19,14 @@ const baseNavItems = [
 
 const procurementNavItems = [
     { href: '/optic/procurement', label: 'Заказы', icon: LayoutDashboard, color: 'text-gray-500' },
+    { href: '/optic/partners', label: 'Партнеры', icon: Building2, color: 'text-blue-500' },
     { href: '/optic/settings', label: 'Настройки', icon: Settings, color: 'text-violet-500' },
 ];
 
 const managerNavItems = [
     { href: '/clinic-manager/dashboard', label: 'Клиника', icon: Building2, color: 'text-indigo-500' },
     { href: '/clinic-manager/itigris', label: 'ITIGRIS', icon: Link2, color: 'text-orange-500' },
+    { href: '/optic/partners', label: 'Партнеры', icon: Building2, color: 'text-blue-500' },
     { href: '/optic/branches', label: 'Филиалы', icon: Building2, color: 'text-teal-500' },
 ];
 

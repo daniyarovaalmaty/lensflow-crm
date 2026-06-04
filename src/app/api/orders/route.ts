@@ -442,6 +442,7 @@ export async function POST(request: NextRequest) {
                         totalPrice,
                         discountPercent: DISCOUNT_PCT,
                         distributorOrgId: body.distributorOrgId || undefined,
+                        labOrgId: body.labOrgId || undefined,
                     },
                     include: {
                         patient: true,

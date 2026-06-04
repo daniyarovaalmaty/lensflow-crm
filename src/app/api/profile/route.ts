@@ -40,6 +40,8 @@ export async function GET() {
                     contactPhone: true,
                     discountPercent: true,
                     logo: true,
+                    defaultLabId: true,
+                    defaultLab: { select: { id: true, name: true } },
                 },
             },
         },
