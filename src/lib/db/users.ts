@@ -32,7 +32,11 @@ export function toPublicUser(user: PrismaUser): PublicUser {
  * Find user by email
  */
 export async function findUserByEmail(email: string): Promise<PrismaUser | null> {
-    return prisma.user.findUnique({ where: { email } });
+    // Case-insensitive search — handles mixed-case email input
+    const user = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
+    });
+    return user;
 }
 
 /**
