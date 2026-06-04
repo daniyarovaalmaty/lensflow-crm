@@ -636,124 +636,177 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </motion.div>
             )}
 
-            {/* Recipient Selection — REQUIRED */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="card border-2 border-indigo-100"
-            >
-                <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                        <Truck className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Получатель заказа</h2>
-                        <p className="text-sm text-gray-500">Куда отправляется этот заказ?</p>
-                    </div>
-                    <span className="ml-auto text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-full">Обязательно</span>
-                </div>
-
-                {/* Primary choice */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    <button
-                        type="button"
-                        onClick={() => { setRecipientType('laboratory'); setSelectedDistributorId(''); }}
-                        className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
-                            recipientType === 'laboratory'
-                                ? 'border-blue-500 bg-blue-50 shadow-sm'
-                                : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/40'
-                        }`}
-                    >
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
-                            recipientType === 'laboratory' ? 'bg-blue-500' : 'bg-gray-100'
-                        }`}>
-                            🏭
+            {/* Recipient Selection */}
+            {isProcurement ? (
+                /* Procurement: auto-selected, locked — no manual change allowed */
+                selectedBranchId && (() => {
+                    const branch = branches.find(b => b.id === selectedBranchId);
+                    if (!branch) return null;
+                    const isLab = (branch.recipientType || 'laboratory') === 'laboratory';
+                    return (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`card border-2 ${isLab ? 'border-blue-200' : 'border-orange-200'}`}
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isLab ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                                    <Truck className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-semibold text-gray-900">Получатель заказа</h2>
+                                    <p className="text-sm text-gray-500">Определяется автоматически по филиалу</p>
+                                </div>
+                                <span className="ml-auto text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded-full flex items-center gap-1">
+                                    🔒 Авто
+                                </span>
+                            </div>
+                            <div className={`flex items-center gap-4 p-4 rounded-2xl border-2 ${
+                                isLab
+                                    ? 'border-blue-300 bg-blue-50'
+                                    : 'border-orange-300 bg-orange-50'
+                            }`}>
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${isLab ? 'bg-blue-500' : 'bg-orange-500'}`}>
+                                    {isLab ? '🏭' : '🚛'}
+                                </div>
+                                <div className="flex-1">
+                                    <div className={`text-base font-bold ${isLab ? 'text-blue-800' : 'text-orange-800'}`}>
+                                        {branch.recipientLabel || (isLab ? 'Лаборатория MedInvision' : 'ЦКК Дистрибьютор')}
+                                    </div>
+                                    <div className="text-sm text-gray-500 mt-0.5">
+                                        {isLab ? 'Изготовление линз' : 'Дистрибьютор — Очки, линзы, аксессуары'}
+                                    </div>
+                                </div>
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isLab ? 'bg-blue-500' : 'bg-orange-500'}`}>
+                                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })()
+            ) : (
+                /* Standard users: full interactive selector */
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="card border-2 border-indigo-100"
+                >
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                            <Truck className="w-5 h-5" />
                         </div>
                         <div>
-                            <div className={`text-sm font-bold ${
-                                recipientType === 'laboratory' ? 'text-blue-800' : 'text-gray-700'
-                            }`}>В Лабораторию</div>
-                            <div className="text-xs text-gray-500 mt-0.5">Изготовление линз</div>
+                            <h2 className="text-xl font-semibold text-gray-900">Получатель заказа</h2>
+                            <p className="text-sm text-gray-500">Куда отправляется этот заказ?</p>
                         </div>
-                        {recipientType === 'laboratory' && (
-                            <div className="ml-auto w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                        )}
-                    </button>
+                        <span className="ml-auto text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-full">Обязательно</span>
+                    </div>
 
-                    <button
-                        type="button"
-                        onClick={() => setRecipientType('distributor')}
-                        className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
-                            recipientType === 'distributor'
-                                ? 'border-purple-500 bg-purple-50 shadow-sm'
-                                : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/40'
-                        }`}
-                    >
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
-                            recipientType === 'distributor' ? 'bg-purple-500' : 'bg-gray-100'
-                        }`}>
-                            🚛
-                        </div>
-                        <div>
-                            <div className={`text-sm font-bold ${
-                                recipientType === 'distributor' ? 'text-purple-800' : 'text-gray-700'
-                            }`}>Дистрибьютору</div>
-                            <div className="text-xs text-gray-500 mt-0.5">Очки, линзы, аксессуары</div>
-                        </div>
-                        {recipientType === 'distributor' && (
-                            <div className="ml-auto w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
+                    {/* Primary choice */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <button
+                            type="button"
+                            onClick={() => { setRecipientType('laboratory'); setSelectedDistributorId(''); }}
+                            className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
+                                recipientType === 'laboratory'
+                                    ? 'border-blue-500 bg-blue-50 shadow-sm'
+                                    : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/40'
+                            }`}
+                        >
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                                recipientType === 'laboratory' ? 'bg-blue-500' : 'bg-gray-100'
+                            }`}>
+                                🏭
                             </div>
-                        )}
-                    </button>
-                </div>
+                            <div>
+                                <div className={`text-sm font-bold ${
+                                    recipientType === 'laboratory' ? 'text-blue-800' : 'text-gray-700'
+                                }`}>В Лабораторию</div>
+                                <div className="text-xs text-gray-500 mt-0.5">Изготовление линз</div>
+                            </div>
+                            {recipientType === 'laboratory' && (
+                                <div className="ml-auto w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            )}
+                        </button>
 
-                {/* Distributor list — shown only when distributor is selected */}
-                {recipientType === 'distributor' && (
-                    <div className="mt-1">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Выберите дистрибьютора:</p>
-                        {distributors.length === 0 ? (
-                            <div className="text-sm text-red-500 bg-red-50 rounded-xl p-3">
-                                ⚠️ Нет активных дистрибьюторов. Обратитесь к администратору.
+                        <button
+                            type="button"
+                            onClick={() => setRecipientType('distributor')}
+                            className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
+                                recipientType === 'distributor'
+                                    ? 'border-purple-500 bg-purple-50 shadow-sm'
+                                    : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/40'
+                            }`}
+                        >
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                                recipientType === 'distributor' ? 'bg-purple-500' : 'bg-gray-100'
+                            }`}>
+                                🚛
                             </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {distributors.map(dist => (
-                                    <button
-                                        key={dist.id}
-                                        type="button"
-                                        onClick={() => setSelectedDistributorId(dist.id)}
-                                        className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                                            selectedDistributorId === dist.id
-                                                ? 'border-purple-500 bg-purple-50 text-purple-800'
-                                                : 'border-gray-200 text-gray-600 hover:border-purple-300'
-                                        }`}
-                                    >
-                                        <Truck className="w-4 h-4 flex-shrink-0" />
-                                        <div>
-                                            <div className="text-sm font-semibold">{dist.name}</div>
-                                            {dist.city && <div className="text-xs opacity-70">{dist.city}</div>}
-                                        </div>
-                                        {selectedDistributorId === dist.id && (
-                                            <div className="ml-auto w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center">
-                                                <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                </svg>
+                            <div>
+                                <div className={`text-sm font-bold ${
+                                    recipientType === 'distributor' ? 'text-purple-800' : 'text-gray-700'
+                                }`}>Дистрибьютору</div>
+                                <div className="text-xs text-gray-500 mt-0.5">Очки, линзы, аксессуары</div>
+                            </div>
+                            {recipientType === 'distributor' && (
+                                <div className="ml-auto w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Distributor list — shown only when distributor is selected */}
+                    {recipientType === 'distributor' && (
+                        <div className="mt-1">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Выберите дистрибьютора:</p>
+                            {distributors.length === 0 ? (
+                                <div className="text-sm text-red-500 bg-red-50 rounded-xl p-3">
+                                    ⚠️ Нет активных дистрибьюторов. Обратитесь к администратору.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {distributors.map(dist => (
+                                        <button
+                                            key={dist.id}
+                                            type="button"
+                                            onClick={() => setSelectedDistributorId(dist.id)}
+                                            className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                                                selectedDistributorId === dist.id
+                                                    ? 'border-purple-500 bg-purple-50 text-purple-800'
+                                                    : 'border-gray-200 text-gray-600 hover:border-purple-300'
+                                            }`}
+                                        >
+                                            <Truck className="w-4 h-4 flex-shrink-0" />
+                                            <div>
+                                                <div className="text-sm font-semibold">{dist.name}</div>
+                                                {dist.city && <div className="text-xs opacity-70">{dist.city}</div>}
                                             </div>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-            </motion.div>
+                                            {selectedDistributorId === dist.id && (
+                                                <div className="ml-auto w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center">
+                                                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
 
             {/* Patient Information */}
             <motion.div
