@@ -115,18 +115,31 @@ export default function SalesHistoryPage() {
         });
     }, [sales, search, payFilter, dateFrom, dateTo]);
 
-    // Summary stats
-    const stats = useMemo(() => ({
-        total: filtered.reduce((s, x) => s + x.total, 0),
-        count: filtered.length,
-        avgCheck: filtered.length ? Math.round(filtered.reduce((s, x) => s + x.total, 0) / filtered.length) : 0,
-        byMethod: Object.entries(
-            filtered.reduce((acc, s) => {
-                acc[s.paymentMethod] = (acc[s.paymentMethod] || 0) + s.total;
-                return acc;
-            }, {} as Record<string, number>)
-        ),
-    }), [filtered]);
+    // Summary stats — correctly splits mixed payments via invoiceData
+    const stats = useMemo(() => {
+        let cashTotal = 0;
+        let cardTotal = 0;
+        let total = 0;
+        for (const s of filtered) {
+            total += s.total;
+            if (s.paymentMethod === 'mixed' && s.invoiceData?.splitPayment) {
+                cashTotal += s.invoiceData.cashAmount ?? 0;
+                cardTotal += s.invoiceData.cardAmount ?? 0;
+            } else if (s.paymentMethod === 'cash') {
+                cashTotal += s.total;
+            } else if (s.paymentMethod === 'card' || s.paymentMethod === 'transfer') {
+                cardTotal += s.total;
+            }
+        }
+        return {
+            total,
+            cashTotal,
+            cardTotal,
+            count: filtered.length,
+            avgCheck: filtered.length ? Math.round(total / filtered.length) : 0,
+        };
+    }, [filtered]);
+
 
     const exportCSV = () => {
         const rows = [
@@ -278,27 +291,27 @@ export default function SalesHistoryPage() {
                         <div className="text-xl font-bold text-gray-900">{stats.count}</div>
                         <div className="text-xs text-gray-400 mt-0.5">транзакций</div>
                     </div>
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+                    {/* Наличные в кассе */}
+                    <div className="bg-white rounded-2xl border border-green-100 p-4 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                                <Banknote className="w-4 h-4 text-green-600" />
+                            </div>
+                            <span className="text-xs font-medium text-gray-500">В кассе</span>
+                        </div>
+                        <div className="text-xl font-bold text-green-700">{fmt(stats.cashTotal)}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">наличными</div>
+                    </div>
+                    {/* Безнал / банк */}
+                    <div className="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                             <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                <Receipt className="w-4 h-4 text-blue-600" />
+                                <CreditCard className="w-4 h-4 text-blue-600" />
                             </div>
-                            <span className="text-xs font-medium text-gray-500">Средний чек</span>
+                            <span className="text-xs font-medium text-gray-500">Через банк</span>
                         </div>
-                        <div className="text-xl font-bold text-gray-900">{fmt(stats.avgCheck)}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">на покупку</div>
-                    </div>
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
-                                <CreditCard className="w-4 h-4 text-orange-600" />
-                            </div>
-                            <span className="text-xs font-medium text-gray-500">По картам</span>
-                        </div>
-                        <div className="text-xl font-bold text-gray-900">
-                            {fmt(stats.byMethod.find(([k]) => k === 'card')?.[1] || 0)}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-0.5">безналичных</div>
+                        <div className="text-xl font-bold text-blue-700">{fmt(stats.cardTotal)}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">карта / перевод</div>
                     </div>
                 </div>
 
