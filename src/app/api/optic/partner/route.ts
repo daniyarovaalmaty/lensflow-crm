@@ -29,6 +29,11 @@ export async function GET(req: Request) {
         // Fetch products (catalog)
         const products = await prisma.product.findMany({
             where: { isActive: true },
+            select: {
+                id: true, name: true, category: true, sku: true, name1c: true,
+                code: true, description: true, price: true, priceByDk: true,
+                unit: true, isActive: true, sortOrder: true, createdAt: true, updatedAt: true,
+            },
             orderBy: [{ category: 'asc' }, { name: 'asc' }]
         });
 
