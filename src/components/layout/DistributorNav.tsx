@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import {
     LayoutDashboard, ShoppingCart, Users, Settings,
-    LogOut, Truck, ChevronDown, User
+    LogOut, Truck, ChevronDown, User, Package
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
     { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
     { href: '/distributor/orders', label: 'Заказы', icon: ShoppingCart, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
+    { href: '/distributor/catalog', label: 'Каталог', icon: Package, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
     { href: '/distributor/staff', label: 'Сотрудники', icon: Users, roles: ['dist_head', 'dist_admin'] },
     { href: '/distributor/settings', label: 'Настройки', icon: Settings, roles: ['dist_head'] },
 ];
