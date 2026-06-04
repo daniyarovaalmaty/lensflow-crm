@@ -62,6 +62,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
     const [rgpPhotos, setRgpPhotos] = useState<{ od?: File; os?: File }>({});
     const [orgDiscount, setOrgDiscount] = useState<number>(0);
+    const [partnerLab, setPartnerLab] = useState<{ id: string; name: string } | null>(null);
     const [singleEye, setSingleEye] = useState<'both' | 'od' | 'os'>('both');
     const [distributors, setDistributors] = useState<{ id: string; name: string; city?: string }[]>([]);
     const [selectedDistributorId, setSelectedDistributorId] = useState<string>('');
@@ -132,6 +133,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         if (org.inn) setValue('inn', org.inn);
                         if (org.address) setValue('delivery_address', org.address);
                         if (org.discountPercent != null) setOrgDiscount(org.discountPercent);
+                        if (org.defaultLab) setPartnerLab(org.defaultLab);
                     }
                 }
             } catch (e) { console.error(e); }
@@ -297,8 +299,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             const submitData: any = { ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined };
             if (recipientType === 'distributor' && selectedDistributorId) {
                 submitData.distributorOrgId = selectedDistributorId;
-            } else {
+            } else if (recipientType === 'laboratory') {
                 submitData.distributorOrgId = undefined; // lab order
+                if (partnerLab?.id) {
+                    submitData.labOrgId = partnerLab.id;
+                }
             }
             // For procurement: set branch as the order's organization
             if (isProcurement && selectedBranchId) {
@@ -677,7 +682,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <div>
                                 <div className={`text-sm font-bold ${
                                     recipientType === 'laboratory' ? 'text-blue-800' : 'text-gray-700'
-                                }`}>В Лабораторию</div>
+                                }`}>В Лабораторию {partnerLab ? `(${partnerLab.name})` : ''}</div>
                                 <div className="text-xs text-gray-500 mt-0.5">Изготовление линз</div>
                             </div>
                             {recipientType === 'laboratory' && (
