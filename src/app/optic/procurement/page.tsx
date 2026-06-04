@@ -5,10 +5,11 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShoppingBag, Plus, Search, Filter, ChevronDown, ChevronUp,
+  ShoppingBag, Plus, Search, ChevronDown, ChevronUp,
   Building2, Calendar, CreditCard, CheckCircle2, Clock, XCircle,
-  Truck, AlertCircle, Eye, TrendingUp, Package, RefreshCw
+  Truck, Eye, TrendingUp, Package, RefreshCw
 } from 'lucide-react';
+import QuickNav from '@/components/ui/QuickNav';
 
 const STATUS_LABELS: Record<string, string> = {
   new: 'Новый',
@@ -16,6 +17,7 @@ const STATUS_LABELS: Record<string, string> = {
   quality_check: 'Контроль качества',
   ready: 'Готов',
   shipped: 'Отправлен',
+  out_for_delivery: 'У курьера',
   delivered: 'Доставлен',
   cancelled: 'Отменён',
 };
@@ -26,6 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   quality_check: 'bg-purple-100 text-purple-700',
   ready: 'bg-green-100 text-green-700',
   shipped: 'bg-amber-100 text-amber-700',
+  out_for_delivery: 'bg-orange-100 text-orange-700',
   delivered: 'bg-emerald-100 text-emerald-700',
   cancelled: 'bg-red-100 text-red-700',
 };
@@ -36,6 +39,7 @@ const STATUS_ICONS: Record<string, any> = {
   quality_check: Eye,
   ready: CheckCircle2,
   shipped: Truck,
+  out_for_delivery: Truck,
   delivered: CheckCircle2,
   cancelled: XCircle,
 };
@@ -66,14 +70,8 @@ export default function ProcurementPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load branches of parent org
       const orgRes = await fetch('/api/organizations/branches');
-      if (orgRes.ok) {
-        const data = await orgRes.json();
-        setBranches(data);
-      }
-
-      // Load all orders for the org
+      if (orgRes.ok) setBranches(await orgRes.json());
       const ordRes = await fetch('/api/orders?all=true');
       if (ordRes.ok) {
         const data = await ordRes.json();
@@ -99,7 +97,6 @@ export default function ProcurementPage() {
     });
   }, [orders, search, statusFilter, branchFilter]);
 
-  // Stats
   const stats = useMemo(() => {
     const total = orders.length;
     const active = orders.filter(o => !['delivered', 'cancelled'].includes(o.status)).length;
@@ -110,18 +107,13 @@ export default function ProcurementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
-              <ShoppingBag className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Отдел закупа</h1>
-              <p className="text-xs text-gray-400">Оптика Народная</p>
-            </div>
-          </div>
+      {/* Navigation — same as optic doctors/managers */}
+      <QuickNav />
+
+      {/* Page action bar */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          <h1 className="text-base font-semibold text-gray-800">Все заказы</h1>
           <div className="flex items-center gap-2">
             <button onClick={loadData} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
               <RefreshCw className="w-4 h-4" />
