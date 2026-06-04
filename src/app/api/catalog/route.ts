@@ -38,29 +38,41 @@ export async function GET(request: NextRequest) {
 
         // Strip prices only for clinic doctors (optic_doctor)
         const subRole = session.user.subRole;
-        const role = session.user.role;
 
         if (subRole === 'optic_doctor') {
             const stripped = products.map(({ price, name1c, code, ...rest }: any) => rest);
             return NextResponse.json(stripped);
         }
 
-        // For distributors: replace priceByDk with distributorPriceByDk if available
-        if (role === 'distributor') {
-            const adjusted = products.map((p: any) => {
-                const dist = p.distributorPriceByDk;
-                return {
-                    ...p,
-                    // Override priceByDk with distributor pricing when available
-                    priceByDk: dist && Object.keys(dist).length > 0 ? dist : p.priceByDk,
-                    // Also expose raw distributor prices
-                    distributorPriceByDk: dist,
-                };
+        // For distributors — apply their custom priceList if it exists
+        if (session.user.role === 'distributor' && session.user.organizationId) {
+            const distOrg = await prisma.organization.findUnique({
+                where: { id: session.user.organizationId },
+                select: { metadata: true },
             });
-            return NextResponse.json(adjusted);
+            const priceList = (distOrg?.metadata as any)?.priceList;
+            if (priceList?.lenses) {
+                const patched = products.map((product: any) => {
+                    if (product.category !== 'lens') return product;
+                    // Build a priceByDk from the distributor's priceList
+                    const desc = product.description; // 'toric', 'spherical', 'probe', 'rgp'
+                    if (desc === 'toric' && priceList.lenses.toric) {
+                        return { ...product, priceByDk: priceList.lenses.toric, price: Object.values(priceList.lenses.toric)[0] };
+                    }
+                    if (desc === 'spherical' && priceList.lenses.spherical) {
+                        return { ...product, priceByDk: priceList.lenses.spherical, price: Object.values(priceList.lenses.spherical)[0] };
+                    }
+                    if (desc === 'rgp' && priceList.lenses.probe) {
+                        return { ...product, priceByDk: priceList.lenses.probe, price: Object.values(priceList.lenses.probe)[0] };
+                    }
+                    return product;
+                });
+                return NextResponse.json(patched);
+            }
         }
 
         return NextResponse.json(products);
+
     } catch (error) {
         console.error('GET /api/catalog error:', error);
         return NextResponse.json({ error: 'Failed to fetch catalog' }, { status: 500 });

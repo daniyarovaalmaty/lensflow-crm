@@ -298,20 +298,35 @@ export async function POST(request: NextRequest) {
 
         if (odChar || osChar) {
             const lensProducts = await prisma.product.findMany({
-                where: { category: 'lens', isActive: true },
-                select: { description: true, price: true, priceByDk: true, distributorPriceByDk: true, name1c: true, sku: true },
+                where: { category: 'lens', description: { in: [odChar, osChar].filter(Boolean) } },
+                select: { description: true, price: true, priceByDk: true, name1c: true },
             });
 
-            // Determine if this order is from a distributor
-            const isDistributor = session.user.role === 'distributor';
+            // Load distributor's custom price list (if any)
+            let distPriceList: any = null;
+            if (session.user.role === 'distributor' && session.user.organizationId) {
+                const distOrg = await prisma.organization.findUnique({
+                    where: { id: session.user.organizationId },
+                    select: { metadata: true },
+                });
+                distPriceList = (distOrg?.metadata as any)?.priceList || null;
+            }
 
-            // Get price for a lens based on DK value
-            // For distributors, prefer distributorPriceByDk → priceByDk → price
-            const getLensPrice = (product: any, dk: string): number => {
-                if (isDistributor && product.distributorPriceByDk && typeof product.distributorPriceByDk === 'object') {
-                    const dkPrice = (product.distributorPriceByDk as Record<string, number>)[dk];
-                    if (dkPrice != null) return dkPrice;
+            // Helper: resolve price for a lens from distributor priceList or catalog
+            const getLensPrice = (product: any, dk: string, characteristic: string, isTrial: boolean): number => {
+                // Distributor custom price list takes priority
+                if (distPriceList) {
+                    const dkKey = String(dk);
+                    if (isTrial || dk === '50') {
+                        // Probe lens
+                        const probePrice = distPriceList.lenses?.probe?.[dkKey];
+                        if (probePrice != null) return probePrice;
+                    }
+                    const charKey = characteristic === 'toric' ? 'toric' : 'spherical';
+                    const charPrice = distPriceList.lenses?.[charKey]?.[dkKey];
+                    if (charPrice != null) return charPrice;
                 }
+                // Global catalog fallback
                 if (product.priceByDk && typeof product.priceByDk === 'object') {
                     const dkPrice = (product.priceByDk as Record<string, number>)[dk];
                     if (dkPrice != null) return dkPrice;
@@ -319,21 +334,13 @@ export async function POST(request: NextRequest) {
                 return product.price || 0;
             };
 
-            // Get the right product: trial product for DK=50, otherwise match by description/characteristic
-            const getProductForEye = (characteristic: string, dk: string): any | undefined => {
-                if (dk === '50') {
-                    // DK 50 → always a trial lens
-                    const trial = lensProducts.find((p: any) => p.sku === 'ML-TRIAL-DK50' || (p.description && p.description.toLowerCase().includes('trial')));
-                    if (trial) return trial;
-                }
-                return lensProducts.find((p: any) => p.description === characteristic);
-            };
 
-            const odProduct: any = getProductForEye(odChar, odDk);
-            const osProduct: any = getProductForEye(osChar, osDk);
+            const productMap = new Map(lensProducts.map((p: any) => [p.description, p]));
+            const odProduct: any = productMap.get(odChar);
+            const osProduct: any = productMap.get(osChar);
 
-            odUnitPrice = odProduct ? getLensPrice(odProduct, odDk) : 0;
-            osUnitPrice = osProduct ? getLensPrice(osProduct, osDk) : 0;
+            odUnitPrice = odProduct ? getLensPrice(odProduct, odDk, odChar, odTrial) : 0;
+            osUnitPrice = osProduct ? getLensPrice(osProduct, osDk, osChar, osTrial) : 0;
             odPrice = odUnitPrice * odQty;
             osPrice = osUnitPrice * osQty;
 
