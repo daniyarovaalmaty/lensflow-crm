@@ -134,6 +134,8 @@ export async function GET(request: NextRequest) {
                     doctor: order.doctorName || order.createdBy?.fullName || '',
                     created_at: order.createdAt.toISOString(),
                     updated_at: order.updatedAt.toISOString(),
+                    lab_org_id: order.labOrgId || null,
+                    distributor_org_id: order.distributorOrgId || null,
                 },
                 patient: order.patient ? {
                     id: order.patient.id,

@@ -440,22 +440,15 @@ export default function OpticDashboard() {
                     {clinicPerms.canViewFinance && perms.canViewStats && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mt-4 sm:mt-6">
                             {[
-                                { label: 'Всего', value: stats.total, icon: Package, bg: 'bg-gray-100', text: 'text-gray-600' },
-                                { label: 'Новые', value: stats.new, icon: Clock, bg: 'bg-blue-100', text: 'text-blue-600' },
-                                { label: 'В работе', value: stats.in_production, icon: TruckIcon, bg: 'bg-yellow-100', text: 'text-yellow-600' },
-                                { label: 'Готовы', value: stats.ready, icon: CheckCircle, bg: 'bg-green-100', text: 'text-green-600' },
-                                { label: 'Отгружены', value: stats.shipped, icon: TruckIcon, bg: 'bg-purple-100', text: 'text-purple-600' },
+                                { label: 'Всего', value: stats.total, icon: Package, bg: 'bg-gray-50', text: 'text-gray-700' },
+                                { label: 'Новые', value: stats.new, icon: Clock, bg: 'bg-blue-50', text: 'text-blue-700' },
+                                { label: 'В работе', value: stats.in_production, icon: TruckIcon, bg: 'bg-yellow-50', text: 'text-yellow-700' },
+                                { label: 'Готовы', value: stats.ready, icon: CheckCircle, bg: 'bg-green-50', text: 'text-green-700' },
+                                { label: 'Отгружены', value: stats.shipped, icon: TruckIcon, bg: 'bg-purple-50', text: 'text-purple-700' },
                             ].map(s => (
-                                <div key={s.label} className="card !p-3 sm:!p-4">
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${s.bg} ${s.text} flex items-center justify-center`}>
-                                            <s.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs sm:text-sm text-gray-600">{s.label}</p>
-                                            <p className="text-lg sm:text-2xl font-bold text-gray-900">{s.value}</p>
-                                        </div>
-                                    </div>
+                                <div key={s.label} className={`rounded-xl p-3 sm:p-4 ${s.bg}`}>
+                                    <div className="text-2xl font-bold mb-0.5" className={`${s.text}`}>{s.value}</div>
+                                    <div className={`text-xs font-medium ${s.text} opacity-90`}>{s.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -544,8 +537,8 @@ export default function OpticDashboard() {
                             className={`
                                 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0
                                 ${filter === status
-                                    ? 'bg-primary-500 text-white shadow-sm'
-                                    : 'bg-surface-elevated text-gray-700 hover:bg-surface-secondary'}
+                                    ? 'bg-primary-600 text-white shadow-sm'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
                             `}
                         >
                             {status === 'all' ? 'Все' : OrderStatusLabels[status]}
@@ -617,7 +610,7 @@ export default function OpticDashboard() {
                                     layout
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="card card-hover"
+                                    className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow p-4 sm:p-5"
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                                         <div className="flex-1 min-w-0">
