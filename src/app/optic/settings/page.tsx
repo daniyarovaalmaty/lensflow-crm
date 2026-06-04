@@ -39,10 +39,11 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'org'>('profile');
 
   useEffect(() => {
-    if (session?.user) {
-      setEmail((session.user as any).email || '');
-    }
-    // Always load name + phone fresh from DB (JWT may be stale)
+    if (session?.user) setEmail((session.user as any).email || '');
+  }, [session]);
+
+  // Load name + phone from DB on mount (don't rely on JWT which may be stale)
+  useEffect(() => {
     fetch('/api/user/profile')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -50,7 +51,7 @@ export default function SettingsPage() {
         if (data?.phone) setPhone(data.phone);
       })
       .catch(() => {});
-  }, [session]);
+  }, []); // runs once on mount
 
 
   useEffect(() => {
