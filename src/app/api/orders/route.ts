@@ -302,8 +302,31 @@ export async function POST(request: NextRequest) {
                 select: { description: true, price: true, priceByDk: true, name1c: true },
             });
 
-            // Get price for a lens based on DK value
-            const getLensPrice = (product: any, dk: string): number => {
+            // Load distributor's custom price list (if any)
+            let distPriceList: any = null;
+            if (session.user.role === 'distributor' && session.user.organizationId) {
+                const distOrg = await prisma.organization.findUnique({
+                    where: { id: session.user.organizationId },
+                    select: { metadata: true },
+                });
+                distPriceList = (distOrg?.metadata as any)?.priceList || null;
+            }
+
+            // Helper: resolve price for a lens from distributor priceList or catalog
+            const getLensPrice = (product: any, dk: string, characteristic: string, isTrial: boolean): number => {
+                // Distributor custom price list takes priority
+                if (distPriceList) {
+                    const dkKey = String(dk);
+                    if (isTrial || dk === '50') {
+                        // Probe lens
+                        const probePrice = distPriceList.lenses?.probe?.[dkKey];
+                        if (probePrice != null) return probePrice;
+                    }
+                    const charKey = characteristic === 'toric' ? 'toric' : 'spherical';
+                    const charPrice = distPriceList.lenses?.[charKey]?.[dkKey];
+                    if (charPrice != null) return charPrice;
+                }
+                // Global catalog fallback
                 if (product.priceByDk && typeof product.priceByDk === 'object') {
                     const dkPrice = (product.priceByDk as Record<string, number>)[dk];
                     if (dkPrice != null) return dkPrice;
@@ -311,12 +334,13 @@ export async function POST(request: NextRequest) {
                 return product.price || 0;
             };
 
+
             const productMap = new Map(lensProducts.map((p: any) => [p.description, p]));
             const odProduct: any = productMap.get(odChar);
             const osProduct: any = productMap.get(osChar);
 
-            odUnitPrice = odProduct ? getLensPrice(odProduct, odDk) : 0;
-            osUnitPrice = osProduct ? getLensPrice(osProduct, osDk) : 0;
+            odUnitPrice = odProduct ? getLensPrice(odProduct, odDk, odChar, odTrial) : 0;
+            osUnitPrice = osProduct ? getLensPrice(osProduct, osDk, osChar, osTrial) : 0;
             odPrice = odUnitPrice * odQty;
             osPrice = osUnitPrice * osQty;
 
