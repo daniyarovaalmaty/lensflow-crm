@@ -5,8 +5,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const products = await prisma.product.findMany();
-        return NextResponse.json({ count: products.length, products });
+        const columns = await prisma.$queryRaw`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'products';
+        `;
+        return NextResponse.json({ columns });
     } catch (e: any) {
         return NextResponse.json({ error: e.message, stack: e.stack }, { status: 500 });
     }
