@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan, Layers, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
@@ -27,16 +27,30 @@ interface CartItem {
 interface Sale {
     id: string; saleNumber: string; customerName: string | null; total: number;
     paymentMethod: string; createdAt: string;
+    invoiceData?: { split?: Array<{ method: string; label: string; amount: number }> } | null;
     items: Array<{ name: string; quantity: number; unitPrice: number; total: number }>;
 }
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 const PAYMENT_METHODS = [
-    { key: 'cash', label: 'Наличные', icon: Banknote, color: 'bg-green-50 text-green-700 border-green-200' },
-    { key: 'card', label: 'Карта', icon: CreditCard, color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    { key: 'transfer', label: 'Перевод', icon: ArrowRightLeft, color: 'bg-purple-50 text-purple-700 border-purple-200' },
+    { key: 'cash',          label: 'Нал',          icon: Banknote,        color: 'bg-green-50 text-green-700 border-green-200' },
+    { key: 'kaspi',         label: 'Kaspi',         icon: CreditCard,      color: 'bg-red-50 text-red-700 border-red-200' },
+    { key: 'card',          label: 'Карта',         icon: CreditCard,      color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { key: 'installment12', label: 'Рассрочка 12',  icon: Calendar,        color: 'bg-violet-50 text-violet-700 border-violet-200' },
+    { key: 'transfer',      label: 'Перевод',       icon: ArrowRightLeft,  color: 'bg-purple-50 text-purple-700 border-purple-200' },
+    { key: 'mixed',         label: 'Смешанная',     icon: Layers,          color: 'bg-orange-50 text-orange-700 border-orange-200' },
 ];
+
+const MIXED_SPLITS = [
+    { key: 'cash',          label: 'Наличные' },
+    { key: 'kaspi',         label: 'Kaspi' },
+    { key: 'card',          label: 'Карта' },
+    { key: 'installment12', label: 'Рассрочка 12' },
+    { key: 'transfer',      label: 'Перевод' },
+] as const;
+
+type MixedKey = typeof MIXED_SPLITS[number]['key'];
 
 export default function POSPage() {
     const { data: session } = useSession();
@@ -66,6 +80,9 @@ export default function POSPage() {
     const [discount, setDiscount] = useState('0');
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [saving, setSaving] = useState(false);
+    const [mixedPayments, setMixedPayments] = useState<Record<MixedKey, string>>({
+        cash: '', kaspi: '', card: '', installment12: '', transfer: '',
+    });
 
     // Patient integration state
     const [patientId, setPatientId] = useState<string | null>(null);
@@ -210,9 +227,16 @@ export default function POSPage() {
     const total = subtotal - discountAmount;
     const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
+    const mixedTotal = MIXED_SPLITS.reduce((s, sp) => s + (Number(mixedPayments[sp.key]) || 0), 0);
+    const mixedValid = paymentMethod !== 'mixed' || mixedTotal === total;
+
+    const activeMixedSplits = MIXED_SPLITS.filter(sp => Number(mixedPayments[sp.key]) > 0)
+        .map(sp => ({ method: sp.key, label: sp.label, amount: Number(mixedPayments[sp.key]) }));
+
     // Checkout
     const handleCheckout = async () => {
         if (!cart.length) return;
+        if (!mixedValid) return;
         setSaving(true);
         try {
             const res = await fetch('/api/optic/sales', {
@@ -224,13 +248,13 @@ export default function POSPage() {
                     customerPhone: customerPhone || undefined,
                     discountPercent: discountPct,
                     paymentMethod,
+                    paymentSplit: paymentMethod === 'mixed' ? activeMixedSplits : undefined,
                     patientId: patientId || undefined,
                     leadId: leadId || undefined,
                 }),
             });
             if (res.ok) {
                 const sale = await res.json();
-                setLastSale(sale);
                 setCart([]);
                 setCustomerName('');
                 setCustomerPhone('');
@@ -238,8 +262,10 @@ export default function POSPage() {
                 setPatientId(null);
                 setLeadId(null);
                 setPatientSearch('');
+                setMixedPayments({ cash: '', kaspi: '', card: '', installment12: '', transfer: '' });
                 setShowCheckout(false);
-                loadProducts(); // refresh stock
+                setLastSale(sale);
+                loadProducts();
             }
         } finally { setSaving(false); }
     };
@@ -468,23 +494,54 @@ export default function POSPage() {
                                 </div>
 
                                 {/* Payment actions - fixed at bottom */}
-                                <div className="p-5 border-t border-gray-100 flex-shrink-0 bg-white">
-                                    <div className="flex gap-2 mb-4">
+                                <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-white space-y-3">
+                                    {/* Payment method grid 3x2 */}
+                                    <div className="grid grid-cols-3 gap-1.5">
                                         {PAYMENT_METHODS.map(pm => (
                                             <button key={pm.key} onClick={() => setPaymentMethod(pm.key)}
-                                                className={`flex-1 flex flex-col md:flex-row items-center justify-center gap-1.5 py-3 rounded-2xl text-xs font-bold border transition-all active:scale-[0.96] ${
-                                                    paymentMethod === pm.key 
-                                                        ? pm.color + ' ring-2 ring-current border-transparent font-extrabold shadow-sm' 
+                                                className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-bold border transition-all active:scale-[0.96] ${
+                                                    paymentMethod === pm.key
+                                                        ? pm.color + ' ring-2 ring-current border-transparent shadow-sm'
                                                         : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
                                                 }`}>
-                                                <pm.icon className="w-4 h-4" />
-                                                <span>{pm.label}</span>
+                                                <pm.icon className="w-3.5 h-3.5" />
+                                                <span className="leading-tight text-center">{pm.label}</span>
                                             </button>
                                         ))}
                                     </div>
+
+                                    {/* Mixed payment inputs */}
+                                    {paymentMethod === 'mixed' && (
+                                        <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 space-y-2">
+                                            {MIXED_SPLITS.map(sp => (
+                                                <div key={sp.key} className="flex items-center gap-2">
+                                                    <span className="text-[11px] font-bold text-gray-600 w-20 shrink-0">{sp.label}</span>
+                                                    <input
+                                                        type="number" min="0"
+                                                        value={mixedPayments[sp.key]}
+                                                        onChange={e => {
+                                                            const raw = e.target.value;
+                                                            if (raw === '') { setMixedPayments(prev => ({ ...prev, [sp.key]: '' })); return; }
+                                                            const n = Number(raw);
+                                                            if (!isNaN(n) && n >= 0) setMixedPayments(prev => ({ ...prev, [sp.key]: String(n) }));
+                                                        }}
+                                                        placeholder="0"
+                                                        className="flex-1 border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-lg px-2 py-1.5 text-xs text-right font-bold bg-white"
+                                                    />
+                                                    <span className="text-[11px] text-gray-400 shrink-0">₸</span>
+                                                </div>
+                                            ))}
+                                            <div className={`flex justify-between text-xs font-black pt-1.5 border-t ${mixedValid ? 'text-green-600 border-green-200' : 'text-red-500 border-red-200'}`}>
+                                                <span>Сумма:</span>
+                                                <span>{fmt(mixedTotal)} / {fmt(total)} ₸ {mixedValid ? '✓' : '≠'}</span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <button onClick={() => setShowCheckout(true)}
-                                        className="w-full py-4 md:py-5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-2xl text-xs md:text-base font-extrabold uppercase tracking-wider transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer">
-                                        <Banknote className="w-4 h-4 md:w-5 h-5" /> Оформить заказ — {fmt(total)} ₸
+                                        disabled={!mixedValid}
+                                        className="w-full py-4 md:py-5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 active:scale-95 text-white rounded-2xl text-xs md:text-base font-extrabold uppercase tracking-wider transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer">
+                                        <Banknote className="w-4 h-4 md:w-5 h-5" /> Оформить — {fmt(total)} ₸
                                     </button>
                                 </div>
                             </div>
@@ -584,10 +641,24 @@ export default function POSPage() {
                                     <span>ИТОГО</span>
                                     <span className="text-primary-700">{fmt(total)} ₸</span>
                                 </div>
-                                <div className="text-xs text-gray-400 font-bold flex items-center gap-1 mt-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-                                    Оплата: {PAYMENT_METHODS.find(p => p.key === paymentMethod)?.label}
-                                </div>
+                                {paymentMethod === 'mixed' && activeMixedSplits.length > 0 ? (
+                                    <div className="mt-2 pt-2 border-t border-orange-100 space-y-1">
+                                        <p className="text-[11px] font-black text-orange-700 flex items-center gap-1">
+                                            <Layers className="w-3 h-3" /> Смешанная оплата:
+                                        </p>
+                                        {activeMixedSplits.map(sp => (
+                                            <div key={sp.method} className="flex justify-between text-xs">
+                                                <span className="text-gray-500 font-medium">{sp.label}</span>
+                                                <span className="font-bold text-gray-800">{fmt(sp.amount)} ₸</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-gray-400 font-bold flex items-center gap-1 mt-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                                        Оплата: {PAYMENT_METHODS.find(p => p.key === paymentMethod)?.label}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex gap-4">
@@ -608,14 +679,18 @@ export default function POSPage() {
             {/* ==================== SUCCESS MODAL ==================== */}
             <AnimatePresence>
                 {lastSale && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setLastSale(null)}>
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setLastSale(null)}>
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
                             onClick={e => e.stopPropagation()} className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 md:p-8 text-center">
                             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 animate-bounce" />
-                            <h2 className="text-xl font-black text-gray-900 mb-1">Продажа оформлена!</h2>
-                            <p className="text-2xl font-black text-green-600 mb-1">{fmt(lastSale.total)} ₸</p>
-                            <p className="text-xs text-gray-400 font-bold mb-5">Чек №{lastSale.saleNumber}</p>
+                            <h2 className="text-2xl font-black text-gray-900 mb-1">🎉 Поздравляем!</h2>
+                            <p className="text-sm text-gray-500 font-bold mb-3">Продажа успешно оформлена</p>
+                            <p className="text-3xl font-black text-green-600 mb-1">{fmt(lastSale.total)} ₸</p>
+                            <p className="text-xs text-gray-400 font-bold mb-2">Чек №{lastSale.saleNumber}</p>
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-xs font-bold mb-5">
+                                {PAYMENT_METHODS.find(p => p.key === lastSale.paymentMethod)?.label || lastSale.paymentMethod}
+                            </div>
                             <div className="bg-gray-50 rounded-2xl p-4 text-left mb-5 text-xs md:text-sm space-y-1.5 max-h-[160px] overflow-y-auto border border-gray-100">
                                 {lastSale.items?.map((item, i) => (
                                     <div key={i} className="flex justify-between py-0.5">
@@ -671,7 +746,7 @@ export default function POSPage() {
                                                 </>
                                             )}
                                             <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-[10px]">
-                                                {PAYMENT_METHODS.find(p => p.key === sale.paymentMethod)?.label || sale.paymentMethod}
+                                                {PAYMENT_METHODS.find(p => p.key === sale.paymentMethod)?.label ?? sale.paymentMethod}
                                             </span>
                                         </div>
                                         <div className="space-y-1.5 bg-white border border-gray-100/80 rounded-xl p-3">

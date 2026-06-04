@@ -51,14 +51,14 @@ export default function RootLayout({
                 <SessionProvider>
                     {children}
                 </SessionProvider>
-                <Script id="sw-register" strategy="afterInteractive">
+                <Script id="sw-cleanup" strategy="afterInteractive">
                     {`
+                        // Unregister any previously installed service worker.
+                        // The old SW intercepted POST requests and broke API calls.
                         if ('serviceWorker' in navigator) {
-                            window.addEventListener('load', () => {
-                                navigator.serviceWorker.register('/sw.js')
-                                    .then(reg => console.log('SW registered:', reg.scope))
-                                    .catch(err => console.log('SW registration failed:', err));
-                            });
+                            navigator.serviceWorker.getRegistrations()
+                                .then(regs => regs.forEach(reg => reg.unregister()))
+                                .catch(() => {});
                         }
                     `}
                 </Script>

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, paymentMethod, notes, patientId, leadId } = body;
+    const { items, customerName, customerPhone, discountPercent, paymentMethod, paymentSplit, notes, patientId, leadId } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
@@ -177,6 +177,7 @@ export async function POST(req: NextRequest) {
             paidAmount: totalAmount,
             paymentMethod: paymentMethod || 'cash',
             paymentStatus: 'paid',
+            invoiceData: paymentSplit ? { split: paymentSplit } : undefined,
             performedById: user.id,
             performedByName: user.fullName || user.email,
             notes: notes || null,
