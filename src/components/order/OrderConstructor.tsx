@@ -139,7 +139,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     }, [session?.user?.organizationId]);
 
     // Lens products from catalog (matched by description field = characteristic code)
-    const lensProducts = useMemo(() => catalog.filter(p => p.category === 'lens'), [catalog]);
+    const VALID_LENS_DESCRIPTIONS = new Set(['toric', 'spherical', 'rgp', 'probe']);
+    const lensProducts = useMemo(
+        () => catalog.filter(p => p.category === 'lens' && p.description != null && VALID_LENS_DESCRIPTIONS.has(p.description)),
+        [catalog]
+    );
+
     const additionalProducts = useMemo(() => catalog.filter(p => p.category !== 'lens'), [catalog]);
 
     // Map characteristic code → catalog product
