@@ -67,7 +67,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [distributors, setDistributors] = useState<{ id: string; name: string; city?: string }[]>([]);
     const [selectedDistributorId, setSelectedDistributorId] = useState<string>('');
     const [recipientType, setRecipientType] = useState<'laboratory' | 'distributor'>('laboratory');
+    const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
+    const [selectedBranchId, setSelectedBranchId] = useState<string>('');
     const subRole = session?.user?.subRole || '';
+    const isProcurement = subRole === 'optic_procurement';
     const canSeePrices = subRole !== 'optic_doctor';
     const isDistributor = session?.user?.role === 'distributor';
 
@@ -91,6 +94,17 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             } catch (e) { /* no distributors is fine */ }
         })();
     }, []);
+
+    // Load branches for procurement users
+    useEffect(() => {
+        if (!isProcurement) return;
+        (async () => {
+            try {
+                const res = await fetch('/api/organizations/branches');
+                if (res.ok) setBranches(await res.json());
+            } catch (e) { /* ignore */ }
+        })();
+    }, [isProcurement]);
 
     // Fetch organization profile for auto-fill
     useEffect(() => {
@@ -262,6 +276,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             validationErrors.push('Выберите дистрибьютора для этого заказа');
         }
 
+        // Branch validation for procurement
+        if (isProcurement && !selectedBranchId) {
+            validationErrors.push('Выберите филиал для этого заказа');
+        }
+
         if (validationErrors.length > 0) {
             showFormErrors(validationErrors);
             return;
@@ -276,6 +295,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 submitData.distributorOrgId = selectedDistributorId;
             } else {
                 submitData.distributorOrgId = undefined; // lab order
+            }
+            // For procurement: set branch as the order's organization
+            if (isProcurement && selectedBranchId) {
+                submitData.branchOrgId = selectedBranchId;
             }
             if (rgpPhotos.od || rgpPhotos.os) {
                 const MAX_SIZE = 1200; // max dimension in px
@@ -520,6 +543,66 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     </div>
                 </div>
             </motion.div>
+
+            {/* Branch Selection — only for procurement users */}
+            {isProcurement && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="card border-2 border-violet-100"
+                >
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center">
+                            <Building2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900">Филиал</h2>
+                            <p className="text-sm text-gray-500">Для какого филиала этот заказ?</p>
+                        </div>
+                        <span className="ml-auto text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-full">Обязательно</span>
+                    </div>
+
+                    {branches.length === 0 ? (
+                        <div className="text-sm text-amber-600 bg-amber-50 rounded-xl p-3 flex items-center gap-2">
+                            <span>⚠️</span> Загрузка филиалов...
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {branches.map(branch => (
+                                <button
+                                    key={branch.id}
+                                    type="button"
+                                    onClick={() => setSelectedBranchId(branch.id)}
+                                    className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-left ${
+                                        selectedBranchId === branch.id
+                                            ? 'border-violet-500 bg-violet-50 shadow-sm'
+                                            : 'border-gray-200 hover:border-violet-300 hover:bg-violet-50/40'
+                                    }`}
+                                >
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
+                                        selectedBranchId === branch.id ? 'bg-violet-500' : 'bg-gray-100'
+                                    }`}>
+                                        🏪
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className={`text-sm font-bold truncate ${
+                                            selectedBranchId === branch.id ? 'text-violet-800' : 'text-gray-700'
+                                        }`}>{branch.name}</div>
+                                    </div>
+                                    {selectedBranchId === branch.id && (
+                                        <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
 
             {/* Recipient Selection — REQUIRED */}
             <motion.div

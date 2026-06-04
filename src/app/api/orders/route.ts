@@ -32,12 +32,29 @@ export async function GET(request: NextRequest) {
             // Distributor sees only orders assigned to them
             where.distributorOrgId = session.user.organizationId;
         } else if (session.user.role === 'optic') {
-            // Clinic sees only its org orders
-            where.organizationId = session.user.organizationId;
+            if (session.user.subRole === 'optic_procurement') {
+                // Procurement sees orders for ALL branches of their parent org
+                const orgId = session.user.organizationId;
+                // Find the headquarters (parent) and all its branches
+                const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
+                let relatedOrgIds: string[] = orgId ? [orgId] : [];
+                if (org?.type === 'headquarters') {
+                    const branches = await prisma.organization.findMany({ where: { parentId: orgId }, select: { id: true } });
+                    relatedOrgIds = [orgId, ...branches.map((b: any) => b.id)];
+                } else if (org?.parentId) {
+                    const siblings = await prisma.organization.findMany({ where: { parentId: org.parentId }, select: { id: true } });
+                    relatedOrgIds = [org.parentId, ...siblings.map((b: any) => b.id)];
+                }
+                where.organizationId = { in: relatedOrgIds };
+            } else {
+                // Regular clinic user sees only its org orders
+                where.organizationId = session.user.organizationId;
+            }
         } else if (session.user.role === 'doctor') {
             // Doctor sees only their orders
             where.createdById = session.user.id;
         }
+
 
         if (status) {
             // Map status string to enum value
@@ -373,12 +390,16 @@ export async function POST(request: NextRequest) {
         while (attempts < maxAttempts) {
             try {
                 const orderNumber = await generateOrderNumber();
+                // For procurement users: use the selected branch org; otherwise use the user's own org
+                const orderOrgId = (session.user.subRole === 'optic_procurement' && body.branchOrgId)
+                    ? body.branchOrgId
+                    : (session.user.organizationId || undefined);
                 order = await prisma.order.create({
                     data: {
                         orderNumber,
                         status: 'new_order',
                         isUrgent: is_urgent,
-                        organizationId: session.user.organizationId || undefined,
+                        organizationId: orderOrgId,
                         createdById: session.user.id,
                         patientId,
                         opticName: session.user.profile?.opticName || '',

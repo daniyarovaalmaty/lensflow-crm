@@ -182,6 +182,7 @@ enum SubRole {
   optic_manager
   optic_doctor
   optic_accountant
+  optic_procurement
   doctor
   sales_manager
   dist_head

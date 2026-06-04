@@ -25,6 +25,7 @@ export const SubRoleEnum = z.enum([
     'optic_manager',    // Руководитель
     'optic_doctor',     // Врач клиники
     'optic_accountant', // Бухгалтер клиники
+    'optic_procurement', // Отдел закупа
 
     // Doctor (independent)
     'doctor',           // Независимый врач
@@ -50,6 +51,7 @@ export const SubRoleLabels: Record<SubRole, string> = {
     optic_manager: 'Руководитель',
     optic_doctor: 'Врач',
     optic_accountant: 'Бухгалтер',
+    optic_procurement: 'Отдел закупа',
     doctor: 'Врач',
     sales_manager: 'Менеджер по продажам',
     dist_head: 'Руководитель',
@@ -61,7 +63,7 @@ export const SubRoleLabels: Record<SubRole, string> = {
 // Which sub-roles belong to which top-level role
 export const SubRolesByRole: Record<UserRole, SubRole[]> = {
     laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_head', 'lab_admin', 'lab_accountant', 'sales_manager'],
-    optic: ['optic_manager', 'optic_doctor', 'optic_accountant'],
+    optic: ['optic_manager', 'optic_doctor', 'optic_accountant', 'optic_procurement'],
     doctor: ['doctor'],
     distributor: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'],
 };
@@ -257,6 +259,24 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canSendToAccountant: false,
         canProcessDocs: false,
     },
+    optic_procurement: {
+        canViewKanban: false,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: false,
+        canAddDefects: false,
+        canViewPayments: true,
+        canChangePayments: false,
+        canShip: false,
+        canPrint: true,
+        canCreateOrders: true,
+        canViewOrders: true,
+        canViewAllOrders: true,
+        canViewStats: true,
+        canSendToAccountant: false,
+        canProcessDocs: false,
+    },
     doctor: {
         canViewKanban: false,
         canChangeStatus: false,
@@ -362,6 +382,15 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewPatients: false,
         canViewFinance: true,
         canViewOrders: false,
+    },
+    optic_procurement: {
+        canViewPos: false,
+        canViewWarehouse: false,
+        canViewCatalog: false,
+        canViewCash: false,
+        canViewPatients: false,
+        canViewFinance: true,
+        canViewOrders: true,
     },
     // Fallbacks for other roles to be fully typed and safe
     lab_engineer: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
