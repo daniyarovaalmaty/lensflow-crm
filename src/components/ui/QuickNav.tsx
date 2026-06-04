@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check } from 'lucide-react';
+import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User } from 'lucide-react';
 import FullscreenButton from '@/components/ui/FullscreenButton';
 
 const baseNavItems = [
@@ -15,6 +15,11 @@ const baseNavItems = [
     { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500' },
     { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500' },
     { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500' },
+];
+
+const procurementNavItems = [
+    { href: '/optic/procurement', label: 'Заказы', icon: LayoutDashboard, color: 'text-gray-500' },
+    { href: '/optic/settings', label: 'Настройки', icon: Settings, color: 'text-violet-500' },
 ];
 
 const managerNavItems = [
@@ -33,8 +38,11 @@ export default function QuickNav() {
     const { data: session } = useSession();
     const subRole = (session?.user as any)?.subRole;
     const orgType = (session?.user as any)?.orgType;
+    const orgName = (session?.user as any)?.organizationName || '';
+    const userName = (session?.user as any)?.name || '';
     const isManager = subRole === 'optic_manager';
     const isHQ = orgType === 'headquarters';
+    const isProcurement = subRole === 'optic_procurement';
 
     const [branches, setBranches] = useState<Branch[]>([]);
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
@@ -67,13 +75,26 @@ export default function QuickNav() {
         ? 'Все филиалы'
         : branches.find(b => b.id === selectedBranch)?.name || 'Все';
 
-    const allItems = isManager ? [...baseNavItems, ...managerNavItems] : baseNavItems;
+    const allItems = isProcurement ? procurementNavItems : (isManager ? [...baseNavItems, ...managerNavItems] : baseNavItems);
 
     return (
         <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-0.5 overflow-x-auto py-2 scrollbar-hide -mx-1">
+                    {/* Left: logo for procurement + nav links */}
+                    <div className="flex items-center gap-3 overflow-x-auto py-2 scrollbar-hide -mx-1">
+                        {isProcurement && (
+                            <div className="flex items-center gap-2 mr-3 flex-shrink-0">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">ОН</span>
+                                </div>
+                                <div className="hidden sm:block">
+                                    <div className="text-xs font-bold text-gray-900 leading-tight">Оптика Народная</div>
+                                    <div className="text-[10px] text-gray-400 leading-tight">Отдел закупа</div>
+                                </div>
+                                <div className="w-px h-5 bg-gray-200 ml-1" />
+                            </div>
+                        )}
                         {allItems.map(item => {
                             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                             return (
@@ -92,8 +113,10 @@ export default function QuickNav() {
                             );
                         })}
                     </div>
+
+                    {/* Right side */}
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                        {/* Branch Switcher */}
+                        {/* Branch Switcher — only for manager HQ */}
                         {isManager && isHQ && branches.length > 0 && (
                             <div className="relative">
                                 <button
@@ -131,6 +154,29 @@ export default function QuickNav() {
                                 )}
                             </div>
                         )}
+
+                        {/* Procurement: user chip + logout */}
+                        {isProcurement && (
+                            <div className="flex items-center gap-2">
+                                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center">
+                                        <User className="w-3 h-3 text-violet-600" />
+                                    </div>
+                                    <span className="text-xs font-medium text-gray-700 max-w-[140px] truncate">
+                                        {userName || 'Пользователь'}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => signOut({ callbackUrl: '/login' })}
+                                    title="Выйти"
+                                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors text-xs font-medium"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Выйти</span>
+                                </button>
+                            </div>
+                        )}
+
                         <FullscreenButton className="!p-1.5 !rounded-lg !border-0 !shadow-none !bg-transparent hover:!bg-gray-100" />
                     </div>
                 </div>
