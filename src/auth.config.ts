@@ -33,12 +33,14 @@ export const authConfig = {
                 token.parentOrgId = user.parentOrgId;
                 token.permissions = user.permissions;
                 token.profile = user.profile;
+                token.name = (user.profile as any)?.fullName || user.name || '';
             }
             return token;
         },
         async session({ session, token }) {
             if (token && session.user) {
                 session.user.id = token.id as string;
+                session.user.name = (token.name as string) || (token.profile as any)?.fullName || '';
                 session.user.role = token.role as 'doctor' | 'optic' | 'laboratory' | 'distributor';
                 session.user.subRole = token.subRole as any;
                 session.user.organizationId = token.organizationId as string | undefined;
