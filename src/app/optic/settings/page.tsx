@@ -43,7 +43,13 @@ export default function SettingsPage() {
       setName((session.user as any).name || '');
       setEmail((session.user as any).email || '');
     }
+    // Load phone from API (not in session)
+    fetch('/api/user/profile')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.phone) setPhone(data.phone); })
+      .catch(() => {});
   }, [session]);
+
 
   useEffect(() => {
     fetch('/api/organizations/branches')
