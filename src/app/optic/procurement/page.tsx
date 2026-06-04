@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Plus, Search, ChevronDown, ChevronUp,
   Building2, Calendar, CreditCard, CheckCircle2, Clock, XCircle,
-  Truck, Eye, TrendingUp, Package, RefreshCw, Paperclip, Download, Upload, Trash2
+  Truck, Eye, TrendingUp, Package, RefreshCw, Paperclip, Download, Upload, Trash2, FileText
 } from 'lucide-react';
 import QuickNav from '@/components/ui/QuickNav';
+import { generateInvoicePdf } from '@/lib/generateInvoicePdf';
 
 const STATUS_LABELS: Record<string, string> = {
   new: 'Новый',
@@ -402,7 +403,19 @@ export default function ProcurementPage() {
 
                             {/* Finance row */}
                             <div className="bg-white rounded-xl p-3 border border-gray-100">
-                              <p className="text-xs font-bold text-gray-500 uppercase mb-2">Финансы</p>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold text-gray-500 uppercase">Финансы</p>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateInvoicePdf(order);
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-medium rounded-lg transition-colors"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                  Счет на оплату (PDF)
+                                </button>
+                              </div>
                               <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                   <div className="text-xs text-gray-500">
