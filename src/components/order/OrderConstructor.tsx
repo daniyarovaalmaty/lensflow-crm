@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
 import { MediLensCalculator } from './MediLensCalculator';
-import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye, Factory } from 'lucide-react';
 
 interface CatalogProduct {
     id: string;
@@ -684,10 +684,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                     : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/40'
                             }`}
                         >
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
-                                recipientType === 'laboratory' ? 'bg-blue-500' : 'bg-gray-100'
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                                recipientType === 'laboratory' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
                             }`}>
-                                🏭
+                                <Factory className="w-6 h-6" />
                             </div>
                             <div>
                                 <div className={`text-sm font-bold ${
@@ -713,10 +713,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                     : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/40'
                             }`}
                         >
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
-                                recipientType === 'distributor' ? 'bg-purple-500' : 'bg-gray-100'
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                                recipientType === 'distributor' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'
                             }`}>
-                                🚛
+                                <Truck className="w-6 h-6" />
                             </div>
                             <div>
                                 <div className={`text-sm font-bold ${
