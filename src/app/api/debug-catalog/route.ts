@@ -5,25 +5,28 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const columns = await prisma.$queryRaw`
-            SELECT column_name, data_type 
-            FROM information_schema.columns 
-            WHERE table_name = 'products';
-        `;
+        const fields = ['id','name','category','sku','name1c','code','description','price','priceByDk','unit','isActive','sortOrder','createdAt','updatedAt'];
+        const results: Record<string, string> = {};
         
-        let findManyResult: any = null;
-        let findManyError: any = null;
-        try {
-            const products = await prisma.product.findMany({ take: 2 });
-            findManyResult = { count: products.length, sample: products };
-        } catch (e2: any) {
-            findManyError = e2.message;
+        for (const field of fields) {
+            try {
+                await prisma.product.findFirst({ select: { [field]: true } });
+                results[field] = 'OK';
+            } catch (e: any) {
+                results[field] = e.message?.substring(0, 100);
+            }
         }
 
-        const rawProducts = await prisma.$queryRaw`SELECT id, name, category FROM products LIMIT 3`;
-        
-        return NextResponse.json({ columns, findManyResult, findManyError, rawProducts });
+        let fullQuery = 'not tested';
+        try {
+            const p = await prisma.product.findMany({ take: 1 });
+            fullQuery = `OK: ${p.length} products`;
+        } catch (e: any) {
+            fullQuery = e.message?.substring(0, 200);
+        }
+
+        return NextResponse.json({ fieldTests: results, fullQuery });
     } catch (e: any) {
-        return NextResponse.json({ error: e.message, stack: e.stack }, { status: 500 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
