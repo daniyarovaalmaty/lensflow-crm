@@ -302,7 +302,7 @@ export async function POST(request: NextRequest) {
                 select: { description: true, price: true, priceByDk: true, name1c: true },
             });
 
-            // Load distributor's custom price list (if any)
+            // Load custom price list: distributor or optic org
             let distPriceList: any = null;
             if (session.user.role === 'distributor' && session.user.organizationId) {
                 const distOrg = await prisma.organization.findUnique({
@@ -310,15 +310,34 @@ export async function POST(request: NextRequest) {
                     select: { metadata: true },
                 });
                 distPriceList = (distOrg?.metadata as any)?.priceList || null;
+            } else if (session.user.role === 'optic') {
+                // For optic (including procurement): use branch org or user's org
+                const effectiveOrgId = (session.user.subRole === 'optic_procurement' && body.branchOrgId)
+                    ? body.branchOrgId
+                    : session.user.organizationId;
+                if (effectiveOrgId) {
+                    const opticOrg = await prisma.organization.findUnique({
+                        where: { id: effectiveOrgId },
+                        select: { metadata: true, parentId: true },
+                    });
+                    // Check own metadata first, then HQ metadata
+                    distPriceList = (opticOrg?.metadata as any)?.priceList || null;
+                    if (!distPriceList && opticOrg?.parentId) {
+                        const hqOrg = await prisma.organization.findUnique({
+                            where: { id: opticOrg.parentId },
+                            select: { metadata: true },
+                        });
+                        distPriceList = (hqOrg?.metadata as any)?.priceList || null;
+                    }
+                }
             }
 
-            // Helper: resolve price for a lens from distributor priceList or catalog
+            // Helper: resolve price from org priceList or catalog
             const getLensPrice = (product: any, dk: string, characteristic: string, isTrial: boolean): number => {
-                // Distributor custom price list takes priority
+                // Custom price list takes priority
                 if (distPriceList) {
                     const dkKey = String(dk);
                     if (isTrial || dk === '50') {
-                        // Probe lens
                         const probePrice = distPriceList.lenses?.probe?.[dkKey];
                         if (probePrice != null) return probePrice;
                     }
@@ -333,6 +352,7 @@ export async function POST(request: NextRequest) {
                 }
                 return product.price || 0;
             };
+
 
 
             const productMap = new Map(lensProducts.map((p: any) => [p.description, p]));
