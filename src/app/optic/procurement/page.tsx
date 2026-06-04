@@ -268,6 +268,25 @@ export default function OpticProcurementDashboard() {
         });
     };
 
+    const setQuickDate = (preset: 'today' | '7d' | '30d' | '6m' | '1y' | 'all') => {
+        if (preset === 'all') {
+            setDateFrom('');
+            setDateTo('');
+            return;
+        }
+        const today = new Date();
+        const fromDate = new Date();
+        switch (preset) {
+            case 'today': break;
+            case '7d': fromDate.setDate(today.getDate() - 7); break;
+            case '30d': fromDate.setDate(today.getDate() - 30); break;
+            case '6m': fromDate.setMonth(today.getMonth() - 6); break;
+            case '1y': fromDate.setFullYear(today.getFullYear() - 1); break;
+        }
+        setDateFrom(fromDate.toISOString().split('T')[0]);
+        setDateTo(today.toISOString().split('T')[0]);
+    };
+
     const clearFilters = () => {
         setSearchQuery('');
         setFilter('all');
@@ -605,10 +624,20 @@ export default function OpticProcurementDashboard() {
                         <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
                     </div>
                     {hasActiveFilters && (
-                        <button onClick={clearFilters} className="btn btn-secondary text-sm gap-1">
+                        <button onClick={clearFilters} className="btn btn-secondary text-sm gap-1 h-[42px]">
                             <X className="w-4 h-4" /> Сбросить
                         </button>
                     )}
+                </div>
+                
+                {/* Quick Date Filters */}
+                <div className="flex flex-wrap items-center gap-2 mb-6 -mt-2">
+                    <button onClick={() => setQuickDate('today')} className="px-3 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">Сегодня</button>
+                    <button onClick={() => setQuickDate('7d')} className="px-3 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">7 дней</button>
+                    <button onClick={() => setQuickDate('30d')} className="px-3 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">30 дней</button>
+                    <button onClick={() => setQuickDate('6m')} className="px-3 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">Полгода</button>
+                    <button onClick={() => setQuickDate('1y')} className="px-3 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">Год</button>
+                    <button onClick={() => setQuickDate('all')} className="px-3 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">За всё время</button>
                 </div>
 
 

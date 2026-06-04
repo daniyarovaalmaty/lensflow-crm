@@ -78,15 +78,8 @@ export async function GET(request: NextRequest) {
             where.organizationId = opticId;
         }
 
-        // Exclude old delivered (>30 days) orders for performance
-        if (!status) {
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            where.NOT = {
-                status: 'delivered',
-                deliveredAt: { lt: thirtyDaysAgo },
-            };
-        }
+        // Fetch all orders regardless of how old they are
+        // (Removed 30-day exclusion for delivered orders)
 
         const orders = await prisma.order.findMany({
             where,
