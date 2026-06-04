@@ -11,9 +11,9 @@ import { useState } from 'react';
 
 const navItems = [
     { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
-    { href: '/distributor/orders', label: 'Заказы', icon: ShoppingCart, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
+    { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
     { href: '/distributor/catalog', label: 'Каталог', icon: Package, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
-    { href: '/distributor/staff', label: 'Сотрудники', icon: Users, roles: ['dist_head', 'dist_admin'] },
+    { href: '/distributor/staff', label: 'Сотрудники', icon: User, roles: ['dist_head', 'dist_admin'] },
     { href: '/distributor/settings', label: 'Настройки', icon: Settings, roles: ['dist_head'] },
 ];
 

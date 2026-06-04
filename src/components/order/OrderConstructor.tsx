@@ -657,62 +657,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             )}
 
             {/* Recipient Selection */}
-            {isProcurement ? (
-                /* Procurement: auto-selected, locked — no manual change allowed */
-                selectedBranchId && (() => {
-                    const branch = branches.find(b => b.id === selectedBranchId);
-                    if (!branch) return null;
-                    const isLab = (branch.recipientType || 'laboratory') === 'laboratory';
-                    return (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={`card border-2 ${isLab ? 'border-blue-200' : 'border-orange-200'}`}
-                        >
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isLab ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                                    <Truck className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-semibold text-gray-900">Получатель заказа</h2>
-                                    <p className="text-sm text-gray-500">Определяется автоматически по филиалу</p>
-                                </div>
-                                <span className="ml-auto text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded-full flex items-center gap-1">
-                                    🔒 Авто
-                                </span>
-                            </div>
-                            <div className={`flex items-center gap-4 p-4 rounded-2xl border-2 ${
-                                isLab
-                                    ? 'border-blue-300 bg-blue-50'
-                                    : 'border-orange-300 bg-orange-50'
-                            }`}>
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${isLab ? 'bg-blue-500' : 'bg-orange-500'}`}>
-                                    {isLab ? '🏭' : '🚛'}
-                                </div>
-                                <div className="flex-1">
-                                    <div className={`text-base font-bold ${isLab ? 'text-blue-800' : 'text-orange-800'}`}>
-                                        {branch.recipientLabel || (isLab ? 'Лаборатория MedInvision' : 'ЦКК Дистрибьютор')}
-                                    </div>
-                                    <div className="text-sm text-gray-500 mt-0.5">
-                                        {isLab ? 'Изготовление линз' : 'Дистрибьютор — Очки, линзы, аксессуары'}
-                                    </div>
-                                </div>
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isLab ? 'bg-blue-500' : 'bg-orange-500'}`}>
-                                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </motion.div>
-                    );
-                })()
-            ) : (
-                /* Standard users: full interactive selector */
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="card border-2 border-indigo-100"
-                >
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="card border-2 border-indigo-100"
+            >
                     <div className="flex items-center gap-3 mb-5">
                         <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
                             <Truck className="w-5 h-5" />
@@ -825,7 +774,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         </div>
                     )}
                 </motion.div>
-            )}
 
 
             {/* Patient Information */}

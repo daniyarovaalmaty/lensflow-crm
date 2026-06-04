@@ -385,7 +385,7 @@ export default function LabHeadDashboard() {
                                     onClick={() => { setDateFrom(from); setDateTo(to); }}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
                                         ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                 >
                                     {label}
@@ -420,53 +420,53 @@ export default function LabHeadDashboard() {
                 {/* ─── KPI Cards Row ─── */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Total Orders */}
-                    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                    <div className="bg-blue-50 rounded-2xl p-5">
                         <div className="flex items-center justify-between mb-3">
                             <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
                                 <Package className="w-5 h-5" />
                             </div>
                             <GrowthBadge pct={kpis.growthPct} />
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{kpis.totalThisMonth}</p>
-                        <p className="text-sm text-gray-500 mt-1">Заказов за месяц</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Всего: {kpis.totalOrders}</p>
+                        <p className="text-2xl font-bold text-blue-900">{kpis.totalThisMonth}</p>
+                        <p className="text-sm text-blue-800 opacity-90 mt-1">Заказов за месяц</p>
+                        <p className="text-xs text-blue-600 opacity-80 mt-0.5">Всего: {kpis.totalOrders}</p>
                     </div>
 
                     {/* Revenue This Month */}
-                    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                    <div className="bg-emerald-50 rounded-2xl p-5">
                         <div className="flex items-center justify-between mb-3">
                             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
                                 <DollarSign className="w-5 h-5" />
                             </div>
                             <GrowthBadge pct={kpis.revenueGrowthPct} />
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{fmt(kpis.revenueThisMonth)} ₸</p>
-                        <p className="text-sm text-gray-500 mt-1">Выручка за месяц</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Всего: {fmt(kpis.totalRevenue)} ₸</p>
+                        <p className="text-2xl font-bold text-emerald-900">{fmt(kpis.revenueThisMonth)} ₸</p>
+                        <p className="text-sm text-emerald-800 opacity-90 mt-1">Выручка за месяц</p>
+                        <p className="text-xs text-emerald-600 opacity-80 mt-0.5">Всего: {fmt(kpis.totalRevenue)} ₸</p>
                     </div>
 
                     {/* Defect Rate */}
-                    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                    <div className="bg-red-50 rounded-2xl p-5">
                         <div className="flex items-center justify-between mb-3">
                             <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
                                 <AlertTriangle className="w-5 h-5" />
                             </div>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{kpis.defectRate}%</p>
-                        <p className="text-sm text-gray-500 mt-1">Процент брака</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{kpis.totalDefects} браков / {kpis.totalLenses} линз</p>
+                        <p className="text-2xl font-bold text-red-900">{kpis.defectRate}%</p>
+                        <p className="text-sm text-red-800 opacity-90 mt-1">Процент брака</p>
+                        <p className="text-xs text-red-600 opacity-80 mt-0.5">{kpis.totalDefects} браков / {kpis.totalLenses} линз</p>
                     </div>
 
                     {/* Avg Production Time */}
-                    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                    <div className="bg-purple-50 rounded-2xl p-5">
                         <div className="flex items-center justify-between mb-3">
                             <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
                                 <Clock className="w-5 h-5" />
                             </div>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">{kpis.avgProdHours > 0 ? `${kpis.avgProdHours} ч` : '—'}</p>
-                        <p className="text-sm text-gray-500 mt-1">Ср. время производства</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{kpis.completedOrders} выполн. заказов</p>
+                        <p className="text-2xl font-bold text-purple-900">{kpis.avgProdHours > 0 ? `${kpis.avgProdHours} ч` : '—'}</p>
+                        <p className="text-sm text-purple-800 opacity-90 mt-1">Ср. время производства</p>
+                        <p className="text-xs text-purple-600 opacity-80 mt-0.5">{kpis.completedOrders} выполн. заказов</p>
                     </div>
                 </div>
 

@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Plus, Search, ChevronDown, ChevronUp,
   Building2, Calendar, CreditCard, CheckCircle2, Clock, XCircle,
-  Truck, Eye, TrendingUp, Package, RefreshCw, Paperclip, Download, Upload, Trash2
+  Truck, Eye, TrendingUp, Package, RefreshCw, Paperclip, Download, Upload, Trash2, FileText
 } from 'lucide-react';
 import QuickNav from '@/components/ui/QuickNav';
+import { generateInvoicePdf } from '@/lib/generateInvoicePdf';
 
 const STATUS_LABELS: Record<string, string> = {
   new: 'Новый',
@@ -221,61 +222,59 @@ export default function ProcurementPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'Всего заказов', value: stats.total, icon: Package, color: 'from-blue-500 to-blue-600' },
-            { label: 'Активных', value: stats.active, icon: Clock, color: 'from-violet-500 to-purple-600' },
-            { label: 'Сумма заказов', value: stats.totalAmount.toLocaleString('ru-RU') + ' ₸', icon: TrendingUp, color: 'from-emerald-500 to-green-600' },
-            { label: 'Оплачено', value: stats.paidAmount.toLocaleString('ru-RU') + ' ₸', icon: CreditCard, color: 'from-amber-500 to-orange-500' },
+            { label: 'Всего заказов', value: stats.total, icon: Package, bg: 'bg-blue-50', text: 'text-blue-700' },
+            { label: 'Активных', value: stats.active, icon: Clock, bg: 'bg-purple-50', text: 'text-purple-700' },
+            { label: 'Сумма заказов', value: stats.totalAmount.toLocaleString('ru-RU') + ' ₸', icon: TrendingUp, bg: 'bg-emerald-50', text: 'text-emerald-700' },
+            { label: 'Оплачено', value: stats.paidAmount.toLocaleString('ru-RU') + ' ₸', icon: CreditCard, bg: 'bg-amber-50', text: 'text-amber-700' },
           ].map((s, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+              className={`${s.bg} rounded-2xl p-4`}
             >
-              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-3`}>
-                <s.icon className="w-4 h-4 text-white" />
+              <div className={`w-9 h-9 rounded-xl ${s.text} opacity-80 flex items-center justify-center mb-2`}>
+                <s.icon className="w-5 h-5" />
               </div>
-              <div className="text-xl font-bold text-gray-900">{s.value}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+              <div className={`text-xl font-bold ${s.text}`}>{s.value}</div>
+              <div className={`text-xs font-medium ${s.text} opacity-90 mt-0.5`}>{s.label}</div>
             </motion.div>
           ))}
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Поиск по номеру, пациенту, филиалу..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400"
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 bg-white"
-            >
-              <option value="">Все статусы</option>
-              {Object.entries(STATUS_LABELS).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
-              ))}
-            </select>
-            <select
-              value={branchFilter}
-              onChange={e => setBranchFilter(e.target.value)}
-              className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 bg-white"
-            >
-              <option value="">Все филиалы</option>
-              {branches.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Поиск по номеру, пациенту, филиалу..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="input pl-9 w-full"
+            />
           </div>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="input w-full sm:w-auto"
+          >
+            <option value="">Все статусы</option>
+            {Object.entries(STATUS_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
+          <select
+            value={branchFilter}
+            onChange={e => setBranchFilter(e.target.value)}
+            className="input w-full sm:w-auto"
+          >
+            <option value="">Все филиалы</option>
+            {branches.map(b => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* Orders list */}
@@ -402,7 +401,19 @@ export default function ProcurementPage() {
 
                             {/* Finance row */}
                             <div className="bg-white rounded-xl p-3 border border-gray-100">
-                              <p className="text-xs font-bold text-gray-500 uppercase mb-2">Финансы</p>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold text-gray-500 uppercase">Финансы</p>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateInvoicePdf(order);
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-medium rounded-lg transition-colors"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                  Счет на оплату (PDF)
+                                </button>
+                              </div>
                               <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                   <div className="text-xs text-gray-500">

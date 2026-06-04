@@ -198,6 +198,8 @@ export default function NewOrderPage() {
 
     const subRole = session?.user?.subRole || '';
     const isDoctor = subRole === 'optic_doctor' || session?.user?.role === 'doctor';
+    const isProcurement = subRole === 'optic_procurement';
+    const dashboardUrl = isProcurement ? '/optic/procurement' : '/optic/dashboard';
 
     const opticId = 'OPT-001';
 
@@ -324,7 +326,7 @@ export default function NewOrderPage() {
                         )}
 
                         <button
-                            onClick={() => router.push('/optic/dashboard')}
+                            onClick={() => router.push(dashboardUrl)}
                             className="text-sm text-gray-500 hover:text-primary-600 transition-colors flex items-center justify-center gap-1 mx-auto"
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -344,7 +346,7 @@ export default function NewOrderPage() {
                 <nav className="mb-8">
                     <ol className="flex items-center gap-2 text-sm text-gray-600">
                         <li>
-                            <a href="/optic/dashboard" className="hover:text-primary-500 transition-colors">
+                            <a href={dashboardUrl} className="hover:text-primary-500 transition-colors">
                                 Дашборд
                             </a>
                         </li>

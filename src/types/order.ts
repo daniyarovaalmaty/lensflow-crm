@@ -160,6 +160,8 @@ export const OrderMetaSchema = z.object({
     doctor: z.string().optional(),
     created_at: z.string().datetime(),
     updated_at: z.string().datetime(),
+    lab_org_id: z.string().nullable().optional(),
+    distributor_org_id: z.string().nullable().optional(),
 });
 
 export type OrderMeta = z.infer<typeof OrderMetaSchema>;
