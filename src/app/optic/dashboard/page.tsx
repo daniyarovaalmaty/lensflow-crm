@@ -44,8 +44,13 @@ export default function OpticDashboard() {
     useEffect(() => {
         if (!session?.user) return;
         const role = session.user.role;
+        const sr = session.user.subRole;
+        // Procurement: redirect to dedicated procurement page
+        if (sr === 'optic_procurement') {
+            router.replace('/optic/procurement');
+            return;
+        }
         if (role === 'laboratory') {
-            const sr = session.user.subRole;
             if (sr === 'lab_accountant') {
                 router.replace('/laboratory/accountant');
             } else {
@@ -53,6 +58,7 @@ export default function OpticDashboard() {
             }
         }
     }, [session, router]);
+
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
