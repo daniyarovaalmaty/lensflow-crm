@@ -299,7 +299,8 @@ model Product {
   code        String?  // Код товара
   description String?
   price       Int      @default(0)
-  priceByDk   Json?    // { "50": 7600, "100": 18500, ... } DK-specific prices for lenses
+  priceByDk   Json?    // { "50": 7600, "100": 18500, ... } DK-specific prices for lenses (clinic/optic price)
+  distributorPriceByDk Json? // { "50": 7600, "100": 18500, ... } DK-specific prices for distributors
   unit        String   @default("шт")
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)

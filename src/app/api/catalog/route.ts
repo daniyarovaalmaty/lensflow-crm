@@ -38,10 +38,26 @@ export async function GET(request: NextRequest) {
 
         // Strip prices only for clinic doctors (optic_doctor)
         const subRole = session.user.subRole;
+        const role = session.user.role;
 
         if (subRole === 'optic_doctor') {
             const stripped = products.map(({ price, name1c, code, ...rest }: any) => rest);
             return NextResponse.json(stripped);
+        }
+
+        // For distributors: replace priceByDk with distributorPriceByDk if available
+        if (role === 'distributor') {
+            const adjusted = products.map((p: any) => {
+                const dist = p.distributorPriceByDk;
+                return {
+                    ...p,
+                    // Override priceByDk with distributor pricing when available
+                    priceByDk: dist && Object.keys(dist).length > 0 ? dist : p.priceByDk,
+                    // Also expose raw distributor prices
+                    distributorPriceByDk: dist,
+                };
+            });
+            return NextResponse.json(adjusted);
         }
 
         return NextResponse.json(products);

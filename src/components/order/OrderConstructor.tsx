@@ -18,6 +18,7 @@ interface CatalogProduct {
     description: string | null;
     price?: number; // undefined for doctors
     priceByDk?: Record<string, number> | null; // DK-specific prices: { "50": 15000, "100": 18500, ... }
+    distributorPriceByDk?: Record<string, number> | null; // Distributor-specific DK prices
     unit: string;
 }
 
@@ -68,6 +69,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [recipientType, setRecipientType] = useState<'laboratory' | 'distributor'>('laboratory');
     const subRole = session?.user?.subRole || '';
     const canSeePrices = subRole !== 'optic_doctor';
+    const isDistributor = session?.user?.role === 'distributor';
 
     useEffect(() => {
         (async () => {
@@ -115,13 +117,26 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const additionalProducts = useMemo(() => catalog.filter(p => p.category !== 'lens'), [catalog]);
 
     // Map characteristic code → catalog product
-    const getLensProduct = (characteristic: string) => {
+    // When DK=50, it's always a trial lens — find the trial product
+    const getLensProduct = (characteristic: string, dk?: string) => {
+        if (dk === '50') {
+            // DK 50 is always a trial lens — look for the dedicated trial product
+            const trialProduct = lensProducts.find(p => p.sku === 'ML-TRIAL-DK50' || (p.description && p.description.toLowerCase().includes('trial')));
+            if (trialProduct) return trialProduct;
+        }
         return lensProducts.find(p => p.description === characteristic);
     };
 
     // Get price for a lens based on DK (mirrors backend getLensPrice logic)
+    // For distributors, use distributorPriceByDk if available
     const getLensPrice = (product: CatalogProduct | undefined, dk: string): number => {
         if (!product) return 0;
+        // Distributor pricing
+        if (isDistributor && product.distributorPriceByDk && typeof product.distributorPriceByDk === 'object') {
+            const dkPrice = product.distributorPriceByDk[dk];
+            if (dkPrice != null) return dkPrice;
+        }
+        // Standard pricing
         if (product.priceByDk && typeof product.priceByDk === 'object') {
             const dkPrice = product.priceByDk[dk];
             if (dkPrice != null) return dkPrice;
@@ -364,8 +379,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     // Lens price from catalog based on characteristic + DK
     // Uses priceByDk when available (matches backend calculation)
     // RGP lenses have custom pricing (set by accountant), so price = 0
-    const odLensProduct = getLensProduct(odCharacteristic || '');
-    const osLensProduct = getLensProduct(osCharacteristic || '');
+    const odLensProduct = getLensProduct(odCharacteristic || '', odDk);
+    const osLensProduct = getLensProduct(osCharacteristic || '', osDk);
     const odUnitPrice = isRgpOD ? 0 : getLensPrice(odLensProduct, odDk);
     const osUnitPrice = isRgpOS ? 0 : getLensPrice(osLensProduct, osDk);
     const odLensPrice = odUnitPrice * odQty;

@@ -8,7 +8,9 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "update-distributor-prices": "ts-node --compiler-options {\"module\":\"commonjs\"} scripts/update-distributor-prices.ts",
+    "add-dk50-trial": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/add-dk50-trial.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

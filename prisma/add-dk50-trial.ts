@@ -10,7 +10,8 @@ async function main() {
     const trialLens = await prisma.product.upsert({
         where: { sku: 'ML-TRIAL-DK50' },
         update: {
-            price: 5500,
+            price: 12000,                         // Цена для оптик/клиник: 12 000 ₸
+            distributorPriceByDk: { '50': 7600 }, // Цена для дистрибьютора: 7 600 ₸
             priceByDk: null,
             isActive: true,
             sortOrder: 1,
@@ -21,15 +22,16 @@ async function main() {
             sku: 'ML-TRIAL-DK50',
             name1c: 'Линзы контактные жесткие корригирующие ОКV - RGP пробная',
             code: '796',
-            description: 'Пробная линза DK 50 (5500 ₸)',
-            price: 5500,
+            description: 'trial',                // Ключевой маркер: description='trial' для DK 50
+            price: 12000,                         // Цена для оптик/клиник
             priceByDk: null,
+            distributorPriceByDk: { '50': 7600 }, // Цена для дистрибьютора
             unit: 'шт',
             isActive: true,
             sortOrder: 1,
         }
     });
-    console.log('Added Trial Lens:', trialLens.name, 'Price:', trialLens.price);
+    console.log('Added Trial Lens:', trialLens.name, 'Price (clinic):', trialLens.price, '/ Price (distributor DK50): 7 600');
 }
 
 main()
