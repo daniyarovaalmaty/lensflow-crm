@@ -4,6 +4,7 @@ import prisma from '@/lib/db/prisma';
 
 // GET /api/organizations/branches
 // Returns branches of the current user's organization (for procurement users)
+// Also includes routing config (default recipient per branch) from HQ metadata
 export async function GET() {
     const session = await auth();
     if (!session?.user) {
@@ -15,18 +16,18 @@ export async function GET() {
         return NextResponse.json([], { status: 200 });
     }
 
-    // Find branches: either direct children or siblings (if user is in a branch)
     const org = await prisma.organization.findUnique({
         where: { id: orgId },
-        select: { id: true, name: true, type: true, parentId: true },
+        select: { id: true, name: true, type: true, parentId: true, metadata: true },
     });
 
     if (!org) return NextResponse.json([], { status: 200 });
 
-    let branches: { id: string; name: string }[] = [];
+    let branches: { id: string; name: string; recipientType?: string; recipientOrgId?: string }[] = [];
+    let hqMetadata: any = null;
 
     if (org.type === 'headquarters') {
-        // Return all child branches
+        hqMetadata = org.metadata as any;
         const children = await prisma.organization.findMany({
             where: { parentId: orgId, type: 'branch' },
             select: { id: true, name: true },
@@ -34,7 +35,13 @@ export async function GET() {
         });
         branches = children;
     } else if (org.type === 'branch' && org.parentId) {
-        // Return all sibling branches (same parent)
+        // Load HQ for routing config
+        const hq = await prisma.organization.findUnique({
+            where: { id: org.parentId },
+            select: { metadata: true },
+        });
+        hqMetadata = hq?.metadata as any;
+
         const siblings = await prisma.organization.findMany({
             where: { parentId: org.parentId, type: 'branch' },
             select: { id: true, name: true },
@@ -45,5 +52,14 @@ export async function GET() {
         branches = [{ id: org.id, name: org.name }];
     }
 
-    return NextResponse.json(branches);
+    // Inject routing config into each branch
+    const branchRouting = hqMetadata?.branchRouting || {};
+    const result = branches.map(b => ({
+        ...b,
+        recipientType: branchRouting[b.id]?.recipientType || 'laboratory',
+        recipientOrgId: branchRouting[b.id]?.recipientOrgId || null,
+        recipientLabel: branchRouting[b.id]?.label || 'Лаборатория',
+    }));
+
+    return NextResponse.json(result);
 }

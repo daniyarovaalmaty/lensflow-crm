@@ -67,7 +67,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [distributors, setDistributors] = useState<{ id: string; name: string; city?: string }[]>([]);
     const [selectedDistributorId, setSelectedDistributorId] = useState<string>('');
     const [recipientType, setRecipientType] = useState<'laboratory' | 'distributor'>('laboratory');
-    const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
+    const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string }[]>([]);
     const [selectedBranchId, setSelectedBranchId] = useState<string>('');
     const subRole = session?.user?.subRole || '';
     const isProcurement = subRole === 'optic_procurement';
@@ -95,7 +95,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         })();
     }, []);
 
-    // Load branches for procurement users
+    // Load branches for procurement users (with routing config)
     useEffect(() => {
         if (!isProcurement) return;
         (async () => {
@@ -105,6 +105,20 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             } catch (e) { /* ignore */ }
         })();
     }, [isProcurement]);
+
+    // Auto-select recipient when branch is selected
+    useEffect(() => {
+        if (!selectedBranchId || !isProcurement) return;
+        const branch = branches.find(b => b.id === selectedBranchId);
+        if (!branch) return;
+        const rType = (branch.recipientType as 'laboratory' | 'distributor') || 'laboratory';
+        setRecipientType(rType);
+        if (rType === 'distributor' && branch.recipientOrgId) {
+            setSelectedDistributorId(branch.recipientOrgId);
+        } else {
+            setSelectedDistributorId('');
+        }
+    }, [selectedBranchId, branches, isProcurement]);
 
     // Fetch organization profile for auto-fill
     useEffect(() => {
@@ -567,42 +581,75 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <span>⚠️</span> Загрузка филиалов...
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {branches.map(branch => (
-                                <button
-                                    key={branch.id}
-                                    type="button"
-                                    onClick={() => setSelectedBranchId(branch.id)}
-                                    className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all text-left ${
-                                        selectedBranchId === branch.id
-                                            ? 'border-violet-500 bg-violet-50 shadow-sm'
-                                            : 'border-gray-200 hover:border-violet-300 hover:bg-violet-50/40'
-                                    }`}
-                                >
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
-                                        selectedBranchId === branch.id ? 'bg-violet-500' : 'bg-gray-100'
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {branches.map(branch => {
+                                    const isSelected = selectedBranchId === branch.id;
+                                    const isLab = (branch.recipientType || 'laboratory') === 'laboratory';
+                                    return (
+                                        <button
+                                            key={branch.id}
+                                            type="button"
+                                            onClick={() => setSelectedBranchId(branch.id)}
+                                            className={`flex flex-col gap-2 p-4 rounded-2xl border-2 transition-all text-left ${
+                                                isSelected
+                                                    ? 'border-violet-500 bg-violet-50 shadow-sm'
+                                                    : 'border-gray-200 hover:border-violet-300 hover:bg-violet-50/40'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base ${
+                                                    isSelected ? 'bg-violet-500' : 'bg-gray-100'
+                                                }`}>
+                                                    🏪
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className={`text-sm font-bold truncate ${
+                                                        isSelected ? 'text-violet-800' : 'text-gray-700'
+                                                    }`}>{branch.name}</div>
+                                                </div>
+                                                {isSelected && (
+                                                    <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
+                                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* Routing hint */}
+                                            <div className={`text-xs px-2 py-1 rounded-lg font-medium flex items-center gap-1 ${
+                                                isLab
+                                                    ? 'bg-blue-50 text-blue-600'
+                                                    : 'bg-orange-50 text-orange-600'
+                                            }`}>
+                                                {isLab ? '🔬' : '🚚'} {branch.recipientLabel || (isLab ? 'Лаборатория' : 'Дистрибьютор')}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Auto-routing confirmation banner */}
+                            {selectedBranchId && (() => {
+                                const branch = branches.find(b => b.id === selectedBranchId);
+                                if (!branch) return null;
+                                const isLab = (branch.recipientType || 'laboratory') === 'laboratory';
+                                return (
+                                    <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
+                                        isLab ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-orange-50 text-orange-700 border border-orange-200'
                                     }`}>
-                                        🏪
+                                        {isLab ? '🔬' : '🚚'}
+                                        <span>
+                                            Заказ будет отправлен в <strong>{branch.recipientLabel || (isLab ? 'Лабораторию' : 'ЦКК')}</strong>
+                                        </span>
+                                        <span className="ml-auto text-xs opacity-60">авто-маршрут</span>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className={`text-sm font-bold truncate ${
-                                            selectedBranchId === branch.id ? 'text-violet-800' : 'text-gray-700'
-                                        }`}>{branch.name}</div>
-                                    </div>
-                                    {selectedBranchId === branch.id && (
-                                        <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
+                                );
+                            })()}
                         </div>
                     )}
                 </motion.div>
             )}
-
 
             {/* Recipient Selection — REQUIRED */}
             <motion.div
