@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-    const connectionString = process.env.DATABASE_URL ?? 'postgresql://localhost:5432/lensflow';
+    const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/lensflow';
     const pool = new pg.Pool({ connectionString });
     const adapter = new PrismaPg(pool);
 
@@ -22,3 +22,5 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;
+
+
