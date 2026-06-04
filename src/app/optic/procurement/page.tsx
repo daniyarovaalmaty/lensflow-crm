@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Plus, Search, ChevronDown, ChevronUp,
   Building2, Calendar, CreditCard, CheckCircle2, Clock, XCircle,
-  Truck, Eye, TrendingUp, Package, RefreshCw
+  Truck, Eye, TrendingUp, Package, RefreshCw, Paperclip, Download, Upload, Trash2
 } from 'lucide-react';
 import QuickNav from '@/components/ui/QuickNav';
 
@@ -66,6 +66,94 @@ export default function ProcurementPage() {
   const [branchFilter, setBranchFilter] = useState('');
   const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [orderDocs, setOrderDocs] = useState<Record<string, Array<{ index: number; name: string; mimeType: string; size: number; uploadedAt: string; uploadedBy: string }>>>({});
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+
+  const handleFileUpload = async (orderId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadingDoc(orderId);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`Файл "${file.name}" превышает 5 МБ. Пропущен.`);
+          continue;
+        }
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch(`/api/orders/${orderId}/documents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: file.name,
+            data: base64,
+            mimeType: file.type,
+            size: file.size,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+          alert(`Ошибка загрузки "${file.name}": ${err.error || res.statusText}`);
+        }
+      }
+      await loadDocs(orderId);
+    } catch (e) {
+      alert('Ошибка при загрузке файла');
+      console.error('Upload error:', e);
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
+  const deleteDoc = async (orderId: string, index: number) => {
+    await fetch(`/api/orders/${orderId}/documents`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ index }),
+    });
+    await loadDocs(orderId);
+  };
+
+  const loadDocs = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/documents`);
+      if (res.ok) {
+        const docs = await res.json();
+        setOrderDocs(prev => ({ ...prev, [orderId]: docs }));
+      } else {
+        setOrderDocs(prev => ({ ...prev, [orderId]: [] }));
+      }
+    } catch (e) {
+      console.error('Load docs error:', e);
+      setOrderDocs(prev => ({ ...prev, [orderId]: [] }));
+    }
+  };
+
+  const downloadDoc = async (orderId: string, index: number, fileName: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/documents?download=${index}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Download error:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (expandedId && !orderDocs[expandedId]) {
+      loadDocs(expandedId);
+    }
+  }, [expandedId]);
 
   const loadData = async () => {
     setLoading(true);
@@ -332,14 +420,70 @@ export default function ProcurementPage() {
                                   )}
                                 </div>
                                 <span className={`text-sm font-bold px-3 py-1 rounded-full ${
-                                  order.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
-                                  order.payment_status === 'partial' ? 'bg-amber-100 text-amber-700' :
-                                  'bg-red-100 text-red-700'
-                                }`}>
-                                  {PAYMENT_LABELS[order.payment_status] || '—'}
-                                </span>
-                              </div>
+                                order.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                                order.payment_status === 'partial' ? 'bg-amber-100 text-amber-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {PAYMENT_LABELS[order.payment_status] || '—'}
+                              </span>
                             </div>
+
+                            {/* Closing documents list */}
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-xs font-bold text-gray-500 uppercase">Закрывающие документы</p>
+                                <label className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer">
+                                  <Upload className="w-3.5 h-3.5" />
+                                  {uploadingDoc === order.order_id ? 'Загрузка...' : 'Загрузить'}
+                                  <input
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    disabled={uploadingDoc === order.order_id}
+                                    onChange={e => handleFileUpload(order.order_id, e.target.files)}
+                                  />
+                                </label>
+                              </div>
+                              {(() => {
+                                const docs = orderDocs[order.order_id];
+                                if (!docs) {
+                                  return <p className="text-xs text-gray-400">Загрузка...</p>;
+                                }
+                                if (docs.length === 0) {
+                                  return <p className="text-xs text-gray-400">Нет загруженных документов</p>;
+                                }
+                                return (
+                                  <div className="space-y-2 mt-2">
+                                    {docs.map((doc, i) => (
+                                      <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-lg border border-gray-200 px-3 py-2">
+                                        <Paperclip className="w-4 h-4 text-gray-400 shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium text-gray-800 truncate">{doc.name}</p>
+                                          <p className="text-[10px] text-gray-500">
+                                            {(doc.size / 1024).toFixed(1)} KB · {new Date(doc.uploadedAt).toLocaleDateString('ru-RU')}
+                                          </p>
+                                        </div>
+                                        <button
+                                          onClick={() => downloadDoc(order.order_id, doc.index, doc.name)}
+                                          className="text-violet-600 hover:text-violet-700 p-1.5 bg-violet-50 hover:bg-violet-100 rounded-md transition-colors"
+                                          title="Скачать"
+                                        >
+                                          <Download className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={() => deleteDoc(order.order_id, doc.index)}
+                                          className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                                          title="Удалить"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
 
                             {/* Notes */}
                             {order.notes && (
