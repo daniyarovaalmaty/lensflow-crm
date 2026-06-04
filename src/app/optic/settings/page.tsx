@@ -40,13 +40,15 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (session?.user) {
-      setName((session.user as any).name || '');
       setEmail((session.user as any).email || '');
     }
-    // Load phone from API (not in session)
+    // Always load name + phone fresh from DB (JWT may be stale)
     fetch('/api/user/profile')
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.phone) setPhone(data.phone); })
+      .then(data => {
+        if (data?.fullName) setName(data.fullName);
+        if (data?.phone) setPhone(data.phone);
+      })
       .catch(() => {});
   }, [session]);
 
