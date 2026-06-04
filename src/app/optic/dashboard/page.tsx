@@ -447,7 +447,7 @@ export default function OpticDashboard() {
                                 { label: 'Отгружены', value: stats.shipped, icon: TruckIcon, bg: 'bg-purple-50', text: 'text-purple-700' },
                             ].map(s => (
                                 <div key={s.label} className={`rounded-xl p-3 sm:p-4 ${s.bg}`}>
-                                    <div className="text-2xl font-bold mb-0.5" className={`${s.text}`}>{s.value}</div>
+                                    <div className={`text-2xl font-bold mb-0.5 ${s.text}`}>{s.value}</div>
                                     <div className={`text-xs font-medium ${s.text} opacity-90`}>{s.label}</div>
                                 </div>
                             ))}
