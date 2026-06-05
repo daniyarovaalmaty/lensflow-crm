@@ -30,7 +30,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-    try {
     const body = await req.json();
     const { items, customerName, customerPhone, discountPercent, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId } = body;
     // items: [{ productId, quantity, unitPrice }]
@@ -39,9 +38,19 @@ export async function POST(req: NextRequest) {
 
     const orgId = user.organizationId;
 
-    // Generate sale number
-    const saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
-    const saleNumber = `S-${String(saleCount + 1).padStart(4, '0')}`;
+    // Generate a globally-unique sale number. The unique constraint on `saleNumber`
+    // is GLOBAL, so per-org count()+1 collides across organizations and after a sale
+    // is deleted. Base the next number on the global max numeric value instead.
+    const generateSaleNumber = async () => {
+        const rows = await prisma.sale.findMany({ select: { saleNumber: true } });
+        let maxN = 0;
+        for (const r of rows) {
+            const m = /(\d+)/.exec(r.saleNumber || '');
+            if (m) maxN = Math.max(maxN, parseInt(m[1], 10));
+        }
+        return `S-${String(maxN + 1).padStart(4, '0')}`;
+    };
+    let saleNumber = await generateSaleNumber();
 
     // Auto-attribute lead if patient is provided but no leadId is given
     let finalLeadId = leadId;
@@ -173,8 +182,12 @@ export async function POST(req: NextRequest) {
         invoiceMeta.dueNow = dueNow;
     }
 
-    // Create sale with items
-    const sale = await prisma.sale.create({
+    // Create sale with items — retry with a fresh number on unique-collision
+    // (covers concurrent sales across organizations).
+    let sale: any = null;
+    for (let _attempt = 0; _attempt < 5; _attempt++) {
+      try {
+        sale = await prisma.sale.create({
         data: {
             saleNumber,
             organizationId: orgId,
@@ -206,7 +219,14 @@ export async function POST(req: NextRequest) {
             },
         },
         include: { items: true },
-    });
+        });
+        break;
+      } catch (e: any) {
+        const isUnique = e?.code === 'P2002' || JSON.stringify(e || '').includes('23505');
+        if (isUnique && _attempt < 4) { saleNumber = await generateSaleNumber(); continue; }
+        throw e;
+      }
+    }
 
     // Attribute revenue and update lead stage
     if (finalLeadId) {
@@ -233,9 +253,4 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(sale, { status: 201 });
-    } catch (e: any) {
-        // TEMP diagnostic: surface the real server error in the response
-        console.error('[sales POST] ERROR:', e);
-        return NextResponse.json({ error: e?.message || String(e), code: e?.code, meta: e?.meta ?? null }, { status: 500 });
-    }
 }
