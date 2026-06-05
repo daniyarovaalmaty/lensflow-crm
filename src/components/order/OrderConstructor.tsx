@@ -143,7 +143,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     }, [session?.user?.organizationId]);
 
     // Lens products from catalog (matched by description field = characteristic code)
-    const VALID_LENS_DESCRIPTIONS = new Set(['toric', 'spherical', 'rgp', 'probe']);
+    const VALID_LENS_DESCRIPTIONS = new Set(['toric', 'spherical', 'rgp', 'probe', 'trial']);
     const lensProducts = useMemo(
         () => catalog.filter(p => p.category === 'lens' && p.description != null && VALID_LENS_DESCRIPTIONS.has(p.description)),
         [catalog]
@@ -154,9 +154,14 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     // Map characteristic code → catalog product
     // When DK=50, it's always a trial lens — find the trial product
     const getLensProduct = (characteristic: string, dk?: string) => {
-        if (dk === '50') {
-            // DK 50 is always a trial lens — look for the dedicated trial product
-            const trialProduct = lensProducts.find(p => p.sku === 'ML-TRIAL-DK50' || (p.description && p.description.toLowerCase().includes('trial')));
+        // DK 50 or the "Пробная" (probe) characteristic = trial lens.
+        // Catalog stores the trial product with description 'trial'.
+        if (dk === '50' || characteristic === 'probe') {
+            const trialProduct = lensProducts.find(p =>
+                p.sku === 'ML-TRIAL-DK50' ||
+                (p.description && p.description.toLowerCase().includes('trial')) ||
+                p.description === 'probe'
+            );
             if (trialProduct) return trialProduct;
         }
         return lensProducts.find(p => p.description === characteristic);
@@ -175,6 +180,18 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         if (product.priceByDk && typeof product.priceByDk === 'object') {
             const dkPrice = product.priceByDk[dk];
             if (dkPrice != null) return dkPrice;
+        }
+        return product.price || 0;
+    };
+
+    // Representative price for the "Тип линз" card. Prefer DK-based pricing
+    // (distributor prices for distributors) so the card matches what the order
+    // actually charges; fall back to the base `price` field.
+    const getLensDisplayPrice = (product: CatalogProduct): number => {
+        const dkMap = (isDistributor && product.distributorPriceByDk) || product.priceByDk;
+        if (dkMap && typeof dkMap === 'object') {
+            const vals = Object.values(dkMap).filter((v): v is number => typeof v === 'number' && v > 0);
+            if (vals.length) return Math.min(...vals);
         }
         return product.price || 0;
     };
@@ -985,6 +1002,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     {lensProducts.map(product => {
                         const isSelected = odLensProduct?.id === product.id || osLensProduct?.id === product.id;
                         const isRgp = product.description === 'rgp';
+                        // When this lens is selected for an eye, show the exact price for
+                        // that eye's DK; otherwise show the lowest price as a reference.
+                        const cardPrice =
+                            (odLensProduct?.id === product.id && odDk) ? getLensPrice(product, odDk) :
+                            (osLensProduct?.id === product.id && osDk) ? getLensPrice(product, osDk) :
+                            getLensDisplayPrice(product);
                         return (
                             <div
                                 key={product.id}
@@ -996,7 +1019,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                 <p className="font-semibold text-sm text-gray-900">{product.name}</p>
                                 {canSeePrices && (
                                     <p className={`text-xs mt-1 ${isRgp ? 'text-amber-600 font-medium' : 'text-gray-500'}`}>
-                                        {isRgp ? 'Цена индивидуальная' : `${(product.price || 0).toLocaleString('ru-RU')} ₸/${product.unit}`}
+                                        {isRgp ? 'Цена индивидуальная' : `${cardPrice.toLocaleString('ru-RU')} ₸/${product.unit}`}
                                     </p>
                                 )}
                                 {isSelected && (
@@ -1134,13 +1157,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
                     <div className="space-y-3">
                         {/* Lens prices from characteristic */}
-                        {odLensProduct && (odLensProduct.price ?? 0) > 0 && (
+                        {odLensProduct && odUnitPrice > 0 && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600">OD: {odLensProduct.name} × {odQty}</span>
                                 <span className="font-medium text-gray-900">{odLensPrice.toLocaleString('ru-RU')} ₸</span>
                             </div>
                         )}
-                        {osLensProduct && (osLensProduct.price ?? 0) > 0 && (
+                        {osLensProduct && osUnitPrice > 0 && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600">OS: {osLensProduct.name} × {osQty}</span>
                                 <span className="font-medium text-gray-900">{osLensPrice.toLocaleString('ru-RU')} ₸</span>

@@ -79,6 +79,7 @@ export default function POSPage() {
     const [customerPhone, setCustomerPhone] = useState('');
     const [discount, setDiscount] = useState('0');
     const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [prepayment, setPrepayment] = useState('');
     const [saving, setSaving] = useState(false);
     const [mixedPayments, setMixedPayments] = useState<Record<MixedKey, string>>({
         cash: '', kaspi: '', card: '', installment12: '', transfer: '',
@@ -227,8 +228,12 @@ export default function POSPage() {
     const total = subtotal - discountAmount;
     const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
+    // Prepayment (предоплата уже внесена ранее) reduces what's due now
+    const prepaymentAmount = Math.min(Math.max(Number(prepayment) || 0, 0), total);
+    const dueNow = total - prepaymentAmount;
+
     const mixedTotal = MIXED_SPLITS.reduce((s, sp) => s + (Number(mixedPayments[sp.key]) || 0), 0);
-    const mixedValid = paymentMethod !== 'mixed' || mixedTotal === total;
+    const mixedValid = paymentMethod !== 'mixed' || mixedTotal === dueNow;
 
     const activeMixedSplits = MIXED_SPLITS.filter(sp => Number(mixedPayments[sp.key]) > 0)
         .map(sp => ({ method: sp.key, label: sp.label, amount: Number(mixedPayments[sp.key]) }));
@@ -249,6 +254,7 @@ export default function POSPage() {
                     discountPercent: discountPct,
                     paymentMethod,
                     paymentSplit: paymentMethod === 'mixed' ? activeMixedSplits : undefined,
+                    prepaymentAmount: prepaymentAmount > 0 ? prepaymentAmount : undefined,
                     patientId: patientId || undefined,
                     leadId: leadId || undefined,
                 }),
@@ -259,6 +265,7 @@ export default function POSPage() {
                 setCustomerName('');
                 setCustomerPhone('');
                 setDiscount('0');
+                setPrepayment('');
                 setPatientId(null);
                 setLeadId(null);
                 setPatientSearch('');
@@ -491,6 +498,28 @@ export default function POSPage() {
                                         <span>ИТОГО:</span>
                                         <span className="text-primary-700 text-lg md:text-2xl">{fmt(total)} ₸</span>
                                     </div>
+                                    {/* Предоплата (уже внесена ранее) */}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-xs md:text-sm text-gray-500 font-bold">Предоплата:</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <input type="number" min="0" value={prepayment}
+                                                onChange={e => {
+                                                    const raw = e.target.value;
+                                                    if (raw === '') { setPrepayment(''); return; }
+                                                    const n = Number(raw);
+                                                    if (!isNaN(n) && n >= 0) setPrepayment(String(n));
+                                                }}
+                                                placeholder="0"
+                                                className="w-24 border border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 rounded-xl px-2 py-1.5 text-xs md:text-sm text-right font-extrabold bg-white shadow-sm" />
+                                            <span className="text-xs md:text-sm text-gray-500 font-bold">₸</span>
+                                        </div>
+                                    </div>
+                                    {prepaymentAmount > 0 && (
+                                        <div className="flex justify-between text-sm md:text-base font-black text-amber-700 bg-amber-50 -mx-2 px-2 py-1.5 rounded-lg">
+                                            <span>К оплате сейчас:</span>
+                                            <span>{fmt(dueNow)} ₸</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Payment actions - fixed at bottom */}
@@ -533,7 +562,7 @@ export default function POSPage() {
                                             ))}
                                             <div className={`flex justify-between text-xs font-black pt-1.5 border-t ${mixedValid ? 'text-green-600 border-green-200' : 'text-red-500 border-red-200'}`}>
                                                 <span>Сумма:</span>
-                                                <span>{fmt(mixedTotal)} / {fmt(total)} ₸ {mixedValid ? '✓' : '≠'}</span>
+                                                <span>{fmt(mixedTotal)} / {fmt(dueNow)} ₸ {mixedValid ? '✓' : '≠'}</span>
                                             </div>
                                         </div>
                                     )}
@@ -541,7 +570,7 @@ export default function POSPage() {
                                     <button onClick={() => setShowCheckout(true)}
                                         disabled={!mixedValid}
                                         className="w-full py-4 md:py-5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 active:scale-95 text-white rounded-2xl text-xs md:text-base font-extrabold uppercase tracking-wider transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer">
-                                        <Banknote className="w-4 h-4 md:w-5 h-5" /> Оформить — {fmt(total)} ₸
+                                        <Banknote className="w-4 h-4 md:w-5 h-5" /> Оформить — {fmt(dueNow)} ₸
                                     </button>
                                 </div>
                             </div>
@@ -641,6 +670,18 @@ export default function POSPage() {
                                     <span>ИТОГО</span>
                                     <span className="text-primary-700">{fmt(total)} ₸</span>
                                 </div>
+                                {prepaymentAmount > 0 && (
+                                    <>
+                                        <div className="flex justify-between text-xs md:text-sm text-amber-700 font-bold">
+                                            <span>Предоплата (внесена ранее)</span>
+                                            <span>−{fmt(prepaymentAmount)} ₸</span>
+                                        </div>
+                                        <div className="flex justify-between font-black text-sm md:text-base text-amber-700">
+                                            <span>К оплате сейчас</span>
+                                            <span>{fmt(dueNow)} ₸</span>
+                                        </div>
+                                    </>
+                                )}
                                 {paymentMethod === 'mixed' && activeMixedSplits.length > 0 ? (
                                     <div className="mt-2 pt-2 border-t border-orange-100 space-y-1">
                                         <p className="text-[11px] font-black text-orange-700 flex items-center gap-1">

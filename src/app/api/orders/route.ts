@@ -293,8 +293,8 @@ export async function POST(request: NextRequest) {
 
         if (odChar || osChar) {
             const lensProducts = await prisma.product.findMany({
-                where: { category: 'lens', description: { in: [odChar, osChar].filter(Boolean) } },
-                select: { description: true, price: true, priceByDk: true, name1c: true },
+                where: { category: 'lens', isActive: true },
+                select: { description: true, sku: true, price: true, priceByDk: true, distributorPriceByDk: true, name1c: true },
             });
 
             // Load custom price list: distributor or optic org
@@ -340,6 +340,11 @@ export async function POST(request: NextRequest) {
                     const charPrice = distPriceList.lenses?.[charKey]?.[dkKey];
                     if (charPrice != null) return charPrice;
                 }
+                // Distributor-specific catalog prices (mirrors frontend getLensPrice)
+                if (session.user.role === 'distributor' && product.distributorPriceByDk && typeof product.distributorPriceByDk === 'object') {
+                    const dp = (product.distributorPriceByDk as Record<string, number>)[dk];
+                    if (dp != null) return dp;
+                }
                 // Global catalog fallback
                 if (product.priceByDk && typeof product.priceByDk === 'object') {
                     const dkPrice = (product.priceByDk as Record<string, number>)[dk];
@@ -350,9 +355,21 @@ export async function POST(request: NextRequest) {
 
 
 
-            const productMap = new Map(lensProducts.map((p: any) => [p.description, p]));
-            const odProduct: any = productMap.get(odChar);
-            const osProduct: any = productMap.get(osChar);
+            // Resolve catalog product for a characteristic. "Пробная" (probe) / DK 50
+            // map to the trial product (catalog description = 'trial').
+            const resolveLensProduct = (char: string, dk: string, isTrial: boolean): any => {
+                if (isTrial || dk === '50' || char === 'probe') {
+                    const trial = lensProducts.find((p: any) =>
+                        p.sku === 'ML-TRIAL-DK50' ||
+                        (p.description && p.description.toLowerCase().includes('trial')) ||
+                        p.description === 'probe'
+                    );
+                    if (trial) return trial;
+                }
+                return lensProducts.find((p: any) => p.description === char);
+            };
+            const odProduct: any = odChar ? resolveLensProduct(odChar, odDk, odTrial) : undefined;
+            const osProduct: any = osChar ? resolveLensProduct(osChar, osDk, osTrial) : undefined;
 
             odUnitPrice = odProduct ? getLensPrice(odProduct, odDk, odChar, odTrial) : 0;
             osUnitPrice = osProduct ? getLensPrice(osProduct, osDk, osChar, osTrial) : 0;

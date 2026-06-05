@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, paymentMethod, paymentSplit, notes, patientId, leadId } = body;
+    const { items, customerName, customerPhone, discountPercent, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
@@ -161,6 +161,18 @@ export async function POST(req: NextRequest) {
     const discountAmount = Math.round(subtotal * discount / 100);
     const totalAmount = subtotal - discountAmount;
 
+    // Prepayment already received earlier — clamp to [0, total]
+    const prepayment = Math.min(Math.max(Number(prepaymentAmount) || 0, 0), totalAmount);
+    const dueNow = totalAmount - prepayment;
+
+    // Build invoice metadata (split + prepayment breakdown)
+    const invoiceMeta: any = {};
+    if (paymentSplit) invoiceMeta.split = paymentSplit;
+    if (prepayment > 0) {
+        invoiceMeta.prepayment = prepayment;
+        invoiceMeta.dueNow = dueNow;
+    }
+
     // Create sale with items
     const sale = await prisma.sale.create({
         data: {
@@ -177,7 +189,7 @@ export async function POST(req: NextRequest) {
             paidAmount: totalAmount,
             paymentMethod: paymentMethod || 'cash',
             paymentStatus: 'paid',
-            invoiceData: paymentSplit ? { split: paymentSplit } : undefined,
+            invoiceData: Object.keys(invoiceMeta).length > 0 ? invoiceMeta : undefined,
             performedById: user.id,
             performedByName: user.fullName || user.email,
             notes: notes || null,
