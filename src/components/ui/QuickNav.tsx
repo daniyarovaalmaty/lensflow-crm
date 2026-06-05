@@ -24,6 +24,7 @@ const procurementNavItems = [
 ];
 
 const managerNavItems = [
+    { href: '/optic/staff', label: 'Сотрудники', icon: Users, color: 'text-rose-500' },
     { href: '/clinic-manager/dashboard', label: 'Клиника', icon: Building2, color: 'text-indigo-500' },
     { href: '/clinic-manager/itigris', label: 'ITIGRIS', icon: Link2, color: 'text-orange-500' },
     { href: '/optic/partners', label: 'Партнеры', icon: Building2, color: 'text-blue-500' },

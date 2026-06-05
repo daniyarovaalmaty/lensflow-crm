@@ -299,7 +299,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         try {
             // Convert RGP photos to compressed base64 and attach to config
             const submitData: any = { ...data, products: selectedProducts.length > 0 ? selectedProducts : undefined };
-            if (recipientType === 'distributor' && selectedDistributorId) {
+            if (isDistributor) {
+                // Distributor always: order belongs to them + goes to lab
+                submitData.distributorOrgId = session?.user?.organizationId;
+                if (partnerLab?.id) {
+                    submitData.labOrgId = partnerLab.id;
+                }
+            } else if (recipientType === 'distributor' && selectedDistributorId) {
                 submitData.distributorOrgId = selectedDistributorId;
             } else if (recipientType === 'laboratory') {
                 submitData.distributorOrgId = undefined; // lab order
