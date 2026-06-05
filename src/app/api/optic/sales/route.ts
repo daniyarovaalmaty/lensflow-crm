@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-
+    try {
     const body = await req.json();
     const { items, customerName, customerPhone, discountPercent, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId } = body;
     // items: [{ productId, quantity, unitPrice }]
@@ -233,4 +233,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(sale, { status: 201 });
+    } catch (e: any) {
+        // TEMP diagnostic: surface the real server error in the response
+        console.error('[sales POST] ERROR:', e);
+        return NextResponse.json({ error: e?.message || String(e), code: e?.code, meta: e?.meta ?? null }, { status: 500 });
+    }
 }
