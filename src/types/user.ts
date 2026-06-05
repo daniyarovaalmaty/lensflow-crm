@@ -316,8 +316,8 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     dist_head: {
         canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
         canDeliver: false, canAddDefects: false, canViewPayments: true, canChangePayments: false,
-        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
-        canViewAllOrders: false, canViewStats: true, canSendToAccountant: false, canProcessDocs: false,
+        canShip: false, canPrint: true, canCreateOrders: true, canViewOrders: true,
+        canViewAllOrders: true, canViewStats: true, canSendToAccountant: false, canProcessDocs: false,
     },
     dist_admin: {
         canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
