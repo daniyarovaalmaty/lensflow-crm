@@ -24,8 +24,22 @@ async function findOrderWithAccess(idOrNumber: string, session: any) {
     if (session.user.role === 'laboratory') return order;
     // Distributor sees orders assigned to them
     if (session.user.role === 'distributor' && (order as any).distributorOrgId === session.user.organizationId) return order;
-    // Clinic sees only its org's orders
-    if (session.user.role === 'optic' && order.organizationId === session.user.organizationId) return order;
+    // Clinic sees its org's orders + procurement sees all branches
+    if (session.user.role === 'optic') {
+        if (order.organizationId === session.user.organizationId) return order;
+        // Procurement: also check parent/sibling orgs
+        if (session.user.subRole === 'optic_procurement' && session.user.organizationId) {
+            const userOrg = await prisma.organization.findUnique({ where: { id: session.user.organizationId }, select: { id: true, type: true, parentId: true } });
+            if (userOrg) {
+                const hqId = userOrg.type === 'headquarters' ? userOrg.id : userOrg.parentId;
+                if (hqId) {
+                    const branches = await prisma.organization.findMany({ where: { parentId: hqId }, select: { id: true } });
+                    const allOrgIds = [hqId, ...branches.map((b: any) => b.id)];
+                    if (order.organizationId && allOrgIds.includes(order.organizationId)) return order;
+                }
+            }
+        }
+    }
     // Doctor sees only their own orders
     if (session.user.role === 'doctor' && order.createdById === session.user.id) return order;
 

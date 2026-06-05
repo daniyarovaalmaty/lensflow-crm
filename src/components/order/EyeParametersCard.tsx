@@ -271,7 +271,7 @@ export function EyeParametersCard({
                         <input
                             type="number"
                             step="any"
-                            {...register(`config.eyes.${eye}.apical_clearance`, { valueAsNumber: true })}
+                            {...register(`config.eyes.${eye}.apical_clearance`)}
                             className="input"
                             placeholder="0.00"
                         />
@@ -281,9 +281,9 @@ export function EyeParametersCard({
                         <input
                             type="number"
                             step="any"
-                            {...register(`config.eyes.${eye}.compression_factor`, { valueAsNumber: true })}
+                            {...register(`config.eyes.${eye}.compression_factor`)}
                             className="input"
-                            placeholder="0.00"
+                            placeholder=""
                         />
                     </div>
                     <div>
