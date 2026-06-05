@@ -10,6 +10,7 @@ export default async function HomePage() {
     if (session?.user) {
         const role = session.user.role;
         if (role === 'laboratory') dashboardUrl = '/laboratory/production';
+        else if (role === 'distributor') dashboardUrl = '/distributor';
         else if (role === 'optic' || role === 'doctor') dashboardUrl = '/optic/dashboard';
     }
     const isLoggedIn = !!session?.user;
