@@ -75,7 +75,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const isProcurement = subRole === 'optic_procurement';
     const isDistributor = userRole === 'distributor';
     const canSeePrices = subRole !== 'optic_doctor';
-    const isDistributor = session?.user?.role === 'distributor';
 
     useEffect(() => {
         (async () => {
