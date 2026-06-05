@@ -3,9 +3,8 @@ import prisma from '@/lib/db/prisma';
 
 export const dynamic = 'force-dynamic';
 
-// ⚠️ TEMPORARY read-only diagnostic endpoint. Returns recent orders so we can
-// verify routing (production), saved prices and visibility. Reads only — no writes.
-// Guarded by a secret token. REMOVE THIS FILE after use.
+// ⚠️ TEMPORARY read-only diagnostic endpoint. Raw SQL only — reads recent orders
+// with org/patient names. No writes. Guarded by a secret token. REMOVE after use.
 const TOKEN = 'lf-checkorder-2026-a7F3k9Q2xR8m';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -28,59 +27,69 @@ export async function GET(req: NextRequest) {
     }
 
     const q = req.nextUrl.searchParams.get('q')?.trim();
+    const like = q ? `%${q}%` : '%';
 
-    const orders = await prisma.order.findMany({
-        where: q ? { OR: [{ orderNumber: { contains: q, mode: 'insensitive' } }, { patient: { name: { contains: q, mode: 'insensitive' } } }] } : undefined,
-        orderBy: { createdAt: 'desc' },
-        take: q ? 20 : 10,
-        select: {
-            orderNumber: true,
-            status: true,
-            createdAt: true,
-            totalPrice: true,
-            priceOd: true,
-            priceOs: true,
-            documentNameOd: true,
-            documentNameOs: true,
-            lensConfig: true,
-            organizationId: true,
-            distributorOrgId: true,
-            labOrgId: true,
-            organization: { select: { name: true } },
-            distributorOrg: { select: { name: true } },
-            labOrg: { select: { name: true } },
-            patient: { select: { name: true, phone: true } },
-            createdBy: { select: { fullName: true, email: true } },
-        },
-    });
+    try {
+        const rows: any[] = await prisma.$queryRawUnsafe(
+            `SELECT
+               o."orderNumber"        AS "orderNumber",
+               o.status               AS status,
+               o."createdAt"          AS "createdAt",
+               o."totalPrice"         AS "totalPrice",
+               o."priceOd"            AS "priceOd",
+               o."priceOs"            AS "priceOs",
+               o."documentNameOd"     AS "documentNameOd",
+               o."documentNameOs"     AS "documentNameOs",
+               o."lensConfig"         AS "lensConfig",
+               o."organizationId"     AS "organizationId",
+               o."distributorOrgId"   AS "distributorOrgId",
+               o."labOrgId"           AS "labOrgId",
+               creator.name           AS creator_org,
+               dist.name              AS dist_org,
+               lab.name               AS lab_org,
+               p.name                 AS patient_name,
+               p.phone                AS patient_phone,
+               u."fullName"           AS created_by_name,
+               u.email                AS created_by_email
+             FROM orders o
+             LEFT JOIN organizations creator ON creator.id = o."organizationId"
+             LEFT JOIN organizations dist    ON dist.id    = o."distributorOrgId"
+             LEFT JOIN organizations lab     ON lab.id     = o."labOrgId"
+             LEFT JOIN patients p            ON p.id        = o."patientId"
+             LEFT JOIN users u               ON u.id        = o."createdById"
+             WHERE o."orderNumber" ILIKE $1 OR p.name ILIKE $1
+             ORDER BY o."createdAt" DESC
+             LIMIT 20`,
+            like,
+        );
 
-    const result = orders.map((o: any) => {
-        const eyes = (o.lensConfig as any)?.eyes || {};
-        const summarizeEye = (e: any) => e ? { char: e.characteristic, dk: e.dk, qty: e.qty, km: e.km, tp: e.tp, dia: e.dia, e: e.e, tor: e.tor, trial: e.trial, color: e.color } : null;
-        return {
-            orderNumber: o.orderNumber,
-            status: o.status,
-            statusLabel: STATUS_LABEL[o.status] || o.status,
-            createdAt: o.createdAt,
-            createdBy: o.createdBy ? (o.createdBy.fullName || o.createdBy.email) : null,
-            patient: o.patient?.name || null,
-            patientPhone: o.patient?.phone || null,
-            // routing / visibility
-            creatorOrg: o.organization?.name || o.organizationId,
-            distributorOrg: o.distributorOrg?.name || (o.distributorOrgId ? o.distributorOrgId : 'нет (прямой заказ)'),
-            labOrg: o.labOrg?.name || (o.labOrgId ? o.labOrgId : 'нет (виден всем лабораториям как прямой заказ)'),
-            // who sees it in production: lab sees orders with distributorOrgId = null OR labOrgId = lab
-            goesToProduction: o.distributorOrgId == null || o.labOrgId != null,
-            // numbers
-            priceOd: o.priceOd,
-            priceOs: o.priceOs,
-            totalPrice: o.totalPrice,
-            documentNameOd: o.documentNameOd,
-            documentNameOs: o.documentNameOs,
-            od: summarizeEye(eyes.od),
-            os: summarizeEye(eyes.os),
-        };
-    });
+        const orders = rows.map((o) => {
+            const eyes = (o.lensConfig as any)?.eyes || {};
+            const eye = (e: any) => e ? { char: e.characteristic, dk: e.dk, qty: e.qty, km: e.km, tp: e.tp, dia: e.dia, e: e.e, tor: e.tor, trial: e.trial, color: e.color } : null;
+            return {
+                orderNumber: o.orderNumber,
+                status: o.status,
+                statusLabel: STATUS_LABEL[o.status] || o.status,
+                createdAt: o.createdAt,
+                createdBy: o.created_by_name || o.created_by_email || null,
+                patient: o.patient_name || null,
+                patientPhone: o.patient_phone || null,
+                creatorOrg: o.creator_org || o.organizationId,
+                distributorOrg: o.dist_org || (o.distributorOrgId ? o.distributorOrgId : 'нет (прямой заказ)'),
+                labOrg: o.lab_org || (o.labOrgId ? o.labOrgId : 'нет (виден всем лабораториям как прямой заказ)'),
+                goesToProduction: o.distributorOrgId == null || o.labOrgId != null,
+                priceOd: o.priceOd,
+                priceOs: o.priceOs,
+                totalPrice: o.totalPrice,
+                documentNameOd: o.documentNameOd,
+                documentNameOs: o.documentNameOs,
+                od: eye(eyes.od),
+                os: eye(eyes.os),
+            };
+        });
 
-    return NextResponse.json(JSON.parse(JSON.stringify({ count: result.length, orders: result }, (_k, v) => (typeof v === 'bigint' ? Number(v) : v))));
+        return NextResponse.json(JSON.parse(JSON.stringify({ count: orders.length, orders }, (_k, v) => (typeof v === 'bigint' ? Number(v) : v))));
+    } catch (e: any) {
+        return NextResponse.json({ error: e?.message || String(e), stack: (e?.stack || '').split('\n').slice(0, 4) }, { status: 200 });
+    }
 }
