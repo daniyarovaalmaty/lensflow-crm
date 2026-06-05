@@ -70,7 +70,9 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string }[]>([]);
     const [selectedBranchId, setSelectedBranchId] = useState<string>('');
     const subRole = session?.user?.subRole || '';
+    const userRole = session?.user?.role || '';
     const isProcurement = subRole === 'optic_procurement';
+    const isDistributor = userRole === 'distributor';
     const canSeePrices = subRole !== 'optic_doctor';
 
     useEffect(() => {
@@ -646,7 +648,28 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </motion.div>
             )}
 
-            {/* Recipient Selection */}
+            {/* Recipient Selection — distributors always send to lab */}
+            {isDistributor ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="card border-2 border-blue-100"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <Factory className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                            <h2 className="text-lg font-semibold text-gray-900">Получатель заказа</h2>
+                            <p className="text-sm text-blue-700 font-medium">MedInvision Lab</p>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                            <span className="text-xs font-semibold text-blue-600">Лаборатория</span>
+                        </div>
+                    </div>
+                </motion.div>
+            ) : (
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -764,6 +787,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         </div>
                     )}
                 </motion.div>
+            )}
 
 
             {/* Patient Information */}
