@@ -234,38 +234,38 @@ export default function OpticDashboard() {
     };
 
 
-    const ParamRow = ({ label, value }: { label: string; value: any }) => (
+    const renderParamRow = (label: string, value: any) => (
         <div className="flex justify-between text-xs py-1 border-b border-gray-100">
             <span className="text-gray-500">{label}</span>
             <span className="font-medium text-gray-800">{value != null && value !== '' ? String(value) : '—'}</span>
         </div>
     );
 
-    const EyeBlock = ({ label, eye }: { label: string; eye: any }) => (
+    const renderEyeBlock = (label: string, eye: any) => (
         <div>
             <h5 className="text-xs font-semibold text-gray-700 mb-1 mt-2">{label}</h5>
             <div className="bg-gray-50 rounded-lg p-3 space-y-0">
-                <ParamRow label="Характеристика" value={eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null} />
-                <ParamRow label="RGP" value={eye.isRgp ? 'Да' : 'Нет'} />
-                <ParamRow label="MyOrthoK" value={eye.myorthok ? 'Да' : 'Нет'} />
-                <ParamRow label="Km" value={eye.isRgp ? null : eye.km} />
-                <ParamRow label="TP" value={eye.tp} />
-                <ParamRow label="DIA" value={eye.dia} />
-                <ParamRow label="E" value={eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null} />
+                {renderParamRow("Характеристика", eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null)}
+                {renderParamRow("RGP", eye.isRgp ? 'Да' : 'Нет')}
+                {renderParamRow("MyOrthoK", eye.myorthok ? 'Да' : 'Нет')}
+                {renderParamRow("Km", eye.isRgp ? null : eye.km)}
+                {renderParamRow("TP", eye.tp)}
+                {renderParamRow("DIA", eye.dia)}
+                {renderParamRow("E", eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null)}
                 {(eye.sph != null || eye.cyl != null || eye.ax != null) && (
                     <>
-                        <ParamRow label="SPH" value={eye.sph} />
-                        <ParamRow label="CYL" value={eye.cyl} />
-                        <ParamRow label="AX" value={eye.ax} />
+                        {renderParamRow("SPH", eye.sph)}
+                        {renderParamRow("CYL", eye.cyl)}
+                        {renderParamRow("AX", eye.ax)}
                     </>
                 )}
-                <ParamRow label="Тор." value={eye.tor} />
-                <ParamRow label="Dk" value={eye.dk} />
-                <ParamRow label="Пробная" value={(eye.dk === '50' || eye.trial) ? 'Да' : 'Нет'} />
-                <ParamRow label="Цвет" value={eye.color || null} />
-                <ParamRow label="Апик. клиренс" value={eye.apical_clearance} />
-                <ParamRow label="Фактор компр." value={eye.compression_factor} />
-                <ParamRow label="Кол-во" value={eye.qty} />
+                {renderParamRow("Тор.", eye.tor)}
+                {renderParamRow("Dk", eye.dk)}
+                {renderParamRow("Пробная", (eye.dk === '50' || eye.trial) ? 'Да' : 'Нет')}
+                {renderParamRow("Цвет", eye.color || null)}
+                {renderParamRow("Апик. клиренс", eye.apical_clearance)}
+                {renderParamRow("Фактор компр.", eye.compression_factor)}
+                {renderParamRow("Кол-во", eye.qty)}
             </div>
         </div>
     );
@@ -954,8 +954,8 @@ export default function OpticDashboard() {
                                                     </div>
 
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <EyeBlock label="OD (Правый глаз)" eye={od} />
-                                                        <EyeBlock label="OS (Левый глаз)" eye={os} />
+                                                        {renderEyeBlock("OD (Правый глаз)", od)}
+                                                        {renderEyeBlock("OS (Левый глаз)", os)}
                                                     </div>
 
                                                     {/* Additional products */}
