@@ -92,6 +92,7 @@ export default function POSPage() {
     const [mixedCard, setMixedCard] = useState('');
     const [mixedTransfer, setMixedTransfer] = useState('');
     const [saving, setSaving] = useState(false);
+    const [prepayment, setPrepayment] = useState('');
     const [mixedPayments, setMixedPayments] = useState<Record<MixedKey, string>>({
         cash: '', kaspi: '', card: '', installment12: '', transfer: '',
     });
