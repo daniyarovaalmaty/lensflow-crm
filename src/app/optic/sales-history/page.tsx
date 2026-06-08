@@ -39,14 +39,19 @@ interface Sale {
         splitPayment?: boolean;
         cashAmount?: number;
         cardAmount?: number;
+        transferAmount?: number;
+        trafficSource?: string;
     } | null;
 }
 
 const PAY_LABELS: Record<string, { label: string; color: string; icon: any }> = {
-    cash:     { label: 'Наличные',  color: 'bg-green-100 text-green-700',  icon: Banknote },
-    card:     { label: 'Карта',     color: 'bg-blue-100 text-blue-700',    icon: CreditCard },
-    transfer: { label: 'Перевод',   color: 'bg-violet-100 text-violet-700', icon: Building2 },
-    mixed:    { label: 'Смешанно',  color: 'bg-orange-100 text-orange-700', icon: Layers },
+    cash:           { label: 'Наличными',       color: 'bg-green-100 text-green-700',  icon: Banknote },
+    card:           { label: 'Картой',          color: 'bg-blue-100 text-blue-700',    icon: CreditCard },
+    kaspi:          { label: 'Картой',          color: 'bg-blue-100 text-blue-700',    icon: CreditCard },
+    installment12:  { label: 'Рассрочка 12 мес',color: 'bg-indigo-100 text-indigo-700', icon: CreditCard },
+    installment_12: { label: 'Рассрочка 12 мес',color: 'bg-indigo-100 text-indigo-700', icon: CreditCard },
+    transfer:       { label: 'Перевод',         color: 'bg-violet-100 text-violet-700', icon: Building2 },
+    mixed:          { label: 'Смешанно',        color: 'bg-orange-100 text-orange-700', icon: Layers },
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -105,7 +110,10 @@ export default function SalesHistoryPage() {
                 || (s.performedByName?.toLowerCase().includes(q) ?? false)
                 || s.items.some(i => i.name.toLowerCase().includes(q));
 
-            const matchPay = payFilter === 'all' || s.paymentMethod === payFilter;
+            const matchPay = payFilter === 'all' 
+                || s.paymentMethod === payFilter 
+                || (payFilter === 'card' && s.paymentMethod === 'kaspi')
+                || (payFilter === 'installment12' && s.paymentMethod === 'installment_12');
 
             const saleDate = new Date(s.createdAt);
             const matchFrom = !dateFrom || saleDate >= new Date(dateFrom);
@@ -127,7 +135,7 @@ export default function SalesHistoryPage() {
                 cardTotal += s.invoiceData.cardAmount ?? 0;
             } else if (s.paymentMethod === 'cash') {
                 cashTotal += s.total;
-            } else if (s.paymentMethod === 'card' || s.paymentMethod === 'transfer') {
+            } else if (s.paymentMethod === 'card' || s.paymentMethod === 'transfer' || s.paymentMethod === 'kaspi' || s.paymentMethod === 'installment12' || s.paymentMethod === 'installment_12') {
                 cardTotal += s.total;
             }
         }
@@ -238,10 +246,9 @@ export default function SalesHistoryPage() {
                                     className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
                                 >
                                     <option value="all">Все способы</option>
-                                    <option value="cash">Наличные</option>
-                                    <option value="card">Карта</option>
-                                    <option value="transfer">Перевод</option>
-                                    <option value="mixed">Смешанно</option>
+                                    <option value="cash">Наличными</option>
+                                    <option value="card">Картой</option>
+                                    <option value="installment12">Рассрочка 12 мес</option>
                                 </select>
                             </div>
                             <div>
@@ -538,6 +545,18 @@ export default function SalesHistoryPage() {
                                                                             <span className="font-semibold text-gray-800">{fmt(sale.invoiceData.cardAmount)}</span>
                                                                         </div>
                                                                     )}
+                                                                    {sale.invoiceData.transferAmount != null && (
+                                                                        <div className="flex justify-between text-xs">
+                                                                            <span className="text-gray-500 flex items-center gap-1">📲 Перевод</span>
+                                                                            <span className="font-semibold text-gray-800">{fmt(sale.invoiceData.transferAmount)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            {sale.invoiceData?.trafficSource && (
+                                                                <div className="flex justify-between items-center text-sm">
+                                                                    <span className="text-gray-500">Источник трафика</span>
+                                                                    <span className="font-medium text-gray-700">{sale.invoiceData.trafficSource}</span>
                                                                 </div>
                                                             )}
                                                             <div className="flex justify-between items-center text-sm">

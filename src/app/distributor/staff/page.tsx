@@ -62,7 +62,7 @@ export default function DistributorStaffPage() {
                 </div>
                 <button
                     onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium text-sm"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
                 >
                     <Plus className="w-4 h-4" />
                     Добавить сотрудника
@@ -81,8 +81,8 @@ export default function DistributorStaffPage() {
                     <div className="divide-y divide-gray-50">
                         {staff.map(s => (
                             <div key={s.id} className="flex items-center gap-4 px-5 py-4">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <User className="w-5 h-5 text-indigo-600" />
+                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <User className="w-5 h-5 text-blue-600" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium text-gray-900">{s.fullName}</div>
@@ -91,7 +91,7 @@ export default function DistributorStaffPage() {
                                         {s.phone && <span className="flex items-center gap-1 text-sm text-gray-500"><Phone className="w-3.5 h-3.5" />{s.phone}</span>}
                                     </div>
                                 </div>
-                                <span className="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full font-medium">
+                                <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium">
                                     {SUBROLE_LABELS[s.subRole] || s.subRole}
                                 </span>
                                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -119,29 +119,29 @@ export default function DistributorStaffPage() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">ФИО *</label>
                                 <input required value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
-                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                                 <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
                                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Роль *</label>
                                 <select value={form.subRole} onChange={e => setForm(f => ({ ...f, subRole: e.target.value }))}
-                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     {DIST_SUBROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Пароль *</label>
                                 <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
                             </div>
 
                             <div className="flex gap-3 pt-2">
@@ -150,7 +150,7 @@ export default function DistributorStaffPage() {
                                     Отмена
                                 </button>
                                 <button type="submit" disabled={saving}
-                                    className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50">
+                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50">
                                     {saving ? 'Добавление...' : 'Добавить'}
                                 </button>
                             </div>

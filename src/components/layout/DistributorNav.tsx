@@ -2,12 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
-import {
-    LayoutDashboard, ShoppingCart, Users, Settings,
-    LogOut, Truck, ChevronDown, User, Package
-} from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
+import { LayoutDashboard, Users, Settings, LogOut, User, Package, Menu, X } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 
 const navItems = [
     { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
@@ -20,7 +18,8 @@ const navItems = [
 export default function DistributorNav() {
     const pathname = usePathname();
     const { data: session } = useSession();
-    const [profileOpen, setProfileOpen] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
 
     const subRole = (session?.user as any)?.subRole || '';
 
@@ -29,80 +28,120 @@ export default function DistributorNav() {
 
     const visibleItems = navItems.filter(item => item.roles.includes(subRole));
 
-    return (
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4">
-                <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
-                            <Truck className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <div className="text-sm font-bold text-gray-900 leading-none">LensFlow</div>
-                            <div className="text-xs text-indigo-500 font-medium">Дистрибьютор</div>
-                        </div>
-                    </div>
+    const handleLogout = async () => {
+        setLoggingOut(true);
+        await signOut({ callbackUrl: '/login' });
+    };
 
-                    {/* Nav links */}
-                    <div className="flex items-center gap-1">
+    return (
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+            <div className="max-w-[1800px] mx-auto px-4 sm:px-6 flex items-center justify-between">
+                {/* Logo */}
+                <span className="text-lg font-bold text-blue-600 mr-2 shrink-0">LensFlow</span>
+
+                {/* Desktop nav — static, no scroll */}
+                <div className="hidden md:flex items-center flex-1">
+                    {visibleItems.map(item => {
+                        const active = isActive(item);
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`
+                                    px-1.5 lg:px-2.5 py-3.5 text-[12px] lg:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap
+                                    ${active
+                                        ? 'border-blue-600 text-blue-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
+                                    }
+                                `}
+                            >
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* Right side: Profile & Logout — far right */}
+                <div className="hidden md:flex items-center shrink-0 ml-auto gap-1">
+                    <Link
+                        href="/profile"
+                        className="p-2 text-gray-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50"
+                        title="Профиль"
+                    >
+                        <User className="w-4 h-4" />
+                    </Link>
+                    <button
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                        title="Выйти"
+                    >
+                        {loggingOut ? (
+                            <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin block" />
+                        ) : (
+                            <LogOut className="w-4 h-4" />
+                        )}
+                    </button>
+                </div>
+
+                {/* Mobile hamburger */}
+                <button
+                    onClick={() => setMobileOpen(!mobileOpen)}
+                    className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                    {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+            </div>
+
+            {/* Mobile dropdown menu */}
+            {mobileOpen && (
+                <div className="md:hidden border-t border-gray-100 bg-white shadow-lg">
+                    <div className="px-4 py-2 space-y-1">
                         {visibleItems.map(item => {
-                            const Icon = item.icon;
                             const active = isActive(item);
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                        active
-                                            ? 'bg-indigo-50 text-indigo-600'
-                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                    }`}
+                                    onClick={() => setMobileOpen(false)}
+                                    className={`
+                                        flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                        ${active
+                                            ? 'bg-blue-50 text-blue-600'
+                                            : 'text-gray-600 hover:bg-gray-50'
+                                        }
+                                    `}
                                 >
-                                    <Icon className="w-4 h-4" />
+                                    <item.icon className="w-4 h-4" />
                                     {item.label}
                                 </Link>
                             );
                         })}
-                    </div>
-
-                    {/* Profile */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setProfileOpen(o => !o)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <User className="w-4 h-4 text-indigo-600" />
-                            </div>
-                            <div className="text-left hidden sm:block">
-                                <div className="text-sm font-medium text-gray-900 leading-none">
-                                    {(session?.user as any)?.profile?.fullName || session?.user?.email}
-                                </div>
-                                <div className="text-xs text-gray-400 mt-0.5">
-                                    {subRole === 'dist_head' ? 'Руководитель' :
-                                     subRole === 'dist_admin' ? 'Администратор' :
-                                     subRole === 'dist_manager' ? 'Менеджер' :
-                                     subRole === 'dist_accountant' ? 'Бухгалтер' : subRole}
-                                </div>
-                            </div>
-                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {profileOpen && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-gray-200 shadow-lg py-1 z-50">
-                                <button
-                                    onClick={() => signOut({ callbackUrl: '/login' })}
-                                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                >
+                        <div className="border-t border-gray-100 pt-2 mt-2 flex items-center gap-3">
+                            <Link
+                                href="/profile"
+                                onClick={() => setMobileOpen(false)}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-gray-50 flex-1"
+                            >
+                                <User className="w-4 h-4" />
+                                Профиль
+                            </Link>
+                            <button
+                                onClick={() => { setMobileOpen(false); handleLogout(); }}
+                                disabled={loggingOut}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50"
+                            >
+                                {loggingOut ? (
+                                    <span className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                ) : (
                                     <LogOut className="w-4 h-4" />
-                                    Выйти
-                                </button>
-                            </div>
-                        )}
+                                )}
+                                {loggingOut ? 'Выход...' : 'Выйти'}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </nav>
+            )}
+        </div>
     );
 }

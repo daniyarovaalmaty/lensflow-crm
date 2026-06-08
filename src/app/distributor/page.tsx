@@ -1,65 +1,61 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback, ReactNode } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useState, useEffect, useMemo, ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote } from 'lucide-react';
+import {
+    Plus, Package, Clock, CheckCircle, TruckIcon, Search,
+    Download, User, Calendar, X, Zap, Pencil, Truck, Users,
+    Building2, MessageSquarePlus, MessageCircle, Send, Banknote,
+    FlaskConical, BoxIcon, ArrowRight, Eye, Lock, FileEdit, XCircle
+} from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
-import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
+import {
+    OrderStatusLabels, OrderStatusColors, CharacteristicLabels,
+    PaymentStatusLabels, PaymentStatusColors,
+    canEditOrder, editWindowRemainingMs
+} from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
-import { getPermissions, SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
+import { getPermissions, SubRoleLabels } from '@/types/user';
 import type { SubRole } from '@/types/user';
-import FullscreenButton from '@/components/ui/FullscreenButton';
-import QuickNav from '@/components/ui/QuickNav';
 
-const PRICE_PER_LENS = 17500; // fallback for print/expanded details
 
-type SortOption = 'newest' | 'oldest' | 'patient_az' | 'patient_za';
 
-const SortLabels: Record<SortOption, string> = {
-    newest: 'Сначала новые',
-    oldest: 'Сначала старые',
-    patient_az: 'Пациент А → Я',
-    patient_za: 'Пациент Я → А',
-};
+const PRICE_PER_LENS = 17500;
 
 export default function DistributorDashboard() {
     const { data: session } = useSession();
     const router = useRouter();
     const subRole = (session?.user?.subRole || 'dist_manager') as SubRole;
     const perms = getPermissions(subRole);
-    
     const canSeePrices = perms.canViewPayments;
 
     useEffect(() => {
         if (!session?.user) return;
-        if (session.user.role !== 'distributor') {
-            router.replace('/login');
-        }
+        if (session.user.role !== 'distributor') router.replace('/login');
     }, [session, router]);
 
-
+    // ==================== STATE ====================
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [orderTab, setOrderTab] = useState<'incoming' | 'outgoing'>('incoming');
-    const [filter, setFilter] = useState<OrderStatus | 'all' | 'unpaid'>('all');
+
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState<SortOption>('newest');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
-    const [showFilters, setShowFilters] = useState(false);
-    const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [clinicFilter, setClinicFilter] = useState('all');
+
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [partnerLabId, setPartnerLabId] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+    const [showRequestModal, setShowRequestModal] = useState<string | null>(null);
+    const [requestType, setRequestType] = useState<'request_edit' | 'request_cancel'>('request_edit');
+    const [requestReason, setRequestReason] = useState('');
     const [commentText, setCommentText] = useState('');
     const [sendingComment, setSendingComment] = useState(false);
-    const [requestType, setRequestType] = useState<'comment' | 'request_edit' | 'request_cancel'>('comment');
-    const [showRequestModal, setShowRequestModal] = useState<string | null>(null);
-    const [requestReason, setRequestReason] = useState('');
-    // tick every 30s to refresh countdown displays
-    const [, setTick] = useState(0);
+    const [tick, setTick] = useState(0);
+
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
 
     const formatCountdown = (ms: number) => {
@@ -69,54 +65,52 @@ export default function DistributorDashboard() {
         return h > 0 ? `${h}ч ${m}м` : `${m}м`;
     };
 
+    const selectedOrder = useMemo(() =>
+        orders.find(o => o.order_id === selectedOrderId) || null,
+        [orders, selectedOrderId]
+    );
+
+    // Lock body scroll when modal is open
     useEffect(() => {
-        loadOrders();
-    }, []);
+        document.body.style.overflow = selectedOrderId ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [selectedOrderId]);
+
+    // ==================== DATA LOADING ====================
+    useEffect(() => { loadOrders(); loadPartnerLab(); }, []);
 
     const loadOrders = async () => {
         try {
-            const response = await fetch('/api/orders');
-            if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
-            }
-        } catch (error) {
-            console.error('Failed to load orders:', error);
-        } finally {
-            setIsLoading(false);
-        }
+            const res = await fetch('/api/orders');
+            if (res.ok) setOrders(await res.json());
+        } catch (e) { console.error('Failed to load orders:', e); }
+        finally { setIsLoading(false); }
     };
 
-    const confirmDelivery = async (orderId: string) => {
+    const loadPartnerLab = async () => {
         try {
-            await fetch(`/api/orders/${orderId}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'delivered' }),
-            });
-            await loadOrders();
-        } catch (err) {
-            console.error('Failed to confirm delivery:', err);
-        }
+            const res = await fetch('/api/laboratories');
+            if (res.ok) {
+                const labs = await res.json();
+                if (labs.length > 0) setPartnerLabId(labs[0].id);
+            }
+        } catch {}
     };
 
-    const filteredOrders = useMemo(() => {
+    // ==================== FILTERING ====================
+    const clinicNames = useMemo(() => {
+        const names = new Set<string>();
+        orders.forEach(o => {
+            const name = o.company || o.meta.optic_name;
+            if (name) names.add(name);
+        });
+        return Array.from(names).sort();
+    }, [orders]);
+
+    // All orders in kanban
+    const kanbanOrders = useMemo(() => {
         let result = [...orders];
 
-        if (orderTab === 'incoming') {
-            result = result.filter(o => !o.meta.lab_org_id);
-        } else {
-            result = result.filter(o => !!o.meta.lab_org_id);
-        }
-
-        // Status filter
-        if (filter === 'unpaid') {
-            result = result.filter(o => (o as any).payment_status !== 'paid');
-        } else if (filter !== 'all') {
-            result = result.filter(o => o.status === filter);
-        }
-
-        // Search filter
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase().trim();
             result = result.filter(o =>
@@ -126,91 +120,91 @@ export default function DistributorDashboard() {
                 (o.company || '').toLowerCase().includes(q)
             );
         }
-
-        // Date range filter
-        if (dateFrom) {
-            const from = new Date(dateFrom);
-            result = result.filter(o => new Date(o.meta.created_at) >= from);
+        if (clinicFilter !== 'all') {
+            result = result.filter(o => (o.company || o.meta.optic_name) === clinicFilter);
         }
-        if (dateTo) {
-            const to = new Date(dateTo);
-            to.setHours(23, 59, 59, 999);
-            result = result.filter(o => new Date(o.meta.created_at) <= to);
-        }
-
-        // Sort
-        result.sort((a, b) => {
-            switch (sortBy) {
-                case 'newest':
-                    return new Date(b.meta.created_at).getTime() - new Date(a.meta.created_at).getTime();
-                case 'oldest':
-                    return new Date(a.meta.created_at).getTime() - new Date(b.meta.created_at).getTime();
-                case 'patient_az':
-                    return a.patient.name.localeCompare(b.patient.name, 'ru');
-                case 'patient_za':
-                    return b.patient.name.localeCompare(a.patient.name, 'ru');
-                default:
-                    return 0;
-            }
-        });
-
         return result;
-    }, [orders, filter, searchQuery, sortBy, dateFrom, dateTo, orderTab]);
+    }, [orders, searchQuery, clinicFilter]);
 
-    const stats = {
-        total: orders.length,
-        new: orders.filter(o => o.status === 'new').length,
-        in_production: orders.filter(o => o.status === 'in_production').length,
-        ready: orders.filter(o => o.status === 'ready').length,
-        shipped: orders.filter(o => o.status === 'shipped').length,
+    const ordersByStatus = useMemo(() => ({
+        new: kanbanOrders.filter(o => o.status === 'new'),
+        in_production: kanbanOrders.filter(o => o.status === 'in_production' || o.status === 'rework'),
+        ready: kanbanOrders.filter(o => o.status === 'ready'),
+        shipped: kanbanOrders.filter(o => o.status === 'shipped' || o.status === 'out_for_delivery'),
+        delivered: kanbanOrders.filter(o => ['delivered', 'accountant_review', 'docs_prep', 'docs_ready'].includes(o.status)),
+    }), [kanbanOrders]);
+
+    // ==================== ACTIONS ====================
+    const forwardToLab = async (orderId: string) => {
+        if (!partnerLabId) { alert('Лаборатория-партнёр не найдена'); return; }
+        setActionLoading(orderId);
+        try {
+            await fetch(`/api/orders/${orderId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ labOrgId: partnerLabId }),
+            });
+            await loadOrders();
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(null); }
     };
 
-    const toggleExpand = (orderId: string) => {
-        setExpandedOrders(prev => {
-            const next = new Set(prev);
-            next.has(orderId) ? next.delete(orderId) : next.add(orderId);
-            return next;
-        });
+    const selfFulfill = async (orderId: string) => {
+        setActionLoading(orderId);
+        try {
+            await fetch(`/api/orders/${orderId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'in_production' }),
+            });
+            await loadOrders();
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(null); }
     };
 
-    const clearFilters = () => {
-        setSearchQuery('');
-        setFilter('all');
-        setDateFrom('');
-        setDateTo('');
-        setSortBy('newest');
+    const updateStatus = async (orderId: string, newStatus: OrderStatus) => {
+        setActionLoading(orderId);
+        try {
+            await fetch(`/api/orders/${orderId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            await loadOrders();
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(null); }
     };
-
-    const hasActiveFilters = searchQuery || filter !== 'all' || dateFrom || dateTo || sortBy !== 'newest';
 
     const handlePrintInvoice = (order: Order) => {
         import('@/lib/generateInvoicePdf').then(({ generateInvoicePdf }) => {
             generateInvoicePdf({
-                order_id: order.order_id,
-                patient: order.patient,
-                meta: order.meta,
-                company: order.company,
-                config: order.config,
-                is_urgent: order.is_urgent,
-                total_price: order.total_price,
+                order_id: order.order_id, patient: order.patient,
+                meta: order.meta, company: order.company, config: order.config,
+                is_urgent: order.is_urgent, total_price: order.total_price,
                 discount_percent: (order as any).discount_percent,
                 document_name_od: (order as any).document_name_od,
                 document_name_os: (order as any).document_name_os,
-                price_od: (order as any).price_od,
-                price_os: (order as any).price_os,
+                price_od: (order as any).price_od, price_os: (order as any).price_os,
                 products: (order as any).products,
             });
         });
     };
 
+    // ==================== HELPERS ====================
+    const isLabOrder = (order: Order) => !!order.meta.lab_org_id;
+    const isSelfFulfilled = (order: Order) => !order.meta.lab_org_id;
+
+    const getOrderPrice = (order: Order) => {
+        const od = order.config?.eyes?.od || { qty: 0 };
+        const os = order.config?.eyes?.os || { qty: 0 };
+        return order.total_price || ((Number(od.qty) || 0) + (Number(os.qty) || 0)) * PRICE_PER_LENS;
+    };
 
     const ParamRow = ({ label, value }: { label: string; value: any }) => (
-        value != null && value !== '' ? (
-            <div className="flex justify-between text-xs py-1 border-b border-gray-100">
-                <span className="text-gray-500">{label}</span>
-                <span className="font-medium text-gray-800">{String(value)}</span>
-            </div>
-        ) : null
+        <div className="flex justify-between text-xs py-1 border-b border-gray-100">
+            <span className="text-gray-500">{label}</span>
+            <span className="font-medium text-gray-800">{value != null && value !== '' ? String(value) : '—'}</span>
+        </div>
     );
 
     const EyeBlock = ({ label, eye }: { label: string; eye: any }) => (
@@ -218,12 +212,22 @@ export default function DistributorDashboard() {
             <h5 className="text-xs font-semibold text-gray-700 mb-1 mt-2">{label}</h5>
             <div className="bg-gray-50 rounded-lg p-3 space-y-0">
                 <ParamRow label="Характеристика" value={eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null} />
-                <ParamRow label="Km" value={eye.km} />
+                <ParamRow label="RGP" value={eye.isRgp ? 'Да' : 'Нет'} />
+                <ParamRow label="MyOrthoK" value={eye.myorthok ? 'Да' : 'Нет'} />
+                <ParamRow label="Km" value={eye.isRgp ? null : eye.km} />
                 <ParamRow label="TP" value={eye.tp} />
                 <ParamRow label="DIA" value={eye.dia} />
                 <ParamRow label="E" value={eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null} />
-                {eye.tor != null && <ParamRow label="Тог." value={eye.tor} />}
+                {(eye.sph != null || eye.cyl != null || eye.ax != null) && (
+                    <>
+                        <ParamRow label="SPH" value={eye.sph} />
+                        <ParamRow label="CYL" value={eye.cyl} />
+                        <ParamRow label="AX" value={eye.ax} />
+                    </>
+                )}
+                <ParamRow label="Тор." value={eye.tor} />
                 <ParamRow label="Dk" value={eye.dk} />
+                <ParamRow label="Пробная" value={(eye.dk === '50' || eye.trial) ? 'Да' : 'Нет'} />
                 <ParamRow label="Цвет" value={eye.color || null} />
                 <ParamRow label="Апик. клиренс" value={eye.apical_clearance} />
                 <ParamRow label="Фактор компр." value={eye.compression_factor} />
@@ -232,690 +236,603 @@ export default function DistributorDashboard() {
         </div>
     );
 
-    return (
-        <div className="min-h-screen bg-surface">
-            <QuickNav />
-            {/* Header */}
-            <div className="bg-surface-elevated border-b border-border">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-                    <div className="flex items-center justify-between">
-                        <div className="min-w-0">
-                            <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
-                                {session?.user?.profile?.fullName || session?.user?.email || 'Дистрибьютор'}
-                            </h1>
-                            <p className="text-sm sm:text-base text-gray-600 mt-0.5 sm:mt-1 truncate">
-                                {SubRoleLabels[subRole] || 'Дашборд'}
-                            </p>
+    // ==================== KANBAN CARD ====================
+    const KanbanCard = ({ order }: { order: Order }) => {
+        const od = order.config?.eyes?.od || { km: '-', dk: '-', qty: 0 };
+        const charLabel = od.characteristic
+            ? CharacteristicLabels[od.characteristic as Characteristic] : '—';
+        const payStatus = (order as any).payment_status || 'unpaid';
+        const clinic = order.company || order.meta.optic_name;
+        const lab = isLabOrder(order);
+
+        return (
+            <div
+                onClick={() => setSelectedOrderId(order.order_id)}
+                className="card cursor-pointer hover:shadow-md transition-all group hover:border-blue-200"
+            >
+                <div className="space-y-2">
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <div className="flex items-center gap-1.5">
+                                <h4 className="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">
+                                    {order.order_id}
+                                </h4>
+                                <span className={`text-[10px] font-bold rounded px-1.5 py-0.5 ${lab ? 'bg-violet-100 text-violet-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                    {lab ? '🔬 Лаб' : '📦 Своя'}
+                                </span>
+                            </div>
+                            <p className="text-xs text-gray-600">{order.patient.name}</p>
                         </div>
-
-                        {/* Desktop nav - row 1: actions */}
-                        <div className="hidden md:flex items-center gap-2">
-                            {/* Primary actions */}
-                            {perms.canCreateOrders && (
-                                <Link href="/distributor/orders/new" className="btn btn-primary gap-2 text-sm">
-                                    <Plus className="w-4 h-4" />
-                                    Создать заказ
-                                </Link>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="text-xs text-gray-400">{formatDate(order.meta.created_at)}</span>
+                            {order.is_urgent && (
+                                <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 rounded px-1.5 py-0.5">
+                                    <Zap className="w-2.5 h-2.5" /> СРОЧНО
+                                </span>
                             )}
-
-                            <div className="w-px h-6 bg-gray-200 mx-1" />
-
-                            <Link href="/profile" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Профиль">
-                                <User className="w-4 h-4" />
-                            </Link>
-                            <Link href="/support" className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Поддержка">
-                                <MessageSquarePlus className="w-4 h-4" />
-                            </Link>
-                            <button
-                                onClick={() => signOut({ callbackUrl: '/login' })}
-                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Выйти"
-                            >
-                                <LogOut className="w-4 h-4" />
-                            </button>
-                            <FullscreenButton />
-                        </div>
-
-                        {/* Mobile: create + hamburger */}
-                        <div className="flex md:hidden items-center gap-2">
-                            {perms.canCreateOrders && (
-                                <Link href="/distributor/orders/new" className="btn btn-primary gap-1.5 text-sm px-3 py-2">
-                                    <Plus className="w-4 h-4" />
-                                    <span className="hidden xs:inline">Заказ</span>
-                                </Link>
-                            )}
-                            <button
-                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                            >
-                                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                            </button>
                         </div>
                     </div>
 
-                    {/* Mobile dropdown menu */}
-                    {mobileMenuOpen && (
-                        <div className="md:hidden border-t border-gray-100 mt-3 pt-3 space-y-1">
-                            <Link
-                                href="/distributor/catalog"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                            >
-                                <Package className="w-4 h-4" />
-                                Каталог
-                            </Link>
-                            <Link
-                                href="/distributor/counterparties"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                            >
-                                <Users className="w-4 h-4" />
-                                Контрагенты
-                            </Link>
-                            <Link
-                                href="/profile"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50"
-                            >
-                                <User className="w-4 h-4" />
-                                Профиль
-                            </Link>
-                            <button
-                                onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/login' }); }}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 w-full text-left"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Выйти
+                    {clinic && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Building2 className="w-3 h-3" />
+                            <span className="truncate">{clinic}</span>
+                        </div>
+                    )}
+
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="bg-gray-100 rounded px-1.5 py-0.5">{charLabel}</span>
+                        <span>Km: {od.km ?? '—'}</span>
+                        <span>Dk: {od.dk ?? '—'}</span>
+                    </div>
+
+                    {/* Incoming order without lab — show forward/self-fulfill buttons */}
+                    {isSelfFulfilled(order) && order.status === 'new' && (
+                        <div className="flex gap-2 pt-1">
+                            <button onClick={e => { e.stopPropagation(); forwardToLab(order.order_id); }}
+                                className="flex-1 text-xs py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium transition-colors flex items-center justify-center gap-1"
+                                disabled={actionLoading === order.order_id || !partnerLabId}>
+                                <FlaskConical className="w-3 h-3" /> Перенаправить в MedInnVision LAB
+                            </button>
+                            <button onClick={e => { e.stopPropagation(); selfFulfill(order.order_id); }}
+                                className="flex-1 text-xs py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-medium transition-colors flex items-center justify-center gap-1"
+                                disabled={actionLoading === order.order_id}>
+                                <BoxIcon className="w-3 h-3" /> Реализовать
                             </button>
                         </div>
                     )}
 
+                    {/* Self-fulfilled actions (non-new) */}
+                    {isSelfFulfilled(order) && order.status !== 'new' && order.status !== 'delivered' && order.status !== 'cancelled' && (
+                        <div className="pt-1">
+                            {order.status === 'in_production' && (
+                                <button onClick={e => { e.stopPropagation(); updateStatus(order.order_id, 'ready'); }}
+                                    className="w-full text-xs py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-medium transition-colors"
+                                    disabled={actionLoading === order.order_id}>
+                                    ✅ Готов
+                                </button>
+                            )}
+                            {order.status === 'ready' && (
+                                <button onClick={e => { e.stopPropagation(); updateStatus(order.order_id, 'shipped'); }}
+                                    className="w-full text-xs py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg font-medium transition-colors"
+                                    disabled={actionLoading === order.order_id}>
+                                    🚚 Отгрузить
+                                </button>
+                            )}
+                            {(order.status === 'shipped' || order.status === 'out_for_delivery') && (
+                                <button onClick={e => { e.stopPropagation(); updateStatus(order.order_id, 'delivered'); }}
+                                    className="w-full text-xs py-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg font-medium transition-colors"
+                                    disabled={actionLoading === order.order_id}>
+                                    📬 Доставлен
+                                </button>
+                            )}
+                        </div>
+                    )}
 
-                    {/* Stats */}
-                    {perms.canViewStats && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mt-4 sm:mt-6">
+                    {/* Lab order: confirm delivery */}
+                    {isLabOrder(order) && order.status === 'out_for_delivery' && (
+                        <button onClick={e => { e.stopPropagation(); updateStatus(order.order_id, 'delivered'); }}
+                            className="w-full text-xs py-1.5 bg-teal-600 text-white hover:bg-teal-700 rounded-lg font-medium transition-colors"
+                            disabled={actionLoading === order.order_id}>
+                            <CheckCircle className="w-3 h-3 inline mr-1" /> Подтвердить получение
+                        </button>
+                    )}
+
+                    <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-gray-100">
+                        {order.meta.doctor ? (
+                            <div className="flex items-center gap-1 text-xs text-gray-400">
+                                <User className="w-3 h-3" />
+                                {order.meta.doctor}
+                            </div>
+                        ) : <div />}
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                            <span className={`w-2 h-2 rounded-full ${payStatus === 'paid' ? 'bg-emerald-500' : payStatus === 'partial' ? 'bg-amber-500' : 'bg-gray-300'}`} />
+                            <span className={`font-medium ${payStatus === 'paid' ? 'text-emerald-600' : payStatus === 'partial' ? 'text-amber-600' : 'text-gray-400'}`}>
+                                {PaymentStatusLabels[payStatus as PaymentStatus]}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // ==================== KANBAN COLUMN ====================
+    const Column = ({ title, icon: Icon, orders: colOrders, color }: {
+        title: string; icon: any; orders: Order[]; color: string;
+    }) => (
+        <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[220px]">
+            <div className={`card mb-3 ${color}`}>
+                <div className="flex items-center gap-2">
+                    <Icon className="w-5 h-5" />
+                    <h3 className="font-semibold text-sm">{title}</h3>
+                    <span className="ml-auto bg-white/50 rounded-full px-2 py-0.5 text-sm font-medium">
+                        {colOrders.length}
+                    </span>
+                </div>
+            </div>
+            <div className="space-y-3">
+                {colOrders.length === 0 ? (
+                    <div className="card text-center py-8 text-gray-400">
+                        <p className="text-sm">Нет заказов</p>
+                    </div>
+                ) : (
+                    colOrders.map(order => <KanbanCard key={order.order_id} order={order} />)
+                )}
+            </div>
+        </div>
+    );
+
+    // ==================== ORDER MODAL ====================
+    const OrderModal = () => {
+        if (!selectedOrder) return null;
+        const order = selectedOrder;
+        const od = order.config?.eyes?.od || { km: '-', dia: '-', dk: '-', qty: 0 };
+        const os = order.config?.eyes?.os || { km: '-', dia: '-', dk: '-', qty: 0 };
+        const lab = isLabOrder(order);
+        const price = getOrderPrice(order);
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-4 pt-[2vh] sm:pt-[5vh] overflow-y-auto"
+                onClick={() => setSelectedOrderId(null)}>
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    onClick={e => e.stopPropagation()}
+                    className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mb-[5vh] max-h-[90vh] overflow-y-auto"
+                >
+                    {/* Header */}
+                    <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 rounded-t-2xl z-10">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-lg font-bold text-gray-900">Заказ {order.order_id}</h2>
+                                    <span className={`text-xs font-bold rounded px-2 py-0.5 ${lab ? 'bg-violet-100 text-violet-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                        {lab ? '🔬 Лаборатория' : '📦 Своя реализация'}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-500">
+                                    {OrderStatusLabels[order.status === 'rework' ? 'in_production' : order.status]} • {formatDate(order.meta.created_at)}
+                                </p>
+                            </div>
+                            <button onClick={() => setSelectedOrderId(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Body */}
+                    <div className="px-4 sm:px-6 py-4 space-y-4">
+                        {/* Status + Badges */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className={`badge ${OrderStatusColors[order.status === 'rework' ? 'in_production' : order.status]}`}>
+                                {OrderStatusLabels[order.status === 'rework' ? 'in_production' : order.status]}
+                            </span>
+                            {order.is_urgent && (
+                                <span className="badge bg-amber-100 text-amber-700 flex items-center gap-1">
+                                    <Zap className="w-3 h-3" /> СРОЧНО
+                                </span>
+                            )}
+                            {canSeePrices && (() => {
+                                const ps = (order as any).payment_status || 'unpaid';
+                                return (
+                                    <span className={`badge flex items-center gap-1.5 ${PaymentStatusColors[ps as PaymentStatus]}`}>
+                                        <span className={`w-2 h-2 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-400'}`} />
+                                        {PaymentStatusLabels[ps as PaymentStatus]}
+                                    </span>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Patient & Doctor */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="text-xs font-semibold text-gray-400 uppercase mb-1">Пациент</h4>
+                                <p className="text-sm font-medium text-gray-900">{order.patient.name}</p>
+                                <p className="text-xs text-gray-500">{order.patient.phone}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-semibold text-gray-400 uppercase mb-1">Ответственный</h4>
+                                <p className="text-sm font-medium text-gray-900">{order.meta.doctor || order.meta.optic_name || '—'}</p>
+                                {order.company && <p className="text-xs text-gray-500">{order.company}</p>}
+                            </div>
+                        </div>
+
+                        {/* Delivery */}
+                        {order.delivery_method && (
+                            <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
+                                <span className="font-medium">Доставка:</span> {order.delivery_method}
+                                {order.delivery_address && ` — ${order.delivery_address}`}
+                            </div>
+                        )}
+                        {order.notes && (
+                            <div className="text-xs text-gray-600 bg-yellow-50 rounded-lg p-3">
+                                <span className="font-medium">Примечания:</span> {order.notes}
+                            </div>
+                        )}
+
+                        {/* Eyes */}
+                        <div className="grid grid-cols-2 gap-4">
+                            {od.km != null && <EyeBlock label="OD (правый)" eye={od} />}
+                            {os.km != null && <EyeBlock label="OS (левый)" eye={os} />}
+                        </div>
+
+                        {/* Price */}
+                        {canSeePrices && (
+                            <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-600">Итого</span>
+                                <span className="text-xl font-bold text-gray-900">{price.toLocaleString('ru-RU')} ₸</span>
+                            </div>
+                        )}
+
+                        {/* Edit window indicator and Requests */}
+                        {(() => {
+                            const editable = canEditOrder(order);
+                            const remainMs = editWindowRemainingMs(order);
+                            const countdown = formatCountdown(remainMs);
+                            const comments = ((order as any).comments || []) as any[];
+                            const hasPendingRequest = comments.some((c: any) => 
+                                ['request_edit', 'request_cancel'].includes(c.type) &&
+                                !comments.some((r: any) => ['approve_edit', 'approve_cancel', 'reject_request'].includes(r.type) && new Date(r.createdAt) > new Date(c.createdAt))
+                            );
+                            const lastAction = [...comments].reverse().find((c: any) => ['approve_edit', 'approve_cancel', 'reject_request'].includes(c.type));
+
+                            if (order.status === 'cancelled') {
+                                return (
+                                    <div className="flex items-center gap-1 text-xs text-red-400 bg-red-50 p-3 rounded-xl mb-4">
+                                        <X className="w-4 h-4" /> Заказ отменён
+                                    </div>
+                                );
+                            }
+
+                            if (editable) {
+                                return (
+                                    <div className="bg-blue-50/50 p-3 rounded-xl flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2 text-sm text-blue-800">
+                                            <Pencil className="w-4 h-4" />
+                                            Доступно редактирование
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            {countdown && !order.is_urgent && (
+                                                <span className="text-xs text-amber-600 flex items-center gap-1">
+                                                    <Clock className="w-3.5 h-3.5" /> ещё {countdown}
+                                                </span>
+                                            )}
+                                            <Link href={`/distributor/orders/${order.order_id}/edit`} onClick={(e) => { e.stopPropagation(); document.body.style.overflow = ''; }} className="text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-lg font-medium transition-colors">
+                                                Изменить
+                                            </Link>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl mb-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="flex items-center gap-1 text-sm text-gray-500">
+                                            <Lock className="w-4 h-4" /> Редактирование закрыто
+                                        </span>
+                                        {hasPendingRequest && (
+                                            <span className="text-xs text-amber-600 font-medium animate-comment-blink">⏳ Запрос отправлен</span>
+                                        )}
+                                        {lastAction?.type === 'reject_request' && (
+                                            <span className="text-xs text-red-500"><XCircle className="w-3.5 h-3.5 inline mr-1" /> Отклонено</span>
+                                        )}
+                                    </div>
+                                    {!hasPendingRequest && (
+                                        <div className="flex items-center gap-2">
+                                            <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_edit'); setRequestReason(''); }} className="flex-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+                                                <Pencil className="w-3.5 h-3.5" /> Запросить ред.
+                                            </button>
+                                            <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_cancel'); setRequestReason(''); }} className="flex-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+                                                <X className="w-3.5 h-3.5" /> Запросить отмену
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
+                        {/* Request modal (inside order modal) */}
+                        {showRequestModal === order.order_id && (
+                            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3" onClick={e => e.stopPropagation()}>
+                                <p className="text-sm font-medium text-amber-800">
+                                    {requestType === 'request_edit' ? (
+                                        <span className="inline-flex items-center gap-1.5"><FileEdit className="w-4 h-4" /> Запрос на редактирование</span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5"><XCircle className="w-4 h-4" /> Запрос на отмену заказа</span>
+                                    )}
+                                </p>
+                                <textarea
+                                    value={requestReason}
+                                    onChange={e => setRequestReason(e.target.value)}
+                                    placeholder="Опишите причину..."
+                                    className="w-full px-3 py-2 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white"
+                                    rows={3}
+                                />
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={async () => {
+                                            if (!requestReason.trim()) return;
+                                            setSendingComment(true);
+                                            await fetch(`/api/orders/${(order as any).id}/comments`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ text: requestReason, type: requestType }),
+                                            });
+                                            setShowRequestModal(null);
+                                            setRequestReason('');
+                                            setSendingComment(false);
+                                            loadOrders();
+                                        }}
+                                        disabled={!requestReason.trim() || sendingComment}
+                                        className="flex-1 text-sm py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 font-medium"
+                                    >
+                                        Отправить запрос
+                                    </button>
+                                    <button onClick={() => setShowRequestModal(null)} className="text-sm py-2 px-4 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 font-medium">Отмена</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Comments Section */}
+                        <div className="bg-gray-50 rounded-xl p-4 mt-4">
+                            <h4 className="text-xs font-semibold text-gray-400 uppercase mb-3 flex items-center gap-1.5">
+                                <MessageCircle className="w-3.5 h-3.5" /> Комментарии
+                                {((order as any).comments?.length > 0) && (
+                                    <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full">
+                                        {(order as any).comments.length}
+                                    </span>
+                                )}
+                            </h4>
+
+                            {((order as any).comments?.length > 0) && (
+                                <div className="space-y-2 mb-3 max-h-64 overflow-y-auto pr-1">
+                                    {((order as any).comments as any[]).map((c: any, i: number) => {
+                                        const typeLabels: Record<string, { label: ReactNode; cls: string }> = {
+                                            request_edit: { label: <span className="inline-flex items-center gap-1"><FileEdit className="w-3.5 h-3.5" /> Запрос ред.</span>, cls: 'bg-amber-100 text-amber-700' },
+                                            request_cancel: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Запрос отмены</span>, cls: 'bg-red-100 text-red-700' },
+                                            approve_edit: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Одобрено ред.</span>, cls: 'bg-green-100 text-green-700' },
+                                            approve_cancel: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Отменён</span>, cls: 'bg-red-100 text-red-700' },
+                                            reject_request: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Отклонено</span>, cls: 'bg-gray-100 text-gray-700' },
+                                        };
+                                        const typeBadge = typeLabels[c.type];
+                                        return (
+                                            <div key={i} className={`text-xs rounded-lg p-2.5 ${
+                                                c.role === 'laboratory'
+                                                    ? 'bg-blue-50 border border-blue-100 mr-4'
+                                                    : 'bg-white border border-gray-200 ml-4'
+                                            }`}>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="font-semibold text-gray-700">
+                                                        {c.authorName}
+                                                        <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                                                            c.role === 'laboratory' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                                                        }`}>
+                                                            {c.role === 'laboratory' ? 'Лаборатория' : 'Дистрибьютор'}
+                                                        </span>
+                                                        {typeBadge && (
+                                                            <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${typeBadge.cls}`}>
+                                                                {typeBadge.label}
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                    <span className="text-gray-400">
+                                                        {new Date(c.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                                <p className="text-gray-600 whitespace-pre-wrap">{c.text}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={commentText}
+                                    onChange={e => setCommentText(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' && commentText.trim() && !sendingComment) {
+                                            e.preventDefault();
+                                            setSendingComment(true);
+                                            fetch(`/api/orders/${(order as any).id}/comments`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ text: commentText }),
+                                            }).then(res => {
+                                                if (res.ok) { setCommentText(''); loadOrders(); }
+                                            }).finally(() => setSendingComment(false));
+                                        }
+                                    }}
+                                    placeholder="Ваш комментарий..."
+                                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    disabled={sendingComment}
+                                />
+                                <button
+                                    onClick={() => {
+                                        if (!commentText.trim() || sendingComment) return;
+                                        setSendingComment(true);
+                                        fetch(`/api/orders/${(order as any).id}/comments`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ text: commentText }),
+                                        }).then(res => {
+                                            if (res.ok) { setCommentText(''); loadOrders(); }
+                                        }).finally(() => setSendingComment(false));
+                                    }}
+                                    disabled={!commentText.trim() || sendingComment}
+                                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex-shrink-0"
+                                >
+                                    <Send className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-2">
+                            {/* Self-fulfilled actions */}
+                            {isSelfFulfilled(order) && order.status === 'in_production' && (
+                                <button onClick={() => { updateStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
+                                    className="flex-1 btn bg-green-600 hover:bg-green-700 text-white text-sm py-2.5 rounded-xl font-medium">
+                                    ✅ Отметить как готов
+                                </button>
+                            )}
+                            {isSelfFulfilled(order) && order.status === 'ready' && (
+                                <button onClick={() => { updateStatus(order.order_id, 'shipped'); setSelectedOrderId(null); }}
+                                    className="flex-1 btn bg-purple-600 hover:bg-purple-700 text-white text-sm py-2.5 rounded-xl font-medium">
+                                    🚚 Отгрузить клинике
+                                </button>
+                            )}
+                            {isSelfFulfilled(order) && (order.status === 'shipped' || order.status === 'out_for_delivery') && (
+                                <button onClick={() => { updateStatus(order.order_id, 'delivered'); setSelectedOrderId(null); }}
+                                    className="flex-1 btn bg-teal-600 hover:bg-teal-700 text-white text-sm py-2.5 rounded-xl font-medium">
+                                    📬 Подтвердить доставку
+                                </button>
+                            )}
+
+                            {/* Lab order: confirm delivery */}
+                            {isLabOrder(order) && order.status === 'out_for_delivery' && (
+                                <button onClick={() => { updateStatus(order.order_id, 'delivered'); setSelectedOrderId(null); }}
+                                    className="flex-1 btn bg-teal-600 hover:bg-teal-700 text-white text-sm py-2.5 rounded-xl font-medium">
+                                    <CheckCircle className="w-4 h-4 inline mr-1" /> Подтвердить получение
+                                </button>
+                            )}
+
+                            {canSeePrices && (
+                                <button onClick={() => handlePrintInvoice(order)}
+                                    className="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm py-2.5 px-4 rounded-xl font-medium">
+                                    <Download className="w-4 h-4 inline mr-1" /> Счёт PDF
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    };
+
+    // ==================== RENDER ====================
+    return (
+        <div className="min-h-screen bg-surface">
+            {/* Page Header */}
+            <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-bold">Дашборд</h1>
+                            <p className="text-sm text-gray-400 mt-0.5">{SubRoleLabels[subRole] || 'Дистрибьютор'} • Ключевые показатели</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
+                            {perms.canCreateOrders && (
+                                <Link
+                                    href="/distributor/orders/new"
+                                    className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium transition-colors text-white"
+                                >
+                                    <Plus className="w-4 h-4" /> Создать заказ
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats */}
+            {perms.canViewStats && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
                             {[
-                                { label: 'Всего', value: stats.total, icon: Package, bg: 'bg-gray-50', text: 'text-gray-700' },
-                                { label: 'Новые', value: stats.new, icon: Clock, bg: 'bg-blue-50', text: 'text-blue-700' },
-                                { label: 'В работе', value: stats.in_production, icon: TruckIcon, bg: 'bg-yellow-50', text: 'text-yellow-700' },
-                                { label: 'Готовы', value: stats.ready, icon: CheckCircle, bg: 'bg-green-50', text: 'text-green-700' },
-                                { label: 'Отгружены', value: stats.shipped, icon: TruckIcon, bg: 'bg-purple-50', text: 'text-purple-700' },
+                                { label: 'Новые', value: ordersByStatus.new.length, icon: Clock, bg: 'bg-blue-50', text: 'text-blue-700' },
+                                { label: 'В работе', value: ordersByStatus.in_production.length, icon: TruckIcon, bg: 'bg-yellow-50', text: 'text-yellow-700' },
+                                { label: 'Готовы', value: ordersByStatus.ready.length, icon: CheckCircle, bg: 'bg-green-50', text: 'text-green-700' },
+                                { label: 'Отгружены', value: ordersByStatus.shipped.length, icon: Truck, bg: 'bg-purple-50', text: 'text-purple-700' },
+                                { label: 'Доставлены', value: ordersByStatus.delivered.length, icon: Package, bg: 'bg-teal-50', text: 'text-teal-700' },
                             ].map(s => (
-                                <div key={s.label} className={`rounded-xl p-3 sm:p-4 ${s.bg}`}>
+                                <div key={s.label} className={`rounded-xl p-3 ${s.bg}`}>
                                     <div className={`text-2xl font-bold mb-0.5 ${s.text}`}>{s.value}</div>
                                     <div className={`text-xs font-medium ${s.text} opacity-90`}>{s.label}</div>
                                 </div>
                             ))}
                         </div>
-                    )}
-                </div>
-            </div>
-
-
-            {/* Filters & Orders */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-                {/* Tabs + Create Order */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-                    <div className="flex bg-gray-100/50 p-1 rounded-xl w-full sm:w-fit shadow-sm border border-gray-100">
-                        <button
-                            onClick={() => setOrderTab('incoming')}
-                            className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                orderTab === 'incoming' 
-                                ? 'bg-indigo-600 text-white shadow-sm' 
-                                : 'text-gray-500 hover:text-gray-700 bg-transparent'
-                            }`}
-                        >
-                            Входящие заказы
-                            <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${orderTab === 'incoming' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500'}`}>
-                                {orders.filter(o => !o.meta.lab_org_id).length}
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => setOrderTab('outgoing')}
-                            className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                orderTab === 'outgoing' 
-                                ? 'bg-indigo-600 text-white shadow-sm' 
-                                : 'text-gray-500 hover:text-gray-700 bg-transparent'
-                            }`}
-                        >
-                            Исходящие заказы
-                            <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${orderTab === 'outgoing' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-500'}`}>
-                                {orders.filter(o => !!o.meta.lab_org_id).length}
-                            </span>
-                        </button>
-                    </div>
-                    {perms.canCreateOrders && (
-                        <Link href="/distributor/orders/new" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-sm hover:shadow-md transition-all text-sm">
-                            <Plus className="w-5 h-5" />
-                            Создать заказ
-                        </Link>
-                    )}
-                </div>
-                {/* Search + Filter Controls */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-                    {/* Search */}
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Поиск по номеру, пациенту, врачу..."
-                            className="input pl-10 w-full"
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Sort */}
-                    <select
-                        value={sortBy}
-                        onChange={e => setSortBy(e.target.value as SortOption)}
-                        className="input w-full sm:w-auto sm:min-w-[180px]"
-                    >
-                        {Object.entries(SortLabels).map(([k, v]) => (
-                            <option key={k} value={k}>{v}</option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Date Filters — always visible */}
-                <div className="flex flex-wrap items-end gap-2 sm:gap-3 mb-4 sm:mb-6">
-                    <div className="flex-1 min-w-[130px]">
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата от
-                        </label>
-                        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input w-full" />
-                    </div>
-                    <div className="flex-1 min-w-[130px]">
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                            <Calendar className="w-3.5 h-3.5 inline mr-1" />Дата до
-                        </label>
-                        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
-                    </div>
-                    {hasActiveFilters && (
-                        <button onClick={clearFilters} className="btn btn-secondary text-sm gap-1">
-                            <X className="w-4 h-4" /> Сбросить
-                        </button>
-                    )}
-                </div>
-
-
-                {/* Status Tabs */}
-                <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-                    {(['all', 'new', 'in_production', 'ready', 'shipped'] as const).map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setFilter(status)}
-                            className={`
-                                px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0
-                                ${filter === status
-                                    ? 'bg-primary-600 text-white shadow-sm'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
-                            `}
-                        >
-                            {status === 'all' ? 'Все' : OrderStatusLabels[status]}
-                            <span className="ml-1 sm:ml-1.5 text-xs opacity-70">
-                                {status === 'all' ? orders.length : orders.filter(o => o.status === status).length}
-                            </span>
-                        </button>
-                    ))}
-                    <button
-                        onClick={() => setFilter('unpaid')}
-                        className={`
-                            px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex-shrink-0
-                            ${filter === 'unpaid'
-                                ? 'bg-red-500 text-white shadow-sm'
-                                : 'bg-red-50 text-red-600 hover:bg-red-100'}
-                        `}
-                    >
-                        Неоплаченные
-                        <span className="ml-1 sm:ml-1.5 text-xs opacity-70">
-                            {orders.filter(o => (o as any).payment_status !== 'paid').length}
-                        </span>
-                    </button>
-                </div>
-
-                {/* Results count */}
-                <p className="text-sm text-gray-500 mb-4">
-                    Найдено: {filteredOrders.length} {filteredOrders.length === 1 ? 'заказ' : filteredOrders.length < 5 ? 'заказа' : 'заказов'}
-                </p>
-
-                {/* Orders List */}
-                {isLoading ? (
-                    <div className="grid gap-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="card">
-                                <div className="skeleton h-20" />
-                            </div>
-                        ))}
-                    </div>
-                ) : filteredOrders.length === 0 ? (
-                    <div className="text-center py-16">
-                        <Package className="w-14 h-14 text-gray-300 mx-auto mb-4" />
-                        <p className="text-lg text-gray-600 mb-2">Заказов не найдено</p>
-                        {hasActiveFilters && (
-                            <button onClick={clearFilters} className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                                Сбросить фильтры
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="grid gap-4">
-                        {filteredOrders.map((order) => {
-                            const isExpanded = expandedOrders.has(order.order_id);
-                            const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
-                            const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-                            const odQty = Number(od.qty) || 0;
-                            const osQty = Number(os.qty) || 0;
-                            const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
-                            const osPrice = (order as any).price_os ?? PRICE_PER_LENS;
-                            const lensTotal = (odQty * odPrice) + (osQty * osPrice);
-                            const additionalTotal = ((order as any).products || []).reduce((sum: number, p: any) => sum + (p.price || 0) * (p.qty || 1), 0);
-                            const discountAmt = Math.round((lensTotal + additionalTotal) * ((order as any).discount_percent || 0) / 100);
-                            const afterDiscount = (lensTotal + additionalTotal) - discountAmt;
-                            const urgentAmt = order.is_urgent ? Math.round(afterDiscount * 25 / 100) : 0;
-                            const totalPrice = order.total_price || (afterDiscount + urgentAmt);
-
-                            return (
-                                <motion.div
-                                    key={order.order_id}
-                                    layout
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow p-4 sm:p-5"
-                                >
-                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{order.order_id}</h3>
-                                                {/* Hide internal 'rework' status from optic — show as "В производстве" */}
-                                                {(() => {
-                                                    const displayStatus = order.status === 'rework' ? 'in_production' : order.status;
-                                                    return (
-                                                        <span className={`badge ${OrderStatusColors[displayStatus]}`}>
-                                                            {OrderStatusLabels[displayStatus]}
-                                                        </span>
-                                                    );
-                                                })()}
-                                                {/* Urgent badge */}
-                                                {order.is_urgent && (
-                                                    <span className="badge bg-amber-100 text-amber-700 flex items-center gap-1">
-                                                        <Zap className="w-3 h-3" /> СРОЧНО
-                                                    </span>
-                                                )}
-                                                {perms.canViewPayments && (() => {
-                                                    const ps = (order as any).payment_status || 'unpaid';
-                                                    return (
-                                                        <span className={`badge flex items-center gap-1.5 ${PaymentStatusColors[ps as PaymentStatus]}`}>
-                                                            <span className={`w-2 h-2 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-400'}`} />
-                                                            {PaymentStatusLabels[ps as PaymentStatus]}
-                                                        </span>
-                                                    );
-                                                })()}
-                                                {/* Comment notification from lab */}
-                                                {(() => {
-                                                    const comments = (order as any).comments || [];
-                                                    if (comments.length === 0) return null;
-                                                    const last = comments[comments.length - 1];
-                                                    if (last.role !== 'laboratory') return null;
-                                                    return (
-                                                        <span className="badge bg-blue-100 text-blue-700 flex items-center gap-1 animate-comment-blink">
-                                                            <MessageCircle className="w-3 h-3" />
-                                                            Комментарий от лаборатории
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
-                                                <span>Пациент: <strong>{order.patient.name}</strong></span>
-                                                {order.meta.doctor && (
-                                                    <span className="flex items-center gap-1">
-                                                        <User className="w-3.5 h-3.5" />
-                                                        {order.meta.doctor}
-                                                    </span>
-                                                )}
-                                                {order.company && (
-                                                    <span className="flex items-center gap-1">
-                                                        <Building2 className="w-3.5 h-3.5" />
-                                                        {order.company}
-                                                    </span>
-                                                )}
-                                                <span>Тип: MediLens</span>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
-                                                <span>OD: Km {od.km} | DIA {od.dia} | Dk {od.dk}</span>
-                                                <span>OS: Km {os.km} | DIA {os.dia} | Dk {os.dk}</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-left sm:text-right text-sm text-gray-500 sm:ml-4 flex-shrink-0 flex sm:block items-center gap-3">
-                                            <p>{formatDate(order.meta.created_at)}</p>
-                                            <p className="text-base font-semibold text-gray-900 sm:mt-1">
-                                                {canSeePrices ? `${totalPrice.toLocaleString('ru-RU')} ₸` : ''}
-                                            </p>
-                                            {order.tracking_number && (
-                                                <p className="font-mono text-xs mt-1">{order.tracking_number}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Expand / Actions row */}
-                                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
-                                        <button
-                                            onClick={() => toggleExpand(order.order_id)}
-                                            className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors"
-                                        >
-                                            <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                                            {isExpanded ? 'Свернуть' : 'Подробнее'}
-                                        </button>
-
-                                        {/* out_for_delivery: prominent confirmation button */}
-                                        {order.status === 'out_for_delivery' && (
-                                            <div className="mb-3">
-                                                <div className="flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2 mb-2">
-                                                    <Truck className="w-3.5 h-3.5" />
-                                                    Курьер доставляет ваш заказ
-                                                </div>
-                                                <button
-                                                    onClick={() => confirmDelivery(order.order_id)}
-                                                    className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-colors"
-                                                >
-                                                    <CheckCircle className="w-4 h-4" />
-                                                    Подтвердить получение
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* delivered: confirmation banner */}
-                                        {order.status === 'delivered' && (
-                                            <div className="flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2 mb-3">
-                                                <CheckCircle className="w-3.5 h-3.5" />
-                                                <span>Доставлен — вы подтвердили получение</span>
-                                                {order.delivered_at && (
-                                                    <span className="ml-auto text-teal-500">{formatDate(order.delivered_at)}</span>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Distributor Actions */}
-                                        {(() => {
-                                            if (order.status === 'cancelled') {
-                                                return (
-                                                    <span className="flex items-center gap-1 text-xs text-red-400">
-                                                        <X className="w-3.5 h-3.5" />
-                                                        Заказ отменён
-                                                    </span>
-                                                );
-                                            }
-                                            
-                                            if (orderTab === 'incoming' && order.status === 'new') {
-                                                return (
-                                                    <button
-                                                        onClick={() => { /* TODO: Send to lab logic */ }}
-                                                        className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-xl transition-colors"
-                                                    >
-                                                        <Truck className="w-4 h-4" />
-                                                        Отправить в лабораторию
-                                                    </button>
-                                                );
-                                            }
-
-                                            if (orderTab === 'outgoing' && order.status === 'new') {
-                                                return (
-                                                    <Link
-                                                        href={`/distributor/orders/${order.order_id}/edit`}
-                                                        className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors"
-                                                    >
-                                                        <Pencil className="w-3.5 h-3.5" />
-                                                        Редактировать
-                                                    </Link>
-                                                );
-                                            }
-
-                                            return null;
-                                        })()}
-
-                                        {/* Request modal */}
-                                        {showRequestModal === order.order_id && (
-                                            <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2" onClick={e => e.stopPropagation()}>
-                                                <p className="text-sm font-medium text-amber-800">
-                                                    {requestType === 'request_edit' ? (
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <FileEdit className="w-4 h-4" /> Запрос на редактирование
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <XCircle className="w-4 h-4" /> Запрос на отмену заказа
-                                                        </span>
-                                                    )}
-                                                </p>
-                                                <textarea
-                                                    value={requestReason}
-                                                    onChange={e => setRequestReason(e.target.value)}
-                                                    placeholder="Укажите причину..."
-                                                    className="w-full px-3 py-2 text-sm border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-white"
-                                                    rows={2}
-                                                />
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={async () => {
-                                                            if (!requestReason.trim()) return;
-                                                            setSendingComment(true);
-                                                            await fetch(`/api/orders/${(order as any).id}/comments`, {
-                                                                method: 'POST',
-                                                                headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({ text: requestReason, type: requestType }),
-                                                            });
-                                                            setShowRequestModal(null);
-                                                            setRequestReason('');
-                                                            setSendingComment(false);
-                                                            loadOrders();
-                                                        }}
-                                                        disabled={!requestReason.trim() || sendingComment}
-                                                        className="flex-1 text-sm py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 font-medium"
-                                                    >
-                                                        Отправить запрос
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setShowRequestModal(null)}
-                                                        className="text-sm py-2 px-4 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50"
-                                                    >
-                                                        Отмена
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {perms.canViewPayments && (
-                                            <button
-                                                onClick={() => handlePrintInvoice(order)}
-                                                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors ml-auto"
-                                            >
-                                                <Download className="w-3.5 h-3.5" />
-                                                Скачать счёт PDF
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Expanded details */}
-                                    <AnimatePresence>
-                                        {isExpanded && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <div className="border-t border-gray-100 pt-4 mt-3">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                                        <div className="space-y-1.5">
-                                                            <p><span className="text-gray-400">Телефон:</span> {order.patient.phone}</p>
-                                                            {order.company && <p><span className="text-gray-400">Компания:</span> {order.company}</p>}
-                                                            {order.inn && <p><span className="text-gray-400">ИНН:</span> {order.inn}</p>}
-                                                        </div>
-                                                        <div className="space-y-1.5">
-                                                            {order.delivery_method && <p><span className="text-gray-400">Доставка:</span> {order.delivery_method}</p>}
-                                                            {order.delivery_address && <p><span className="text-gray-400">Адрес:</span> {order.delivery_address}</p>}
-                                                            {order.notes && <p><span className="text-gray-400">Примечания:</span> {order.notes}</p>}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <EyeBlock label="OD (Правый глаз)" eye={od} />
-                                                        <EyeBlock label="OS (Левый глаз)" eye={os} />
-                                                    </div>
-
-                                                    {/* Additional products */}
-                                                    {(order as any).products?.length > 0 && (
-                                                        <div className="mt-4">
-                                                            <h5 className="text-xs font-semibold text-gray-700 mb-2">Дополнительные товары</h5>
-                                                            <div className="bg-gray-50 rounded-lg divide-y divide-gray-100">
-                                                                {((order as any).products as Array<{ name: string; qty: number; price: number; category?: string }>).map((prod, idx) => (
-                                                                    <div key={idx} className="flex items-center justify-between px-3 py-2 text-sm">
-                                                                        <div>
-                                                                            <span className="text-gray-800 font-medium">{prod.name}</span>
-                                                                            <span className="text-gray-400 ml-2">× {prod.qty}</span>
-                                                                        </div>
-                                                                        {canSeePrices && (
-                                                                            <span className="text-gray-600">{((prod.price || 0) * (prod.qty || 1)).toLocaleString('ru-RU')} ₸</span>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {canSeePrices && (
-                                                        <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
-                                                            <div className="text-sm text-gray-600 space-y-0.5">
-                                                                <div>
-                                                                    <span>OD: {Number(od.qty)} × {((order as any).price_od ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
-                                                                    <span className="mx-2">+</span>
-                                                                    <span>OS: {Number(os.qty)} × {((order as any).price_os ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
-                                                                </div>
-                                                                {(order as any).products?.length > 0 && (
-                                                                    <div className="text-xs text-gray-400">
-                                                                        + доп. товары: {((order as any).products as Array<{ price: number; qty: number }>).reduce((s: number, p: any) => s + (p.price || 0) * (p.qty || 1), 0).toLocaleString('ru-RU')} ₸
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <span className="text-lg font-bold text-primary-600">
-                                                                {totalPrice.toLocaleString('ru-RU')} ₸
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Comments Section */}
-                                                    <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                                                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-3 flex items-center gap-1.5">
-                                                            <MessageCircle className="w-3.5 h-3.5" />
-                                                            Комментарии
-                                                            {((order as any).comments?.length > 0) && (
-                                                                <span className="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full">
-                                                                    {(order as any).comments.length}
-                                                                </span>
-                                                            )}
-                                                        </h4>
-
-                                                        {((order as any).comments?.length > 0) && (
-                                                            <div className="space-y-2 mb-3 max-h-48 overflow-y-auto">
-                                                                {((order as any).comments as any[]).map((c: any, i: number) => {
-                                                                    const typeLabels: Record<string, { label: ReactNode; cls: string }> = {
-                                                                        request_edit: { label: <span className="inline-flex items-center gap-1"><FileEdit className="w-3.5 h-3.5" /> Запрос ред.</span>, cls: 'bg-amber-100 text-amber-700' },
-                                                                        request_cancel: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Запрос отмены</span>, cls: 'bg-red-100 text-red-700' },
-                                                                        approve_edit: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Одобрено ред.</span>, cls: 'bg-green-100 text-green-700' },
-                                                                        approve_cancel: { label: <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Отменён</span>, cls: 'bg-red-100 text-red-700' },
-                                                                        reject_request: { label: <span className="inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Отклонено</span>, cls: 'bg-gray-100 text-gray-700' },
-                                                                    };
-                                                                    const typeBadge = typeLabels[c.type];
-                                                                    return (
-                                                                    <div key={i} className={`text-xs rounded-lg p-2.5 ${
-                                                                        c.role === 'laboratory'
-                                                                            ? 'bg-blue-50 border border-blue-100 mr-4'
-                                                                            : 'bg-white border border-gray-200 ml-4'
-                                                                    }`}>
-                                                                        <div className="flex items-center justify-between mb-1">
-                                                                            <span className="font-semibold text-gray-700">
-                                                                                {c.authorName}
-                                                                                <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${
-                                                                                    c.role === 'laboratory'
-                                                                                        ? 'bg-blue-100 text-blue-600'
-                                                                                        : 'bg-green-100 text-green-600'
-                                                                                }`}>
-                                                                                    {c.role === 'laboratory' ? 'Лаборатория' : 'Врач'}
-                                                                                </span>
-                                                                                {typeBadge && (
-                                                                                    <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full ${typeBadge.cls}`}>
-                                                                                        {typeBadge.label}
-                                                                                    </span>
-                                                                                )}
-                                                                            </span>
-                                                                            <span className="text-gray-400">
-                                                                                {new Date(c.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                                                            </span>
-                                                                        </div>
-                                                                        <p className="text-gray-600 whitespace-pre-wrap">{c.text}</p>
-                                                                    </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        )}
-
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="text"
-                                                                value={commentText}
-                                                                onChange={e => setCommentText(e.target.value)}
-                                                                onKeyDown={e => {
-                                                                    if (e.key === 'Enter' && commentText.trim() && !sendingComment) {
-                                                                        e.preventDefault();
-                                                                        setSendingComment(true);
-                                                                        fetch(`/api/orders/${(order as any).id}/comments`, {
-                                                                            method: 'POST',
-                                                                            headers: { 'Content-Type': 'application/json' },
-                                                                            body: JSON.stringify({ text: commentText }),
-                                                                        }).then(res => {
-                                                                            if (res.ok) { setCommentText(''); loadOrders(); }
-                                                                        }).finally(() => setSendingComment(false));
-                                                                    }
-                                                                }}
-                                                                placeholder="Ответить на комментарий..."
-                                                                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                disabled={sendingComment}
-                                                            />
-                                                            <button
-                                                                onClick={() => {
-                                                                    if (!commentText.trim() || sendingComment) return;
-                                                                    setSendingComment(true);
-                                                                    fetch(`/api/orders/${(order as any).id}/comments`, {
-                                                                        method: 'POST',
-                                                                        headers: { 'Content-Type': 'application/json' },
-                                                                        body: JSON.stringify({ text: commentText }),
-                                                                    }).then(res => {
-                                                                        if (res.ok) { setCommentText(''); loadOrders(); }
-                                                                    }).finally(() => setSendingComment(false));
-                                                                }}
-                                                                disabled={!commentText.trim() || sendingComment}
-                                                                className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                                                            >
-                                                                <Send className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </motion.div>
-                            );
-                        })}
                     </div>
                 )}
+
+            {/* Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+                {/* Search + Clinic filter */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                    <div className="flex gap-2 flex-1 sm:max-w-md">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Поиск по номеру, пациенту, врачу..."
+                                className="input pl-10 w-full text-sm"
+                            />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+                        {clinicNames.length > 1 && (
+                            <select value={clinicFilter} onChange={e => setClinicFilter(e.target.value)} className="input text-sm w-auto">
+                                <option value="all">Все клиники</option>
+                                {clinicNames.map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                        )}
+                    </div>
+                </div>
+
+                {/* ==================== KANBAN ==================== */}
+                {(
+                    isLoading ? (
+                        <div className="grid grid-cols-5 gap-4">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i}><div className="card"><div className="skeleton h-12" /></div><div className="card mt-3"><div className="skeleton h-24" /></div></div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory sm:snap-none">
+                            <Column title="Новые" icon={Clock} orders={ordersByStatus.new} color="bg-blue-50 text-blue-700" />
+                            <Column title="В производстве" icon={TruckIcon} orders={ordersByStatus.in_production} color="bg-yellow-50 text-yellow-700" />
+                            <Column title="Готовы" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
+                            <Column title="Отгружены" icon={Truck} orders={ordersByStatus.shipped} color="bg-purple-50 text-purple-700" />
+                            <Column title="Доставлены" icon={Package} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
+                        </div>
+                    )
+                )}
             </div>
+
+            {/* Order Modal */}
+            <AnimatePresence>
+                {selectedOrderId && <OrderModal />}
+            </AnimatePresence>
         </div>
     );
 }

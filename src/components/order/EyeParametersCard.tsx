@@ -50,6 +50,7 @@ export function EyeParametersCard({
     const dkValue = watch(`config.eyes.${eye}.dk`);
     const characteristic = watch(`config.eyes.${eye}.characteristic`);
     const isRgp = watch(`config.eyes.${eye}.isRgp`) || false;
+    const isMyOrthoK = watch(`config.eyes.${eye}.myorthok`) || false;
     const isTrial = dkValue === '50';
     const isSpherical = characteristic === 'spherical';
 
@@ -113,7 +114,7 @@ export function EyeParametersCard({
 
             {/* Row 1: Характеристика + RGP checkbox + Km + TP + DIA */}
             <div className="space-y-5">
-                <div className={`grid grid-cols-2 ${isRgp ? 'sm:grid-cols-3' : 'sm:grid-cols-4'} gap-3`}>
+                <div className={`grid grid-cols-2 ${isRgp ? 'sm:grid-cols-3' : 'sm:grid-cols-5'} gap-3`}>
                     {/* Характеристика */}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика <span className="text-red-500">*</span></label>
@@ -139,6 +140,24 @@ export function EyeParametersCard({
                             />
                             <span className={`ml-2 text-sm font-medium ${isRgp ? 'text-amber-700' : 'text-gray-400'}`}>
                                 {isRgp ? 'Да' : 'Нет'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* MyOrthoK checkbox */}
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">MyOrthoK</label>
+                        <div
+                            onClick={() => setValue(`config.eyes.${eye}.myorthok`, !isMyOrthoK)}
+                            className={`flex items-center h-[42px] px-3 rounded-lg border cursor-pointer transition-colors ${isMyOrthoK ? 'bg-teal-50 border-teal-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
+                        >
+                            <input
+                                type="checkbox"
+                                {...register(`config.eyes.${eye}.myorthok`)}
+                                className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                            />
+                            <span className={`ml-2 text-sm font-medium ${isMyOrthoK ? 'text-teal-700' : 'text-gray-400'}`}>
+                                {isMyOrthoK ? 'Да' : 'Нет'}
                             </span>
                         </div>
                     </div>
@@ -241,13 +260,21 @@ export function EyeParametersCard({
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Пробная</label>
-                        <div className={`flex items-center h-[42px] px-3 rounded-lg border transition-colors ${isTrial ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                        <div
+                            onClick={() => {
+                                if (isTrial) {
+                                    setValue(`config.eyes.${eye}.dk`, '' as any);
+                                } else {
+                                    setValue(`config.eyes.${eye}.dk`, '50');
+                                }
+                            }}
+                            className={`flex items-center h-[42px] px-3 rounded-lg border cursor-pointer transition-colors ${isTrial ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
+                        >
                             <input
                                 type="checkbox"
-                                {...register(`config.eyes.${eye}.trial`)}
                                 checked={isTrial}
                                 readOnly
-                                className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 pointer-events-none"
                             />
                             <span className={`ml-2 text-sm font-medium ${isTrial ? 'text-green-700' : 'text-gray-400'}`}>
                                 {isTrial ? 'Да' : 'Нет'}

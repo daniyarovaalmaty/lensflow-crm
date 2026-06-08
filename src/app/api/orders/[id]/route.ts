@@ -107,7 +107,9 @@ export async function GET(
 }
 
 /**
- * PATCH /api/orders/[id] — Doctor edits order (only while editable)
+ * PATCH /api/orders/[id] — Edit order or forward to lab
+ * - Doctor: edit while editable (new_order + within deadline)
+ * - Distributor: can set labOrgId (forward to lab) on new_order
  */
 export async function PATCH(
     request: NextRequest,
@@ -119,7 +121,22 @@ export async function PATCH(
     const order = await findOrderWithAccess(params.id, session);
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
-    // Check if editable
+    const body = await request.json();
+
+    // Distributor forwarding to lab (set labOrgId)
+    if (session.user.role === 'distributor' && body.labOrgId !== undefined) {
+        if (order.status !== 'new_order') {
+            return NextResponse.json({ error: 'Can only forward new orders' }, { status: 403 });
+        }
+        const updated = await prisma.order.update({
+            where: { id: order.id },
+            data: { labOrgId: body.labOrgId },
+            include: { patient: true, organization: { select: { name: true } } },
+        });
+        return NextResponse.json(transformOrder(updated));
+    }
+
+    // Standard edit: check if editable
     if (order.status !== 'new_order') {
         return NextResponse.json({ error: 'Order is no longer editable' }, { status: 403 });
     }
@@ -127,8 +144,6 @@ export async function PATCH(
     if (order.isUrgent && order.editDeadline && new Date() >= order.editDeadline) {
         return NextResponse.json({ error: 'Edit window has expired' }, { status: 403 });
     }
-
-    const body = await request.json();
 
     const updateData: any = {};
     if (body.notes !== undefined) updateData.notes = body.notes;

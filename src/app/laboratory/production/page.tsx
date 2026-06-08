@@ -8,6 +8,7 @@ import { Clock, CheckCircle, TruckIcon, Package, Printer, User, Search, X, Calen
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
+import { ReadOnlyEyeCard } from '@/components/order/ReadOnlyEyeCard';
 import { formatDate, formatDateTime, formatShortDate } from '@/lib/dateUtils';
 import type { Characteristic } from '@/types/order';
 import { getPermissions, SubRoleLabels } from '@/types/user';
@@ -492,14 +493,11 @@ export default function ProductionHubPage() {
 
     const hasActiveFilters = searchQuery || dateFrom || dateTo;
 
-    // ==================== PARAM ROW HELPER ====================
     const ParamRow = ({ label, value }: { label: string; value: any }) => (
-        value != null && value !== '' ? (
-            <div className="flex justify-between text-xs py-1 border-b border-gray-50">
-                <span className="text-gray-500">{label}</span>
-                <span className="font-medium text-gray-800">{String(value)}</span>
-            </div>
-        ) : null
+        <div className="flex justify-between text-xs py-1 border-b border-gray-100">
+            <span className="text-gray-500">{label}</span>
+            <span className="font-medium text-gray-800">{value != null && value !== '' ? String(value) : '—'}</span>
+        </div>
     );
 
     const EyeSection = ({ label, eye, color }: { label: string; eye: any; color: string }) => (
@@ -507,16 +505,26 @@ export default function ProductionHubPage() {
             <h5 className={`text-xs font-semibold ${color} mb-1 flex items-center gap-1.5`}>
                 {label}
                 {eye.isRgp && <span className="text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                {eye.myorthok && <span className="text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
             </h5>
-            <ParamRow label="Характеристика" value={eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : undefined} />
-            <ParamRow label="Km" value={eye.isRgp ? '— (RGP)' : eye.km} />
+            <ParamRow label="Характеристика" value={eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null} />
+            <ParamRow label="RGP" value={eye.isRgp ? 'Да' : 'Нет'} />
+            <ParamRow label="MyOrthoK" value={eye.myorthok ? 'Да' : 'Нет'} />
+            <ParamRow label="Km" value={eye.isRgp ? null : eye.km} />
             <ParamRow label="TP" value={eye.tp} />
             <ParamRow label="DIA" value={eye.dia} />
-            <ParamRow label="E1 / E2" value={eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : undefined} />
+            <ParamRow label="E" value={eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null} />
+            {(eye.sph != null || eye.cyl != null || eye.ax != null) && (
+                <>
+                    <ParamRow label="SPH" value={eye.sph} />
+                    <ParamRow label="CYL" value={eye.cyl} />
+                    <ParamRow label="AX" value={eye.ax} />
+                </>
+            )}
             <ParamRow label="Тор." value={eye.tor} />
             <ParamRow label="Dk" value={eye.dk} />
-            <ParamRow label="Цвет" value={eye.color} />
-            <ParamRow label="Пробная" value={eye.trial ? 'Да' : undefined} />
+            <ParamRow label="Пробная" value={(eye.dk === '50' || eye.trial) ? 'Да' : 'Нет'} />
+            <ParamRow label="Цвет" value={eye.color || null} />
             <ParamRow label="Апик. клиренс" value={eye.apical_clearance} />
             <ParamRow label="Фактор компр." value={eye.compression_factor} />
             <ParamRow label="Кол-во" value={eye.qty} />
@@ -596,6 +604,9 @@ export default function ProductionHubPage() {
                         <span className="bg-gray-100 rounded px-1.5 py-0.5">{charLabel}</span>
                         {(od as any).isRgp && (
                             <span className="bg-orange-100 text-orange-700 font-semibold rounded px-1.5 py-0.5">RGP</span>
+                        )}
+                        {(od as any).myorthok && (
+                            <span className="bg-teal-100 text-teal-700 font-semibold rounded px-1.5 py-0.5">MyOrthoK</span>
                         )}
                         <span>Km: {od.km ?? '—'}</span>
                         <span>Dk: {od.dk ?? '—'}</span>
@@ -1049,24 +1060,28 @@ export default function ProductionHubPage() {
                         {/* Eye parameters — table format */}
                         <div className="border border-gray-200 rounded-xl overflow-hidden">
                             <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                                <span className="text-xs font-semibold text-gray-700">Тип линз: Ортокератологическая</span>
+                                <span className="text-xs font-semibold text-gray-700">Параметры линз</span>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-xs">
                                     <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200">
-                                            <th className="text-left px-3 py-2 font-semibold text-gray-600 whitespace-nowrap">Глаз</th>
-                                            <th className="text-left px-3 py-2 font-semibold text-gray-600 whitespace-nowrap">Характеристика</th>
+                                            <th className="text-left px-3 py-2 font-semibold text-gray-600">Глаз</th>
+                                            <th className="text-left px-3 py-2 font-semibold text-gray-600">Характеристика</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Km</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">TP</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">DIA</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">E</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Тор.</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Пробная</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">SPH</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">CYL</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">AX</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Тор.</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Пробная</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>
-
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Кол-во</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Апик. клиренс</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Фактор компр.</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Кол-во</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1076,16 +1091,21 @@ export default function ProductionHubPage() {
                                                 <td className="px-3 py-2 text-gray-700">
                                                     {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
                                                     {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                    {(eye as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                 </td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.sph ?? '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.cyl ?? '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.ax ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tor ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>
-
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.apical_clearance ?? '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
                                             </tr>
                                         ))}
@@ -1617,17 +1637,21 @@ export default function ProductionHubPage() {
                                     <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200">
                                             <th className="text-left px-3 py-2 font-semibold text-gray-600">Глаз</th>
-                                            <th className="text-left px-3 py-2 font-semibold text-gray-600 whitespace-nowrap">Характеристика</th>
+                                            <th className="text-left px-3 py-2 font-semibold text-gray-600">Характеристика</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Km</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">TP</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">DIA</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">E</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">SPH</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">CYL</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">AX</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Тор.</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Пробная</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>
                                             <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>
-
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap">Кол-во</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Апик. клиренс</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Фактор компр.</th>
+                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Кол-во</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1637,16 +1661,21 @@ export default function ProductionHubPage() {
                                                 <td className="px-3 py-2 text-gray-700">
                                                     {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
                                                     {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                    {(eye as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                 </td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.sph ?? '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.cyl ?? '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.ax ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tor ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>
-
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.apical_clearance ?? '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
                                             </tr>
                                         ))}

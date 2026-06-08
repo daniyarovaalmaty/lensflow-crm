@@ -61,17 +61,28 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(stripped);
         }
 
-        // For distributors — apply their custom priceList if it exists
-        if (session.user.role === 'distributor' && session.user.organizationId) {
-            const distOrg = await prisma.organization.findUnique({
-                where: { id: session.user.organizationId },
-                select: { metadata: true },
+        // For distributors and optics — apply their custom priceList if it exists
+        if ((session.user.role === 'distributor' || session.user.role === 'optic') && session.user.organizationId) {
+            let effectiveOrgId = session.user.organizationId;
+            let priceList: any = null;
+
+            const org = await prisma.organization.findUnique({
+                where: { id: effectiveOrgId },
+                select: { metadata: true, parentId: true },
             });
-            const priceList = (distOrg?.metadata as any)?.priceList;
+            priceList = (org?.metadata as any)?.priceList;
+
+            if (!priceList && org?.parentId) {
+                const parentOrg = await prisma.organization.findUnique({
+                    where: { id: org.parentId },
+                    select: { metadata: true },
+                });
+                priceList = (parentOrg?.metadata as any)?.priceList;
+            }
+
             if (priceList?.lenses) {
                 const patched = products.map((product: any) => {
                     if (product.category !== 'lens') return product;
-                    // Build a priceByDk from the distributor's priceList
                     const desc = product.description; // 'toric', 'spherical', 'probe', 'rgp'
                     if (desc === 'toric' && priceList.lenses.toric) {
                         return { ...product, priceByDk: priceList.lenses.toric, price: Object.values(priceList.lenses.toric)[0] };
@@ -79,7 +90,7 @@ export async function GET(request: NextRequest) {
                     if (desc === 'spherical' && priceList.lenses.spherical) {
                         return { ...product, priceByDk: priceList.lenses.spherical, price: Object.values(priceList.lenses.spherical)[0] };
                     }
-                    if (desc === 'rgp' && priceList.lenses.probe) {
+                    if ((desc === 'probe' || desc === 'rgp') && priceList.lenses.probe) {
                         return { ...product, priceByDk: priceList.lenses.probe, price: Object.values(priceList.lenses.probe)[0] };
                     }
                     return product;
