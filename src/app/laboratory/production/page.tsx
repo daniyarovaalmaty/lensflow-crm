@@ -1085,13 +1085,15 @@ export default function ProductionHubPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => (
+                                        {[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye: rawEye }) => {
+                                            const eye = rawEye as any;
+                                            return (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
                                                 <td className="px-3 py-2 text-gray-700">
                                                     {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
-                                                    {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
-                                                    {(eye as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
+                                                    {eye.isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                    {eye.myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                 </td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
@@ -1108,7 +1110,7 @@ export default function ProductionHubPage() {
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
                                             </tr>
-                                        ))}
+                                        )})}
                                     </tbody>
                                 </table>
                             </div>
@@ -1655,13 +1657,15 @@ export default function ProductionHubPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) }].map(({ label, eye }) => (
+                                        {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) }].map(({ label, eye: rawEye }) => {
+                                            const eye = rawEye as any;
+                                            return (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
                                                 <td className="px-3 py-2 text-gray-700">
                                                     {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
-                                                    {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
-                                                    {(eye as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
+                                                    {eye.isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                    {eye.myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                 </td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
@@ -1678,7 +1682,7 @@ export default function ProductionHubPage() {
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
                                             </tr>
-                                        ))}
+                                        )})}
                                     </tbody>
                                 </table>
                             </div>
