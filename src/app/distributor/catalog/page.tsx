@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Plus, Pencil, Trash2, X, Save, Package, Droplets, Wrench,
-    Search, DollarSign, Tag, Hash, FileText, Barcode
+    Pencil, X, Save, Package, Droplets, Wrench,
+    Search, DollarSign, FileText, Barcode, Check
 } from 'lucide-react';
 import type { SubRole } from '@/types/user';
 
@@ -18,9 +18,14 @@ interface Product {
     code: string | null;
     description: string | null;
     price: number;
+    priceByDk?: Record<string, number> | null;
     unit: string;
     isActive: boolean;
     sortOrder: number;
+}
+
+interface PriceList {
+    lenses: Record<string, Record<string, number>>;
 }
 
 const CATEGORIES = [
@@ -36,35 +41,37 @@ function formatPrice(price: number) {
     return price.toLocaleString('ru-RU') + ' ₸';
 }
 
+const DEFAULT_PRICES: PriceList = {
+    lenses: {
+        probe: { '50': 12000 },
+        spherical: { '100': 25000, '125': 28000, '180': 31000 },
+        toric: { '100': 30000, '125': 33000, '180': 36000 },
+    }
+};
+
 export default function CatalogPage() {
     const { data: session } = useSession();
     const subRole = session?.user?.subRole as SubRole;
+    const canEditPrices = subRole === 'dist_head' || subRole === 'dist_admin';
 
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterCategory, setFilterCategory] = useState<string>('');
 
+    const [priceList, setPriceList] = useState<PriceList>(DEFAULT_PRICES);
+
     // Modal
     const [showModal, setShowModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form fields
-    const [formName, setFormName] = useState('');
-    const [formCategory, setFormCategory] = useState('lens');
-    const [formSku, setFormSku] = useState('');
-    const [formDescription, setFormDescription] = useState('');
-    const [formName1c, setFormName1c] = useState('');
-    const [formCode, setFormCode] = useState('');
-    const [formPrice, setFormPrice] = useState('');
-    const [formUnit, setFormUnit] = useState('шт');
-    const [formSortOrder, setFormSortOrder] = useState('0');
-
-    const canEdit = false; // Distributors can only view the catalog
+    // Form state for DK prices
+    const [dkPrices, setDkPrices] = useState<Record<string, number>>({});
 
     useEffect(() => {
         fetchProducts();
+        fetchPriceList();
     }, []);
 
     const fetchProducts = async () => {
@@ -78,98 +85,68 @@ export default function CatalogPage() {
         finally { setIsLoading(false); }
     };
 
-    const openCreateModal = () => {
-        setEditingProduct(null);
-        setFormName('');
-        setFormCategory('lens');
-        setFormSku('');
-        setFormName1c('');
-        setFormCode('');
-        setFormDescription('');
-        setFormPrice('');
-        setFormUnit('шт');
-        setFormSortOrder('0');
-        setShowModal(true);
+    const fetchPriceList = async () => {
+        try {
+            const res = await fetch('/api/distributor/pricelist');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.priceList) {
+                    setPriceList(data.priceList);
+                }
+            }
+        } catch (e) { console.error(e); }
     };
 
     const openEditModal = (product: Product) => {
         setEditingProduct(product);
-        setFormName(product.name);
-        setFormCategory(product.category);
-        setFormSku(product.sku || '');
-        setFormName1c(product.name1c || '');
-        setFormCode(product.code || '');
-        setFormDescription(product.description || '');
-        setFormPrice(String(product.price));
-        setFormUnit(product.unit);
-        setFormSortOrder(String(product.sortOrder));
+        
+        // Initialize form with current prices
+        let currentPrices = {};
+        if (product.category === 'lens') {
+            const desc = product.description?.toLowerCase() || '';
+            const type = desc === 'rgp' ? 'probe' : desc;
+            
+            if (type && priceList.lenses[type]) {
+                currentPrices = { ...priceList.lenses[type] };
+            } else if (product.priceByDk) {
+                currentPrices = { ...product.priceByDk };
+            }
+        }
+        
+        setDkPrices(currentPrices);
         setShowModal(true);
     };
 
     const handleSave = async () => {
-        if (!formName.trim()) return;
+        if (!editingProduct) return;
         setIsSaving(true);
 
-        const body = {
-            name: formName.trim(),
-            category: formCategory,
-            sku: formSku.trim() || null,
-            name1c: formName1c.trim() || null,
-            code: formCode.trim() || null,
-            description: formDescription.trim() || null,
-            price: Number(formPrice) || 0,
-            unit: formUnit,
-            sortOrder: Number(formSortOrder) || 0,
-        };
+        const newPriceList = JSON.parse(JSON.stringify(priceList)); // deep clone
+        if (!newPriceList.lenses) newPriceList.lenses = {};
 
-        try {
-            if (editingProduct) {
-                const res = await fetch(`/api/catalog/${editingProduct.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                });
-                if (res.ok) {
-                    const updated = await res.json();
-                    setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
-                }
-            } else {
-                const res = await fetch('/api/catalog', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                });
-                if (res.ok) {
-                    const created = await res.json();
-                    setProducts(prev => [...prev, created]);
-                }
+        if (editingProduct.category === 'lens') {
+            const desc = editingProduct.description?.toLowerCase() || '';
+            const type = desc === 'rgp' ? 'probe' : desc;
+            
+            if (type) {
+                newPriceList.lenses[type] = dkPrices;
             }
-            setShowModal(false);
-        } catch (e) { console.error(e); }
-        finally { setIsSaving(false); }
-    };
+        }
 
-    const handleDelete = async (product: Product) => {
-        if (!confirm(`Удалить «${product.name}» из каталога?`)) return;
         try {
-            const res = await fetch(`/api/catalog/${product.id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: false } : p));
-            }
-        } catch (e) { console.error(e); }
-    };
-
-    const handleRestore = async (product: Product) => {
-        try {
-            const res = await fetch(`/api/catalog/${product.id}`, {
+            const res = await fetch('/api/distributor/pricelist', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isActive: true }),
+                body: JSON.stringify({ priceList: newPriceList }),
             });
+            
             if (res.ok) {
-                setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: true } : p));
+                setPriceList(newPriceList);
+                setShowModal(false);
+                fetchProducts(); // Refresh products to get the patched prices
             }
         } catch (e) { console.error(e); }
+        finally { setIsSaving(false); }
     };
 
     const filtered = products.filter(p => {
@@ -184,7 +161,6 @@ export default function CatalogPage() {
     });
 
     const activeProducts = filtered.filter(p => p.isActive);
-    const inactiveProducts = filtered.filter(p => !p.isActive);
 
     if (isLoading) {
         return (
@@ -207,12 +183,6 @@ export default function CatalogPage() {
                             <h1 className="text-2xl font-bold text-gray-900">Каталог товаров</h1>
                             <p className="text-gray-600 mt-1">{products.filter(p => p.isActive).length} товаров</p>
                         </div>
-                        {canEdit && (
-                            <button onClick={openCreateModal} className="btn btn-primary gap-2">
-                                <Plus className="w-5 h-5" />
-                                Добавить товар
-                            </button>
-                        )}
                     </div>
 
                     {/* Search & filters */}
@@ -257,12 +227,6 @@ export default function CatalogPage() {
                     <div className="text-center py-16">
                         <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg">Каталог пуст</p>
-                        {canEdit && (
-                            <button onClick={openCreateModal} className="btn btn-primary gap-2 mt-4">
-                                <Plus className="w-4 h-4" />
-                                Добавить первый товар
-                            </button>
-                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -278,43 +242,35 @@ export default function CatalogPage() {
                                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColor(product.category)}`}>
                                         {categoryLabel(product.category)}
                                     </span>
-                                    {canEdit && (
-                                        <div className="flex gap-1">
-                                            <button onClick={() => openEditModal(product)} className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50">
-                                                <Pencil className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button onClick={() => handleDelete(product)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
+                                    {canEditPrices && product.category === 'lens' && (
+                                        <button onClick={() => openEditModal(product)} className="p-1.5 text-gray-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50">
+                                            <Pencil className="w-3.5 h-3.5" />
+                                        </button>
                                     )}
                                 </div>
                                 <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
                                 {product.description && (
-                                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">{product.description}</p>
+                                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">{product.description === 'toric' ? 'Торическая линза' : product.description === 'spherical' ? 'Сферическая линза' : product.description === 'rgp' ? 'Пробная линза' : product.description}</p>
                                 )}
-                                <div className="flex items-end justify-between mt-auto pt-3 border-t border-gray-100">
-                                    <div>
-                                        <p className="text-xs text-gray-400">Цена за {product.unit}</p>
-                                        <p className="text-lg font-bold text-gray-900">{formatPrice(product.price)}</p>
+                                
+                                {/* Price by DK for lenses */}
+                                {product.category === 'lens' && product.priceByDk && Object.keys(product.priceByDk).length > 0 ? (
+                                    <div className="pt-3 border-t border-gray-100 space-y-1.5">
+                                        {Object.entries(product.priceByDk).sort(([a], [b]) => Number(a) - Number(b)).map(([dk, p]) => (
+                                            <div key={dk} className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-500">DK {dk}</span>
+                                                <span className="font-semibold text-gray-900">{formatPrice(p as number)}</span>
+                                            </div>
+                                        ))}
                                     </div>
-                                    {product.sku && (
-                                        <span className="text-xs text-gray-400 font-mono">#{product.sku}</span>
-                                    )}
-                                </div>
-                                {canEdit && (product.name1c || product.code) && (
-                                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100">
-                                        {product.name1c && (
-                                            <span className="text-xs text-gray-400 flex items-center gap-1" title="Наименование в 1С">
-                                                <FileText className="w-3 h-3" />
-                                                {product.name1c}
-                                            </span>
-                                        )}
-                                        {product.code && (
-                                            <span className="text-xs text-gray-400 font-mono flex items-center gap-1" title="Код товара">
-                                                <Barcode className="w-3 h-3" />
-                                                {product.code}
-                                            </span>
+                                ) : (
+                                    <div className="flex items-end justify-between mt-auto pt-3 border-t border-gray-100">
+                                        <div>
+                                            <p className="text-xs text-gray-400">Цена за {product.unit}</p>
+                                            <p className="text-lg font-bold text-gray-900">{formatPrice(product.price)}</p>
+                                        </div>
+                                        {product.sku && (
+                                            <span className="text-xs text-gray-400 font-mono">#{product.sku}</span>
                                         )}
                                     </div>
                                 )}
@@ -322,36 +278,11 @@ export default function CatalogPage() {
                         ))}
                     </div>
                 )}
-
-                {/* Inactive products */}
-                {inactiveProducts.length > 0 && canEdit && (
-                    <div className="mt-8">
-                        <h3 className="text-sm font-medium text-gray-400 mb-3">Удалённые товары ({inactiveProducts.length})</h3>
-                        <div className="space-y-2">
-                            {inactiveProducts.map(product => (
-                                <div key={product.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 opacity-60">
-                                    <div className="flex items-center gap-3">
-                                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${categoryColor(product.category)}`}>
-                                            {categoryLabel(product.category)}
-                                        </span>
-                                        <span className="text-sm text-gray-600">{product.name}</span>
-                                    </div>
-                                    <button
-                                        onClick={() => handleRestore(product)}
-                                        className="text-xs text-blue-500 hover:text-blue-600 font-medium"
-                                    >
-                                        Восстановить
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
 
-            {/* Create/Edit Modal */}
+            {/* Edit Prices Modal */}
             <AnimatePresence>
-                {showModal && (
+                {showModal && editingProduct && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -364,147 +295,48 @@ export default function CatalogPage() {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             onClick={e => e.stopPropagation()}
-                            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
                         >
                             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                                <h2 className="text-lg font-bold text-gray-900">
-                                    {editingProduct ? 'Редактировать товар' : 'Новый товар'}
-                                </h2>
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900">Цены для оптик</h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">{editingProduct.name}</p>
+                                </div>
                                 <button onClick={() => setShowModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
+                            
                             <div className="p-5 space-y-4">
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
-                                        <Tag className="w-4 h-4 text-gray-400" />
-                                        Название *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formName}
-                                        onChange={e => setFormName(e.target.value)}
-                                        placeholder="Ортокератологическая линза MediLens"
-                                        className="input w-full"
-                                        autoFocus
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
-                                            <Package className="w-4 h-4 text-gray-400" />
-                                            Категория *
-                                        </label>
-                                        <select value={formCategory} onChange={e => setFormCategory(e.target.value)} className="input w-full">
-                                            {CATEGORIES.map(c => (
-                                                <option key={c.value} value={c.value}>{c.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
-                                            <Hash className="w-4 h-4 text-gray-400" />
-                                            Артикул
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formSku}
-                                            onChange={e => setFormSku(e.target.value)}
-                                            placeholder="ML-001"
-                                            className="input w-full"
-                                        />
-                                    </div>
-                                </div>
-                                {canEdit && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
-                                                <FileText className="w-4 h-4 text-gray-400" />
-                                                Наименование в 1С
+                                {Object.keys(dkPrices).length > 0 ? (
+                                    Object.entries(dkPrices).sort(([a], [b]) => Number(a) - Number(b)).map(([dk, price]) => (
+                                        <div key={dk}>
+                                            <label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                                                DK {dk} (₸)
                                             </label>
                                             <input
-                                                type="text"
-                                                value={formName1c}
-                                                onChange={e => setFormName1c(e.target.value)}
-                                                placeholder="Линза контактная ортокератологическая"
+                                                type="number"
+                                                value={price}
+                                                onChange={e => setDkPrices(prev => ({ ...prev, [dk]: Number(e.target.value) }))}
                                                 className="input w-full"
+                                                min="0"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
-                                                <Barcode className="w-4 h-4 text-gray-400" />
-                                                Код
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={formCode}
-                                                onChange={e => setFormCode(e.target.value)}
-                                                placeholder="001-ML-OKL"
-                                                className="input w-full"
-                                            />
-                                        </div>
-                                    </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic">Для этого товара пока нельзя настроить индивидуальную цену дистрибьютора.</p>
                                 )}
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700 mb-1.5 block">Описание</label>
-                                    <textarea
-                                        value={formDescription}
-                                        onChange={e => setFormDescription(e.target.value)}
-                                        placeholder="Краткое описание товара..."
-                                        className="input w-full h-20 resize-none"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1.5">
-                                            <DollarSign className="w-4 h-4 text-gray-400" />
-                                            Цена (₸) *
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={formPrice}
-                                            onChange={e => setFormPrice(e.target.value)}
-                                            placeholder="40000"
-                                            className="input w-full"
-                                            min="0"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700 mb-1.5 block">Единица</label>
-                                        <select value={formUnit} onChange={e => setFormUnit(e.target.value)} className="input w-full">
-                                            <option value="шт">шт</option>
-                                            <option value="мл">мл</option>
-                                            <option value="упак">упак</option>
-                                            <option value="комп">комплект</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700 mb-1.5 block">Порядок</label>
-                                        <input
-                                            type="number"
-                                            value={formSortOrder}
-                                            onChange={e => setFormSortOrder(e.target.value)}
-                                            className="input w-full"
-                                            min="0"
-                                        />
-                                    </div>
-                                </div>
                             </div>
+                            
                             <div className="flex justify-end gap-3 p-5 border-t border-gray-100 bg-gray-50">
                                 <button onClick={() => setShowModal(false)} className="btn btn-secondary">
                                     Отмена
                                 </button>
-                                <button onClick={handleSave} disabled={isSaving || !formName.trim()} className="btn btn-primary gap-2">
+                                <button onClick={handleSave} disabled={isSaving || Object.keys(dkPrices).length === 0} className="btn btn-primary gap-2">
                                     {isSaving ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            Сохранение...
-                                        </>
+                                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Сохранение...</>
                                     ) : (
-                                        <>
-                                            <Save className="w-4 h-4" />
-                                            {editingProduct ? 'Сохранить' : 'Добавить'}
-                                        </>
+                                        <><Save className="w-4 h-4" /> Сохранить</>
                                     )}
                                 </button>
                             </div>

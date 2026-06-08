@@ -9,13 +9,12 @@ export const DkEnum = z.enum(['50', '100', '125', '180']);
 export type DkValue = z.infer<typeof DkEnum>;
 
 // ==================== Characteristic (lens design) ====================
-export const CharacteristicEnum = z.enum(['toric', 'spherical', 'probe']);
+export const CharacteristicEnum = z.enum(['toric', 'spherical']);
 export type Characteristic = z.infer<typeof CharacteristicEnum>;
 
 export const CharacteristicLabels: Record<Characteristic, string> = {
     toric: 'Торическая',
     spherical: 'Сферическая',
-    probe: 'Пробная',
 };
 
 // ==================== Color options per Dk ====================

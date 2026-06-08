@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan, Wallet, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
@@ -33,9 +33,20 @@ interface Sale {
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 const PAYMENT_METHODS = [
-    { key: 'cash', label: 'Наличные', icon: Banknote, color: 'bg-green-50 text-green-700 border-green-200' },
-    { key: 'card', label: 'Карта', icon: CreditCard, color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    { key: 'transfer', label: 'Перевод', icon: ArrowRightLeft, color: 'bg-purple-50 text-purple-700 border-purple-200' },
+    { key: 'cash', label: 'Наличными', icon: Banknote, color: 'bg-green-50 text-green-700 border-green-200' },
+    { key: 'card', label: 'Картой', icon: CreditCard, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { key: 'installment12', label: 'Рассрочка 12 мес', icon: Calendar, color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+];
+
+const TRAFFIC_SOURCES = [
+    'Не указано',
+    'Instagram',
+    '2GIS',
+    'Пациенты Айгерим',
+    'С улицы',
+    'Пациенты Диляры',
+    'С сайта',
+    'другое'
 ];
 
 export default function POSPage() {
@@ -65,6 +76,10 @@ export default function POSPage() {
     const [customerPhone, setCustomerPhone] = useState('');
     const [discount, setDiscount] = useState('0');
     const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [trafficSource, setTrafficSource] = useState('Не указано');
+    const [mixedCash, setMixedCash] = useState('');
+    const [mixedCard, setMixedCard] = useState('');
+    const [mixedTransfer, setMixedTransfer] = useState('');
     const [saving, setSaving] = useState(false);
 
     // Patient integration state
@@ -213,6 +228,25 @@ export default function POSPage() {
     // Checkout
     const handleCheckout = async () => {
         if (!cart.length) return;
+        
+        let invoiceData: any = {};
+        
+        if (paymentMethod === 'mixed') {
+            const sum = (Number(mixedCash) || 0) + (Number(mixedCard) || 0) + (Number(mixedTransfer) || 0);
+            if (sum !== total) {
+                alert(`Сумма смешанной оплаты (${fmt(sum)} ₸) не совпадает с итогом (${fmt(total)} ₸)!`);
+                return;
+            }
+            invoiceData.splitPayment = true;
+            if (Number(mixedCash) > 0) invoiceData.cashAmount = Number(mixedCash);
+            if (Number(mixedCard) > 0) invoiceData.cardAmount = Number(mixedCard);
+            if (Number(mixedTransfer) > 0) invoiceData.transferAmount = Number(mixedTransfer);
+        }
+
+        if (trafficSource !== 'Не указано') {
+            invoiceData.trafficSource = trafficSource;
+        }
+
         setSaving(true);
         try {
             const res = await fetch('/api/optic/sales', {
@@ -224,6 +258,7 @@ export default function POSPage() {
                     customerPhone: customerPhone || undefined,
                     discountPercent: discountPct,
                     paymentMethod,
+                    invoiceData: Object.keys(invoiceData).length > 0 ? invoiceData : undefined,
                     patientId: patientId || undefined,
                     leadId: leadId || undefined,
                 }),
@@ -234,13 +269,22 @@ export default function POSPage() {
                 setCart([]);
                 setCustomerName('');
                 setCustomerPhone('');
+                setTrafficSource('Не указано');
                 setDiscount('0');
                 setPatientId(null);
                 setLeadId(null);
                 setPatientSearch('');
+                setMixedCash('');
+                setMixedCard('');
+                setMixedTransfer('');
                 setShowCheckout(false);
                 loadProducts(); // refresh stock
+            } else {
+                const errData = await res.json();
+                alert(`Ошибка: ${errData.error || 'Неизвестная ошибка сервера'}`);
             }
+        } catch (err: any) {
+            alert(`Ошибка сети: ${err.message}`);
         } finally { setSaving(false); }
     };
 
@@ -469,7 +513,7 @@ export default function POSPage() {
 
                                 {/* Payment actions - fixed at bottom */}
                                 <div className="p-5 border-t border-gray-100 flex-shrink-0 bg-white">
-                                    <div className="flex gap-2 mb-4">
+                                    <div className="flex flex-wrap gap-2 mb-4">
                                         {PAYMENT_METHODS.map(pm => (
                                             <button key={pm.key} onClick={() => setPaymentMethod(pm.key)}
                                                 className={`flex-1 flex flex-col md:flex-row items-center justify-center gap-1.5 py-3 rounded-2xl text-xs font-bold border transition-all active:scale-[0.96] ${
@@ -571,7 +615,46 @@ export default function POSPage() {
                                     <input type="text" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
                                         placeholder="Необязательно" className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white" />
                                 </div>
+                                <div>
+                                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Откуда узнали о нас?</label>
+                                    <select value={trafficSource} onChange={e => setTrafficSource(e.target.value)}
+                                        className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white appearance-none cursor-pointer">
+                                        {TRAFFIC_SOURCES.map(source => (
+                                            <option key={source} value={source}>{source}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
+                            
+                            {paymentMethod === 'mixed' && (
+                                <div className="space-y-3 mb-6 bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
+                                    <h3 className="text-xs font-bold text-orange-800 uppercase tracking-wider mb-2">Смешанная оплата (Итого: {fmt(total)} ₸)</h3>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] font-bold text-gray-500 mb-1">Наличные</label>
+                                            <input type="number" value={mixedCash} onChange={e => setMixedCash(e.target.value)}
+                                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold bg-white" placeholder="0" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] font-bold text-gray-500 mb-1">Карта</label>
+                                            <input type="number" value={mixedCard} onChange={e => setMixedCard(e.target.value)}
+                                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold bg-white" placeholder="0" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-[10px] font-bold text-gray-500 mb-1">Перевод</label>
+                                            <input type="number" value={mixedTransfer} onChange={e => setMixedTransfer(e.target.value)}
+                                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold bg-white" placeholder="0" />
+                                        </div>
+                                    </div>
+                                    {(() => {
+                                        const sum = (Number(mixedCash) || 0) + (Number(mixedCard) || 0) + (Number(mixedTransfer) || 0);
+                                        if (sum !== total) {
+                                            return <p className="text-xs font-bold text-red-500 mt-2">Сумма не совпадает с итогом (Остаток: {fmt(total - sum)} ₸)</p>;
+                                        }
+                                        return <p className="text-xs font-bold text-green-600 mt-2">Сумма сходится!</p>;
+                                    })()}
+                                </div>
+                            )}
 
                             <div className="bg-gray-50 rounded-2xl p-5 mb-6 space-y-2">
                                 {cart.map(c => (

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
 import type { OrderStatus, PaymentStatus } from '@/types/order';
+import { ReadOnlyEyeCard } from '@/components/order/ReadOnlyEyeCard';
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
@@ -170,103 +171,10 @@ export default function LabOrderDetailPage() {
                             <Eye className="w-3.5 h-3.5" /> Параметры линз
                         </h3>
 
-                        {/* Desktop: side-by-side table */}
-                        <div className="overflow-x-auto -mx-6 px-6">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-gray-200 bg-gray-50/80">
-                                        <th className="text-left py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase">Глаз</th>
-                                        <th className="text-left py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase">Тип</th>
-                                        <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">Km</th>
-                                        <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">Tp</th>
-                                        <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">DIA</th>
-                                        <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">Dk</th>
-                                        <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">e1</th>
-                                        <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">e2</th>
-                                        <th className="text-center py-2.5 px-3 text-xs font-semibold text-gray-500">Кол-во</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {odQty > 0 && (
-                                        <tr className="border-b border-gray-100">
-                                            <td className="py-2.5 px-3 font-semibold text-gray-900">OD</td>
-                                            <td className="py-2.5 px-3">
-                                                <span className="inline-flex px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded">
-                                                    {od.characteristic ? charLabel(od.characteristic) : '—'}
-                                                </span>
-                                            </td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{od.km ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{od.tp ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{od.dia ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{od.dk ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{od.e1 ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{od.e2 ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center font-semibold text-gray-900">{odQty}</td>
-                                        </tr>
-                                    )}
-                                    {osQty > 0 && (
-                                        <tr className="border-b border-gray-100">
-                                            <td className="py-2.5 px-3 font-semibold text-gray-900">OS</td>
-                                            <td className="py-2.5 px-3">
-                                                <span className="inline-flex px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded">
-                                                    {os.characteristic ? charLabel(os.characteristic) : '—'}
-                                                </span>
-                                            </td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{os.km ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{os.tp ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{os.dia ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{os.dk ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{os.e1 ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center text-gray-700">{os.e2 ?? '—'}</td>
-                                            <td className="py-2.5 px-3 text-center font-semibold text-gray-900">{osQty}</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                        <div className="space-y-4">
+                            {odQty > 0 && <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={od} qty={odQty} />}
+                            {osQty > 0 && <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={os} qty={osQty} />}
                         </div>
-
-                        {/* Toric params if applicable */}
-                        {((od.characteristic === 'toric' && odQty > 0) || (os.characteristic === 'toric' && osQty > 0)) && (
-                            <div className="mt-4">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Торические параметры</p>
-                                <div className="overflow-x-auto -mx-6 px-6">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b border-gray-200 bg-gray-50/80">
-                                                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Глаз</th>
-                                                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-500">SPH</th>
-                                                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-500">CYL</th>
-                                                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-500">AX</th>
-                                                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-500">TOR</th>
-                                                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-500">Фактор сжатия</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {od.characteristic === 'toric' && odQty > 0 && (
-                                                <tr className="border-b border-gray-100">
-                                                    <td className="py-2 px-3 font-semibold text-gray-900">OD</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{od.sph ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{od.cyl ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{od.ax ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{od.tor ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{od.compression_factor ?? '—'}</td>
-                                                </tr>
-                                            )}
-                                            {os.characteristic === 'toric' && osQty > 0 && (
-                                                <tr className="border-b border-gray-100">
-                                                    <td className="py-2 px-3 font-semibold text-gray-900">OS</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{os.sph ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{os.cyl ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{os.ax ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{os.tor ?? '—'}</td>
-                                                    <td className="py-2 px-3 text-center text-gray-700">{os.compression_factor ?? '—'}</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* ── 1С Document Names ── */}

@@ -41,6 +41,7 @@ export async function GET(
                     contactPerson: true,
                     contactPhone: true,
                     discountPercent: true,
+                    metadata: true,
                     status: true,
                     createdAt: true,
                     users: {

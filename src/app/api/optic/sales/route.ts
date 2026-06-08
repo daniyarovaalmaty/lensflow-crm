@@ -32,16 +32,16 @@ export async function POST(req: NextRequest) {
 
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, paymentMethod, notes, patientId, leadId } = body;
+    const { items, customerName, customerPhone, discountPercent, paymentMethod, notes, patientId, leadId, invoiceData } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
     const orgId = user.organizationId;
 
-    // Generate sale number
+    // Generate sale number (globally unique to avoid @unique constraint violations)
     const saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
-    const saleNumber = `S-${String(saleCount + 1).padStart(4, '0')}`;
+    const saleNumber = `S-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
 
     // Auto-attribute lead if patient is provided but no leadId is given
     let finalLeadId = leadId;
@@ -180,6 +180,7 @@ export async function POST(req: NextRequest) {
             performedById: user.id,
             performedByName: user.fullName || user.email,
             notes: notes || null,
+            invoiceData: invoiceData || null,
             items: {
                 create: saleItems.map(si => ({
                     productId: si.productId,

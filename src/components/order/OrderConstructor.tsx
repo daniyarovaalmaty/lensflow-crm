@@ -7,8 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
+import { ReadOnlyEyeCard } from './ReadOnlyEyeCard';
 import { MediLensCalculator } from './MediLensCalculator';
-import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye, Factory } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye, Factory, X } from 'lucide-react';
 
 interface CatalogProduct {
     id: string;
@@ -57,6 +58,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formErrors, setFormErrors] = useState<string[]>([]);
     const errorsRef = useRef<HTMLDivElement>(null);
+    const [distributorClients, setDistributorClients] = useState<any[]>([]);
 
     const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
@@ -69,6 +71,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [recipientType, setRecipientType] = useState<'laboratory' | 'distributor'>('laboratory');
     const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string }[]>([]);
     const [selectedBranchId, setSelectedBranchId] = useState<string>('');
+    const [confirmData, setConfirmData] = useState<any>(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const subRole = session?.user?.subRole || '';
     const userRole = session?.user?.role || '';
     const isProcurement = subRole === 'optic_procurement';
@@ -95,6 +99,17 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             } catch (e) { /* no distributors is fine */ }
         })();
     }, []);
+
+    useEffect(() => {
+        if (session?.user?.role === 'distributor') {
+            fetch('/api/distributor/clients')
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data)) setDistributorClients(data);
+                })
+                .catch(err => console.error('Failed to fetch distributor clients:', err));
+        }
+    }, [session?.user?.role]);
 
     // Load branches for procurement users (with routing config)
     useEffect(() => {
@@ -370,7 +385,21 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     return;
                 }
             }
-            await onSubmit(submitData);
+            setConfirmData(submitData);
+            setShowConfirmModal(true);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const doSubmit = async () => {
+        setIsSubmitting(true);
+        try {
+            await onSubmit(confirmData);
+            setShowConfirmModal(false);
+            setConfirmData(null);
+        } catch (e: any) {
+            showFormErrors([e.message || 'Ошибка при отправке заказа']);
         } finally {
             setIsSubmitting(false);
         }
@@ -414,13 +443,30 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const osQty = Number(watch('config.eyes.os.qty')) || 0;
     const isRgpOD = watch('config.eyes.od.isRgp') || false;
     const isRgpOS = watch('config.eyes.os.isRgp') || false;
+    const isTrialOD = odDk === '50';
+    const isTrialOS = osDk === '50';
     const hasAnyRgp = isRgpOD || isRgpOS;
+
+    const [companyValue, innValue] = watch(['company', 'inn']);
+
+    useEffect(() => {
+        if (session?.user?.role === 'distributor' && companyValue && distributorClients.length > 0) {
+            const matchedClient = distributorClients.find(c => c.name.toLowerCase() === companyValue.toLowerCase());
+            if (matchedClient && matchedClient.inn && !innValue) {
+                setValue('inn', matchedClient.inn);
+            }
+        }
+    }, [companyValue, distributorClients, innValue, session?.user?.role, setValue]);
 
     // Lens price from catalog based on characteristic + DK
     // Uses priceByDk when available (matches backend calculation)
     // RGP lenses have custom pricing (set by accountant), so price = 0
-    const odLensProduct = getLensProduct(odCharacteristic || '');
-    const osLensProduct = getLensProduct(osCharacteristic || '');
+    // If it's a trial lens (DK 50), the effective product is 'probe'
+    const effectiveOdCharacteristic = isTrialOD ? 'probe' : (odCharacteristic || '');
+    const effectiveOsCharacteristic = isTrialOS ? 'probe' : (osCharacteristic || '');
+    
+    const odLensProduct = getLensProduct(effectiveOdCharacteristic);
+    const osLensProduct = getLensProduct(effectiveOsCharacteristic);
     const odUnitPrice = isRgpOD ? 0 : getLensPrice(odLensProduct, odDk);
     const osUnitPrice = isRgpOS ? 0 : getLensPrice(osLensProduct, osDk);
     const odLensPrice = odUnitPrice * odQty;
@@ -514,10 +560,18 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         <input
                             id="company"
                             type="text"
+                            list={session?.user?.role === 'distributor' ? "distributor-clients" : undefined}
                             {...register('company')}
                             className="input"
                             placeholder="Ozat clinic"
                         />
+                        {session?.user?.role === 'distributor' && (
+                            <datalist id="distributor-clients">
+                                {distributorClients.map((client) => (
+                                    <option key={client.id} value={client.name} />
+                                ))}
+                            </datalist>
+                        )}
                     </div>
 
                     <div>
@@ -1244,6 +1298,84 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     {isSubmitting ? 'Создание...' : 'Создать заказ'}
                 </button>
             </div>
+
+            {/* Confirm Modal */}
+            {showConfirmModal && confirmData && (
+                <div className="fixed inset-0 z-[100] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                            <h3 className="text-xl font-bold text-gray-900">Подтверждение заказа</h3>
+                            <button type="button" onClick={() => setShowConfirmModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto space-y-6">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span className="text-gray-500 block mb-1">Пациент</span>
+                                    <strong className="text-gray-900">{confirmData.patient?.name}</strong>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block mb-1">Телефон</span>
+                                    <strong className="text-gray-900">{confirmData.patient?.phone}</strong>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block mb-1">Компания</span>
+                                    <strong className="text-gray-900">{confirmData.company || '—'}</strong>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block mb-1">Тип заказа</span>
+                                    <strong className={confirmData.is_urgent ? "text-amber-600 font-bold" : "text-primary-600 font-bold"}>
+                                        {confirmData.is_urgent ? "Срочный" : "Обычный"}
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {Number(confirmData.config?.eyes?.od?.qty) > 0 && (
+                                    <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={confirmData.config.eyes.od} qty={Number(confirmData.config.eyes.od.qty)} />
+                                )}
+                                {Number(confirmData.config?.eyes?.os?.qty) > 0 && (
+                                    <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={confirmData.config.eyes.os} qty={Number(confirmData.config.eyes.os.qty)} />
+                                )}
+                            </div>
+
+                            {confirmData.products && confirmData.products.length > 0 && (
+                                <div className="bg-emerald-50/50 rounded-xl p-4 border border-emerald-100/50">
+                                    <h4 className="font-semibold text-emerald-900 text-sm uppercase tracking-wide mb-3">Дополнительные товары</h4>
+                                    <ul className="space-y-2 text-sm">
+                                        {confirmData.products.map((p: any, idx: number) => (
+                                            <li key={idx} className="flex justify-between items-center border-b border-emerald-100/50 pb-2 last:border-0 last:pb-0">
+                                                <span>{p.name}</span>
+                                                <strong className="text-emerald-700">{p.qty} шт.</strong>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {canSeePrices && (
+                                <div className="bg-gray-50 rounded-xl p-4 flex justify-between items-center border border-gray-200">
+                                    <span className="font-medium text-gray-700">Итоговая сумма:</span>
+                                    <span className="text-xl font-bold text-gray-900">{totalPrice.toLocaleString('ru-RU')} ₸</span>
+                                </div>
+                            )}
+
+                            <p className="text-xs text-gray-500 text-center">
+                                Проверьте все параметры перед отправкой заказа.
+                            </p>
+                        </div>
+                        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
+                            <button type="button" onClick={() => setShowConfirmModal(false)} className="btn btn-secondary px-6">
+                                Отмена
+                            </button>
+                            <button type="button" onClick={doSubmit} disabled={isSubmitting} className="btn btn-primary px-8">
+                                {isSubmitting ? 'Отправка...' : 'Подтвердить и отправить'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </form>
     );
 }

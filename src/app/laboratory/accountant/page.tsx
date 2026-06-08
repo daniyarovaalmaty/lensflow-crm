@@ -740,6 +740,7 @@ export default function AccountantPage() {
                                                                                             <td className="px-4 py-2.5 text-gray-600">
                                                                                                 {odChar ? (CharacteristicLabels[odChar] || odChar) : '—'}
                                                                                                 {(od as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                                                                {(od as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                                                             </td>
                                                                                             <td className="px-4 py-2.5 text-center text-gray-800">{odQty}</td>
                                                                                             <td className="px-4 py-2.5 text-right text-gray-600">{odUnitPrice.toLocaleString('ru-RU')} ₸</td>
@@ -752,6 +753,7 @@ export default function AccountantPage() {
                                                                                             <td className="px-4 py-2.5 text-gray-600">
                                                                                                 {osChar ? (CharacteristicLabels[osChar] || osChar) : '—'}
                                                                                                 {(os as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                                                                {(os as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                                                             </td>
                                                                                             <td className="px-4 py-2.5 text-center text-gray-800">{osQty}</td>
                                                                                             <td className="px-4 py-2.5 text-right text-gray-600">{osUnitPrice.toLocaleString('ru-RU')} ₸</td>

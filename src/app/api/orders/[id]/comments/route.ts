@@ -51,9 +51,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const updateData: any = { comments: updatedComments };
 
-    // Handle approve_edit: reset status to new_order + extend deadline 24h
+    // Handle approve_edit: reset status to new_order + extend deadline 2h
     if (type === 'approve_edit' && isLabUser) {
-        updateData.editDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        updateData.editDeadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
         if (order.status !== 'new_order') {
             updateData.status = 'new_order';
         }
@@ -66,7 +66,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // Handle regular lab comment (existing behavior): extend deadline + reset status
     if (type === 'comment' && isLabUser) {
-        updateData.editDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        updateData.editDeadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
         if (order.status !== 'new_order') {
             updateData.status = 'new_order';
         }

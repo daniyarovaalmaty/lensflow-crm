@@ -6,12 +6,29 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import {
     ArrowLeft, Building2, Stethoscope, Package, DollarSign,
-    Phone, Mail, MapPin, Percent, Users, Zap
+    Phone, Mail, MapPin, Percent, Users, Zap, Pencil, Save, X
 } from 'lucide-react';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
 import type { OrderStatus, PaymentStatus } from '@/types/order';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
+
+interface PriceList {
+    lenses: {
+        probe?: Record<string, number>;
+        spherical?: Record<string, number>;
+        toric?: Record<string, number>;
+    };
+}
+
+const DEFAULT_PRICES: PriceList = {
+    lenses: {
+        probe: { '50': 12000 },
+        spherical: { '100': 25000, '125': 28000, '180': 31000 },
+        toric: { '100': 30000, '125': 33000, '180': 36000 },
+    }
+};
 
 export default function CounterpartyDetailPage() {
     const params = useParams();
@@ -24,19 +41,72 @@ export default function CounterpartyDetailPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const canEditPricing = session?.user?.subRole === 'lab_head' || session?.user?.subRole === 'lab_admin';
+    const [showPricingModal, setShowPricingModal] = useState(false);
+    const [pricingMode, setPricingMode] = useState<'discount' | 'individual'>('discount');
+    const [editDiscount, setEditDiscount] = useState('0');
+    const [editPriceList, setEditPriceList] = useState<PriceList>(DEFAULT_PRICES);
+    const [isSavingPricing, setIsSavingPricing] = useState(false);
+
+    const fetchCounterparty = async () => {
+        try {
+            const res = await fetch(`/api/counterparties/${id}?type=${type}`);
+            if (res.ok) {
+                const json = await res.json();
+                setData(json.data);
+                setOrders(json.orders);
+            }
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+    };
+
     useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch(`/api/counterparties/${id}?type=${type}`);
-                if (res.ok) {
-                    const json = await res.json();
-                    setData(json.data);
-                    setOrders(json.orders);
-                }
-            } catch (e) { console.error(e); }
-            finally { setLoading(false); }
-        })();
+        fetchCounterparty();
     }, [id, type]);
+
+    const openPricingModal = () => {
+        const discount = data.discountPercent || 0;
+        const priceList = data.metadata?.priceList;
+        
+        if (priceList && Object.keys(priceList).length > 0) {
+            setPricingMode('individual');
+            setEditPriceList(priceList);
+            setEditDiscount('0');
+        } else {
+            setPricingMode('discount');
+            setEditDiscount(String(discount));
+            setEditPriceList(DEFAULT_PRICES);
+        }
+        setShowPricingModal(true);
+    };
+
+    const handleSavePricing = async () => {
+        setIsSavingPricing(true);
+        try {
+            const body = {
+                discountPercent: pricingMode === 'discount' ? Number(editDiscount) : 0,
+                priceList: pricingMode === 'individual' ? editPriceList : null,
+            };
+
+            const res = await fetch(`/api/counterparties/${id}/pricing`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            if (res.ok) {
+                setShowPricingModal(false);
+                fetchCounterparty();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Ошибка сохранения');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSavingPricing(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -135,11 +205,24 @@ export default function CounterpartyDetailPage() {
                                     {data.contactPerson && <div className="flex justify-between"><span className="text-gray-500">Контакт</span><span className="font-medium">{data.contactPerson}</span></div>}
                                     {data.bankName && <div className="flex justify-between"><span className="text-gray-500">Банк</span><span className="font-medium">{data.bankName}</span></div>}
                                     {data.iban && <div className="flex justify-between"><span className="text-gray-500">IBAN</span><span className="font-medium">{data.iban}</span></div>}
-                                    <div className="flex justify-between pt-2 border-t border-gray-100">
-                                        <span className="text-gray-500">Скидка</span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg">
-                                            <Percent className="w-3 h-3" />{data.discountPercent}%
-                                        </span>
+                                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-gray-500">Ценообразование</span>
+                                            {data.metadata?.priceList ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg">
+                                                    Индивидуальный прайс
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg">
+                                                    <Percent className="w-3 h-3" /> Скидка {data.discountPercent}%
+                                                </span>
+                                            )}
+                                        </div>
+                                        {canEditPricing && (
+                                            <button onClick={openPricingModal} className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                                <Pencil className="w-3 h-3" /> Изменить
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -251,6 +334,176 @@ export default function CounterpartyDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Pricing Modal */}
+            <AnimatePresence>
+                {showPricingModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowPricingModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+                        >
+                            <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-shrink-0">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900">Настройка цен</h2>
+                                    <p className="text-xs text-gray-500 mt-0.5">{name}</p>
+                                </div>
+                                <button onClick={() => setShowPricingModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="p-5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="pricingMode"
+                                            checked={pricingMode === 'discount'}
+                                            onChange={() => setPricingMode('discount')}
+                                            className="text-blue-600"
+                                        />
+                                        <span className="text-sm font-medium">Общая скидка на все товары</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="pricingMode"
+                                            checked={pricingMode === 'individual'}
+                                            onChange={() => setPricingMode('individual')}
+                                            className="text-blue-600"
+                                        />
+                                        <span className="text-sm font-medium">Индивидуальный прайс-лист</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="p-5 overflow-y-auto">
+                                {pricingMode === 'discount' ? (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Размер скидки (%)</label>
+                                        <input
+                                            type="number"
+                                            value={editDiscount}
+                                            onChange={e => setEditDiscount(e.target.value)}
+                                            className="input w-32"
+                                            min="0"
+                                            max="100"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Эта скидка будет автоматически применяться ко всем базовым ценам каталога при оформлении заказа данным контрагентом.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <p className="text-sm text-gray-600">
+                                            Здесь вы можете задать индивидуальные цены на линзы (для разных DK) специально для этой оптики.
+                                            Базовая скидка при этом будет равна 0%.
+                                        </p>
+                                        
+                                        {/* Сферические */}
+                                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-medium text-sm">Сферические линзы</div>
+                                            <div className="p-4 grid grid-cols-3 gap-4">
+                                                {['100', '125', '180'].map(dk => (
+                                                    <div key={dk}>
+                                                        <label className="block text-xs font-medium text-gray-500 mb-1">DK {dk}</label>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="number"
+                                                                value={editPriceList.lenses?.spherical?.[dk] || 0}
+                                                                onChange={e => setEditPriceList(prev => ({
+                                                                    ...prev,
+                                                                    lenses: { ...prev.lenses, spherical: { ...prev.lenses.spherical, [dk]: Number(e.target.value) } }
+                                                                }))}
+                                                                className="input w-full pr-8"
+                                                                min="0"
+                                                            />
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₸</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Торические */}
+                                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-medium text-sm">Торические линзы</div>
+                                            <div className="p-4 grid grid-cols-3 gap-4">
+                                                {['100', '125', '180'].map(dk => (
+                                                    <div key={dk}>
+                                                        <label className="block text-xs font-medium text-gray-500 mb-1">DK {dk}</label>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="number"
+                                                                value={editPriceList.lenses?.toric?.[dk] || 0}
+                                                                onChange={e => setEditPriceList(prev => ({
+                                                                    ...prev,
+                                                                    lenses: { ...prev.lenses, toric: { ...prev.lenses.toric, [dk]: Number(e.target.value) } }
+                                                                }))}
+                                                                className="input w-full pr-8"
+                                                                min="0"
+                                                            />
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₸</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Пробные */}
+                                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-medium text-sm">Пробные линзы</div>
+                                            <div className="p-4 grid grid-cols-3 gap-4">
+                                                <div key="50">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">DK 50</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            value={editPriceList.lenses?.probe?.['50'] || 0}
+                                                            onChange={e => setEditPriceList(prev => ({
+                                                                ...prev,
+                                                                lenses: { ...prev.lenses, probe: { ...prev.lenses.probe, ['50']: Number(e.target.value) } }
+                                                            }))}
+                                                            className="input w-full pr-8"
+                                                            min="0"
+                                                        />
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₸</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end gap-3 p-5 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+                                <button onClick={() => setShowPricingModal(false)} className="btn btn-secondary">Отмена</button>
+                                <button
+                                    onClick={handleSavePricing}
+                                    disabled={isSavingPricing}
+                                    className="btn btn-primary gap-2"
+                                >
+                                    {isSavingPricing ? (
+                                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Сохранение...</>
+                                    ) : (
+                                        <><Save className="w-4 h-4" /> Сохранить цены</>
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

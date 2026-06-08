@@ -8,6 +8,7 @@ import {
     Clock, CheckCircle, Truck, Edit2, AlertCircle, Eye,
     MapPin, FileText, Zap, Calendar, ChevronRight, MessageSquare
 } from 'lucide-react';
+import { ReadOnlyEyeCard } from '@/components/order/ReadOnlyEyeCard';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any; bg: string }> = {
     new:          { label: 'Новый',          color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',   icon: Clock },
@@ -196,9 +197,9 @@ export default function OrderViewPage() {
                                 </div>
                             )}
                             {(od || os) ? (
-                                <div className="divide-y divide-gray-100">
-                                    <EyeRow label="OD" data={od} />
-                                    <EyeRow label="OS" data={os} />
+                                <div className="space-y-4">
+                                    {od && <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={od} qty={Number(od.qty || 1)} />}
+                                    {os && <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={os} qty={Number(os.qty || 1)} />}
                                 </div>
                             ) : (
                                 <p className="text-sm text-gray-400 italic">Параметры не указаны</p>
