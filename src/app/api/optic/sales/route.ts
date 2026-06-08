@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, paymentMethod, notes, patientId, leadId, invoiceData } = body;
+    const { items, customerName, customerPhone, discountPercent, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
     const orgId = user.organizationId;
 
     // Generate sale number (globally unique to avoid @unique constraint violations)
-    const saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
-    const saleNumber = `S-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
+    let saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
+    let saleNumber = `S-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
 
     // Auto-attribute lead if patient is provided but no leadId is given
     let finalLeadId = leadId;
@@ -192,11 +192,10 @@ export async function POST(req: NextRequest) {
             paidAmount: totalAmount,
             paymentMethod: paymentMethod || 'cash',
             paymentStatus: 'paid',
-            invoiceData: Object.keys(invoiceMeta).length > 0 ? invoiceMeta : undefined,
+            invoiceData: Object.keys(invoiceMeta).length > 0 ? invoiceMeta : (reqInvoiceData || null),
             performedById: user.id,
             performedByName: user.fullName || user.email,
-            notes: notes || null,
-            invoiceData: invoiceData || null,
+            notes: null,
             items: {
                 create: saleItems.map(si => ({
                     productId: si.productId,
@@ -214,7 +213,11 @@ export async function POST(req: NextRequest) {
         break;
       } catch (e: any) {
         const isUnique = e?.code === 'P2002' || JSON.stringify(e || '').includes('23505');
-        if (isUnique && _attempt < 4) { saleNumber = await generateSaleNumber(); continue; }
+        if (isUnique && _attempt < 4) { 
+            saleCount++;
+            saleNumber = `S-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
+            continue; 
+        }
         throw e;
       }
     }
