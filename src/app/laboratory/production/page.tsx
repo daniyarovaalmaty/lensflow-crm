@@ -1124,6 +1124,140 @@ export default function ProductionHubPage() {
                                     </tbody>
                                 </table>
                             </div>
+                            <div className="bg-white border-t border-gray-200 p-3">
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <span className="text-xs font-semibold text-gray-700">Строка для копирования</span>
+                                    <button
+                                        onClick={() => {
+                                            const parts = [];
+                                            parts.push(order.meta.doctor?.split(' ')[0] || '');
+                                            parts.push(order.meta.optic_name || '');
+                                            parts.push(order.patient?.name || '');
+                                    
+                                            const od = order.config?.eyes?.od;
+                                            const os = order.config?.eyes?.os;
+                                            
+                                            let hasCommon = false;
+                                            if (od?.characteristic && os?.characteristic && od.characteristic === os.characteristic && od.isRgp === os.isRgp && od.myorthok === os.myorthok) {
+                                                hasCommon = true;
+                                                if (od.myorthok) parts.push('MyOrthoK');
+                                                if (od.isRgp) parts.push('RGP');
+                                                const totalQty = (od.qty || 1) + (os.qty || 1);
+                                                parts.push(totalQty);
+                                                if (od.characteristic === 'toric') parts.push('Toric');
+                                                if (od.characteristic === 'spherical') parts.push('Spherical');
+                                            }
+                                    
+                                            const getEyeParams = (label: string, eye: any) => {
+                                                if (!eye || !eye.characteristic) return '';
+                                                const p = [];
+                                                if (!hasCommon) {
+                                                    if (eye.myorthok) p.push('MyOrthoK');
+                                                    if (eye.isRgp) p.push('RGP');
+                                                    if (eye.qty) p.push(eye.qty);
+                                                    if (eye.characteristic === 'toric') p.push('Toric');
+                                                    if (eye.characteristic === 'spherical') p.push('Spherical');
+                                                }
+                                                
+                                                p.push(label);
+                                                if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
+                                                if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
+                                                if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
+                                                if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
+                                                if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
+                                                if (eye.compression_factor != null) p.push(`Fac${String(eye.compression_factor).replace(/\./g, ',')}`);
+                                                
+                                                const colorMap: Record<string, string> = {
+                                                    'Тёмно-синий': 'dark-blue',
+                                                    'Тёмно-зелёный': 'dark-green',
+                                                    'Синий': 'blue',
+                                                    'Зелёный': 'green',
+                                                    'Фиолетовый': 'violet',
+                                                    'Красный': 'red',
+                                                    'Голубой': 'light-blue',
+                                                    'Салатовый': 'light-green'
+                                                };
+                                                if (eye.color) p.push(colorMap[eye.color] || eye.color);
+                                                return p.join(' ');
+                                            };
+                                    
+                                            const odStr = getEyeParams('OD', od);
+                                            const osStr = getEyeParams('OS', os);
+                                            if (odStr) parts.push(odStr);
+                                            if (osStr) parts.push(osStr);
+                                            
+                                            const str = parts.filter(Boolean).join(' ');
+                                            navigator.clipboard.writeText(str);
+                                            alert('Скопировано в буфер обмена!');
+                                        }}
+                                        className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded"
+                                    >
+                                        <Copy className="w-3 h-3" /> Копировать
+                                    </button>
+                                </div>
+                                <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono">
+                                    {(() => {
+                                        const parts = [];
+                                        parts.push(order.meta.doctor?.split(' ')[0] || '');
+                                        parts.push(order.meta.optic_name || '');
+                                        parts.push(order.patient?.name || '');
+                                
+                                        const od = order.config?.eyes?.od;
+                                        const os = order.config?.eyes?.os;
+                                        
+                                        let hasCommon = false;
+                                        if (od?.characteristic && os?.characteristic && od.characteristic === os.characteristic && od.isRgp === os.isRgp && od.myorthok === os.myorthok) {
+                                            hasCommon = true;
+                                            if (od.myorthok) parts.push('MyOrthoK');
+                                            if (od.isRgp) parts.push('RGP');
+                                            const totalQty = (od.qty || 1) + (os.qty || 1);
+                                            parts.push(totalQty);
+                                            if (od.characteristic === 'toric') parts.push('Toric');
+                                            if (od.characteristic === 'spherical') parts.push('Spherical');
+                                        }
+                                
+                                        const getEyeParams = (label: string, eye: any) => {
+                                            if (!eye || !eye.characteristic) return '';
+                                            const p = [];
+                                            if (!hasCommon) {
+                                                if (eye.myorthok) p.push('MyOrthoK');
+                                                if (eye.isRgp) p.push('RGP');
+                                                if (eye.qty) p.push(eye.qty);
+                                                if (eye.characteristic === 'toric') p.push('Toric');
+                                                if (eye.characteristic === 'spherical') p.push('Spherical');
+                                            }
+                                            
+                                            p.push(label);
+                                            if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
+                                            if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
+                                            if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
+                                            if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
+                                            if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
+                                            if (eye.compression_factor != null) p.push(`Fac${String(eye.compression_factor).replace(/\./g, ',')}`);
+                                            
+                                            const colorMap: Record<string, string> = {
+                                                'Тёмно-синий': 'dark-blue',
+                                                'Тёмно-зелёный': 'dark-green',
+                                                'Синий': 'blue',
+                                                'Зелёный': 'green',
+                                                'Фиолетовый': 'violet',
+                                                'Красный': 'red',
+                                                'Голубой': 'light-blue',
+                                                'Салатовый': 'light-green'
+                                            };
+                                            if (eye.color) p.push(colorMap[eye.color] || eye.color);
+                                            return p.join(' ');
+                                        };
+                                
+                                        const odStr = getEyeParams('OD', od);
+                                        const osStr = getEyeParams('OS', os);
+                                        if (odStr) parts.push(odStr);
+                                        if (osStr) parts.push(osStr);
+                                        
+                                        return parts.filter(Boolean).join(' ');
+                                    })()}
+                                </div>
+                            </div>
                         </div>
 
                         {/* RGP Files — shown when order has RGP attachments */}
