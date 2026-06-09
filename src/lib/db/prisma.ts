@@ -7,8 +7,17 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-    const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/lensflow';
-    const pool = new pg.Pool({ connectionString });
+    // ALWAYS use the pooler (DATABASE_URL) for the app to avoid exhausting connections.
+    // DIRECT_URL is meant for Prisma migrations only.
+    const connectionString = process.env.DATABASE_URL || process.env.DIRECT_URL || 'postgresql://localhost:5432/lensflow';
+    
+    // Configure pg.Pool with a limited max size per serverless invocation
+    const pool = new pg.Pool({ 
+        connectionString,
+        max: 5, // Limit connections per Next.js instance
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 20000
+    });
     const adapter = new PrismaPg(pool);
 
     return new PrismaClient({
