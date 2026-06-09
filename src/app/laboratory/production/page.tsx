@@ -1128,7 +1128,7 @@ export default function ProductionHubPage() {
                                 <div className="flex justify-between items-center mb-1.5">
                                     <span className="text-xs font-semibold text-gray-700">Строка для копирования</span>
                                     <button
-                                        onClick={() => {
+                                        onClick={(e) => {
                                             const parts = [];
                                             parts.push(order.meta.doctor?.split(' ')[0] || '');
                                             parts.push(order.meta.optic_name || '');
@@ -1188,9 +1188,19 @@ export default function ProductionHubPage() {
                                             
                                             const str = parts.filter(Boolean).join(' ');
                                             navigator.clipboard.writeText(str);
-                                            alert('Скопировано в буфер обмена!');
+                                            // Provide subtle feedback without a blocking alert
+                                            const btn = e.currentTarget;
+                                            const originalHtml = btn.innerHTML;
+                                            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><polyline points="20 6 9 17 4 12"></polyline></svg> Скопировано';
+                                            btn.classList.add('text-green-600', 'bg-green-50');
+                                            btn.classList.remove('text-blue-600', 'bg-blue-50');
+                                            setTimeout(() => {
+                                                btn.innerHTML = originalHtml;
+                                                btn.classList.remove('text-green-600', 'bg-green-50');
+                                                btn.classList.add('text-blue-600', 'bg-blue-50');
+                                            }, 2000);
                                         }}
-                                        className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded"
+                                        className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded transition-colors"
                                     >
                                         <Copy className="w-3 h-3" /> Копировать
                                     </button>
