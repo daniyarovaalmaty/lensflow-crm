@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, CheckCircle, TruckIcon, Package, Printer, User, Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban, RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip, CheckSquare, Square, Tag, Trash2, MessageCircle, Send, XCircle, Slash, FileEdit } from 'lucide-react';
+import { Clock, CheckCircle, TruckIcon, Package, Printer, User, Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban, RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip, CheckSquare, Square, Tag, Trash2, MessageCircle, Send, XCircle, Slash, FileEdit, Copy } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
 import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
