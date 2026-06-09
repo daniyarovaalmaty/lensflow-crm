@@ -1136,8 +1136,6 @@ export default function ProductionHubPage() {
                                             const generateLine = (label: string, eye: any) => {
                                                 if (!eye || !eye.characteristic) return null;
                                                 const p = [];
-                                                p.push(order.meta.doctor?.split(' ')[0] || '');
-                                                p.push(order.meta.optic_name || '');
                                                 p.push(order.patient?.name || '');
                                                 
                                                 if (eye.myorthok) p.push('MyOrthoK');
@@ -1201,8 +1199,6 @@ export default function ProductionHubPage() {
                                         const generateLine = (label: string, eye: any) => {
                                             if (!eye || !eye.characteristic) return null;
                                             const p = [];
-                                            p.push(order.meta.doctor?.split(' ')[0] || '');
-                                            p.push(order.meta.optic_name || '');
                                             p.push(order.patient?.name || '');
                                             
                                             if (eye.myorthok) p.push('MyOrthoK');
