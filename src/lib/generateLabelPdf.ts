@@ -93,21 +93,23 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.rect(0, 0, W, H, 'F');
 
     // ===== TOP: LOGO + PRODUCT NAME =====
-    // Black circle
-    doc.setFillColor(0, 0, 0);
-    doc.circle(4.5, 3.5, 1.8, 'F');
-    // White mask over left half
-    doc.setFillColor(255, 255, 255);
-    doc.rect(2.7, 1.5, 1.8, 4, 'F');
-    // Grey blob
-    doc.setFillColor(200, 200, 200);
-    doc.circle(3.2, 3.5, 1.3, 'F');
-    
-    // MediLens
-    doc.setFont('Roboto', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text('MediLens', 6.5, 4.5);
+    try {
+        const logoDataUrl = await fetch('/medilens-logo.png')
+            .then(res => res.blob())
+            .then(blob => new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            }));
+        doc.addImage(logoDataUrl, 'PNG', 2, 1.5, 12, 5.4);
+    } catch (e) {
+        console.error('Failed to load logo', e);
+        doc.setFont('Roboto', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text('MediLens', 2, 5);
+    }
 
     // Quantity — large number
     const totalQty = (Number(od.qty) || 0) + (Number(os.qty) || 0);
