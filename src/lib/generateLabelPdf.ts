@@ -141,7 +141,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(4);
     doc.setTextColor(100, 100, 100);
-    doc.text('RK/B0001/02:', 2, 9.5);
+    doc.text(order.order_id, 2, 9.5);
 
     doc.setFont('Roboto', 'bold');
     doc.setFontSize(7.5);
