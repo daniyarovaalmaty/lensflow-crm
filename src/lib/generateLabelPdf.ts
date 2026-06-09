@@ -102,7 +102,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
                 reader.onerror = reject;
                 reader.readAsDataURL(blob);
             }));
-        doc.addImage(logoDataUrl, 'PNG', 2, 1.5, 12, 5.4);
+        doc.addImage(logoDataUrl, 'PNG', 2, 2, 16, 4);
     } catch (e) {
         console.error('Failed to load logo', e);
         doc.setFont('Roboto', 'normal');
