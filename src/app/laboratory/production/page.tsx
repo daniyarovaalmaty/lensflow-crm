@@ -40,6 +40,7 @@ export default function ProductionHubPage() {
     const [loadingRgpId, setLoadingRgpId] = useState<string | null>(null);
     // Tick every minute to refresh countdown displays
     const [, setTick] = useState(0);
+    const [serverTimeOffset, setServerTimeOffset] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
 
     // Closing documents state for admin view
@@ -133,10 +134,19 @@ export default function ProductionHubPage() {
     const loadOrders = async () => {
         try {
             const response = await fetch('/api/orders');
-            if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
+            if (!response.ok) throw new Error('Failed to fetch orders');
+            
+            // Calculate offset between local computer time and server time
+            const serverDateHeader = response.headers.get('Date');
+            let offset = 0;
+            if (serverDateHeader) {
+                const serverTime = new Date(serverDateHeader).getTime();
+                offset = serverTime - Date.now();
             }
+            setServerTimeOffset(offset);
+
+            const data = await response.json();
+            setOrders(data);
         } catch (error) {
             console.error('Failed to load orders:', error);
         } finally {
@@ -1402,8 +1412,8 @@ export default function ProductionHubPage() {
                                     Этикетка
                                 </button>
                                 {perms.canChangeStatus && order.status === 'new' && (() => {
-                                    const canStart = canStartProduction(order);
-                                    const remainMs = editWindowRemainingMs(order);
+                                    const canStart = canStartProduction(order, serverTimeOffset);
+                                    const remainMs = editWindowRemainingMs(order, serverTimeOffset);
                                     const h = Math.floor(remainMs / 3600_000);
                                     const m = Math.floor((remainMs % 3600_000) / 60_000);
                                     const countdownStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;

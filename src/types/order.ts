@@ -220,23 +220,26 @@ export const OrderSchema = z.object({
 
 // ==================== Order Edit & Production Helpers ====================
 /** Doctor can edit: only when status is 'new' AND edit_deadline has not passed */
-export function canEditOrder(order: Order): boolean {
+export function canEditOrder(order: Order, serverTimeOffsetMs: number = 0): boolean {
     if (order.status !== 'new') return false;
     if (!order.edit_deadline) return true;
-    return new Date() < new Date(order.edit_deadline);
+    const realNow = Date.now() + serverTimeOffsetMs;
+    return realNow < new Date(order.edit_deadline).getTime();
 }
 
 /** Engineer can start production: urgent orders immediately, normal after edit_deadline */
-export function canStartProduction(order: Order): boolean {
+export function canStartProduction(order: Order, serverTimeOffsetMs: number = 0): boolean {
     if (order.is_urgent) return true;
     if (!order.edit_deadline) return true;
-    return new Date() >= new Date(order.edit_deadline);
+    const realNow = Date.now() + serverTimeOffsetMs;
+    return realNow >= new Date(order.edit_deadline).getTime();
 }
 
 /** Returns remaining ms until edit_deadline (0 if passed) */
-export function editWindowRemainingMs(order: Order): number {
+export function editWindowRemainingMs(order: Order, serverTimeOffsetMs: number = 0): number {
     if (!order.edit_deadline) return 0;
-    return Math.max(0, new Date(order.edit_deadline).getTime() - Date.now());
+    const realNow = Date.now() + serverTimeOffsetMs;
+    return Math.max(0, new Date(order.edit_deadline).getTime() - realNow);
 }
 
 export type Order = z.infer<typeof OrderSchema>;
