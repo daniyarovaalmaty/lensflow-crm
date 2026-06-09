@@ -65,6 +65,16 @@ export const OrthoEyeParamsSchema = z.object({
         (val) => (val === '' || val === null || val === undefined || Number.isNaN(Number(val)) ? 1 : Number(val)),
         z.number().int().default(1)
     ),
+}).refine(data => {
+    if (data.characteristic === 'toric') {
+        if (data.tor === undefined || data.tor === null || data.tor === 0) {
+            return false;
+        }
+    }
+    return true;
+}, {
+    message: "Для торической линзы значение Тор. обязательно",
+    path: ["tor"]
 });
 
 export type OrthoEyeParams = z.infer<typeof OrthoEyeParamsSchema>;

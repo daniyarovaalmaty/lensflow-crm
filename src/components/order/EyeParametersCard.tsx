@@ -244,6 +244,9 @@ export function EyeParametersCard({
                                 className="input"
                                 placeholder="0.00"
                             />
+                            {errors?.config?.eyes?.[eye]?.tor && (
+                                <p className="mt-1 text-xs text-red-600">{errors.config.eyes[eye]?.tor?.message}</p>
+                            )}
                         </div>
                     )}
 
