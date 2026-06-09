@@ -1129,35 +1129,22 @@ export default function ProductionHubPage() {
                                     <span className="text-xs font-semibold text-gray-700">Строка для копирования</span>
                                     <button
                                         onClick={(e) => {
-                                            const parts = [];
-                                            parts.push(order.meta.doctor?.split(' ')[0] || '');
-                                            parts.push(order.meta.optic_name || '');
-                                            parts.push(order.patient?.name || '');
-                                    
+                                            const lines = [];
                                             const od = order.config?.eyes?.od;
                                             const os = order.config?.eyes?.os;
                                             
-                                            let hasCommon = false;
-                                            if (od?.characteristic && os?.characteristic && od.characteristic === os.characteristic && od.isRgp === os.isRgp && od.myorthok === os.myorthok) {
-                                                hasCommon = true;
-                                                if (od.myorthok) parts.push('MyOrthoK');
-                                                if (od.isRgp) parts.push('RGP');
-                                                const totalQty = (od.qty || 1) + (os.qty || 1);
-                                                parts.push(totalQty);
-                                                if (od.characteristic === 'toric') parts.push('Toric');
-                                                if (od.characteristic === 'spherical') parts.push('Spherical');
-                                            }
-                                    
-                                            const getEyeParams = (label: string, eye: any) => {
-                                                if (!eye || !eye.characteristic) return '';
+                                            const generateLine = (label: string, eye: any) => {
+                                                if (!eye || !eye.characteristic) return null;
                                                 const p = [];
-                                                if (!hasCommon) {
-                                                    if (eye.myorthok) p.push('MyOrthoK');
-                                                    if (eye.isRgp) p.push('RGP');
-                                                    if (eye.qty) p.push(eye.qty);
-                                                    if (eye.characteristic === 'toric') p.push('Toric');
-                                                    if (eye.characteristic === 'spherical') p.push('Spherical');
-                                                }
+                                                p.push(order.meta.doctor?.split(' ')[0] || '');
+                                                p.push(order.meta.optic_name || '');
+                                                p.push(order.patient?.name || '');
+                                                
+                                                if (eye.myorthok) p.push('MyOrthoK');
+                                                if (eye.isRgp) p.push('RGP');
+                                                if (eye.qty) p.push(eye.qty);
+                                                if (eye.characteristic === 'toric') p.push('Toric');
+                                                if (eye.characteristic === 'spherical') p.push('Spherical');
                                                 
                                                 p.push(label);
                                                 if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
@@ -1178,15 +1165,15 @@ export default function ProductionHubPage() {
                                                     'Салатовый': 'light-green'
                                                 };
                                                 if (eye.color) p.push(colorMap[eye.color] || eye.color);
-                                                return p.join(' ');
+                                                return p.filter(Boolean).join(' ');
                                             };
-                                    
-                                            const odStr = getEyeParams('OD', od);
-                                            const osStr = getEyeParams('OS', os);
-                                            if (odStr) parts.push(odStr);
-                                            if (osStr) parts.push(osStr);
+
+                                            const odLine = generateLine('OD', od);
+                                            if (odLine) lines.push(odLine);
+                                            const osLine = generateLine('OS', os);
+                                            if (osLine) lines.push(osLine);
                                             
-                                            const str = parts.filter(Boolean).join(' ');
+                                            const str = lines.join('\n');
                                             navigator.clipboard.writeText(str);
                                             // Provide subtle feedback without a blocking alert
                                             const btn = e.currentTarget;
@@ -1205,37 +1192,24 @@ export default function ProductionHubPage() {
                                         <Copy className="w-3 h-3" /> Копировать
                                     </button>
                                 </div>
-                                <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono">
+                                <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono whitespace-pre-wrap">
                                     {(() => {
-                                        const parts = [];
-                                        parts.push(order.meta.doctor?.split(' ')[0] || '');
-                                        parts.push(order.meta.optic_name || '');
-                                        parts.push(order.patient?.name || '');
-                                
+                                        const lines = [];
                                         const od = order.config?.eyes?.od;
                                         const os = order.config?.eyes?.os;
                                         
-                                        let hasCommon = false;
-                                        if (od?.characteristic && os?.characteristic && od.characteristic === os.characteristic && od.isRgp === os.isRgp && od.myorthok === os.myorthok) {
-                                            hasCommon = true;
-                                            if (od.myorthok) parts.push('MyOrthoK');
-                                            if (od.isRgp) parts.push('RGP');
-                                            const totalQty = (od.qty || 1) + (os.qty || 1);
-                                            parts.push(totalQty);
-                                            if (od.characteristic === 'toric') parts.push('Toric');
-                                            if (od.characteristic === 'spherical') parts.push('Spherical');
-                                        }
-                                
-                                        const getEyeParams = (label: string, eye: any) => {
-                                            if (!eye || !eye.characteristic) return '';
+                                        const generateLine = (label: string, eye: any) => {
+                                            if (!eye || !eye.characteristic) return null;
                                             const p = [];
-                                            if (!hasCommon) {
-                                                if (eye.myorthok) p.push('MyOrthoK');
-                                                if (eye.isRgp) p.push('RGP');
-                                                if (eye.qty) p.push(eye.qty);
-                                                if (eye.characteristic === 'toric') p.push('Toric');
-                                                if (eye.characteristic === 'spherical') p.push('Spherical');
-                                            }
+                                            p.push(order.meta.doctor?.split(' ')[0] || '');
+                                            p.push(order.meta.optic_name || '');
+                                            p.push(order.patient?.name || '');
+                                            
+                                            if (eye.myorthok) p.push('MyOrthoK');
+                                            if (eye.isRgp) p.push('RGP');
+                                            if (eye.qty) p.push(eye.qty);
+                                            if (eye.characteristic === 'toric') p.push('Toric');
+                                            if (eye.characteristic === 'spherical') p.push('Spherical');
                                             
                                             p.push(label);
                                             if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
@@ -1256,15 +1230,15 @@ export default function ProductionHubPage() {
                                                 'Салатовый': 'light-green'
                                             };
                                             if (eye.color) p.push(colorMap[eye.color] || eye.color);
-                                            return p.join(' ');
+                                            return p.filter(Boolean).join(' ');
                                         };
-                                
-                                        const odStr = getEyeParams('OD', od);
-                                        const osStr = getEyeParams('OS', os);
-                                        if (odStr) parts.push(odStr);
-                                        if (osStr) parts.push(osStr);
+
+                                        const odLine = generateLine('OD', od);
+                                        if (odLine) lines.push(odLine);
+                                        const osLine = generateLine('OS', os);
+                                        if (osLine) lines.push(osLine);
                                         
-                                        return parts.filter(Boolean).join(' ');
+                                        return lines.join('\n');
                                     })()}
                                 </div>
                             </div>
