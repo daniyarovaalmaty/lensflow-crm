@@ -1124,119 +1124,98 @@ export default function ProductionHubPage() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="bg-white border-t border-gray-200 p-3">
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <span className="text-xs font-semibold text-gray-700">Строка для копирования</span>
-                                    <button
-                                        onClick={(e) => {
-                                            const lines = [];
-                                            const od = order.config?.eyes?.od;
-                                            const os = order.config?.eyes?.os;
-                                            
-                                            const generateLine = (label: string, eye: any) => {
-                                                if (!eye || !eye.characteristic) return null;
-                                                const p = [];
-                                                p.push(order.patient?.name || '');
-                                                
-                                                if (eye.myorthok) p.push('MyOrthoK');
-                                                if (eye.isRgp) p.push('RGP');
-                                                if (eye.qty) p.push(eye.qty);
-                                                if (eye.characteristic === 'toric') p.push('Toric');
-                                                if (eye.characteristic === 'spherical') p.push('Spherical');
-                                                
-                                                p.push(label);
-                                                if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
-                                                if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
-                                                if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
-                                                if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
-                                                if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
-                                                if (eye.compression_factor != null) p.push(`Fac${String(eye.compression_factor).replace(/\./g, ',')}`);
-                                                
-                                                const colorMap: Record<string, string> = {
-                                                    'Тёмно-синий': 'dark-blue',
-                                                    'Тёмно-зелёный': 'dark-green',
-                                                    'Синий': 'blue',
-                                                    'Зелёный': 'green',
-                                                    'Фиолетовый': 'violet',
-                                                    'Красный': 'red',
-                                                    'Голубой': 'light-blue',
-                                                    'Салатовый': 'light-green'
-                                                };
-                                                if (eye.color) p.push(colorMap[eye.color] || eye.color);
-                                                return p.filter(Boolean).join(' ');
-                                            };
-
-                                            const odLine = generateLine('OD', od);
-                                            if (odLine) lines.push(odLine);
-                                            const osLine = generateLine('OS', os);
-                                            if (osLine) lines.push(osLine);
-                                            
-                                            const str = lines.join('\n');
-                                            navigator.clipboard.writeText(str);
-                                            // Provide subtle feedback without a blocking alert
-                                            const btn = e.currentTarget;
-                                            const originalHtml = btn.innerHTML;
-                                            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><polyline points="20 6 9 17 4 12"></polyline></svg> Скопировано';
-                                            btn.classList.add('text-green-600', 'bg-green-50');
-                                            btn.classList.remove('text-blue-600', 'bg-blue-50');
-                                            setTimeout(() => {
-                                                btn.innerHTML = originalHtml;
-                                                btn.classList.remove('text-green-600', 'bg-green-50');
-                                                btn.classList.add('text-blue-600', 'bg-blue-50');
-                                            }, 2000);
-                                        }}
-                                        className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded transition-colors"
-                                    >
-                                        <Copy className="w-3 h-3" /> Копировать
-                                    </button>
-                                </div>
-                                <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono whitespace-pre-wrap">
-                                    {(() => {
-                                        const lines = [];
-                                        const od = order.config?.eyes?.od;
-                                        const os = order.config?.eyes?.os;
+                            <div className="bg-white border-t border-gray-200 p-3 space-y-3">
+                                {(() => {
+                                    const od = order.config?.eyes?.od;
+                                    const os = order.config?.eyes?.os;
+                                    
+                                    const generateLine = (label: string, eye: any) => {
+                                        if (!eye || !eye.characteristic) return null;
+                                        const p = [];
+                                        p.push(order.patient?.name || '');
                                         
-                                        const generateLine = (label: string, eye: any) => {
-                                            if (!eye || !eye.characteristic) return null;
-                                            const p = [];
-                                            p.push(order.patient?.name || '');
-                                            
-                                            if (eye.myorthok) p.push('MyOrthoK');
-                                            if (eye.isRgp) p.push('RGP');
-                                            if (eye.qty) p.push(eye.qty);
-                                            if (eye.characteristic === 'toric') p.push('Toric');
-                                            if (eye.characteristic === 'spherical') p.push('Spherical');
-                                            
-                                            p.push(label);
-                                            if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
-                                            if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
-                                            if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
-                                            if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
-                                            if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
-                                            if (eye.compression_factor != null) p.push(`Fac${String(eye.compression_factor).replace(/\./g, ',')}`);
-                                            
-                                            const colorMap: Record<string, string> = {
-                                                'Тёмно-синий': 'dark-blue',
-                                                'Тёмно-зелёный': 'dark-green',
-                                                'Синий': 'blue',
-                                                'Зелёный': 'green',
-                                                'Фиолетовый': 'violet',
-                                                'Красный': 'red',
-                                                'Голубой': 'light-blue',
-                                                'Салатовый': 'light-green'
-                                            };
-                                            if (eye.color) p.push(colorMap[eye.color] || eye.color);
-                                            return p.filter(Boolean).join(' ');
+                                        if (eye.myorthok) p.push('MyOrthoK');
+                                        if (eye.isRgp) p.push('RGP');
+                                        if (eye.qty) p.push(eye.qty);
+                                        if (eye.characteristic === 'toric') p.push('Toric');
+                                        if (eye.characteristic === 'spherical') p.push('Spherical');
+                                        
+                                        p.push(label);
+                                        if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
+                                        if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
+                                        if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
+                                        if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
+                                        if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
+                                        if (eye.compression_factor != null) p.push(`Fac${String(eye.compression_factor).replace(/\./g, ',')}`);
+                                        
+                                        const colorMap: Record<string, string> = {
+                                            'Тёмно-синий': 'dark-blue',
+                                            'Тёмно-зелёный': 'dark-green',
+                                            'Синий': 'blue',
+                                            'Зелёный': 'green',
+                                            'Фиолетовый': 'violet',
+                                            'Красный': 'red',
+                                            'Голубой': 'light-blue',
+                                            'Салатовый': 'light-green'
                                         };
+                                        if (eye.color) p.push(colorMap[eye.color] || eye.color);
+                                        return p.filter(Boolean).join(' ');
+                                    };
 
-                                        const odLine = generateLine('OD', od);
-                                        if (odLine) lines.push(odLine);
-                                        const osLine = generateLine('OS', os);
-                                        if (osLine) lines.push(osLine);
-                                        
-                                        return lines.join('\n');
-                                    })()}
-                                </div>
+                                    const odLine = generateLine('OD', od);
+                                    const osLine = generateLine('OS', os);
+                                    
+                                    const handleCopy = (e: React.MouseEvent<HTMLButtonElement>, text: string) => {
+                                        navigator.clipboard.writeText(text);
+                                        const btn = e.currentTarget;
+                                        const originalHtml = btn.innerHTML;
+                                        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><polyline points="20 6 9 17 4 12"></polyline></svg> Скопировано';
+                                        btn.classList.add('text-green-600', 'bg-green-50');
+                                        btn.classList.remove('text-blue-600', 'bg-blue-50');
+                                        setTimeout(() => {
+                                            btn.innerHTML = originalHtml;
+                                            btn.classList.remove('text-green-600', 'bg-green-50');
+                                            btn.classList.add('text-blue-600', 'bg-blue-50');
+                                        }, 2000);
+                                    };
+
+                                    return (
+                                        <>
+                                            {odLine && (
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <span className="text-xs font-semibold text-gray-700">Строка для копирования OD</span>
+                                                        <button
+                                                            onClick={(e) => handleCopy(e, odLine)}
+                                                            className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded transition-colors"
+                                                        >
+                                                            <Copy className="w-3 h-3" /> Копировать
+                                                        </button>
+                                                    </div>
+                                                    <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono whitespace-pre-wrap">
+                                                        {odLine}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {osLine && (
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <span className="text-xs font-semibold text-gray-700">Строка для копирования OS</span>
+                                                        <button
+                                                            onClick={(e) => handleCopy(e, osLine)}
+                                                            className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded transition-colors"
+                                                        >
+                                                            <Copy className="w-3 h-3" /> Копировать
+                                                        </button>
+                                                    </div>
+                                                    <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono whitespace-pre-wrap">
+                                                        {osLine}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
 
