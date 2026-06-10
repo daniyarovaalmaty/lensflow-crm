@@ -92,7 +92,7 @@ export async function processIncomingMessage(
                 name: senderName || null,
                 source: 'whatsapp',
                 clinicId,
-                tags: ['bot:greeting'],
+                tags: ['bot:human_takeover'], // TEMPORARILY DISABLED (was 'bot:greeting')
             },
         });
 
@@ -129,6 +129,9 @@ export async function processIncomingMessage(
     if (state === 'human_takeover' || state === 'completed') {
         return false;
     }
+
+    // TEMPORARY GLOBAL BOT DISABLE (per user request)
+    return false;
 
     // Process based on current state
     await sendTyping(chatId);
