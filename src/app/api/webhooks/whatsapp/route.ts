@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
-import { handleWhatsAppBot } from '@/lib/whatsapp-bot';
 
 const WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || '';
 
