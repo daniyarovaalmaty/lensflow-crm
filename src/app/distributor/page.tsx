@@ -468,9 +468,9 @@ export default function DistributorDashboard() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4">
-                            {renderEyeBlock("Правый (OD)", od)}
-                            {renderEyeBlock("Левый (OS)", os)}
+                        <div className={`grid ${Number(od?.qty || 0) > 0 && Number(os?.qty || 0) > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                            {Number(od?.qty || 0) > 0 && renderEyeBlock("Правый (OD)", od)}
+                            {Number(os?.qty || 0) > 0 && renderEyeBlock("Левый (OS)", os)}
                         </div>
 
                         {canSeePrices && (
