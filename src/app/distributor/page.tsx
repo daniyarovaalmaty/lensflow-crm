@@ -54,6 +54,8 @@ export default function DistributorDashboard() {
     const [requestReason, setRequestReason] = useState('');
     const [commentText, setCommentText] = useState('');
     const [sendingComment, setSendingComment] = useState(false);
+    const [expediteOrderId, setExpediteOrderId] = useState<string | null>(null);
+    const [isExpediting, setIsExpediting] = useState(false);
     const [tick, setTick] = useState(0);
 
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
@@ -95,6 +97,25 @@ export default function DistributorDashboard() {
                 if (labs.length > 0) setPartnerLabId(labs[0].id);
             }
         } catch {}
+    };
+
+    const handleExpediteOrder = async () => {
+        if (!expediteOrderId) return;
+        try {
+            setIsExpediting(true);
+            const res = await fetch(`/api/orders/${expediteOrderId}/urgent`, { method: 'POST' });
+            if (res.ok) {
+                setExpediteOrderId(null);
+                loadOrders();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to expedite order');
+            }
+        } catch (error) {
+            console.error('Failed to expedite order:', error);
+        } finally {
+            setIsExpediting(false);
+        }
     };
 
     // ==================== FILTERING ====================
@@ -506,11 +527,19 @@ export default function DistributorDashboard() {
                                             <Pencil className="w-4 h-4" />
                                             Доступно редактирование
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap items-center gap-3">
                                             {countdown && !order.is_urgent && (
                                                 <span className="text-xs text-amber-600 flex items-center gap-1">
                                                     <Clock className="w-3.5 h-3.5" /> ещё {countdown}
                                                 </span>
+                                            )}
+                                            {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setExpediteOrderId(order.order_id); }}
+                                                    className="text-xs flex items-center gap-1 text-amber-600 hover:text-amber-700 font-medium transition-colors"
+                                                >
+                                                    <Zap className="w-3.5 h-3.5" /> Ускорить
+                                                </button>
                                             )}
                                             <Link href={`/distributor/orders/${order.order_id}/edit`} onClick={(e) => { e.stopPropagation(); document.body.style.overflow = ''; }} className="text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-lg font-medium transition-colors">
                                                 Изменить
@@ -533,16 +562,26 @@ export default function DistributorDashboard() {
                                             <span className="text-xs text-red-500"><XCircle className="w-3.5 h-3.5 inline mr-1" /> Отклонено</span>
                                         )}
                                     </div>
-                                    {!hasPendingRequest && (
-                                        <div className="flex items-center gap-2">
-                                            <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_edit'); setRequestReason(''); }} className="flex-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
-                                                <Pencil className="w-3.5 h-3.5" /> Запросить ред.
+                                    <div className="flex flex-col gap-2">
+                                        {!hasPendingRequest && (
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_edit'); setRequestReason(''); }} className="flex-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+                                                    <Pencil className="w-3.5 h-3.5" /> Запросить ред.
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_cancel'); setRequestReason(''); }} className="flex-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+                                                    <X className="w-3.5 h-3.5" /> Запросить отмену
+                                                </button>
+                                            </div>
+                                        )}
+                                        {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setExpediteOrderId(order.order_id); }}
+                                                className="w-full text-xs text-amber-600 bg-amber-50 hover:bg-amber-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1 mt-1 transition-colors border border-amber-200/50"
+                                            >
+                                                <Zap className="w-3.5 h-3.5" /> Ускорить заказ
                                             </button>
-                                            <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_cancel'); setRequestReason(''); }} className="flex-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
-                                                <X className="w-3.5 h-3.5" /> Запросить отмену
-                                            </button>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })()}
@@ -813,6 +852,51 @@ export default function DistributorDashboard() {
 
             <AnimatePresence>
                 {selectedOrderId && selectedOrder && renderOrderModal()}
+            </AnimatePresence>
+
+            {/* Expedite Order Modal */}
+            <AnimatePresence>
+                {expediteOrderId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        onClick={() => setExpediteOrderId(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                                <Zap className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Ускорить заказ {expediteOrderId}?</h3>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Стоимость заказа будет увеличена согласно наценке за срочность (по умолчанию +25%). Время на редактирование будет завершено.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setExpediteOrderId(null)}
+                                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+                                    disabled={isExpediting}
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={handleExpediteOrder}
+                                    className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center"
+                                    disabled={isExpediting}
+                                >
+                                    {isExpediting ? <span className="animate-pulse">...</span> : 'Подтвердить'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
             </AnimatePresence>
         </div>
     );

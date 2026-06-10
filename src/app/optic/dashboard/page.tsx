@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote } from 'lucide-react';
+import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Loader2 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -75,6 +75,8 @@ export default function OpticDashboard() {
     const [requestType, setRequestType] = useState<'comment' | 'request_edit' | 'request_cancel'>('comment');
     const [showRequestModal, setShowRequestModal] = useState<string | null>(null);
     const [requestReason, setRequestReason] = useState('');
+    const [expediteOrderId, setExpediteOrderId] = useState<string | null>(null);
+    const [isExpediting, setIsExpediting] = useState(false);
     // tick every 30s to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
@@ -111,9 +113,28 @@ export default function OpticDashboard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'delivered' }),
             });
-            await loadOrders();
-        } catch (err) {
-            console.error('Failed to confirm delivery:', err);
+            loadOrders();
+        } catch (error) {
+            console.error('Failed to confirm delivery:', error);
+        }
+    };
+
+    const handleExpediteOrder = async () => {
+        if (!expediteOrderId) return;
+        try {
+            setIsExpediting(true);
+            const res = await fetch(`/api/orders/${expediteOrderId}/urgent`, { method: 'POST' });
+            if (res.ok) {
+                setExpediteOrderId(null);
+                loadOrders();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to expedite order');
+            }
+        } catch (error) {
+            console.error('Failed to expedite order:', error);
+        } finally {
+            setIsExpediting(false);
         }
     };
 
@@ -733,6 +754,16 @@ export default function OpticDashboard() {
                                             {isExpanded ? 'Свернуть' : 'Подробнее'}
                                         </button>
 
+                                        {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                            <button
+                                                onClick={() => setExpediteOrderId(order.order_id)}
+                                                className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors ml-2"
+                                            >
+                                                <Zap className="w-3.5 h-3.5" />
+                                                Ускорить заказ
+                                            </button>
+                                        )}
+
                                         {/* out_for_delivery: prominent confirmation button */}
                                         {order.status === 'out_for_delivery' && (
                                             <div className="mb-3">
@@ -1104,6 +1135,50 @@ export default function OpticDashboard() {
                         })}
                     </div>
                 )}
+            {/* Expedite Order Modal */}
+            <AnimatePresence>
+                {expediteOrderId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        onClick={() => setExpediteOrderId(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                                <Zap className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Ускорить заказ {expediteOrderId}?</h3>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Стоимость заказа будет увеличена согласно наценке за срочность (по умолчанию +25%). Время на редактирование будет завершено.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setExpediteOrderId(null)}
+                                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+                                    disabled={isExpediting}
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={handleExpediteOrder}
+                                    className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center"
+                                    disabled={isExpediting}
+                                >
+                                    {isExpediting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Подтвердить'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             </div>
         </div>
     );
