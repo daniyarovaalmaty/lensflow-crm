@@ -55,8 +55,11 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ status: 'ignored', reason: 'empty message' });
             }
 
+            // Extract receiver phone (the Green API instance number)
+            const receiverPhone = instanceData?.wid?.replace('@c.us', '');
+
             // Process with chatbot
-            const handled = await processIncomingMessage(chatId, messageText, senderName);
+            const handled = await processIncomingMessage(chatId, messageText, senderName, receiverPhone);
 
             return NextResponse.json({
                 status: 'ok',

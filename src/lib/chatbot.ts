@@ -62,7 +62,23 @@ export async function processIncomingMessage(
     chatId: string,
     messageText: string,
     senderName?: string,
+    receiverPhone?: string
 ): Promise<boolean> {
+
+    let clinicId: string | null = null;
+    if (receiverPhone) {
+        // Find organization where crmPhone matches the receiver's phone (e.g. +7 700 123 45 67)
+        // Since formatting varies, we fetch all organizations with crmPhone and match digits
+        const orgs = await prisma.organization.findMany({
+            where: { crmPhone: { not: null } },
+            select: { id: true, crmPhone: true }
+        });
+        const receiverDigits = receiverPhone.replace(/\D/g, '');
+        const matchingOrg = orgs.find(o => o.crmPhone?.replace(/\D/g, '') === receiverDigits);
+        if (matchingOrg) {
+            clinicId = matchingOrg.id;
+        }
+    }
 
     // Find or create lead
     let lead = await prisma.lead.findFirst({
@@ -75,6 +91,7 @@ export async function processIncomingMessage(
                 phone: chatId,
                 name: senderName || null,
                 source: 'whatsapp',
+                clinicId,
                 tags: ['bot:greeting'],
             },
         });
