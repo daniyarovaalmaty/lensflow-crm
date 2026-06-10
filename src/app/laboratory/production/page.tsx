@@ -1146,6 +1146,7 @@ export default function ProductionHubPage() {
                                         if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
                                         if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
                                         if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
+                                        if (eye.apical_clearance != null) p.push(`F+${String(eye.apical_clearance).replace(/\./g, ',')}`);
                                         if (eye.compression_factor != null) p.push(`Fac${String(eye.compression_factor).replace(/\./g, ',')}`);
                                         
                                         const colorMap: Record<string, string> = {
