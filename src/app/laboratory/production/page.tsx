@@ -1143,11 +1143,16 @@ export default function ProductionHubPage() {
                                         p.push(label);
                                         if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
                                         if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
+                                        if (eye.sph != null) p.push(String(eye.sph).replace(/\./g, ','));
+                                        if (eye.cyl != null) p.push(`cyl${String(eye.cyl).replace(/\./g, ',')}`);
+                                        if (eye.ax != null) p.push(`ax${String(eye.ax).replace(/\./g, ',')}`);
                                         if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
                                         if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
                                         if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
                                         if (eye.apical_clearance != null) p.push(`F+${String(eye.apical_clearance).replace(/\./g, ',')}`);
                                         if (eye.compression_factor != null) p.push(`Fac${String(eye.compression_factor).replace(/\./g, ',')}`);
+                                        if (eye.trial) p.push('Пробная');
+                                        if (eye.dk != null) p.push(`Dk${String(eye.dk).replace(/\./g, ',')}`);
                                         
                                         const colorMap: Record<string, string> = {
                                             'Тёмно-синий': 'dark-blue',
