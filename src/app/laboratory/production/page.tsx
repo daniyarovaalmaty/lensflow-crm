@@ -1136,7 +1136,6 @@ export default function ProductionHubPage() {
                                         
                                         if (eye.myorthok) p.push('MyOrthoK');
                                         if (eye.isRgp) p.push('RGP');
-                                        if (eye.qty) p.push(eye.qty);
                                         if (eye.characteristic === 'toric') p.push('Toric');
                                         if (eye.characteristic === 'spherical') p.push('Spherical');
                                         
