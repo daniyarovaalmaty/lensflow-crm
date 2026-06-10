@@ -135,7 +135,9 @@ export async function POST(req: NextRequest) {
     // Run AI bot asynchronously (don't block webhook response)
     // Vercel has 30s timeout so we run it synchronously but catch errors
     try {
-        await handleWhatsAppBot(normalizedPhone, messageText);
+        // TEMPORARY GLOBAL BOT DISABLE (per user request)
+        // await handleWhatsAppBot(normalizedPhone, messageText);
+        console.log('[WhatsApp Bot] Disabled globally, skipped message for', normalizedPhone);
     } catch (err: any) {
         console.error('[WhatsApp Bot Error]', err?.message);
         // Bot failed silently — message was still saved
