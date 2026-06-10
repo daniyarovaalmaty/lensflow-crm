@@ -132,30 +132,6 @@ export async function processIncomingMessage(
 
     // TEMPORARY GLOBAL BOT DISABLE (per user request)
     return false;
-
-    // Process based on current state
-    await sendTyping(chatId);
-    await delay(1000); // Natural typing delay
-
-    switch (state) {
-        case 'greeting':
-            return await handleGreeting(lead.id, chatId, senderName);
-
-        case 'ask_city':
-            return await handleCity(lead.id, chatId, messageText);
-
-        case 'ask_concern':
-            return await handleConcern(lead.id, chatId, messageText);
-
-        case 'offer_slots':
-            return await handleSlotSelection(lead.id, chatId, messageText);
-
-        case 'confirm_booking':
-            return await handleBookingConfirmation(lead.id, chatId, messageText);
-
-        default:
-            return await handleGreeting(lead.id, chatId, senderName);
-    }
 }
 
 // ── State handlers ──
