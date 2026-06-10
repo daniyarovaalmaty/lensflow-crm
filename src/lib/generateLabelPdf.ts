@@ -119,7 +119,9 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     const qtyW = doc.getTextWidth(String(totalQty));
 
     // Product name
-    const charLabel = od.characteristic === 'toric' ? 'Toric' : od.characteristic === 'spherical' ? 'Spherical' : '';
+    const charOd = (Number(od.qty) > 0 && od.characteristic === 'toric') ? 'Toric' : (Number(od.qty) > 0 && od.characteristic === 'spherical') ? 'Spherical' : '';
+    const charOs = (Number(os.qty) > 0 && os.characteristic === 'toric') ? 'Toric' : (Number(os.qty) > 0 && os.characteristic === 'spherical') ? 'Spherical' : '';
+    const charLabel = charOd && charOs && charOd !== charOs ? `${charOd}/${charOs}` : charOd || charOs || '';
     const dkVal = od.dk || os.dk || '';
     const productName = `Линза MediLens ${charLabel} ${dkVal}`.trim();
     doc.setFont('Roboto', 'normal');
