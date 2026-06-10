@@ -166,6 +166,133 @@ export async function PATCH(
         });
     }
 
+    // If config is being updated, we MUST recalculate the prices
+    if (body.config !== undefined) {
+        let DISCOUNT_PCT = 0;
+        if (session.user.organizationId) {
+            const org = await prisma.organization.findUnique({
+                where: { id: session.user.organizationId },
+                select: { discountPercent: true },
+            });
+            if (org) DISCOUNT_PCT = org.discountPercent;
+        } else {
+            const user = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { discountPercent: true },
+            });
+            if (user?.discountPercent != null) DISCOUNT_PCT = user.discountPercent;
+        }
+
+        const labSettings = await prisma.labSettings.upsert({
+            where: { id: 'default' },
+            create: { id: 'default' },
+            update: {},
+        });
+        const URGENT_SURCHARGE_PCT = labSettings.urgentSurchargePercent;
+
+        // Ensure string quantities are coerced to numbers exactly like Zod does
+        const odQty = Number(body.config?.eyes?.od?.qty) || 0;
+        const osQty = Number(body.config?.eyes?.os?.qty) || 0;
+        const odChar = body.config?.eyes?.od?.characteristic || '';
+        const osChar = body.config?.eyes?.os?.characteristic || '';
+        const odDk = body.config?.eyes?.od?.dk || '';
+        const osDk = body.config?.eyes?.os?.dk || '';
+        const odTrial = body.config?.eyes?.od?.trial || false;
+        const osTrial = body.config?.eyes?.os?.trial || false;
+
+        let odPrice = 0;
+        let osPrice = 0;
+        let odUnitPrice = 0;
+        let osUnitPrice = 0;
+
+        if (odChar || osChar) {
+            const lensProducts = await prisma.product.findMany({
+                where: { category: 'lens', isActive: true },
+                select: { description: true, sku: true, price: true, priceByDk: true, distributorPriceByDk: true },
+            });
+
+            let distPriceList: any = null;
+            if (session.user.role === 'distributor' && session.user.organizationId) {
+                const distOrg = await prisma.organization.findUnique({
+                    where: { id: session.user.organizationId },
+                    select: { metadata: true },
+                });
+                distPriceList = (distOrg?.metadata as any)?.priceList || null;
+            } else if (session.user.role === 'optic' && session.user.organizationId) {
+                const opticOrg = await prisma.organization.findUnique({
+                    where: { id: session.user.organizationId },
+                    select: { metadata: true, parentId: true },
+                });
+                distPriceList = (opticOrg?.metadata as any)?.priceList || null;
+                if (!distPriceList && opticOrg?.parentId) {
+                    const hqOrg = await prisma.organization.findUnique({
+                        where: { id: opticOrg.parentId },
+                        select: { metadata: true },
+                    });
+                    distPriceList = (hqOrg?.metadata as any)?.priceList || null;
+                }
+            }
+
+            const getLensPrice = (product: any, dk: string, characteristic: string, isTrial: boolean): number => {
+                if (distPriceList) {
+                    const dkKey = String(dk);
+                    if (isTrial || dk === '50') {
+                        const probePrice = distPriceList.lenses?.probe?.[dkKey];
+                        if (probePrice != null) return probePrice;
+                    }
+                    const charKey = characteristic === 'toric' ? 'toric' : 'spherical';
+                    const charPrice = distPriceList.lenses?.[charKey]?.[dkKey];
+                    if (charPrice != null) return charPrice;
+                }
+                if (session.user.role === 'distributor' && product.distributorPriceByDk && typeof product.distributorPriceByDk === 'object') {
+                    const dp = (product.distributorPriceByDk as Record<string, number>)[dk];
+                    if (dp != null) return dp;
+                }
+                if (product.priceByDk && typeof product.priceByDk === 'object') {
+                    const dkPrice = (product.priceByDk as Record<string, number>)[dk];
+                    if (dkPrice != null) return dkPrice;
+                }
+                return product.price || 0;
+            };
+
+            const resolveLensProduct = (char: string, dk: string, isTrial: boolean): any => {
+                if (isTrial || dk === '50' || char === 'probe') {
+                    return lensProducts.find((p: any) =>
+                        p.sku === 'ML-TRIAL-DK50' ||
+                        (p.description && p.description.toLowerCase().includes('trial')) ||
+                        p.description === 'probe'
+                    );
+                }
+                return lensProducts.find((p: any) => p.description === char);
+            };
+
+            const odProduct: any = odChar ? resolveLensProduct(odChar, odDk, odTrial) : undefined;
+            const osProduct: any = osChar ? resolveLensProduct(osChar, osDk, osTrial) : undefined;
+
+            odUnitPrice = odProduct ? getLensPrice(odProduct, odDk, odChar, odTrial) : 0;
+            osUnitPrice = osProduct ? getLensPrice(osProduct, osDk, osChar, osTrial) : 0;
+            odPrice = odUnitPrice * odQty;
+            osPrice = osUnitPrice * osQty;
+        }
+
+        // Fetch existing products attached to this order
+        let additionalTotal = 0;
+        if (order.products && Array.isArray(order.products)) {
+            const products = order.products as any[];
+            additionalTotal = products.reduce((sum: number, p: any) => sum + (p.price || 0) * (p.qty || 1), 0);
+        }
+
+        const basePrice = odPrice + osPrice + additionalTotal;
+        const discountAmt = Math.round(basePrice * DISCOUNT_PCT / 100);
+        const priceAfterDiscount = basePrice - discountAmt;
+        const urgentSurcharge = order.isUrgent ? Math.round(priceAfterDiscount * URGENT_SURCHARGE_PCT / 100) : 0;
+        const totalPrice = priceAfterDiscount + urgentSurcharge;
+
+        updateData.priceOd = odQty > 0 ? odPrice : null;
+        updateData.priceOs = osQty > 0 ? osPrice : null;
+        updateData.totalPrice = totalPrice;
+    }
+
     const updated = await prisma.order.update({
         where: { id: order.id },
         data: updateData,

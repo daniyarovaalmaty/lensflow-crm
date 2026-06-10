@@ -55,9 +55,10 @@ const PAY_LABELS: Record<string, { label: string; color: string; icon: any }> = 
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-    paid:    { label: 'Оплачено',       color: 'bg-emerald-100 text-emerald-700' },
-    unpaid:  { label: 'Не оплачено',    color: 'bg-red-100 text-red-700' },
-    partial: { label: 'Частично',       color: 'bg-yellow-100 text-yellow-700' },
+    paid:     { label: 'Оплачено',       color: 'bg-emerald-100 text-emerald-700' },
+    unpaid:   { label: 'Не оплачено',    color: 'bg-red-100 text-red-700' },
+    partial:  { label: 'Частично',       color: 'bg-yellow-100 text-yellow-700' },
+    refunded: { label: 'Возврат',        color: 'bg-gray-100 text-gray-700' },
 };
 
 function fmt(n: number) {
@@ -128,7 +129,10 @@ export default function SalesHistoryPage() {
         let cashTotal = 0;
         let cardTotal = 0;
         let total = 0;
+        let validCount = 0;
         for (const s of filtered) {
+            if (s.paymentStatus === 'refunded') continue;
+            validCount++;
             total += s.total;
             if (s.paymentMethod === 'mixed' && s.invoiceData?.splitPayment) {
                 cashTotal += s.invoiceData.cashAmount ?? 0;
@@ -144,7 +148,8 @@ export default function SalesHistoryPage() {
             cashTotal,
             cardTotal,
             count: filtered.length,
-            avgCheck: filtered.length ? Math.round(total / filtered.length) : 0,
+            validCount,
+            avgCheck: validCount ? Math.round(total / validCount) : 0,
         };
     }, [filtered]);
 
@@ -175,6 +180,25 @@ export default function SalesHistoryPage() {
         a.download = `sales_${fmtDateShort(new Date().toISOString())}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    const handleRefund = async (saleId: string) => {
+        if (!window.confirm('Вы уверены, что хотите сделать возврат по этому чеку? Товары вернутся на склад, а выручка будет пересчитана.')) {
+            return;
+        }
+        try {
+            const res = await fetch(`/api/optic/sales/${saleId}/refund`, { method: 'POST' });
+            if (res.ok) {
+                alert('Возврат успешно оформлен');
+                load();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Ошибка при оформлении возврата');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка сети при оформлении возврата');
+        }
     };
 
     return (
@@ -411,7 +435,9 @@ export default function SalesHistoryPage() {
 
                                             {/* Amount */}
                                             <div>
-                                                <div className="font-bold text-gray-900">{fmt(sale.total)}</div>
+                                                <div className={`font-bold ${sale.paymentStatus === 'refunded' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                                                    {fmt(sale.total)}
+                                                </div>
                                                 {sale.discountAmount > 0 && (
                                                     <div className="text-xs text-emerald-600">скидка {fmt(sale.discountAmount)}</div>
                                                 )}
@@ -588,6 +614,22 @@ export default function SalesHistoryPage() {
                                                             {sale.notes && (
                                                                 <div className="bg-yellow-50 rounded-lg p-3 text-xs text-yellow-700 mt-2">
                                                                     💬 {sale.notes}
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {/* Refund button */}
+                                                            {sale.paymentStatus !== 'refunded' && (
+                                                                <div className="pt-3 border-t mt-3">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleRefund(sale.id);
+                                                                        }}
+                                                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-semibold transition-colors"
+                                                                    >
+                                                                        <X className="w-4 h-4" />
+                                                                        Сделать возврат
+                                                                    </button>
                                                                 </div>
                                                             )}
                                                         </div>
