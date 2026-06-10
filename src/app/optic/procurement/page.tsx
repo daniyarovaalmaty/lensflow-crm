@@ -1037,9 +1037,9 @@ export default function OpticProcurementDashboard() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        {renderEyeBlock("OD (Правый глаз)", od)}
-                                                        {renderEyeBlock("OS (Левый глаз)", os)}
+                                                    <div className={`grid ${Number(od?.qty || 0) > 0 && Number(os?.qty || 0) > 0 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                                                        {Number(od?.qty || 0) > 0 && renderEyeBlock("OD (Правый глаз)", od)}
+                                                        {Number(os?.qty || 0) > 0 && renderEyeBlock("OS (Левый глаз)", os)}
                                                     </div>
 
                                                     {/* Additional products */}
