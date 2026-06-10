@@ -123,7 +123,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     const charOs = (Number(os.qty) > 0 && os.characteristic === 'toric') ? 'Toric' : (Number(os.qty) > 0 && os.characteristic === 'spherical') ? 'Spherical' : '';
     const charLabel = charOd && charOs && charOd !== charOs ? `${charOd}/${charOs}` : charOd || charOs || '';
     const dkVal = od.dk || os.dk || '';
-    const productName = `Линза MediLens ${charLabel} ${dkVal}`.trim();
+    const productName = `${charLabel} ${dkVal}`.trim();
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(4);
     doc.setTextColor(80, 80, 80);
