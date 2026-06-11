@@ -62,6 +62,7 @@ model Organization {
   cashRegisters CashRegister[]
   itigrisSyncLogs ItigrisSyncLog[]
   userBranches UserBranch[]
+  appointments Appointment[] @relation("ClinicAppointments")
 
   // Distributor orders
   distributorOrders Order[] @relation("DistributorOrders")
@@ -143,6 +144,7 @@ model User {
   patients       Patient[] @relation("DoctorPatients")
   prescriptions  Prescription[] @relation("DoctorPrescriptions")
   consultations  Consultation[] @relation("DoctorConsultations")
+  appointments   Appointment[]  @relation("DoctorAppointments")
 
   openedShifts      CashShift[]       @relation("OpenedShifts")
   closedShifts      CashShift[]       @relation("ClosedShifts")
@@ -224,6 +226,7 @@ model Patient {
   consultations Consultation[]
   sales         Sale[]
   leads         Lead[]
+  appointments  Appointment[]
 
   @@index([organizationId])
   @@index([phone])
@@ -752,6 +755,7 @@ model Lead {
   messages      ChatMessage[]
   reminders     Reminder[]
   activities    LeadActivity[]
+  appointments  Appointment[]
 
   @@index([stage])
   @@index([assigneeId])
@@ -962,5 +966,52 @@ model CashTransaction {
   createdAt          DateTime     @default(now())
 
   @@map("cash_transactions")
+}
+
+// ==================== Appointment (Calendar booking) ====================
+// Dedicated appointment entity (separate from Lead) for the two-way MedMundus calendar.
+// Replaces piggybacking the visit on Lead.appointmentAt; supports a real status lifecycle,
+// patient linkage and history. Lead-based calendar is migrated onto this incrementally.
+model Appointment {
+  id          String   @id @default(cuid())
+  medmundusId String?  @unique  // MedMundus appointment id for cross-system sync
+
+  // Relations
+  patientId   String?
+  patient     Patient?      @relation(fields: [patientId], references: [id])
+  doctorId    String?
+  doctor      User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  clinicId    String?
+  clinic      Organization? @relation("ClinicAppointments", fields: [clinicId], references: [id])
+  // Provenance: the CRM lead this appointment originated from (transition / back-fill)
+  leadId      String?
+  lead        Lead?         @relation(fields: [leadId], references: [id])
+
+  // Schedule
+  startAt     DateTime
+  endAt       DateTime?
+  status      AppointmentStatus @default(booked)
+  notes       String?  @db.Text
+
+  // Sync metadata — guards against echo-loops (same pattern as Order.externalId/source)
+  source      String    @default("lensflow")  // lensflow | medmundus
+  syncVersion Int       @default(0)
+  syncedAt    DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([doctorId, startAt])   // занятость слота врача / защита от двойной записи
+  @@index([patientId])
+  @@index([clinicId])
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  booked
+  rescheduled
+  cancelled
+  completed
+  no_show
 }
 
