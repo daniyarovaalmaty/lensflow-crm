@@ -38,7 +38,10 @@ export async function GET(req: Request) {
         // Also fetch filter options (clinics and doctors that have appointments)
         // For a more complete filter, we should just fetch all clinics/doctors, but this is fine for now
         const doctors = await prisma.user.findMany({
-            where: { role: 'doctor' },
+            where: { 
+                role: 'doctor',
+                organizationId: session.user.organizationId
+            },
             select: { id: true, fullName: true }
         });
         
