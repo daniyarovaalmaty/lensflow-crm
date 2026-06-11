@@ -676,6 +676,7 @@ enum LeadSource {
 enum LeadStage {
   new_lead       @map("new")
   contacted
+  follow_up
   qualified
   appointment
   visited

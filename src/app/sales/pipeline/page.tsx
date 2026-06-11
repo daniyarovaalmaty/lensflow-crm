@@ -33,6 +33,7 @@ interface LeadCard {
 const STAGES = [
     { key: 'new_lead', label: 'Новые', icon: UserPlus, color: 'bg-blue-100 text-blue-700' },
     { key: 'contacted', label: 'Связались', icon: Phone, color: 'bg-indigo-100 text-indigo-700' },
+    { key: 'follow_up', label: 'Связаться позже', icon: Clock, color: 'bg-orange-100 text-orange-700' },
     { key: 'qualified', label: 'Квалифицирован', icon: Target, color: 'bg-violet-100 text-violet-700' },
     { key: 'appointment', label: 'Записан', icon: Calendar, color: 'bg-emerald-100 text-emerald-700' },
     { key: 'visited', label: 'Пришёл', icon: User, color: 'bg-teal-100 text-teal-700' },
@@ -85,6 +86,12 @@ export default function SalesPipelinePage() {
     const [appointmentTime, setAppointmentTime] = useState('');
     const [appointmentDoctorId, setAppointmentDoctorId] = useState('');
     const [savingAppointment, setSavingAppointment] = useState(false);
+
+    // Task state
+    const [taskDate, setTaskDate] = useState('');
+    const [taskTime, setTaskTime] = useState('');
+    const [taskMessage, setTaskMessage] = useState('');
+    const [savingTask, setSavingTask] = useState(false);
 
 
     const handleSendWA = async (lead: LeadCard) => {
@@ -612,6 +619,73 @@ export default function SalesPipelinePage() {
                                             className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors"
                                         >
                                             {savingAppointment ? 'Сохранение...' : 'Записать клиента'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Task (Связаться позже) */}
+                                {selectedLead.stage !== 'follow_up' && selectedLead.stage !== 'converted' && selectedLead.stage !== 'lost' && !selectedLead.appointmentAt && (
+                                    <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                                        <label className="text-xs text-orange-800 font-semibold mb-3 flex items-center gap-1.5">
+                                            <Clock className="w-3.5 h-3.5" /> Поставить задачу (Связаться позже)
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Дата</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={taskDate}
+                                                    onChange={e => setTaskDate(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-orange-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Время</label>
+                                                <input 
+                                                    type="time" 
+                                                    value={taskTime}
+                                                    onChange={e => setTaskTime(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-orange-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="text-[10px] text-gray-500 mb-1 block">Комментарий</label>
+                                            <input 
+                                                type="text"
+                                                placeholder="Например: Перезвонить после обеда"
+                                                value={taskMessage}
+                                                onChange={e => setTaskMessage(e.target.value)}
+                                                className="w-full text-xs px-2 py-1.5 border border-orange-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white"
+                                            />
+                                        </div>
+                                        <button 
+                                            disabled={!taskDate || !taskTime || !taskMessage || savingTask}
+                                            onClick={async () => {
+                                                setSavingTask(true);
+                                                try {
+                                                    const dateIso = new Date(`${taskDate}T${taskTime}:00`).toISOString();
+                                                    await fetch('/api/crm/tasks', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ 
+                                                            leadId: selectedLead.id,
+                                                            scheduledAt: dateIso,
+                                                            message: taskMessage
+                                                        }),
+                                                    });
+                                                    setTaskDate('');
+                                                    setTaskTime('');
+                                                    setTaskMessage('');
+                                                    fetchLeads();
+                                                    setSelectedLeadId(null);
+                                                } finally {
+                                                    setSavingTask(false);
+                                                }
+                                            }}
+                                            className="w-full py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors"
+                                        >
+                                            {savingTask ? 'Сохранение...' : 'Добавить задачу'}
                                         </button>
                                     </div>
                                 )}
