@@ -538,10 +538,15 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             if (parsed.od.e1 !== undefined) setValue('config.eyes.od.e1', parsed.od.e1, { shouldValidate: true, shouldDirty: true });
             if (parsed.od.e2 !== undefined) setValue('config.eyes.od.e2', parsed.od.e2, { shouldValidate: true, shouldDirty: true });
             if (parsed.od.dk) setValue('config.eyes.od.dk', parsed.od.dk as any, { shouldValidate: true, shouldDirty: true });
-            if (parsed.od.color) setValue('config.eyes.od.color', parsed.od.color, { shouldValidate: true, shouldDirty: true });
             if (parsed.od.compression_factor !== undefined) setValue('config.eyes.od.compression_factor', parsed.od.compression_factor, { shouldValidate: true, shouldDirty: true });
             if (parsed.od.myorthok !== undefined) setValue('config.eyes.od.myorthok', parsed.od.myorthok, { shouldValidate: true, shouldDirty: true });
             if (parsed.od.qty !== undefined) setValue('config.eyes.od.qty', parsed.od.qty, { shouldValidate: true, shouldDirty: true });
+            const odColor = parsed.od.color;
+            if (odColor) {
+                setTimeout(() => {
+                    setValue('config.eyes.od.color', odColor, { shouldValidate: true, shouldDirty: true });
+                }, 100);
+            }
         } else {
             setValue('config.eyes.od.qty', 0, { shouldValidate: true, shouldDirty: true });
         }
@@ -556,10 +561,15 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             if (parsed.os.e1 !== undefined) setValue('config.eyes.os.e1', parsed.os.e1, { shouldValidate: true, shouldDirty: true });
             if (parsed.os.e2 !== undefined) setValue('config.eyes.os.e2', parsed.os.e2, { shouldValidate: true, shouldDirty: true });
             if (parsed.os.dk) setValue('config.eyes.os.dk', parsed.os.dk as any, { shouldValidate: true, shouldDirty: true });
-            if (parsed.os.color) setValue('config.eyes.os.color', parsed.os.color, { shouldValidate: true, shouldDirty: true });
             if (parsed.os.compression_factor !== undefined) setValue('config.eyes.os.compression_factor', parsed.os.compression_factor, { shouldValidate: true, shouldDirty: true });
             if (parsed.os.myorthok !== undefined) setValue('config.eyes.os.myorthok', parsed.os.myorthok, { shouldValidate: true, shouldDirty: true });
             if (parsed.os.qty !== undefined) setValue('config.eyes.os.qty', parsed.os.qty, { shouldValidate: true, shouldDirty: true });
+            const osColor = parsed.os.color;
+            if (osColor) {
+                setTimeout(() => {
+                    setValue('config.eyes.os.color', osColor, { shouldValidate: true, shouldDirty: true });
+                }, 100);
+            }
         } else {
             setValue('config.eyes.os.qty', 0, { shouldValidate: true, shouldDirty: true });
         }
