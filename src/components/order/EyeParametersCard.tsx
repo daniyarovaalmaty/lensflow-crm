@@ -114,7 +114,7 @@ export function EyeParametersCard({
 
             {/* Row 1: Характеристика + RGP checkbox + Km + TP + DIA */}
             <div className="space-y-5">
-                <div className={`grid grid-cols-2 ${isRgp ? 'sm:grid-cols-3' : 'sm:grid-cols-5'} gap-3`}>
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                     {/* Характеристика */}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика <span className="text-red-500">*</span></label>
@@ -198,7 +198,7 @@ export function EyeParametersCard({
                 </div>
 
                 {/* Row 2: E + Тог. + Dk + Пробная + Цвет */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                     {/* E — single for spherical, double (slash) for toric/RGP */}
                     <div className={isSpherical ? '' : 'col-span-2 sm:col-span-2'}>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
