@@ -36,8 +36,8 @@ export interface ParsedTableData {
 function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od'] {
     if (!eyeStr) return undefined;
     
-    // Remove quotes and newlines
-    eyeStr = eyeStr.replace(/["\n]/g, ' ').trim();
+    // Remove quotes and newlines, normalize Cyrillic 'О' to Latin 'O' for OD/OS
+    eyeStr = eyeStr.replace(/["\n]/g, ' ').replace(/[Оо]D/ig, 'OD').replace(/[Оо]S/ig, 'OS').trim();
     
     const eye: ParsedTableData['od'] = {
         characteristic: isToric ? 'toric' : 'spherical',
@@ -145,7 +145,8 @@ export function parseOrderTableRow(row: string): ParsedTableData {
                 if (cleanCol === '1' || cleanCol === '2') qtyIdx = idx;
                 if (cleanCol.toLowerCase().includes('toric') || cleanCol.toLowerCase().includes('sph')) charIdx = idx;
                 
-                const upperCol = cleanCol.toUpperCase();
+                // Normalize Cyrillic О to Latin O for OD/OS
+                const upperCol = cleanCol.toUpperCase().replace(/ОD/g, 'OD').replace(/ОS/g, 'OS');
                 if (upperCol.startsWith('OD')) odStr = cleanCol;
                 if (upperCol.startsWith('OS')) osStr = cleanCol;
             });
