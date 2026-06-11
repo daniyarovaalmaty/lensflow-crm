@@ -36,10 +36,17 @@ export interface ParsedTableData {
 function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od'] {
     if (!eyeStr) return undefined;
     
+    // Remove quotes and newlines
+    eyeStr = eyeStr.replace(/["\n]/g, ' ').trim();
+    
     const eye: ParsedTableData['od'] = {
         characteristic: isToric ? 'toric' : 'spherical',
         dk: '100' // Default DK 100 as requested
     };
+
+    if (/dk\s*125/i.test(eyeStr)) eye.dk = '125';
+    else if (/dk\s*50/i.test(eyeStr)) eye.dk = '50';
+    else if (/dk\s*180/i.test(eyeStr)) eye.dk = '180';
 
     const parts = eyeStr.split(/\s+/);
     
@@ -75,18 +82,23 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
             if (part.toLowerCase() === 'violet') eye.color = 'Фиолетовый';
             if (part.toLowerCase() === 'green') eye.color = 'Зелёный';
         }
+        // Single E for Spherical (e.g. 0,45)
+        else if (/^0[,.]\d+$/.test(part)) {
+            eye.e1 = parseFloat(part.replace(',', '.'));
+        }
     });
 
-    // Km - usually the first number right after OD/OS
-    const kmMatch = eyeStr.match(/(?:OD|OS)\s+([\d.,]+)/i);
-    if (kmMatch) {
-        eye.km = parseFloat(kmMatch[1].replace(',', '.'));
-    }
-
-    // tp (target) - usually the second number
-    const tpMatch = eyeStr.match(/(?:OD|OS)\s+[\d.,]+\s+([-+]\d+[.,]?\d*)/i);
-    if (tpMatch) {
-        eye.tp = parseFloat(tpMatch[1].replace(',', '.'));
+    // Km and tp - handle "41,5-5,5" (no space between Km and Tp)
+    const kmTpMatch = eyeStr.match(/(?:OD|OS)\s+([\d.,]+)\s*([-+]\d+[.,]?\d*)/i);
+    if (kmTpMatch) {
+        eye.km = parseFloat(kmTpMatch[1].replace(',', '.'));
+        eye.tp = parseFloat(kmTpMatch[2].replace(',', '.'));
+    } else {
+        // Fallback for just Km
+        const kmMatch = eyeStr.match(/(?:OD|OS)\s+([\d.,]+)/i);
+        if (kmMatch) {
+            eye.km = parseFloat(kmMatch[1].replace(',', '.'));
+        }
     }
 
     // Fac if it has space (e.g. Fac 1)
@@ -129,12 +141,13 @@ export function parseOrderTableRow(row: string): ParsedTableData {
             let isToric = false;
             
             cols.forEach((col, idx) => {
-                if (col === '1' || col === '2') qtyIdx = idx;
-                if (col.toLowerCase().includes('toric') || col.toLowerCase().includes('sph')) charIdx = idx;
+                const cleanCol = col.replace(/["\n]/g, '').trim();
+                if (cleanCol === '1' || cleanCol === '2') qtyIdx = idx;
+                if (cleanCol.toLowerCase().includes('toric') || cleanCol.toLowerCase().includes('sph')) charIdx = idx;
                 
-                const upperCol = col.toUpperCase();
-                if (upperCol.startsWith('OD')) odStr = col;
-                if (upperCol.startsWith('OS')) osStr = col;
+                const upperCol = cleanCol.toUpperCase();
+                if (upperCol.startsWith('OD')) odStr = cleanCol;
+                if (upperCol.startsWith('OS')) osStr = cleanCol;
             });
 
             if (qtyIdx !== -1) {
@@ -151,13 +164,21 @@ export function parseOrderTableRow(row: string): ParsedTableData {
                 isToric = cols[charIdx].toLowerCase().includes('toric');
             }
             
+            // Global Dk fallback
+            let globalDk = '100';
+            if (/dk\s*125/i.test(row)) globalDk = '125';
+            else if (/dk\s*50/i.test(row)) globalDk = '50';
+            else if (/dk\s*180/i.test(row)) globalDk = '180';
+
             if (odStr) {
                 data.od = parseEyeString(odStr, isToric);
                 if (data.od && isMyOrthoK) data.od.myorthok = true;
+                if (data.od && !/dk/i.test(odStr)) data.od.dk = globalDk;
             }
             if (osStr) {
                 data.os = parseEyeString(osStr, isToric);
                 if (data.os && isMyOrthoK) data.os.myorthok = true;
+                if (data.os && !/dk/i.test(osStr)) data.os.dk = globalDk;
             }
             
             // Assign qty to eyes
