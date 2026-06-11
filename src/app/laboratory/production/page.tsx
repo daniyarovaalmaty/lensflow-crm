@@ -610,7 +610,7 @@ export default function ProductionHubPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                         <span className="bg-gray-100 rounded px-1.5 py-0.5">{charLabel}</span>
                         {(od as any).isRgp && (
                             <span className="bg-orange-100 text-orange-700 font-semibold rounded px-1.5 py-0.5">RGP</span>
