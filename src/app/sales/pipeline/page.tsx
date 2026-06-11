@@ -78,6 +78,13 @@ export default function SalesPipelinePage() {
     const [googleConnected, setGoogleConnected] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [analytics, setAnalytics] = useState<any>(null);
+    const [doctors, setDoctors] = useState<{id: string, fullName: string}[]>([]);
+    
+    // Appointment state
+    const [appointmentDate, setAppointmentDate] = useState('');
+    const [appointmentTime, setAppointmentTime] = useState('');
+    const [appointmentDoctorId, setAppointmentDoctorId] = useState('');
+    const [savingAppointment, setSavingAppointment] = useState(false);
 
 
     const handleSendWA = async (lead: LeadCard) => {
@@ -114,6 +121,12 @@ export default function SalesPipelinePage() {
             if (analyticsRes.ok) {
                 const analyticsData = await analyticsRes.json();
                 setAnalytics(analyticsData);
+            }
+
+            const apptRes = await fetch('/api/crm/appointments');
+            if (apptRes.ok) {
+                const apptData = await apptRes.json();
+                setDoctors(apptData.doctors || []);
             }
         } catch (err) {
             console.error('Failed to fetch leads:', err);
@@ -506,15 +519,100 @@ export default function SalesPipelinePage() {
                                 </div>
 
                                 {/* Appointment */}
-                                {selectedLead.appointmentAt && (
+                                {selectedLead.appointmentAt ? (
                                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                                        <div className="flex items-center gap-2 text-emerald-700 font-medium text-sm">
-                                            <Calendar className="w-4 h-4" />
-                                            Запись: {new Date(selectedLead.appointmentAt).toLocaleDateString('ru-RU', {
-                                                weekday: 'long', day: 'numeric', month: 'long',
-                                                hour: '2-digit', minute: '2-digit',
-                                            })}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-emerald-700 font-medium text-sm">
+                                                <Calendar className="w-4 h-4" />
+                                                Запись: {new Date(selectedLead.appointmentAt).toLocaleDateString('ru-RU', {
+                                                    weekday: 'long', day: 'numeric', month: 'long',
+                                                    hour: '2-digit', minute: '2-digit',
+                                                })}
+                                            </div>
+                                            <button 
+                                                onClick={async () => {
+                                                    if (!confirm('Отменить запись?')) return;
+                                                    await fetch(`/api/crm/leads/${selectedLead.id}`, {
+                                                        method: 'PATCH',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ appointmentAt: null }),
+                                                    });
+                                                    fetchLeads();
+                                                    setSelectedLeadId(null);
+                                                }}
+                                                className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                            >
+                                                Отменить
+                                            </button>
                                         </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                                        <label className="text-xs text-blue-800 font-semibold mb-3 flex items-center gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5" /> Добавить запись на прием
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Дата</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={appointmentDate}
+                                                    onChange={e => setAppointmentDate(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Время</label>
+                                                <input 
+                                                    type="time" 
+                                                    value={appointmentTime}
+                                                    onChange={e => setAppointmentTime(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="text-[10px] text-gray-500 mb-1 block">Врач</label>
+                                            <select 
+                                                value={appointmentDoctorId}
+                                                onChange={e => setAppointmentDoctorId(e.target.value)}
+                                                className="w-full text-xs px-2 py-1.5 border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                                            >
+                                                <option value="">Выберите врача</option>
+                                                {doctors.map(d => (
+                                                    <option key={d.id} value={d.id}>{d.fullName}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <button 
+                                            disabled={!appointmentDate || !appointmentTime || !appointmentDoctorId || savingAppointment}
+                                            onClick={async () => {
+                                                setSavingAppointment(true);
+                                                try {
+                                                    const dateIso = new Date(`${appointmentDate}T${appointmentTime}:00`).toISOString();
+                                                    await fetch(`/api/crm/leads/${selectedLead.id}`, {
+                                                        method: 'PATCH',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        // Update stage to "appointment" automatically
+                                                        body: JSON.stringify({ 
+                                                            appointmentAt: dateIso,
+                                                            assigneeId: appointmentDoctorId,
+                                                            stage: 'appointment'
+                                                        }),
+                                                    });
+                                                    setAppointmentDate('');
+                                                    setAppointmentTime('');
+                                                    setAppointmentDoctorId('');
+                                                    fetchLeads();
+                                                    setSelectedLeadId(null);
+                                                } finally {
+                                                    setSavingAppointment(false);
+                                                }
+                                            }}
+                                            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors"
+                                        >
+                                            {savingAppointment ? 'Сохранение...' : 'Записать клиента'}
+                                        </button>
                                     </div>
                                 )}
 
