@@ -1124,22 +1124,9 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     });
                 }} />
 
-                {/* OD (Right Eye) */}
-                <EyeParametersCard
-                    eye="od"
-                    label="OD (Правый глаз)"
-                    register={register}
-                    errors={errors}
-                    watch={watch}
-                    setValue={setValue}
-                    disabled={singleEye === 'os'}
-                    rgpFile={rgpPhotos.od}
-                    onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, od: file ?? undefined }))}
-                />
-
                 {/* Mirror Button */}
                 {singleEye === 'both' && (
-                    <div className="flex justify-center">
+                    <div className="flex justify-center mb-4">
                         <button
                             type="button"
                             onClick={mirrorODtoOS}
@@ -1151,18 +1138,33 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     </div>
                 )}
 
-                {/* OS (Left Eye) */}
-                <EyeParametersCard
-                    eye="os"
-                    label="OS (Левый глаз)"
-                    register={register}
-                    errors={errors}
-                    watch={watch}
-                    setValue={setValue}
-                    disabled={singleEye === 'od'}
-                    rgpFile={rgpPhotos.os}
-                    onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, os: file ?? undefined }))}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* OD (Right Eye) */}
+                    <EyeParametersCard
+                        eye="od"
+                        label="OD (Правый глаз)"
+                        register={register}
+                        errors={errors}
+                        watch={watch}
+                        setValue={setValue}
+                        disabled={singleEye === 'os'}
+                        rgpFile={rgpPhotos.od}
+                        onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, od: file ?? undefined }))}
+                    />
+
+                    {/* OS (Left Eye) */}
+                    <EyeParametersCard
+                        eye="os"
+                        label="OS (Левый глаз)"
+                        register={register}
+                        errors={errors}
+                        watch={watch}
+                        setValue={setValue}
+                        disabled={singleEye === 'od'}
+                        rgpFile={rgpPhotos.os}
+                        onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, os: file ?? undefined }))}
+                    />
+                </div>
             </motion.div>
 
             {/* Lens Type — shows lens products from catalog linked to characteristics */}
