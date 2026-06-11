@@ -39,8 +39,8 @@ export async function GET(req: Request) {
         // For a more complete filter, we should just fetch all clinics/doctors, but this is fine for now
         const doctors = await prisma.user.findMany({
             where: { 
-                role: 'doctor',
-                organizationId: session.user.organizationId
+                organizationId: session.user.organizationId,
+                subRole: { in: ['optic_doctor', 'doctor'] }
             },
             select: { id: true, fullName: true }
         });
