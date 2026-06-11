@@ -15,6 +15,7 @@ export interface ParsedTableData {
         dk?: string;
         compression_factor?: number;
         qty?: number;
+        myorthok?: boolean;
     };
     os?: {
         characteristic?: 'toric' | 'spherical';
@@ -28,6 +29,7 @@ export interface ParsedTableData {
         dk?: string;
         compression_factor?: number;
         qty?: number;
+        myorthok?: boolean;
     };
 }
 
@@ -100,6 +102,9 @@ export function parseOrderTableRow(row: string): ParsedTableData {
     const data: ParsedTableData = {};
     const notesArr: string[] = [];
     
+    // Check for MyOrtho K or typo MyOthto K
+    const isMyOrthoK = /my\s*o\w*o\s*k/i.test(row);
+    
     if (row.includes('\t')) {
         const cols = row.split('\t').map(s => s.trim());
         
@@ -148,9 +153,11 @@ export function parseOrderTableRow(row: string): ParsedTableData {
             
             if (odStr) {
                 data.od = parseEyeString(odStr, isToric);
+                if (data.od && isMyOrthoK) data.od.myorthok = true;
             }
             if (osStr) {
                 data.os = parseEyeString(osStr, isToric);
+                if (data.os && isMyOrthoK) data.os.myorthok = true;
             }
             
             // Assign qty to eyes
