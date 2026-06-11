@@ -9,7 +9,8 @@ import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
 import { ReadOnlyEyeCard } from './ReadOnlyEyeCard';
 import { MediLensCalculator } from './MediLensCalculator';
-import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye, Factory, X } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye, Factory, X, Sparkles, CheckCircle } from 'lucide-react';
+import { parseOrderTableRow } from '@/lib/orderParser';
 
 interface CatalogProduct {
     id: string;
@@ -60,6 +61,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [formErrors, setFormErrors] = useState<string[]>([]);
     const errorsRef = useRef<HTMLDivElement>(null);
     const [distributorClients, setDistributorClients] = useState<any[]>([]);
+    const [smartParseInput, setSmartParseInput] = useState('');
+    const [smartParseSuccess, setSmartParseSuccess] = useState(false);
 
     const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
@@ -512,8 +515,90 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * urgentSurchargePct / 100) : 0;
     const totalPrice = priceAfterDiscount + urgentSurcharge;
 
+    const handleSmartParse = () => {
+        if (!smartParseInput.trim()) return;
+        const parsed = parseOrderTableRow(smartParseInput);
+        
+        if (parsed.company) setValue('company', parsed.company, { shouldValidate: true, shouldDirty: true });
+        if (parsed.patientName) setValue('patient.name', parsed.patientName, { shouldValidate: true, shouldDirty: true });
+        
+        // Notes
+        if (parsed.notes) {
+            const currentNotes = getValues('notes') || '';
+            setValue('notes', currentNotes ? `${currentNotes}\n${parsed.notes}` : parsed.notes, { shouldValidate: true, shouldDirty: true });
+        }
+
+        // OD
+        if (parsed.od) {
+            if (parsed.od.characteristic) setValue('config.eyes.od.characteristic', parsed.od.characteristic, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.km !== undefined) setValue('config.eyes.od.km', parsed.od.km, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.tp !== undefined) setValue('config.eyes.od.tp', parsed.od.tp, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.dia !== undefined) setValue('config.eyes.od.dia', parsed.od.dia, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.tor !== undefined) setValue('config.eyes.od.tor', parsed.od.tor, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.e1 !== undefined) setValue('config.eyes.od.e1', parsed.od.e1, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.e2 !== undefined) setValue('config.eyes.od.e2', parsed.od.e2, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.color) setValue('config.eyes.od.color', parsed.od.color, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.qty !== undefined) setValue('config.eyes.od.qty', parsed.od.qty, { shouldValidate: true, shouldDirty: true });
+        } else {
+            setValue('config.eyes.od.qty', 0, { shouldValidate: true, shouldDirty: true });
+        }
+
+        // OS
+        if (parsed.os) {
+            if (parsed.os.characteristic) setValue('config.eyes.os.characteristic', parsed.os.characteristic, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.km !== undefined) setValue('config.eyes.os.km', parsed.os.km, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.tp !== undefined) setValue('config.eyes.os.tp', parsed.os.tp, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.dia !== undefined) setValue('config.eyes.os.dia', parsed.os.dia, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.tor !== undefined) setValue('config.eyes.os.tor', parsed.os.tor, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.e1 !== undefined) setValue('config.eyes.os.e1', parsed.os.e1, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.e2 !== undefined) setValue('config.eyes.os.e2', parsed.os.e2, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.color) setValue('config.eyes.os.color', parsed.os.color, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.qty !== undefined) setValue('config.eyes.os.qty', parsed.os.qty, { shouldValidate: true, shouldDirty: true });
+        } else {
+            setValue('config.eyes.os.qty', 0, { shouldValidate: true, shouldDirty: true });
+        }
+
+        setSmartParseSuccess(true);
+        setTimeout(() => setSmartParseSuccess(false), 3000);
+    };
+
     return (
         <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="max-w-5xl mx-auto space-y-8">
+            {isDistributor && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card border-2 border-emerald-100 bg-emerald-50/30">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <Sparkles className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900">Умная вставка из таблицы</h2>
+                            <p className="text-sm text-gray-500">Скопируйте строку заказа из Excel и вставьте сюда</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <input 
+                            type="text" 
+                            value={smartParseInput}
+                            onChange={e => setSmartParseInput(e.target.value)}
+                            placeholder="2026 06 10    ZKK 11    Ердос Темирлан    2    Toric..."
+                            className="input flex-1 font-mono text-sm bg-white"
+                        />
+                        <button 
+                            type="button" 
+                            onClick={handleSmartParse}
+                            className="btn btn-primary whitespace-nowrap gap-2 bg-emerald-600 hover:bg-emerald-700 border-transparent text-white"
+                        >
+                            <Sparkles className="w-4 h-4" /> Заполнить форму
+                        </button>
+                    </div>
+                    {smartParseSuccess && (
+                        <p className="text-sm text-emerald-600 mt-3 font-medium flex items-center gap-1.5">
+                            <CheckCircle className="w-4 h-4" /> Форма успешно заполнена! Проверьте данные ниже.
+                        </p>
+                    )}
+                </motion.div>
+            )}
+
             {/* Urgency Picker */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
