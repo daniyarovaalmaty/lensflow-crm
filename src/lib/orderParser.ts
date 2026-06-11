@@ -36,8 +36,8 @@ export interface ParsedTableData {
 function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od'] {
     if (!eyeStr) return undefined;
     
-    // Remove quotes and newlines, normalize Cyrillic 'О' to Latin 'O' for OD/OS
-    eyeStr = eyeStr.replace(/["\n]/g, ' ').replace(/[Оо]D/ig, 'OD').replace(/[Оо]S/ig, 'OS').trim();
+    // Remove quotes and newlines, normalize Cyrillic 'О' to Latin 'O' for OD/OS and 'ОВ' to 'OD'
+    eyeStr = eyeStr.replace(/["\n]/g, ' ').replace(/[Оо][Вв]/ig, 'OD').replace(/[Оо]D/ig, 'OD').replace(/[Оо]S/ig, 'OS').trim();
     
     const eye: ParsedTableData['od'] = {
         characteristic: isToric ? 'toric' : 'spherical',
@@ -77,10 +77,11 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
             }
         }
         // Color
-        else if (['blue', 'violet', 'green'].includes(part.toLowerCase())) {
+        else if (['blue', 'violet', 'green', 'red'].includes(part.toLowerCase())) {
             if (part.toLowerCase() === 'blue') eye.color = 'Синий';
             if (part.toLowerCase() === 'violet') eye.color = 'Фиолетовый';
             if (part.toLowerCase() === 'green') eye.color = 'Зелёный';
+            if (part.toLowerCase() === 'red') eye.color = 'Красный';
         }
         // Single E for Spherical (e.g. 0,45)
         else if (/^0[,.]\d+$/.test(part)) {
@@ -88,11 +89,11 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
         }
     });
 
-    // Km and tp - handle "41,5-5,5" (no space between Km and Tp)
-    const kmTpMatch = eyeStr.match(/(?:OD|OS)\s+([\d.,]+)\s*([-+]\d+[.,]?\d*)/i);
+    // Km and tp - handle "41,5-5,5" or "- 3,25" (space after minus)
+    const kmTpMatch = eyeStr.match(/(?:OD|OS)\s+([\d.,]+)\s*([-+]\s*\d+[.,]?\d*)/i);
     if (kmTpMatch) {
         eye.km = parseFloat(kmTpMatch[1].replace(',', '.'));
-        eye.tp = parseFloat(kmTpMatch[2].replace(',', '.'));
+        eye.tp = parseFloat(kmTpMatch[2].replace(/\s+/g, '').replace(',', '.'));
     } else {
         // Fallback for just Km
         const kmMatch = eyeStr.match(/(?:OD|OS)\s+([\d.,]+)/i);
@@ -145,8 +146,8 @@ export function parseOrderTableRow(row: string): ParsedTableData {
                 if (cleanCol === '1' || cleanCol === '2') qtyIdx = idx;
                 if (cleanCol.toLowerCase().includes('toric') || cleanCol.toLowerCase().includes('sph')) charIdx = idx;
                 
-                // Normalize Cyrillic О to Latin O for OD/OS
-                const upperCol = cleanCol.toUpperCase().replace(/ОD/g, 'OD').replace(/ОS/g, 'OS');
+                // Normalize Cyrillic ОВ to OD and О to O
+                const upperCol = cleanCol.toUpperCase().replace(/[Оо][Вв]/g, 'OD').replace(/ОD/g, 'OD').replace(/ОS/g, 'OS');
                 if (upperCol.startsWith('OD')) odStr = cleanCol;
                 if (upperCol.startsWith('OS')) osStr = cleanCol;
             });
