@@ -12,6 +12,8 @@ export interface ParsedTableData {
         e1?: number;
         e2?: number;
         color?: string;
+        dk?: string;
+        compression_factor?: number;
         qty?: number;
     };
     os?: {
@@ -23,6 +25,8 @@ export interface ParsedTableData {
         e1?: number;
         e2?: number;
         color?: string;
+        dk?: string;
+        compression_factor?: number;
         qty?: number;
     };
 }
@@ -31,7 +35,8 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
     if (!eyeStr) return undefined;
     
     const eye: ParsedTableData['od'] = {
-        characteristic: isToric ? 'toric' : 'spherical'
+        characteristic: isToric ? 'toric' : 'spherical',
+        dk: '100' // Default DK 100 as requested
     };
 
     const parts = eyeStr.split(/\s+/);
@@ -55,6 +60,13 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
         else if ((part.startsWith('t') || part.startsWith('T')) && !isNaN(parseFloat(part.substring(1).replace(',', '.')))) {
             eye.tor = parseFloat(part.substring(1).replace(',', '.'));
         }
+        // Fac (compression factor)
+        else if (part.toLowerCase().startsWith('fac')) {
+            const num = part.substring(3);
+            if (num) {
+                eye.compression_factor = parseFloat(num.replace(',', '.'));
+            }
+        }
         // Color
         else if (['blue', 'violet', 'green'].includes(part.toLowerCase())) {
             if (part.toLowerCase() === 'blue') eye.color = 'Синий';
@@ -73,6 +85,12 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
     const tpMatch = eyeStr.match(/(?:OD|OS)\s+[\d.,]+\s+([-+]\d+[.,]?\d*)/i);
     if (tpMatch) {
         eye.tp = parseFloat(tpMatch[1].replace(',', '.'));
+    }
+
+    // Fac if it has space (e.g. Fac 1)
+    const facMatch = eyeStr.match(/Fac\s+([+-]?[\d.,]+)/i);
+    if (facMatch) {
+        eye.compression_factor = parseFloat(facMatch[1].replace(',', '.'));
     }
 
     return eye;
@@ -98,34 +116,41 @@ export function parseOrderTableRow(row: string): ParsedTableData {
         // 9: OS (optional)
         
         if (cols.length >= 5) {
-            data.company = cols[1];
-            data.patientName = cols[2];
             
-            const rawQty = parseInt(cols[3], 10);
-            if (!isNaN(rawQty)) data.qty = rawQty;
-            
-            const isToric = cols[4].toLowerCase().includes('toric');
-            
+            let qtyIdx = -1;
+            let charIdx = -1;
             let odStr = '';
             let osStr = '';
+            let isToric = false;
             
-            cols.forEach(col => {
+            cols.forEach((col, idx) => {
+                if (col === '1' || col === '2') qtyIdx = idx;
+                if (col.toLowerCase().includes('toric') || col.toLowerCase().includes('sph')) charIdx = idx;
+                
                 const upperCol = col.toUpperCase();
                 if (upperCol.startsWith('OD')) odStr = col;
                 if (upperCol.startsWith('OS')) osStr = col;
             });
+
+            if (qtyIdx !== -1) {
+                data.qty = parseInt(cols[qtyIdx], 10);
+                if (qtyIdx >= 2) {
+                    data.patientName = cols[qtyIdx - 1];
+                    data.company = cols[qtyIdx - 2];
+                } else if (qtyIdx === 1) {
+                    data.patientName = cols[0];
+                }
+            }
+            
+            if (charIdx !== -1) {
+                isToric = cols[charIdx].toLowerCase().includes('toric');
+            }
             
             if (odStr) {
                 data.od = parseEyeString(odStr, isToric);
-                // Extract Fac from OD
-                const facMatch = odStr.match(/Fac\s*([+-]?[\d.,]+)/i);
-                if (facMatch) notesArr.push(`OD Fac: ${facMatch[1]}`);
             }
             if (osStr) {
                 data.os = parseEyeString(osStr, isToric);
-                // Extract Fac from OS
-                const facMatch = osStr.match(/Fac\s*([+-]?[\d.,]+)/i);
-                if (facMatch) notesArr.push(`OS Fac: ${facMatch[1]}`);
             }
             
             // Assign qty to eyes
