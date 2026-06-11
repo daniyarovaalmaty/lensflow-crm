@@ -114,8 +114,8 @@ export function parseOrderTableRow(row: string): ParsedTableData {
     const data: ParsedTableData = {};
     const notesArr: string[] = [];
     
-    // Check for MyOrtho K or typo MyOthto K
-    const isMyOrthoK = /my\s*o\w*o\s*k/i.test(row);
+    // Check for MyOrthoK anywhere in the row (can be spelled MyOrtho-K, MyOthto K, etc.)
+    const isMyOrthoK = /my\s*o\w*o[- \s]*k/i.test(row);
     
     if (row.includes('\t')) {
         const cols = row.split('\t').map(s => s.trim());
