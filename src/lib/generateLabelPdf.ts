@@ -2,6 +2,7 @@
 
 import jsPDF from 'jspdf';
 import { RobotoRegular } from './fonts/roboto-regular';
+import { RobotoBold } from './fonts/roboto-bold';
 
 interface LabelOrder {
     order_id: string;
@@ -85,8 +86,9 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [H, W] });
 
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
+    doc.addFileToVFS('Roboto-Bold.ttf', RobotoBold);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
+    doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
 
     // ===== BACKGROUND =====
     doc.setFillColor(255, 255, 255);
