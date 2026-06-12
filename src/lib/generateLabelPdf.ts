@@ -35,8 +35,8 @@ interface EyeData {
     isRgp?: boolean;
 }
 
-function fmt(val: number | undefined | null): string {
-    if (val == null) return '—';
+function fmt(val: number | string | undefined | null): string {
+    if (val == null || val === '' || Number.isNaN(Number(val))) return '—';
     return String(val).replace('.', ',');
 }
 
@@ -216,8 +216,8 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.text(fVal, 23 + 1.5, 19, { align: 'center' });
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(5.5);
-    const fCenterStart = 23 + 1.5 - (fW / 2) - doc.getTextWidth('F+ ');
-    doc.text('F+ ', fCenterStart, 19);
+    const fCenterStart = 23 + 1.5 - (fW / 2) - doc.getTextWidth('F ');
+    doc.text('F ', fCenterStart, 19);
 
     // Row 2 Right (E values stacked)
     doc.setFont('Roboto', 'bold');
