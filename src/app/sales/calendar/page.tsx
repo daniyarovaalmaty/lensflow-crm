@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Calendar as CalendarIcon, Clock, User, MapPin, Phone, Filter, Trash2, Plus, X } from 'lucide-react';
-import { format, isSameDay, isToday, isTomorrow, addDays, parseISO, startOfDay } from 'date-fns';
+import { format, isSameDay, isToday, isTomorrow, addDays, parseISO, startOfDay, endOfDay, isPast } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 interface LeadAppointment {
@@ -23,6 +23,7 @@ export default function CalendarPage() {
 
     const [filterDoctor, setFilterDoctor] = useState('');
     const [filterClinic, setFilterClinic] = useState('');
+    const [viewType, setViewType] = useState<'all' | 'week' | 'month'>('week');
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newName, setNewName] = useState('');
@@ -61,16 +62,29 @@ export default function CalendarPage() {
     // Group appointments by day
     const grouped = useMemo(() => {
         const groups: Record<string, LeadAppointment[]> = {};
+        const now = startOfDay(new Date());
+        const weekEnd = addDays(now, 7);
+        const monthEnd = addDays(now, 30);
+
         appointments.forEach(app => {
             if (!app.appointmentAt) return;
-            const d = startOfDay(parseISO(app.appointmentAt)).toISOString();
+            const appDate = parseISO(app.appointmentAt);
+            const d = startOfDay(appDate).toISOString();
+
+            // Filter by viewType
+            if (viewType === 'week') {
+                if (appDate < now || appDate > endOfDay(weekEnd)) return;
+            } else if (viewType === 'month') {
+                if (appDate < now || appDate > endOfDay(monthEnd)) return;
+            }
+
             if (!groups[d]) groups[d] = [];
             groups[d].push(app);
         });
         
         // Sort groups by date
         return Object.entries(groups).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
-    }, [appointments]);
+    }, [appointments, viewType]);
 
     const getDayLabel = (dateIso: string) => {
         const d = new Date(dateIso);
@@ -90,6 +104,21 @@ export default function CalendarPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                    <div className="bg-gray-100 p-1 rounded-xl flex items-center text-sm font-medium">
+                        <button 
+                            onClick={() => setViewType('all')}
+                            className={`px-3 py-1.5 rounded-lg transition-colors ${viewType === 'all' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        >Все</button>
+                        <button 
+                            onClick={() => setViewType('week')}
+                            className={`px-3 py-1.5 rounded-lg transition-colors ${viewType === 'week' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        >На неделю</button>
+                        <button 
+                            onClick={() => setViewType('month')}
+                            className={`px-3 py-1.5 rounded-lg transition-colors ${viewType === 'month' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        >На месяц</button>
+                    </div>
+
                     <div className="relative">
                         <Filter className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <select
