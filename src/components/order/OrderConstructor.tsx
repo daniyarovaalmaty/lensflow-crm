@@ -290,6 +290,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
     // Form submission
     const onFormSubmit = async (data: CreateOrderDTO) => {
+        if (isSubmitting) return;
         // Custom validation: ensure key fields are filled
         const validationErrors: string[] = [];
 
@@ -427,6 +428,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     };
 
     const doSubmit = async () => {
+        if (isSubmitting) return;
         setIsSubmitting(true);
         try {
             await onSubmit(confirmData);

@@ -1,19 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from './src/lib/db/prisma';
 
 async function main() {
-    const order = await prisma.order.findFirst({
-        where: { orderNumber: 'AC23' },
+    const orders = await prisma.order.findMany({
+        where: { patient: { name: { contains: 'Жумахан Ерсултан' } } },
+        include: { organization: true, createdBy: true, patient: true }
     });
-    console.log("Order total:", order?.totalPrice);
-    console.log("Order discount:", order?.discountPercent);
-    console.log("Config qty:", (order?.lensConfig as any)?.eyes?.od?.qty, (order?.lensConfig as any)?.eyes?.os?.qty);
-
-    const products = await prisma.product.findMany({ where: { category: 'lens' } });
-    for (const p of products) {
-        if (p.description === 'toric') {
-            console.log("Toric:", p.priceByDk, p.distributorPriceByDk);
-        }
-    }
+    console.log("Found orders:");
+    orders.forEach(o => {
+        console.log(`- ID: ${o.id}, CustomId: ${o.orderNumber}, Created: ${o.createdAt}, Patient: ${o.patient?.name}, Source: ${o.source}, CreatedBy: ${o.createdBy?.fullName} (${o.createdBy?.email})`);
+    });
 }
+
 main().catch(console.error).finally(() => prisma.$disconnect());
