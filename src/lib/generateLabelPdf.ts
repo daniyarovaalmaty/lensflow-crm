@@ -148,9 +148,23 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.text(order.order_id, 2, 9.5);
 
     doc.setFont('Roboto', 'bold');
-    doc.setFontSize(7.5);
+    let patientFontSize = 7.5;
+    doc.setFontSize(patientFontSize);
+    let patName = order.patient.name || '—';
+    // Shrink font if patient name is too long (max width ~26mm)
+    while (doc.getTextWidth(patName) > 26 && patientFontSize > 4.5) {
+        patientFontSize -= 0.5;
+        doc.setFontSize(patientFontSize);
+    }
+    // Truncate if still too long
+    if (doc.getTextWidth(patName) > 26) {
+        while (patName.length > 0 && doc.getTextWidth(patName + '...') > 26) {
+            patName = patName.slice(0, -1);
+        }
+        patName += '...';
+    }
     doc.setTextColor(0, 0, 0);
-    doc.text(order.patient.name || '—', W / 2, 10, { align: 'center' });
+    doc.text(patName, W / 2, 10, { align: 'center' });
 
     const eyeLabel = (od.qty && os.qty) ? 'OD/OS' : (od.qty ? 'OD' : (os.qty ? 'OS' : 'OD/OS'));
     doc.setFont('Roboto', 'normal');
@@ -213,7 +227,14 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(4);
     doc.setTextColor(100, 100, 100);
-    doc.text(order.meta.optic_name || '', 2, 24);
+    let opticName = order.meta.optic_name || '';
+    if (doc.getTextWidth(opticName) > 16) {
+        while (opticName.length > 0 && doc.getTextWidth(opticName + '...') > 16) {
+            opticName = opticName.slice(0, -1);
+        }
+        opticName += '...';
+    }
+    doc.text(opticName, 2, 24);
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(6.5);
