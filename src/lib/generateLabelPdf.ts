@@ -228,13 +228,18 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setFontSize(4);
     doc.setTextColor(100, 100, 100);
     let opticName = order.meta.optic_name || '';
-    if (doc.getTextWidth(opticName) > 16) {
-        while (opticName.length > 0 && doc.getTextWidth(opticName + '...') > 16) {
-            opticName = opticName.slice(0, -1);
-        }
-        opticName += '...';
+    const lines = doc.splitTextToSize(opticName, 16);
+    const displayLines = lines.slice(0, 3);
+    if (lines.length > 3) {
+        displayLines[2] = displayLines[2].replace(/.$/, '...');
     }
-    doc.text(opticName, 2, 24);
+    
+    // Bottom-aligned to y=24.5 (which is the baseline for Dk)
+    const lineHeight = 1.4;
+    const startY = 24.5 - (displayLines.length - 1) * lineHeight;
+    displayLines.forEach((line: string, i: number) => {
+        doc.text(line, 2, startY + i * lineHeight);
+    });
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(6.5);
