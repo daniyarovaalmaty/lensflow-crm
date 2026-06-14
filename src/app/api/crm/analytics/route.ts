@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
         });
 
         const totalCampaignSpend = campaigns.reduce((acc: number, c: any) => acc + c.totalSpend, 0);
-        const totalManualSpend = leads.reduce((acc: number, l: any) => acc + (l.acquisitionCost || 0), 0);
+        const hasManualCampaign = campaigns.some((c: any) => c.campaignId === 'manual_spend');
+        const totalManualSpend = hasManualCampaign ? 0 : leads.reduce((acc: number, l: any) => acc + (l.acquisitionCost || 0), 0);
         const totalBudgetSpent = totalCampaignSpend + totalManualSpend;
 
         // 3. CAC and LTV/Revenue
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
             if (srcTotal === 0) return null;
 
             const srcConv = srcLeads.filter(l => l.stage === 'converted').length;
-            const srcManualSpend = srcLeads.reduce((acc: number, l: any) => acc + (l.acquisitionCost || 0), 0);
+            const srcManualSpend = hasManualCampaign ? 0 : srcLeads.reduce((acc: number, l: any) => acc + (l.acquisitionCost || 0), 0);
             
             // Map campaigns associated with source
             const srcCampaigns = campaigns.filter((c: any) => 
