@@ -384,6 +384,17 @@ export default function POSPage() {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                 <input type="text" placeholder="Поиск товара или услуги..."
                                     value={search} onChange={e => setSearch(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' && search.trim()) {
+                                            const code = search.trim();
+                                            const product = products.find(p => p.barcode === code || p.sku === code);
+                                            if (product) {
+                                                e.preventDefault();
+                                                handleUsbScan(code);
+                                                setSearch('');
+                                            }
+                                        }
+                                    }}
                                     className="w-full pl-12 pr-4 py-3.5 md:py-5 border border-gray-200 rounded-2xl text-sm md:text-lg focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 bg-white placeholder-gray-400 transition-all font-medium shadow-sm" />
                             </div>
                             <div className="flex gap-2">
