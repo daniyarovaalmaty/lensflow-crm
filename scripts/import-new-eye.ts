@@ -22,7 +22,7 @@ async function main() {
     console.log(`Using Organization: ${clinic.name} (${clinic.id})`);
 
     // 2. Load Excel file
-    const filePath = '/Users/daniyarovaruslanovna/Downloads/Календарь записи.xlsx';
+    const filePath = '/Users/daniyarovaruslanovna/Downloads/Календарь записи (1).xlsx';
     console.log(`Reading ${filePath}...`);
     const workbook = xlsx.readFile(filePath);
 

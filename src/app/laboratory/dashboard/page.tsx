@@ -26,9 +26,15 @@ function calcOrderPrice(order: Order, urgentPct: number = 0): number {
     const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
     const odQty = Number(od.qty) || 0;
     const osQty = Number(os.qty) || 0;
-    const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
-    const osPrice = (order as any).price_os ?? PRICE_PER_LENS;
-    const base = (odQty * odPrice) + (osQty * osPrice);
+    
+    // Check saved prices first, then fallback to type-based defaults
+    const odPrice = (order as any).price_od ?? (od.characteristic === 'toric' ? 18_500 : PRICE_PER_LENS);
+    const osPrice = (order as any).price_os ?? (os.characteristic === 'toric' ? 18_500 : PRICE_PER_LENS);
+    
+    const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number }> || [];
+    const productsSum = additionalProducts.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
+
+    const base = (odQty * odPrice) + (osQty * osPrice) + productsSum;
     const pct = (order as any).discount_percent ?? 0;
     const discountAmt = Math.round(base * pct / 100);
     const afterDiscount = base - discountAmt;

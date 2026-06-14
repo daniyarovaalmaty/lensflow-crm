@@ -137,12 +137,15 @@ export async function PATCH(
     }
 
     // Standard edit: check if editable
-    if (order.status !== 'new_order') {
-        return NextResponse.json({ error: 'Order is no longer editable' }, { status: 403 });
-    }
-    // Only urgent orders have an edit deadline
-    if (order.isUrgent && order.editDeadline && new Date() >= order.editDeadline) {
-        return NextResponse.json({ error: 'Edit window has expired' }, { status: 403 });
+    const isLab = session.user.role === 'laboratory';
+    if (!isLab) {
+        if (order.status !== 'new_order') {
+            return NextResponse.json({ error: 'Order is no longer editable' }, { status: 403 });
+        }
+        // Only urgent orders have an edit deadline
+        if (order.isUrgent && order.editDeadline && new Date() >= order.editDeadline) {
+            return NextResponse.json({ error: 'Edit window has expired' }, { status: 403 });
+        }
     }
 
     const updateData: any = {};

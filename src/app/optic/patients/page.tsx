@@ -18,7 +18,7 @@ interface Patient {
     gender: string | null;
     medmundusId: number | null;
     createdAt: string;
-    _count: { orders: number; prescriptions: number };
+    _count: { orders: number; prescriptions: number; consultations: number };
     prescriptions: Array<{
         odSph: number | null; odCyl: number | null;
         osSph: number | null; osCyl: number | null;
@@ -253,6 +253,7 @@ export default function PatientsPage() {
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-gray-500">
                                             {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
+                                            <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.consultations} прием.</span>
                                             <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.orders} заказ.</span>
                                             <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{p._count.prescriptions} рецепт.</span>
                                         </div>

@@ -116,7 +116,7 @@ export async function GET(request: Request) {
             skip: (page - 1) * limit,
             take: limit,
             include: {
-                _count: { select: { orders: true, prescriptions: true } },
+                _count: { select: { orders: true, prescriptions: true, consultations: true } },
                 prescriptions: {
                     orderBy: { prescribedAt: 'desc' },
                     take: 1,

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, CheckCircle, TruckIcon, Package, Printer, User, Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban, RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip, CheckSquare, Square, Tag, Trash2, MessageCircle, Send, XCircle, Slash, FileEdit, Copy } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
-import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
+import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels, ColorsByDk } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
 import { ReadOnlyEyeCard } from '@/components/order/ReadOnlyEyeCard';
 import { formatDate, formatDateTime, formatShortDate } from '@/lib/dateUtils';
@@ -82,6 +82,10 @@ export default function ProductionHubPage() {
     const [selectedDefectId, setSelectedDefectId] = useState<{ orderId: string; defectId: string } | null>(null);
     const [commentText, setCommentText] = useState('');
     const [sendingComment, setSendingComment] = useState(false);
+    
+    // Color editing state
+    const [editingColor, setEditingColor] = useState<{ orderId: string, eye: 'od' | 'os' } | null>(null);
+    const [savingColor, setSavingColor] = useState(false);
 
     const selectedOrder = useMemo(() =>
         orders.find(o => o.order_id === selectedOrderId) || null,
@@ -1134,7 +1138,64 @@ export default function ProductionHubPage() {
                                                         {hasAx && <td className="px-2 py-2 text-center text-gray-700">{eye.ax ?? '—'}</td>}
                                                         {hasTor && <td className="px-2 py-2 text-center text-gray-700">{eye.tor ?? '—'}</td>}
                                                         {hasTrial && <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>}
-                                                        {hasColor && <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>}
+                                                        {hasColor && (
+                                                            <td className="px-2 py-2 text-center text-gray-700">
+                                                                {editingColor?.orderId === order.order_id && editingColor?.eye === label.toLowerCase() ? (
+                                                                    <div className="flex items-center justify-center gap-1">
+                                                                        <select
+                                                                            autoFocus
+                                                                            disabled={savingColor}
+                                                                            defaultValue={eye.color || ''}
+                                                                            className="text-xs border-gray-300 rounded py-1 px-2"
+                                                                            onChange={async (e) => {
+                                                                                const newColor = e.target.value;
+                                                                                setSavingColor(true);
+                                                                                try {
+                                                                                    // deep copy config
+                                                                                    const newConfig = JSON.parse(JSON.stringify(order.config));
+                                                                                    newConfig.eyes[label.toLowerCase()].color = newColor;
+                                                                                    
+                                                                                    const res = await fetch(`/api/orders/${order.order_id}`, {
+                                                                                        method: 'PATCH',
+                                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                                        body: JSON.stringify({ config: newConfig }),
+                                                                                    });
+                                                                                    if (res.ok) {
+                                                                                        const updated = await res.json();
+                                                                                        setOrders(prev => prev.map(o => o.order_id === order.order_id ? updated : o));
+                                                                                    } else {
+                                                                                        alert('Ошибка сохранения цвета');
+                                                                                    }
+                                                                                } catch (err) {
+                                                                                    console.error('Failed to update color:', err);
+                                                                                    alert('Ошибка сохранения цвета');
+                                                                                } finally {
+                                                                                    setSavingColor(false);
+                                                                                    setEditingColor(null);
+                                                                                }
+                                                                            }}
+                                                                            onBlur={() => setEditingColor(null)}
+                                                                        >
+                                                                            <option value="">Без цвета</option>
+                                                                            {(ColorsByDk[eye.dk || '100'] || []).map(c => (
+                                                                                <option key={c} value={c}>{c}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center justify-center gap-1 group/color">
+                                                                        <span>{eye.color ?? '—'}</span>
+                                                                        <button
+                                                                            onClick={() => setEditingColor({ orderId: order.order_id, eye: label.toLowerCase() as 'od'|'os' })}
+                                                                            className="opacity-0 group-hover/color:opacity-100 text-blue-500 hover:text-blue-700 transition-opacity p-0.5 rounded hover:bg-blue-50"
+                                                                            title="Изменить цвет"
+                                                                        >
+                                                                            <FileEdit className="w-3 h-3" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        )}
                                                         {hasDk && <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>}
                                                         {hasApical && <td className="px-2 py-2 text-center text-gray-700">{eye.apical_clearance ?? '—'}</td>}
                                                         {hasComp && <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>}
