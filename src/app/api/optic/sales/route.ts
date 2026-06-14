@@ -82,9 +82,33 @@ export async function POST(req: NextRequest) {
     const saleItems: any[] = [];
 
     for (const item of items) {
-        const product = await prisma.opticProduct.findFirst({
-            where: { id: item.productId, organizationId: orgId },
-        });
+        let product;
+        let isCustom = false;
+        
+        if (item.productId?.startsWith('custom_')) {
+            isCustom = true;
+            product = await prisma.opticProduct.findFirst({
+                where: { organizationId: orgId, name: 'Свободная позиция', type: 'service' }
+            });
+            if (!product) {
+                product = await prisma.opticProduct.create({
+                    data: {
+                        organizationId: orgId,
+                        name: 'Свободная позиция',
+                        category: 'Услуга',
+                        type: 'service',
+                        retailPrice: 0,
+                        isActive: true,
+                        isPublic: false
+                    }
+                });
+            }
+        } else {
+            product = await prisma.opticProduct.findFirst({
+                where: { id: item.productId, organizationId: orgId },
+            });
+        }
+        
         if (!product) continue;
 
         const qty = Number(item.quantity) || 1;
@@ -150,8 +174,12 @@ export async function POST(req: NextRequest) {
         } else {
             // Service — no stock change
             saleItems.push({
-                productId: product.id, name: product.name, category: product.category,
-                quantity: qty, unitPrice, total,
+                productId: product.id, 
+                name: isCustom && item.name ? item.name : product.name, 
+                category: isCustom && item.category ? item.category : product.category,
+                quantity: qty, 
+                unitPrice, 
+                total,
             });
         }
     }

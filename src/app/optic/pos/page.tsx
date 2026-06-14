@@ -105,6 +105,11 @@ export default function POSPage() {
     const [patientSearch, setPatientSearch] = useState('');
     const [showPatientDropdown, setShowPatientDropdown] = useState(false);
 
+    // Custom Item State
+    const [showCustomModal, setShowCustomModal] = useState(false);
+    const [customName, setCustomName] = useState('');
+    const [customPrice, setCustomPrice] = useState('');
+
     useEffect(() => {
         if (!patientSearch.trim()) {
             setPatients([]);
@@ -408,6 +413,11 @@ export default function POSPage() {
                                         {f.label}
                                     </button>
                                 ))}
+                                <button onClick={() => setShowCustomModal(true)}
+                                    className="flex-1 sm:flex-initial px-6 py-3.5 md:py-5 rounded-2xl text-xs md:text-base font-bold whitespace-nowrap transition-all duration-200 active:scale-[0.97] bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 shadow-sm flex items-center justify-center gap-2">
+                                    <Plus className="w-5 h-5 shrink-0" />
+                                    <span>Свободная сумма</span>
+                                </button>
                             </div>
                         </div>
 
@@ -891,6 +901,53 @@ export default function POSPage() {
                     </div>
                 )}
             </AnimatePresence>
+            {/* Custom Item Modal */}
+            {showCustomModal && (
+                <div className="fixed inset-0 z-[100] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">Свободная сумма</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Название (необязательно)</label>
+                                    <input type="text" value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Например: Ремонт оправы"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Сумма (₸) *</label>
+                                    <input type="number" value={customPrice} onChange={e => setCustomPrice(e.target.value)} placeholder="0"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                            <button onClick={() => { setShowCustomModal(false); setCustomName(''); setCustomPrice(''); }} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition-colors">
+                                Отмена
+                            </button>
+                            <button onClick={() => {
+                                const price = parseInt(customPrice);
+                                if (!price || price <= 0) return;
+                                setCart(prev => [...prev, {
+                                    productId: `custom_${Date.now()}`,
+                                    name: customName.trim() || 'Произвольная позиция',
+                                    category: 'Услуга',
+                                    type: 'service',
+                                    unitPrice: price,
+                                    quantity: 1,
+                                    maxStock: 999
+                                }]);
+                                setShowCustomModal(false);
+                                setCustomName('');
+                                setCustomPrice('');
+                            }} disabled={!parseInt(customPrice) || parseInt(customPrice) <= 0} 
+                               className="px-5 py-2.5 bg-primary-600 text-white font-bold hover:bg-primary-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                Добавить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
