@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan, Wallet, Calendar, Layers } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan, Wallet, Calendar, Layers, SplitSquareHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
@@ -37,6 +37,7 @@ const PAYMENT_METHODS = [
     { key: 'cash', label: 'Наличными', icon: Banknote, color: 'bg-green-50 text-green-700 border-green-200' },
     { key: 'card', label: 'Картой', icon: CreditCard, color: 'bg-blue-50 text-blue-700 border-blue-200' },
     { key: 'installment12', label: 'Рассрочка 12 мес', icon: Calendar, color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+    { key: 'mixed', label: 'Смешанная', icon: SplitSquareHorizontal, color: 'bg-orange-50 text-orange-700 border-orange-200' },
 ];
 
 const TRAFFIC_SOURCES = [
@@ -486,8 +487,8 @@ export default function POSPage() {
                                 <div className="flex-1 overflow-y-auto px-5 py-2 divide-y divide-gray-100">
                                     {cart.map(item => (
                                         <div key={item.productId} className="flex items-center gap-3 py-4">
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-xs md:text-base font-bold text-gray-800 truncate leading-snug">{item.name}</p>
+                                            <div className="flex-1 min-w-0 pr-2">
+                                                <p className="text-xs md:text-sm font-bold text-gray-800 leading-snug break-words line-clamp-2">{item.name}</p>
                                                 <p className="text-[10px] md:text-sm text-gray-500 font-semibold mt-0.5">{fmt(item.unitPrice)} ₸ × {item.quantity}</p>
                                             </div>
                                             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -559,17 +560,17 @@ export default function POSPage() {
                                 </div>
 
                                 {/* Payment actions - fixed at bottom */}
-                                <div className="p-5 border-t border-gray-100 flex-shrink-0 bg-white">
-                                    <div className="flex flex-wrap gap-2 mb-4">
+                                <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)] z-10">
+                                    <div className="grid grid-cols-2 gap-2 mb-4">
                                         {PAYMENT_METHODS.map(pm => (
                                             <button key={pm.key} onClick={() => setPaymentMethod(pm.key)}
-                                                className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-bold border transition-all active:scale-[0.96] ${
+                                                className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-bold border transition-all active:scale-[0.98] ${
                                                     paymentMethod === pm.key
                                                         ? pm.color + ' ring-2 ring-current border-transparent shadow-sm'
-                                                        : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'
+                                                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
                                                 }`}>
-                                                <pm.icon className="w-3.5 h-3.5" />
-                                                <span className="leading-tight text-center">{pm.label}</span>
+                                                <pm.icon className="w-4 h-4 shrink-0" />
+                                                <span className="leading-tight truncate">{pm.label}</span>
                                             </button>
                                         ))}
                                     </div>
