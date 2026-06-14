@@ -884,124 +884,71 @@ export default function SalesPipelinePage() {
                 )}
             </AnimatePresence>
 
-            {/* Рекламный Трафик & Интеграции Modal */}
+            {/* Manual Ad Spend Modal */}
             <AnimatePresence>
                 {showIntegrationsModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowIntegrationsModal(false)} />
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-2xl p-6 max-w-lg w-full border border-gray-100 shadow-xl"
+                            className="bg-white rounded-2xl p-6 max-w-sm w-full border border-gray-100 shadow-xl z-10"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Интеграция трафика (Meta / Google)</h3>
+                                <h3 className="text-xl font-bold text-gray-900">Рекламный бюджет</h3>
                                 <button onClick={() => setShowIntegrationsModal(false)} className="btn btn-ghost btn-sm btn-circle">
                                     <X className="w-5 h-5 text-gray-500" />
                                 </button>
                             </div>
                             
-                            <div className="space-y-6">
-                                {/* Meta panel */}
-                                <div className="p-4 rounded-xl border border-gray-100 bg-slate-50/50 flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-bold text-gray-900">Meta Ads (Facebook & Instagram)</h4>
-                                        <p className="text-xs text-gray-500">Синхронизация рекламного бюджета и лид-форм Meta</p>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setMetaConnected(!metaConnected);
-                                            alert(metaConnected ? 'Meta Ads отключен' : 'Meta Ads успешно подключен!');
-                                        }}
-                                        className={`btn btn-sm ${metaConnected ? 'btn-success text-white' : 'btn-outline'}`}
-                                    >
-                                        {metaConnected ? 'Подключено' : 'Подключить'}
-                                    </button>
+                            <div className="space-y-4">
+                                <p className="text-sm text-gray-500">
+                                    Укажите общую сумму, потраченную на рекламу за текущий период. Это позволит CRM рассчитать стоимость привлечения лида (CPL), клиента (CAC) и возврат инвестиций (ROMI).
+                                </p>
+                                
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Общая сумма расходов (₸)</label>
+                                    <input 
+                                        type="number"
+                                        placeholder="Например: 150000"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-sm"
+                                        id="manualAdSpendInput"
+                                    />
                                 </div>
-
-                                {/* Google panel */}
-                                <div className="p-4 rounded-xl border border-gray-100 bg-slate-50/50 flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-bold text-gray-900">Google Ads</h4>
-                                        <p className="text-xs text-gray-500">Импорт суточных бюджетов из Google Search & GDN</p>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setGoogleConnected(!googleConnected);
-                                            alert(googleConnected ? 'Google Ads отключен' : 'Google Ads API подключен успешно!');
-                                        }}
-                                        className={`btn btn-sm ${googleConnected ? 'btn-success text-white' : 'btn-outline'}`}
-                                    >
-                                        {googleConnected ? 'Подключено' : 'Подключить'}
-                                    </button>
-                                </div>
-
-                                {/* Demo traffic trigger */}
-                                <div className="p-6 rounded-xl border border-dashed border-blue-200 bg-blue-50/50 text-center">
-                                    <h4 className="font-bold text-blue-900 mb-2">Симуляция рекламного трафика</h4>
-                                    <p className="text-xs text-blue-700 mb-4">
-                                        Запустите демо-генератор, чтобы автоматически начислить рекламный бюджет в Google Ads и Meta Ads, а также привлечь 2 новых лида из Instagram и Google Webhook.
-                                    </p>
-                                    <button
-                                        onClick={async () => {
-                                            setSyncing(true);
-                                            try {
-                                                // Sync Meta spend
-                                                await fetch('/api/crm/webhook/sync-spend', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({
-                                                        campaignId: 'meta_spring_1',
-                                                        name: 'Весеннее промо Линзы (Instagram)',
-                                                        source: 'facebook',
-                                                        dailyBudget: 5000,
-                                                        spendDate: new Date().toISOString(),
-                                                        amount: 15000
-                                                    })
-                                                });
-
-                                                // Sync Google spend
-                                                await fetch('/api/crm/webhook/sync-spend', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({
-                                                        campaignId: 'google_search_1',
-                                                        name: 'Контекст Ночные Линзы',
-                                                        source: 'google',
-                                                        dailyBudget: 8000,
-                                                        spendDate: new Date().toISOString(),
-                                                        amount: 24000
-                                                    })
-                                                });
-
-                                                // Ingest leads via webhook
-                                                const leadsPayloads = [
-                                                    { name: 'Анель Куралова', phone: '+77073335566', city: 'Алматы', source: 'instagram', campaignId: 'meta_spring_1', utmSource: 'instagram', utmMedium: 'cpc', utmCampaign: 'lens_conversion' },
-                                                    { name: 'Тимур Рахимов', phone: '+77019998877', city: 'Астана', source: 'google', campaignId: 'google_search_1', utmSource: 'google', utmMedium: 'cpc', utmCampaign: 'night_lenses' }
-                                                ];
-
-                                                for (const lead of leadsPayloads) {
-                                                    await fetch('/api/crm/webhook/incoming', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify(lead)
-                                                    });
-                                                }
-
-                                                alert('Рекламный трафик и суточные бюджеты успешно синхронизированы!');
-                                                fetchLeads();
-                                            } catch (err) {
-                                                alert('Ошибка симуляции.');
-                                            } finally {
-                                                setSyncing(false);
-                                            }
-                                        }}
-                                        disabled={syncing}
-                                        className="btn btn-primary w-full"
-                                    >
-                                        {syncing ? 'Синхронизация...' : 'Запустить рекламный трафик'}
-                                    </button>
-                                </div>
+                            </div>
+                            
+                            <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-4">
+                                <button 
+                                    onClick={() => setShowIntegrationsModal(false)} 
+                                    className="btn bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                >
+                                    Отмена
+                                </button>
+                                <button 
+                                    onClick={async () => {
+                                        const input = document.getElementById('manualAdSpendInput') as HTMLInputElement | null;
+                                        if (!input) return;
+                                        const amount = Number(input.value) || 0;
+                                        if (amount < 0) return alert('Введите корректную сумму');
+                                        
+                                        try {
+                                            const res = await fetch('/api/crm/analytics/manual-spend', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ amount })
+                                            });
+                                            if (!res.ok) throw new Error('Ошибка');
+                                            window.location.reload();
+                                        } catch (e) {
+                                            console.error(e);
+                                            alert('Ошибка сохранения');
+                                        }
+                                    }}
+                                    className="btn btn-primary"
+                                >
+                                    Сохранить бюджет
+                                </button>
                             </div>
                         </motion.div>
                     </div>
