@@ -35,6 +35,12 @@ export async function GET() {
                     bankName: true,
                     bik: true,
                     iban: true,
+                    bankName2: true,
+                    bik2: true,
+                    iban2: true,
+                    bankName3: true,
+                    bik3: true,
+                    iban3: true,
                     directorName: true,
                     contactPerson: true,
                     contactPhone: true,
@@ -92,7 +98,8 @@ export async function PUT(req: NextRequest) {
         const orgFields = [
             'name', 'inn', 'phone', 'email', 'address', 'city',
             'actualAddress', 'deliveryAddress', 'bankName', 'bik',
-            'iban', 'directorName', 'contactPerson', 'contactPhone', 'logo', 'registrationDate',
+            'iban', 'bankName2', 'bik2', 'iban2', 'bankName3', 'bik3', 'iban3',
+            'directorName', 'contactPerson', 'contactPhone', 'logo', 'registrationDate',
         ];
         for (const f of orgFields) {
             if (organization[f] !== undefined) {

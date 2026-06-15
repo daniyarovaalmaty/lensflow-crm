@@ -26,6 +26,12 @@ interface OrgData {
     bankName: string | null;
     bik: string | null;
     iban: string | null;
+    bankName2: string | null;
+    bik2: string | null;
+    iban2: string | null;
+    bankName3: string | null;
+    bik3: string | null;
+    iban3: string | null;
     directorName: string | null;
     contactPerson: string | null;
     contactPhone: string | null;
@@ -63,8 +69,9 @@ export default function ProfilePage() {
     // Organization fields
     const [org, setOrg] = useState({
         name: '', inn: '', phone: '', email: '', address: '', city: '',
-        actualAddress: '', deliveryAddress: '', bankName: '', bik: '',
-        iban: '', directorName: '', contactPerson: '', contactPhone: '', registrationDate: '', logo: '',
+        actualAddress: '', deliveryAddress: '', bankName: '', bik: '', iban: '',
+        bankName2: '', bik2: '', iban2: '', bankName3: '', bik3: '', iban3: '',
+        directorName: '', contactPerson: '', contactPhone: '', registrationDate: '', logo: '',
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -96,6 +103,12 @@ export default function ProfilePage() {
                             bankName: data.organization.bankName || '',
                             bik: data.organization.bik || '',
                             iban: data.organization.iban || '',
+                            bankName2: data.organization.bankName2 || '',
+                            bik2: data.organization.bik2 || '',
+                            iban2: data.organization.iban2 || '',
+                            bankName3: data.organization.bankName3 || '',
+                            bik3: data.organization.bik3 || '',
+                            iban3: data.organization.iban3 || '',
                             directorName: data.organization.directorName || '',
                             contactPerson: data.organization.contactPerson || '',
                             contactPhone: data.organization.contactPhone || '',
@@ -376,7 +389,7 @@ export default function ProfilePage() {
                             {/* Банковские реквизиты */}
                             <div className="pt-2 border-t border-gray-100">
                                 <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                    <Landmark className="w-4 h-4 text-gray-400" /> Банковские реквизиты
+                                    <Landmark className="w-4 h-4 text-gray-400" /> Основной банк
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <Field label="Название банка" value={org.bankName} onChange={v => setOrg(o => ({ ...o, bankName: v }))} placeholder="АО Каспи Банк" disabled={!isManager} />
@@ -384,6 +397,32 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="mt-4">
                                     <Field label="IBAN / Расчётный счёт" value={org.iban} onChange={v => setOrg(o => ({ ...o, iban: v }))} placeholder="KZ00..." disabled={!isManager} />
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-gray-100">
+                                <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <Landmark className="w-4 h-4 text-gray-400" /> Доп. банк 1
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <Field label="Название банка" value={org.bankName2} onChange={v => setOrg(o => ({ ...o, bankName2: v }))} placeholder="АО Halyk Bank" disabled={!isManager} />
+                                    <Field label="БИК" value={org.bik2} onChange={v => setOrg(o => ({ ...o, bik2: v }))} placeholder="HSBKKZKX" disabled={!isManager} />
+                                </div>
+                                <div className="mt-4">
+                                    <Field label="IBAN / Расчётный счёт" value={org.iban2} onChange={v => setOrg(o => ({ ...o, iban2: v }))} placeholder="KZ00..." disabled={!isManager} />
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-gray-100">
+                                <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <Landmark className="w-4 h-4 text-gray-400" /> Доп. банк 2
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <Field label="Название банка" value={org.bankName3} onChange={v => setOrg(o => ({ ...o, bankName3: v }))} placeholder="АО ForteBank" disabled={!isManager} />
+                                    <Field label="БИК" value={org.bik3} onChange={v => setOrg(o => ({ ...o, bik3: v }))} placeholder="MTEBKZKA" disabled={!isManager} />
+                                </div>
+                                <div className="mt-4">
+                                    <Field label="IBAN / Расчётный счёт" value={org.iban3} onChange={v => setOrg(o => ({ ...o, iban3: v }))} placeholder="KZ00..." disabled={!isManager} />
                                 </div>
                             </div>
 

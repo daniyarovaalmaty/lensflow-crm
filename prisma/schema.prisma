@@ -32,6 +32,12 @@ model Organization {
   bankName         String?  // Название банка
   bik              String?  // БИК банка
   iban             String?  // IBAN / расчётный счёт
+  bankName2        String?  // Название банка 2
+  bik2             String?  // БИК банка 2
+  iban2            String?  // IBAN / расчётный счёт 2
+  bankName3        String?  // Название банка 3
+  bik3             String?  // БИК банка 3
+  iban3            String?  // IBAN / расчётный счёт 3
   directorName     String?  // ФИО руководителя
   registrationDate String?  // Дата регистрации
   contactPerson    String?  // Контактное лицо
