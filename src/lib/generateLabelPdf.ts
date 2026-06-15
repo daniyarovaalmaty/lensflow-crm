@@ -40,9 +40,6 @@ function fmt(val: number | string | undefined | null): string {
     return String(val).replace('.', ',');
 }
 
-function pair(odVal: number | undefined | null, osVal: number | undefined | null): string {
-    return `${fmt(odVal)}/${fmt(osVal)}`;
-}
 
 function generateBarcodeDataUrl(text: string): string {
     try {
@@ -126,15 +123,25 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     const charOd = (odQty > 0 && od.characteristic === 'toric') ? 'Toric' : (odQty > 0 && od.characteristic === 'spherical') ? 'Spherical' : '';
     const charOs = (osQty > 0 && os.characteristic === 'toric') ? 'Toric' : (osQty > 0 && os.characteristic === 'spherical') ? 'Spherical' : '';
     const charLabel = charOd && charOs && charOd !== charOs ? `${charOd}/${charOs}` : charOd || charOs || '';
-    const dkVal = od.dk || os.dk || '';
+    
+    function pair(odVal: number | undefined | null, osVal: number | undefined | null): string {
+        const hasOd = odQty > 0;
+        const hasOs = osQty > 0;
+        if (hasOd && hasOs) return `${fmt(odVal)}/${fmt(osVal)}`;
+        if (hasOd) return fmt(odVal);
+        if (hasOs) return fmt(osVal);
+        return '—';
+    }
+
+    const dkVal = (odQty > 0 ? od.dk : null) || (osQty > 0 ? os.dk : null) || '';
     const productName = `${charLabel} ${dkVal}`.trim();
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(4);
     doc.setTextColor(80, 80, 80);
     doc.text(productName, 44 - qtyW - 1, 3.5, { align: 'right' });
     
-    const colorOd = od.color || '';
-    const colorOs = os.color || '';
+    const colorOd = odQty > 0 ? od.color || '' : '';
+    const colorOs = osQty > 0 ? os.color || '' : '';
     const colorStr = colorOd && colorOs && colorOd !== colorOs
         ? `${colorOd}/${colorOs}`
         : colorOd || colorOs || '';
