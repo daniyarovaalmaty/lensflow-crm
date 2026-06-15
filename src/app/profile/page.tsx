@@ -29,6 +29,7 @@ interface OrgData {
     directorName: string | null;
     contactPerson: string | null;
     contactPhone: string | null;
+    registrationDate: string | null;
     logo: string | null;
 }
 
@@ -63,14 +64,14 @@ export default function ProfilePage() {
     const [org, setOrg] = useState({
         name: '', inn: '', phone: '', email: '', address: '', city: '',
         actualAddress: '', deliveryAddress: '', bankName: '', bik: '',
-        iban: '', directorName: '', contactPerson: '', contactPhone: '', logo: '',
+        iban: '', directorName: '', contactPerson: '', contactPhone: '', registrationDate: '', logo: '',
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
 
-    const isManager = session?.user?.subRole === 'optic_manager';
-    const hasOrg = session?.user?.role === 'optic';
+    const isManager = ['optic_manager', 'lab_head'].includes(session?.user?.subRole as string);
+    const hasOrg = ['optic', 'laboratory'].includes(session?.user?.role as string);
 
     useEffect(() => {
         (async () => {
@@ -98,6 +99,7 @@ export default function ProfilePage() {
                             directorName: data.organization.directorName || '',
                             contactPerson: data.organization.contactPerson || '',
                             contactPhone: data.organization.contactPhone || '',
+                            registrationDate: data.organization.registrationDate || '',
                             logo: data.organization.logo || '',
                         });
                         setLogoPreview(data.organization.logo || null);
@@ -300,7 +302,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* Organization Details — editable for optic_manager */}
+                {/* Organization Details — editable for optic_manager and lab_head */}
                 {hasOrg && profile?.organization && (
                     <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
                         <h3 className="text-base font-semibold text-gray-900 mb-1">Реквизиты организации</h3>
@@ -347,14 +349,15 @@ export default function ProfilePage() {
                                 <Field icon={<CreditCard className="w-4 h-4" />} label="БИН / ИИН" value={org.inn} onChange={v => setOrg(o => ({ ...o, inn: v }))} placeholder="123456789012" disabled={!isManager} />
                             </div>
 
-                            {/* Руководитель */}
+                            {/* Руководитель / Дата регистрации */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Field icon={<UserCheck className="w-4 h-4" />} label="ФИО руководителя" value={org.directorName} onChange={v => setOrg(o => ({ ...o, directorName: v }))} disabled={!isManager} />
-                                <Field icon={<Phone className="w-4 h-4" />} label="Телефон организации" value={org.phone} onChange={v => setOrg(o => ({ ...o, phone: v }))} placeholder="+7 777 123 45 67" disabled={!isManager} />
+                                <Field icon={<Building2 className="w-4 h-4" />} label="Дата регистрации" value={org.registrationDate} onChange={v => setOrg(o => ({ ...o, registrationDate: v }))} placeholder="21.11.2022" disabled={!isManager} />
                             </div>
 
-                            {/* Email / City */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Email / Phone / City */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <Field icon={<Phone className="w-4 h-4" />} label="Телефон организации" value={org.phone} onChange={v => setOrg(o => ({ ...o, phone: v }))} placeholder="+7 777 123 45 67" disabled={!isManager} />
                                 <Field icon={<Mail className="w-4 h-4" />} label="Email организации" value={org.email} onChange={v => setOrg(o => ({ ...o, email: v }))} placeholder="info@company.kz" disabled={!isManager} />
                                 <Field icon={<MapPin className="w-4 h-4" />} label="Город" value={org.city} onChange={v => setOrg(o => ({ ...o, city: v }))} placeholder="Алматы" disabled={!isManager} />
                             </div>

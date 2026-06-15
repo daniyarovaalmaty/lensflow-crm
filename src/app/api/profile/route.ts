@@ -38,6 +38,7 @@ export async function GET() {
                     directorName: true,
                     contactPerson: true,
                     contactPhone: true,
+                    registrationDate: true,
                     discountPercent: true,
                     logo: true,
                     defaultLabId: true,
@@ -85,13 +86,13 @@ export async function PUT(req: NextRequest) {
         },
     });
 
-    // Update organization fields (only for optic_manager)
-    if (organization && user.organizationId && session.user.subRole === 'optic_manager') {
+    // Update organization fields (only for optic_manager and lab_head)
+    if (organization && user.organizationId && ['optic_manager', 'lab_head'].includes(session.user.subRole)) {
         const orgData: any = {};
         const orgFields = [
             'name', 'inn', 'phone', 'email', 'address', 'city',
             'actualAddress', 'deliveryAddress', 'bankName', 'bik',
-            'iban', 'directorName', 'contactPerson', 'contactPhone', 'logo',
+            'iban', 'directorName', 'contactPerson', 'contactPhone', 'logo', 'registrationDate',
         ];
         for (const f of orgFields) {
             if (organization[f] !== undefined) {

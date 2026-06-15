@@ -33,6 +33,7 @@ model Organization {
   bik              String?  // БИК банка
   iban             String?  // IBAN / расчётный счёт
   directorName     String?  // ФИО руководителя
+  registrationDate String?  // Дата регистрации
   contactPerson    String?  // Контактное лицо
   contactPhone     String?  // Телефон контактного лица
   discountPercent  Float    @default(0)  // Персональная скидка (%), по умолчанию 0%

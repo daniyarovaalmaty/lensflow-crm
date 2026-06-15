@@ -32,50 +32,53 @@ async function main() {
     console.log(`Found ${leads.length} leads. Creating consultations...`);
 
     let count = 0;
-    for (const lead of leads) {
-        if (!lead.patientId || !lead.patient) continue;
-
-        // Parse notes to extract diagnosis and comments
-        // Format was: Диагноз: {diagnosis}\nКомментарии: {comments}\nОплатить ЦКК: {cck}
-        let diagnosis = '';
-        let notes = lead.notes || '';
+    const batchSize = 50;
+    for (let i = 0; i < leads.length; i += batchSize) {
+        const batch = leads.slice(i, i + batchSize);
+        console.log(`Processing batch ${i / batchSize + 1} of ${Math.ceil(leads.length / batchSize)}...`);
         
-        const lines = notes.split('\n');
-        for (const line of lines) {
-            if (line.startsWith('Диагноз: ')) {
-                diagnosis = line.replace('Диагноз: ', '').trim();
-            }
-        }
+        for (const lead of batch) {
+            if (!lead.patientId || !lead.patient) continue;
 
-        // Check if consultation already exists to prevent duplicates
-        const existing = await prisma.consultation.findFirst({
-            where: {
-                patientId: lead.patientId,
-                visitDate: lead.createdAt
+            let diagnosis = '';
+            let notes = lead.notes || '';
+            const lines = notes.split('\n');
+            for (const line of lines) {
+                if (line.startsWith('Диагноз: ')) {
+                    diagnosis = line.replace('Диагноз: ', '').trim();
+                }
             }
-        });
 
-        if (!existing) {
-            await prisma.consultation.create({
-                data: {
+            const existing = await prisma.consultation.findFirst({
+                where: {
                     patientId: lead.patientId,
-                    doctorId: doctor.id,
-                    visitDate: lead.createdAt,
-                    type: 'exam',
-                    diagnosis: diagnosis,
-                    notes: lead.notes, // keep full notes just in case
+                    visitDate: lead.createdAt
                 }
             });
-            count++;
-        }
 
-        // Update patient to set doctorId if missing
-        if (!lead.patient.doctorId) {
-            await prisma.patient.update({
-                where: { id: lead.patientId },
-                data: { doctorId: doctor.id }
-            });
+            if (!existing) {
+                await prisma.consultation.create({
+                    data: {
+                        patientId: lead.patientId,
+                        doctorId: doctor.id,
+                        visitDate: lead.createdAt,
+                        type: 'exam',
+                        diagnosis: diagnosis,
+                        notes: lead.notes,
+                    }
+                });
+                count++;
+            }
+
+            if (!lead.patient.doctorId) {
+                await prisma.patient.update({
+                    where: { id: lead.patientId },
+                    data: { doctorId: doctor.id }
+                });
+            }
         }
+        // Small delay between batches to let connection pool breathe
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     console.log(`Successfully created ${count} consultations and assigned doctor.`);
