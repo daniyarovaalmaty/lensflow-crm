@@ -53,9 +53,10 @@ export async function generateM11Excel(orders: OrderForM11[], docNumber?: string
             const color = eye.color || '';
             const eng = COLOR_MAP[color] || color.toLowerCase() || 'green';
             const brand = DK_BRAND[dk] || `DK ${dk}`;
-            const material = `${brand} ${eng}`;
+            const isFullMaterial = color.toLowerCase().includes('optimum') || color.toLowerCase().includes('contraperm');
+            const material = isFullMaterial ? color : `${brand} ${eng}`;
             const docName = DOC_NAME_BY_DK[dk] || `DK ${dk}`;
-            const key = `${dk}-${eng}`;
+            const key = isFullMaterial ? `${dk}-${color}` : `${dk}-${eng}`;
             const existing = blankMap.get(key);
             if (existing) { existing.qty += qty; }
             else { blankMap.set(key, { material, doc_name: docName, qty }); }

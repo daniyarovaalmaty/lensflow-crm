@@ -25,8 +25,8 @@ export async function generateOrderApplicationXlsx(order: OrderData): Promise<vo
 
     const od = order.config?.eyes?.od || {};
     const os = order.config?.eyes?.os || {};
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
 
     // Column widths
     ws.columns = [
@@ -95,7 +95,7 @@ export async function generateOrderApplicationXlsx(order: OrderData): Promise<vo
     });
 
     const addLensRow = (eye: string, data: any, qty: number, docName?: string) => {
-        if (qty <= 0) return;
+        if (qty <= 0 || !data.characteristic) return;
         const row = ws.addRow([
             eye,
             docName || `${data.characteristic || ''} DK ${data.dk || ''}`.trim(),

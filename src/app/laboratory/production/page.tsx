@@ -390,7 +390,9 @@ export default function ProductionHubPage() {
                 </tr>
             </thead>
             <tbody>
-                ${[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => `
+                ${[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => {
+                    if (!eye || !eye.characteristic) return '';
+                    return `
                     <tr>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;font-weight:700">${label}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db">${eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : '—'}${eye.isRgp ? ' <span style="background:#fed7aa;color:#c2410c;font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px">RGP</span>' : ''}</td>
@@ -1121,6 +1123,7 @@ export default function ProductionHubPage() {
                                                 {[{ label: 'OD', eye: localOd }, { label: 'OS', eye: localOs }].map(({ label, eye: rawEye }) => {
                                                     if (!rawEye) return null;
                                                     const eye = rawEye as any;
+                                                    if (!eye.characteristic) return null;
                                                     return (
                                                     <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                         <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
@@ -1244,9 +1247,21 @@ export default function ProductionHubPage() {
                                             'Фиолетовый': 'violet',
                                             'Красный': 'red',
                                             'Голубой': 'light-blue',
-                                            'Салатовый': 'light-green'
+                                            'Салатовый': 'light-green',
+                                            'Contraperm F2Mid dark blue': 'dark-blue',
+                                            'Contraperm F2Mid green': 'dark-green',
+                                            'Optimum extra blue': 'blue',
+                                            'Optimum extra green': 'green',
+                                            'Optimum extra violet': 'violet',
+                                            'Optimum extreme blue': 'blue',
+                                            'Optimum extreme green': 'green',
+                                            'Optimum extreme violet': 'violet',
+                                            'Optimum extreme grey': 'grey',
+                                            'Optimum infinite blue': 'light-blue',
+                                            'Optimum infinite green': 'light-green',
+                                            'Optimum infinite red': 'red'
                                         };
-                                        if (eye.color) p.push(colorMap[eye.color] || eye.color);
+                                        if (eye.color) p.push(colorMap[eye.color] || eye.color.replace(/\s+/g, '-'));
                                         return p.filter(Boolean).join(' ');
                                     };
 
@@ -1850,6 +1865,7 @@ export default function ProductionHubPage() {
                                     <tbody>
                                         {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) }].map(({ label, eye: rawEye }) => {
                                             const eye = rawEye as any;
+                                            if (!eye.characteristic) return null;
                                             return (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>

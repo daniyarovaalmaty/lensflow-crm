@@ -218,7 +218,9 @@ export default function DistributorDashboard() {
     const getOrderPrice = (order: Order) => {
         const od = order.config?.eyes?.od || { qty: 0 };
         const os = order.config?.eyes?.os || { qty: 0 };
-        return order.total_price || ((Number(od.qty) || 0) + (Number(os.qty) || 0)) * PRICE_PER_LENS;
+        const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+        const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
+        return order.total_price || (odQty + osQty) * PRICE_PER_LENS;
     };
 
     const renderParamRow = (label: string, value: any) => (

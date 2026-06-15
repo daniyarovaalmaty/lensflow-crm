@@ -38,8 +38,8 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
 
     const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
     const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
     const additionalProducts = order.products || [];
     const discountPct = order.discount_percent ?? 0;
     const isUrgent = order.is_urgent || false;

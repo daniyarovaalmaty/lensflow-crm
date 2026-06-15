@@ -651,8 +651,8 @@ export default function OpticDashboard() {
                             const isExpanded = expandedOrders.has(order.order_id);
                             const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
                             const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-                            const odQty = Number(od.qty) || 0;
-                            const osQty = Number(os.qty) || 0;
+                            const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+                            const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
                             const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
                             const osPrice = (order as any).price_os ?? PRICE_PER_LENS;
                             const lensTotal = (odQty * odPrice) + (osQty * osPrice);
@@ -984,9 +984,9 @@ export default function OpticDashboard() {
                                                         </div>
                                                     </div>
 
-                                                    <div className={`grid ${Number(od?.qty || 0) > 0 && Number(os?.qty || 0) > 0 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
-                                                        {Number(od?.qty || 0) > 0 && renderEyeBlock("OD (Правый глаз)", od)}
-                                                        {Number(os?.qty || 0) > 0 && renderEyeBlock("OS (Левый глаз)", os)}
+                                                    <div className={`grid ${odQty > 0 && osQty > 0 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                                                        {odQty > 0 && renderEyeBlock("OD (Правый глаз)", od)}
+                                                        {osQty > 0 && renderEyeBlock("OS (Левый глаз)", os)}
                                                     </div>
 
                                                     {/* Additional products */}
@@ -1013,9 +1013,9 @@ export default function OpticDashboard() {
                                                         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
                                                             <div className="text-sm text-gray-600 space-y-0.5">
                                                                 <div>
-                                                                    <span>OD: {Number(od.qty)} × {((order as any).price_od ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
-                                                                    <span className="mx-2">+</span>
-                                                                    <span>OS: {Number(os.qty)} × {((order as any).price_os ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
+                                                                    {odQty > 0 && <span>OD: {odQty} × {((order as any).price_od ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>}
+                                                                    {odQty > 0 && osQty > 0 && <span className="mx-2">+</span>}
+                                                                    {osQty > 0 && <span>OS: {osQty} × {((order as any).price_os ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>}
                                                                 </div>
                                                                 {(order as any).products?.length > 0 && (
                                                                     <div className="text-xs text-gray-400">

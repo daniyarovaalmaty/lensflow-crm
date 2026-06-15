@@ -114,15 +114,17 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     }
 
     // Quantity — large number
-    const totalQty = (Number(od.qty) || 0) + (Number(os.qty) || 0);
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
+    const totalQty = odQty + osQty;
     doc.setFont('Roboto', 'bold');
     doc.setFontSize(18);
     doc.text(String(totalQty), 44, 5.5, { align: 'right' });
     const qtyW = doc.getTextWidth(String(totalQty));
 
     // Product name
-    const charOd = (Number(od.qty) > 0 && od.characteristic === 'toric') ? 'Toric' : (Number(od.qty) > 0 && od.characteristic === 'spherical') ? 'Spherical' : '';
-    const charOs = (Number(os.qty) > 0 && os.characteristic === 'toric') ? 'Toric' : (Number(os.qty) > 0 && os.characteristic === 'spherical') ? 'Spherical' : '';
+    const charOd = (odQty > 0 && od.characteristic === 'toric') ? 'Toric' : (odQty > 0 && od.characteristic === 'spherical') ? 'Spherical' : '';
+    const charOs = (osQty > 0 && os.characteristic === 'toric') ? 'Toric' : (osQty > 0 && os.characteristic === 'spherical') ? 'Spherical' : '';
     const charLabel = charOd && charOs && charOd !== charOs ? `${charOd}/${charOs}` : charOd || charOs || '';
     const dkVal = od.dk || os.dk || '';
     const productName = `${charLabel} ${dkVal}`.trim();
@@ -168,7 +170,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setTextColor(0, 0, 0);
     doc.text(patName, W / 2, 10, { align: 'center' });
 
-    const eyeLabel = (od.qty && os.qty) ? 'OD/OS' : (od.qty ? 'OD' : (os.qty ? 'OS' : 'OD/OS'));
+    const eyeLabel = (odQty > 0 && osQty > 0) ? 'OD/OS' : (odQty > 0 ? 'OD' : (osQty > 0 ? 'OS' : 'OD/OS'));
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(5);
     doc.setTextColor(100, 100, 100);

@@ -15,8 +15,8 @@ const PRICE_PER_LENS = 17500; // fallback
 function generateInvoiceHTML(order: Order): string {
     const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
     const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
     const additionalProducts = order.products || [];
     const dateStr = formatDate(order.meta.created_at);
 

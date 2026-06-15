@@ -56,8 +56,8 @@ export default function LabOrderDetailPage() {
 
     const od = order.config?.eyes?.od || {};
     const os = order.config?.eyes?.os || {};
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
     const createdAt = new Date(order.meta.created_at);
     const status = order.status as OrderStatus;
     const paymentStatus = order.payment_status as PaymentStatus;
@@ -172,8 +172,8 @@ export default function LabOrderDetailPage() {
                         </h3>
 
                         <div className="space-y-4">
-                            {odQty > 0 && <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={od} qty={odQty} />}
-                            {osQty > 0 && <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={os} qty={osQty} />}
+                            {od.characteristic && odQty > 0 && <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={od} qty={odQty} />}
+                            {os.characteristic && osQty > 0 && <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={os} qty={osQty} />}
                         </div>
                     </div>
 

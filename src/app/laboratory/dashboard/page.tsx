@@ -24,8 +24,8 @@ function calcOrderPrice(order: Order, urgentPct: number = 0): number {
     // Fallback for old orders
     const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
     const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
     
     // Check saved prices first, then fallback to type-based defaults
     const odPrice = (order as any).price_od ?? (od.characteristic === 'toric' ? 18_500 : PRICE_PER_LENS);

@@ -1474,10 +1474,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             </div>
 
                             <div className="space-y-4">
-                                {Number(confirmData.config?.eyes?.od?.qty) > 0 && (
+                                {confirmData.config?.eyes?.od?.characteristic && Number(confirmData.config?.eyes?.od?.qty) > 0 && (
                                     <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={confirmData.config.eyes.od} qty={Number(confirmData.config.eyes.od.qty)} />
                                 )}
-                                {Number(confirmData.config?.eyes?.os?.qty) > 0 && (
+                                {confirmData.config?.eyes?.os?.characteristic && Number(confirmData.config?.eyes?.os?.qty) > 0 && (
                                     <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={confirmData.config.eyes.os} qty={Number(confirmData.config.eyes.os.qty)} />
                                 )}
                             </div>
