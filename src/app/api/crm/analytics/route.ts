@@ -35,10 +35,17 @@ export async function GET(req: NextRequest) {
             }
         });
 
-        const totalCampaignSpend = campaigns.reduce((acc: number, c: any) => acc + c.totalSpend, 0);
-        const hasManualCampaign = campaigns.some((c: any) => c.campaignId === 'manual_spend');
-        const totalManualSpend = hasManualCampaign ? 0 : leads.reduce((acc: number, l: any) => acc + (l.acquisitionCost || 0), 0);
-        const totalBudgetSpent = totalCampaignSpend + totalManualSpend;
+        const manualCampaign = campaigns.find((c: any) => c.campaignId === 'manual_spend');
+        const hasManualCampaign = !!manualCampaign;
+        
+        let totalBudgetSpent = 0;
+        if (hasManualCampaign) {
+            totalBudgetSpent = manualCampaign.totalSpend;
+        } else {
+            const totalCampaignSpend = campaigns.reduce((acc: number, c: any) => acc + c.totalSpend, 0);
+            const totalManualSpend = leads.reduce((acc: number, l: any) => acc + (l.acquisitionCost || 0), 0);
+            totalBudgetSpent = totalCampaignSpend + totalManualSpend;
+        }
 
         // 3. CAC and LTV/Revenue
         const cac = totalConverted > 0 ? Math.round(totalBudgetSpent / totalConverted) : totalBudgetSpent;
