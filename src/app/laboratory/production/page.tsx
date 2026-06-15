@@ -407,7 +407,8 @@ export default function ProductionHubPage() {
 
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center;font-weight:600">${eye.qty ?? 1}</td>
                     </tr>
-                `).join('')}
+                    `;
+                }).join('')}
             </tbody>
         </table>`;
 
