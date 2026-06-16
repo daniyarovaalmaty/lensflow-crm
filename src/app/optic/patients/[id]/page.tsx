@@ -679,7 +679,7 @@ export default function PatientDetailPage() {
                     {/* MAIN CONTENT AREA */}
                     <div className="flex-1 min-w-0">
                         {/* TABS HEADER */}
-                        <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-gray-100 p-1 flex gap-1 mb-6 overflow-x-auto no-scrollbar">
+                        <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-gray-100 p-1 flex gap-1 mb-6 overflow-x-auto no-scrollbar sticky top-4 z-20">
                             {[
                                 { id: 'overview', icon: LayoutDashboard, label: 'Обзор' },
                                 { id: 'consultations', icon: Activity, label: 'Консультации', count: consultations.length },
@@ -689,7 +689,10 @@ export default function PatientDetailPage() {
                             ].map(tab => (
                                 <button
                                     key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
+                                    onClick={() => {
+                                        setActiveTab(tab.id);
+                                        document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth' });
+                                    }}
                                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${activeTab === tab.id ? 'bg-primary-50 text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
                                 >
                                     <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400'}`} />
@@ -701,9 +704,10 @@ export default function PatientDetailPage() {
                             ))}
                         </div>
 
-                        {/* OVERVIEW TAB */}
-                        {activeTab === 'overview' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* MAIN CONTENT STACK */}
+                        <div className="space-y-16 pb-32">
+                            {/* OVERVIEW SECTION */}
+                            <div id="overview" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-24">
                                 <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
                                     <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2"><Activity className="w-4 h-4 text-teal-500" /> Активность</h3>
                                     <div className="grid grid-cols-2 gap-4">
@@ -747,11 +751,9 @@ export default function PatientDetailPage() {
                                     )}
                                 </div>
                             </div>
-                        )}
 
-                        <div className={activeTab === 'prescriptions' ? 'block' : 'hidden'}>
                             {/* Prescriptions */}
-                            <div>
+                            <div id="prescriptions" className="scroll-mt-24">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <Stethoscope className="w-5 h-5 text-primary-600" /> Рецепты на зрение
@@ -839,12 +841,8 @@ export default function PatientDetailPage() {
                         )}
                     </div>
 
-                    </div>
-                </div>
-
-                <div className={activeTab === 'orders' ? 'block' : 'hidden'}>
                     {/* Orders */}
-                    <div>
+                    <div id="orders" className="scroll-mt-24">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <ClipboardList className="w-5 h-5 text-primary-600" /> История заказов
@@ -896,11 +894,9 @@ export default function PatientDetailPage() {
                             </div>
                         )}
                     </div>
-                </div>
 
-                <div className={activeTab === 'consultations' ? 'block' : 'hidden'}>
                     {/* Consultations */}
-                    <div className="mt-6">
+                    <div id="consultations" className="scroll-mt-24">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <Activity className="w-5 h-5 text-teal-600" /> История консультаций
@@ -1120,9 +1116,8 @@ export default function PatientDetailPage() {
                     )}
                 </div>
 
-                <div className={activeTab === 'files' ? 'block' : 'hidden'}>
-                    {/* Attachments Section */}
-                    <div className="mt-6">
+                {/* Attachments Section */}
+                <div id="files" className="scroll-mt-24">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <Paperclip className="w-5 h-5 text-indigo-600" /> Показатели и Снимки
