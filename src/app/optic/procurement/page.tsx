@@ -338,6 +338,7 @@ export default function OpticProcurementDashboard() {
                 optic_inn: (order as any).optic_inn,
                 optic_address: (order as any).optic_address,
                 lab_org: (order as any).lab_org,
+                distributor_org: (order as any).distributor_org,
             });
         });
     };

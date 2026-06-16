@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
                 createdBy: { select: { fullName: true, email: true } },
                 organization: { select: { name: true, inn: true, deliveryAddress: true } },
                 labOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
+                distributorOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
                 contract: {
                     select: {
                         number: true,
@@ -213,6 +214,14 @@ export async function GET(request: NextRequest) {
                     bankName: order.labOrg.bankName,
                     bik: order.labOrg.bik,
                     iban: order.labOrg.iban,
+                } : undefined,
+                distributor_org: order.distributorOrg ? {
+                    name: order.distributorOrg.name,
+                    inn: order.distributorOrg.inn,
+                    address: order.distributorOrg.deliveryAddress,
+                    bankName: order.distributorOrg.bankName,
+                    bik: order.distributorOrg.bik,
+                    iban: order.distributorOrg.iban,
                 } : undefined,
             };
         });
