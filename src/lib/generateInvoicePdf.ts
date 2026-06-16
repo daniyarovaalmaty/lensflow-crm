@@ -51,7 +51,7 @@ interface InvoiceOrder {
 
 const PRICE_PER_LENS = 17500;
 
-export function generateInvoicePdf(order: InvoiceOrder): void {
+export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
@@ -349,6 +349,21 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     doc.setTextColor(150, 150, 150);
     doc.text('М.П.', margin + 35, currentY - 5);
     doc.setTextColor(0, 0, 0);
+
+    // Добавляем печать
+    try {
+        const img = new Image();
+        img.src = '/images/stamp.png';
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+        });
+        // Располагаем печать поверх М.П., делаем её достаточно крупной (например, 40х40 мм)
+        // Координаты смещены, чтобы печать ложилась красиво на подпись и М.П.
+        doc.addImage(img, 'PNG', margin + 15, currentY - 25, 40, 40);
+    } catch (e) {
+        console.warn('Could not load stamp image', e);
+    }
 
     doc.save(`Счет_на_оплату_№${order.order_id}.pdf`);
 }
