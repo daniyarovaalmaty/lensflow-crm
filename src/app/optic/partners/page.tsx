@@ -12,12 +12,14 @@ export default function OpticPartnersPage() {
     const [laboratories, setLaboratories] = useState<any[]>([]);
     const [products, setProducts] = useState<any[]>([]);
     const [contracts, setContracts] = useState<any[]>([]);
+    const [branches, setBranches] = useState<any[]>([]);
     const [defaultLabId, setDefaultLabId] = useState<string>('');
     
     // Add new partner form state
     const [newContractNumber, setNewContractNumber] = useState('');
     const [newContractDate, setNewContractDate] = useState('');
     const [newContractLab, setNewContractLab] = useState('');
+    const [newContractBranch, setNewContractBranch] = useState('');
     const [newContractDocument, setNewContractDocument] = useState<{name: string, data: string, mimeType: string, size: number} | null>(null);
     const [creatingContract, setCreatingContract] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -36,6 +38,12 @@ export default function OpticPartnersPage() {
                 setProducts(data.products);
                 setDefaultLabId(data.organization?.defaultLabId || '');
 
+                const bRes = await fetch('/api/branches');
+                if (bRes.ok) {
+                    const bData = await bRes.json();
+                    setBranches(bData.branches || []);
+                }
+
                 const cRes = await fetch('/api/optic/contracts');
                 if (cRes.ok) {
                     const fetchedContracts = await cRes.json();
@@ -50,6 +58,7 @@ export default function OpticPartnersPage() {
                             date: new Date().toISOString(),
                             providerId: defaultId,
                             provider: defaultLab || { id: defaultId, name: 'Лаборатория по умолчанию' },
+                            client: { id: data.organization.id, name: data.organization.name, type: data.organization.type },
                             customPrices: null
                         });
                     }
@@ -98,6 +107,7 @@ export default function OpticPartnersPage() {
                     providerId: newContractLab, 
                     number: newContractNumber, 
                     date: newContractDate,
+                    branchId: newContractBranch || undefined,
                     document: newContractDocument
                 })
             });
@@ -108,6 +118,7 @@ export default function OpticPartnersPage() {
                 setNewContractNumber('');
                 setNewContractDate('');
                 setNewContractLab('');
+                setNewContractBranch('');
                 setNewContractDocument(null);
                 setShowAddForm(false);
             } else {
@@ -191,6 +202,13 @@ export default function OpticPartnersPage() {
                                             {laboratories.map(lab => <option key={lab.id} value={lab.id}>{lab.name}</option>)}
                                         </select>
                                     </div>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Филиал</label>
+                                        <select value={newContractBranch} onChange={e => setNewContractBranch(e.target.value)} className="input text-sm w-full bg-white">
+                                            <option value="">Головная компания</option>
+                                            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                        </select>
+                                    </div>
                                     <div className="w-full sm:w-48">
                                         <label className="block text-xs font-medium text-gray-700 mb-1">Номер договора</label>
                                         <input type="text" value={newContractNumber} onChange={e => setNewContractNumber(e.target.value)} className="input text-sm w-full bg-white" placeholder="№..." />
@@ -249,7 +267,12 @@ export default function OpticPartnersPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-base font-bold text-gray-900">{contract.provider?.name || 'Неизвестная лаборатория'}</h3>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5 flex-wrap">
+                                            <div className="text-xs text-indigo-600 font-medium bg-indigo-50 inline-block px-2 py-0.5 rounded-md mt-1">
+                                                {contract.client?.id === orgData?.id || contract.client?.type === 'headquarters' || contract.client?.type === 'standalone' 
+                                                    ? 'Головная компания' 
+                                                    : `Филиал: ${contract.client?.name || 'Неизвестно'}`}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-1.5 flex-wrap">
                                                 <Tag className="w-3 h-3" />
                                                 Договор №{contract.number} от {new Date(contract.date).toLocaleDateString('ru-RU')}
                                                 

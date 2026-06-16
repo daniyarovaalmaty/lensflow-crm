@@ -771,7 +771,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                 <option value="">-- Без договора --</option>
                                 {contracts.map(c => (
                                     <option key={c.id} value={c.id}>
-                                        № {c.number} от {new Date(c.date).toLocaleDateString('ru-RU')} ({c.provider?.name})
+                                        № {c.number} от {new Date(c.date).toLocaleDateString('ru-RU')} ({c.provider?.name}) {c.client?.type === 'branch' ? `[Филиал: ${c.client.name}]` : '[Головная компания]'}
                                     </option>
                                 ))}
                             </select>
