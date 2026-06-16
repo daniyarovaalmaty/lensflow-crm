@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
             // Distributor sees only orders assigned to them
             where.distributorOrgId = session.user.organizationId;
         } else if (session.user.role === 'optic') {
-            if (session.user.subRole === 'optic_procurement') {
-                // Procurement sees orders for ALL branches of their parent org
+            if (session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager') {
+                // Procurement and Managers see orders for ALL branches of their parent org
                 const orgId = session.user.organizationId;
                 // Find the headquarters (parent) and all its branches
                 const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
