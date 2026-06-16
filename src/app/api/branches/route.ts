@@ -33,9 +33,13 @@ export async function GET() {
         id: b.id,
         name: b.name,
         address: b.address,
+        deliveryAddress: b.deliveryAddress,
         city: b.city,
         phone: b.phone,
         crmPhone: b.crmPhone,
+        bankName: b.bankName,
+        bik: b.bik,
+        iban: b.iban,
         createdAt: b.createdAt,
         usersCount: b._count.users,
         ordersCount: b._count.orders,
@@ -66,7 +70,7 @@ export async function POST(request: Request) {
     const { action } = body;
 
     if (action === 'create') {
-        const { name, address, city, phone, crmPhone } = body;
+        const { name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban } = body;
         if (!name?.trim()) {
             return NextResponse.json({ error: 'Название филиала обязательно' }, { status: 400 });
         }
@@ -93,9 +97,13 @@ export async function POST(request: Request) {
                 type: 'branch',
                 parentId: orgId,
                 address: address?.trim() || null,
+                deliveryAddress: deliveryAddress?.trim() || null,
                 city: city?.trim() || null,
                 phone: phone?.trim() || null,
                 crmPhone: crmPhone?.trim() || null,
+                bankName: bankName?.trim() || null,
+                bik: bik?.trim() || null,
+                iban: iban?.trim() || null,
                 status: 'active',
             },
         });
@@ -104,7 +112,7 @@ export async function POST(request: Request) {
     }
 
     if (action === 'update') {
-        const { branchId, name, address, city, phone, crmPhone } = body;
+        const { branchId, name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban } = body;
         if (!branchId) return NextResponse.json({ error: 'branchId обязателен' }, { status: 400 });
 
         const branch = await prisma.organization.findFirst({
@@ -117,9 +125,13 @@ export async function POST(request: Request) {
             data: {
                 ...(name && { name: name.trim() }),
                 ...(address !== undefined && { address: address?.trim() || null }),
+                ...(deliveryAddress !== undefined && { deliveryAddress: deliveryAddress?.trim() || null }),
                 ...(city !== undefined && { city: city?.trim() || null }),
                 ...(phone !== undefined && { phone: phone?.trim() || null }),
                 ...(crmPhone !== undefined && { crmPhone: crmPhone?.trim() || null }),
+                ...(bankName !== undefined && { bankName: bankName?.trim() || null }),
+                ...(bik !== undefined && { bik: bik?.trim() || null }),
+                ...(iban !== undefined && { iban: iban?.trim() || null }),
             },
         });
 

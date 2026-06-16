@@ -1,11 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import 'dotenv/config';
+import prisma from './src/lib/db/prisma';
 
 async function main() {
     console.log('Adding ЦКК laboratory...');
-    
-    // Check if it already exists
     const existing = await prisma.organization.findFirst({
         where: { name: 'ЦКК' }
     });
@@ -26,11 +23,4 @@ async function main() {
     console.log('Successfully created ЦКК laboratory:', lab);
 }
 
-main()
-    .catch(e => {
-        console.error(e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+main().finally(() => prisma.$disconnect());

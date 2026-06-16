@@ -8,9 +8,13 @@ interface Branch {
     id: string;
     name: string;
     address: string | null;
+    deliveryAddress: string | null;
     city: string | null;
     phone: string | null;
     crmPhone: string | null;
+    bankName: string | null;
+    bik: string | null;
+    iban: string | null;
     createdAt: string;
     usersCount: number;
     ordersCount: number;
@@ -40,7 +44,7 @@ export default function BranchesPage() {
     const [saving, setSaving] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [form, setForm] = useState({ name: '', address: '', city: '', phone: '', crmPhone: '' });
+    const [form, setForm] = useState({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '' });
     const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
     const [assigningBranch, setAssigningBranch] = useState<string | null>(null);
     const [editingOrgCrm, setEditingOrgCrm] = useState(false);
@@ -87,7 +91,7 @@ export default function BranchesPage() {
             if (res.ok) {
                 setShowForm(false);
                 setEditingId(null);
-                setForm({ name: '', address: '', city: '', phone: '', crmPhone: '' });
+                setForm({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '' });
                 await loadData();
             } else {
                 const data = await res.json();
@@ -146,9 +150,13 @@ export default function BranchesPage() {
         setForm({
             name: branch.name,
             address: branch.address || '',
+            deliveryAddress: branch.deliveryAddress || '',
             city: branch.city || '',
             phone: branch.phone || '',
             crmPhone: branch.crmPhone || '',
+            bankName: branch.bankName || '',
+            bik: branch.bik || '',
+            iban: branch.iban || '',
         });
         setShowForm(true);
     };
@@ -170,7 +178,7 @@ export default function BranchesPage() {
                         </p>
                     </div>
                     <button
-                        onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: '', address: '', city: '', phone: '', crmPhone: '' }); }}
+                        onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '' }); }}
                         className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" /> Добавить филиал
@@ -194,11 +202,15 @@ export default function BranchesPage() {
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Название *</label>
                                     <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Оптика Алматы-1" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Адрес</label>
-                                    <input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="ул. Абая 150, Алматы" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                                </div>
                                 <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Юр. Адрес</label>
+                                        <input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="ул. Абая 150, Алматы" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Фактический адрес доставки</label>
+                                        <input value={form.deliveryAddress} onChange={e => setForm(f => ({ ...f, deliveryAddress: e.target.value }))} placeholder="ул. Абая 150, Блок Б" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Город</label>
                                         <input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Алматы" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
@@ -206,6 +218,23 @@ export default function BranchesPage() {
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Телефон</label>
                                         <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+7 777 123 45 67" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    </div>
+                                </div>
+                                <div className="border-t border-gray-200 pt-4 mt-2">
+                                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Банковские реквизиты</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Название банка</label>
+                                            <input value={form.bankName} onChange={e => setForm(f => ({ ...f, bankName: e.target.value }))} placeholder="АО Kaspi Bank" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">БИК</label>
+                                            <input value={form.bik} onChange={e => setForm(f => ({ ...f, bik: e.target.value }))} placeholder="KSPIKZKX" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">IBAN</label>
+                                            <input value={form.iban} onChange={e => setForm(f => ({ ...f, iban: e.target.value }))} placeholder="KZ123456789012345678" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
