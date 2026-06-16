@@ -425,6 +425,7 @@ model Contract {
 
   status      String   @default("active") // active | inactive
   customPrices Json?   // { "productId": 15000, "productId2": 12000 }
+  document    Json?    // { name: string, data: string (base64), mimeType: string, size: number }
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

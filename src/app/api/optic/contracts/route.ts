@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { number, date, providerId } = body;
+        const { number, date, providerId, document } = body;
 
         if (!number || !date || !providerId) {
             return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
                 date: new Date(date),
                 providerId,
                 clientId: userOrgId,
-                status: 'active'
+                status: 'active',
+                document: document || null,
             },
             include: {
                 provider: {

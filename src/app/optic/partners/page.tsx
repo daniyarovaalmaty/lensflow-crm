@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Store, Building2, Save, Loader2, Tag, Percent, Plus, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { Store, Building2, Save, Loader2, Tag, Percent, Plus, ChevronDown, ChevronUp, CheckCircle2, FileText, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function OpticPartnersPage() {
@@ -18,6 +18,7 @@ export default function OpticPartnersPage() {
     const [newContractNumber, setNewContractNumber] = useState('');
     const [newContractDate, setNewContractDate] = useState('');
     const [newContractLab, setNewContractLab] = useState('');
+    const [newContractDocument, setNewContractDocument] = useState<{name: string, data: string, mimeType: string, size: number} | null>(null);
     const [creatingContract, setCreatingContract] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
 
@@ -93,7 +94,12 @@ export default function OpticPartnersPage() {
             const res = await fetch('/api/optic/contracts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ providerId: newContractLab, number: newContractNumber, date: newContractDate })
+                body: JSON.stringify({ 
+                    providerId: newContractLab, 
+                    number: newContractNumber, 
+                    date: newContractDate,
+                    document: newContractDocument
+                })
             });
             if (res.ok) {
                 toast.success('Партнер добавлен');
@@ -102,6 +108,7 @@ export default function OpticPartnersPage() {
                 setNewContractNumber('');
                 setNewContractDate('');
                 setNewContractLab('');
+                setNewContractDocument(null);
                 setShowAddForm(false);
             } else {
                 toast.error('Ошибка добавления партнера');
@@ -109,6 +116,28 @@ export default function OpticPartnersPage() {
         } finally {
             setCreatingContract(false);
         }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Файл слишком большой (макс. 5МБ)');
+            e.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setNewContractDocument({
+                name: file.name,
+                mimeType: file.type,
+                size: file.size,
+                data: ev.target?.result as string
+            });
+        };
+        reader.readAsDataURL(file);
     };
 
     if (loading) {
@@ -170,6 +199,23 @@ export default function OpticPartnersPage() {
                                         <label className="block text-xs font-medium text-gray-700 mb-1">Дата договора</label>
                                         <input type="date" value={newContractDate} onChange={e => setNewContractDate(e.target.value)} className="input text-sm w-full bg-white" />
                                     </div>
+                                    <div className="w-full sm:w-48">
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Скан договора</label>
+                                        <div className="relative">
+                                            <input 
+                                                type="file" 
+                                                onChange={handleFileChange} 
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                                accept=".pdf,image/*"
+                                            />
+                                            <div className="input text-sm w-full bg-white flex items-center justify-between overflow-hidden">
+                                                <span className="truncate text-gray-500 text-xs">
+                                                    {newContractDocument ? newContractDocument.name : 'Выберите файл (до 5МБ)'}
+                                                </span>
+                                                <Upload className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                                            </div>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={handleAddContract}
                                         disabled={creatingContract}
@@ -219,6 +265,17 @@ export default function OpticPartnersPage() {
                                                     >
                                                         Внести данные реального договора
                                                     </button>
+                                                )}
+                                                
+                                                {contract.document && (
+                                                    <a
+                                                        href={contract.document.data}
+                                                        download={contract.document.name}
+                                                        className="ml-2 inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-0.5 rounded transition-colors"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <FileText className="w-3 h-3" /> Скан договора
+                                                    </a>
                                                 )}
                                             </div>
                                         </div>
