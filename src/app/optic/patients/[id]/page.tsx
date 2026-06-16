@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -405,32 +405,40 @@ export default function PatientDetailPage() {
         <div className="min-h-screen bg-surface">
             
             {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, видна при печати) --- */}
-            <div className="hidden print:block p-8 bg-white text-black font-sans w-full">
+            <div className="hidden print:block p-8 bg-white text-gray-800 font-sans w-full" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                 {/* Header: Логотип и контакты клиники */}
-                <div className="border-b-2 border-gray-900 pb-6 mb-6 flex justify-between items-start">
-                    <div>
-                        <h1 className="text-2xl font-bold uppercase tracking-wider text-gray-900">Медицинская карта</h1>
-                        <p className="text-gray-500 mt-1">Офтальмологический центр LensFlow</p>
+                <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 p-6 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md">
+                            <Stethoscope className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
+                            <p className="text-primary-600 font-medium mt-1">Офтальмологический центр LensFlow</p>
+                        </div>
                     </div>
-                    <div className="text-right text-sm text-gray-600">
-                        <p>г. Алматы, ул. Абая 1</p>
-                        <p>+7 (777) 123-45-67</p>
-                        <p>www.lensflow.kz</p>
+                    <div className="text-right text-sm text-gray-500 space-y-1">
+                        <p className="flex items-center justify-end gap-2"><MapPin className="w-3.5 h-3.5 text-primary-400" /> г. Алматы, ул. Абая 1</p>
+                        <p className="flex items-center justify-end gap-2"><Phone className="w-3.5 h-3.5 text-primary-400" /> +7 (777) 123-45-67</p>
+                        <p className="flex items-center justify-end gap-2"><Globe className="w-3.5 h-3.5 text-primary-400" /> www.lensflow.kz</p>
                     </div>
                 </div>
 
                 {/* Данные пациента */}
-                <div className="mb-8">
-                    <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-200 pb-1">Пациент</h2>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div><span className="text-gray-500">ФИО:</span> <strong className="text-gray-900">{patient.name}</strong></div>
-                        <div><span className="text-gray-500">Дата рождения:</span> <strong className="text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} ({calcAge(patient.birthDate)})</strong></div>
-                        <div><span className="text-gray-500">Телефон:</span> <strong className="text-gray-900">{patient.phone}</strong></div>
-                        <div><span className="text-gray-500">Email:</span> <strong className="text-gray-900">{patient.email || '—'}</strong></div>
+                <div className="mb-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                        <User className="w-5 h-5 text-primary-500" />
+                        <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
+                    </div>
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">ФИО</span> <strong className="text-lg text-gray-900">{patient.name}</strong></div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Дата рождения</span> <strong className="text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
                         {patient.notes && (
-                            <div className="col-span-2 mt-2">
-                                <span className="text-gray-500 block mb-1">Анамнез / Заметки:</span>
-                                <p className="text-gray-900 bg-gray-50 p-3 rounded">{patient.notes}</p>
+                            <div className="col-span-2 mt-2 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                                <span className="text-xs font-bold text-orange-400 uppercase mb-1 block">Анамнез / Заметки</span>
+                                <p className="text-gray-800 leading-relaxed">{patient.notes}</p>
                             </div>
                         )}
                     </div>
@@ -439,51 +447,60 @@ export default function PatientDetailPage() {
                 {/* Последняя консультация (если есть) */}
                 {consultations.length > 0 && (
                     <div className="mb-8">
-                        <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-200 pb-1">Последний визит</h2>
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                            <Activity className="w-5 h-5 text-teal-500" />
+                            <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Последний визит</h2>
+                        </div>
                         {(() => {
                             const c = consultations[0];
                             return (
                                 <div className="text-sm">
-                                    <p className="mb-2"><span className="text-gray-500">Дата:</span> <strong className="text-gray-900">{new Date(c.visitDate).toLocaleDateString('ru-RU')}</strong> {c.doctor && <span>(Врач: {c.doctor.fullName})</span>}</p>
+                                    <div className="flex items-center gap-4 mb-4 bg-teal-50 text-teal-800 px-4 py-2 rounded-lg font-medium inline-flex">
+                                        <Calendar className="w-4 h-4 text-teal-600" />
+                                        <span>{new Date(c.visitDate).toLocaleDateString('ru-RU')}</span>
+                                        {c.doctor && <span className="border-l border-teal-200 pl-4 ml-2">Врач: {c.doctor.fullName}</span>}
+                                    </div>
                                     
                                     {(c.visualAcuityOD || c.visualAcuityOS || c.intraocularPressureOD || c.intraocularPressureOS) && (
-                                        <table className="w-full mt-3 mb-4 border-collapse border border-gray-300 text-center">
-                                            <thead>
-                                                <tr className="bg-gray-100">
-                                                    <th className="border border-gray-300 py-2 px-3 font-semibold text-gray-600">Показатель</th>
-                                                    <th className="border border-gray-300 py-2 px-3 font-semibold text-gray-600">OD (Правый)</th>
-                                                    <th className="border border-gray-300 py-2 px-3 font-semibold text-gray-600">OS (Левый)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {(c.visualAcuityOD || c.visualAcuityOS) && (
-                                                    <tr>
-                                                        <td className="border border-gray-300 py-2 px-3 font-medium text-gray-700">Острота зрения (Visus)</td>
-                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.visualAcuityOD || '—'}</td>
-                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.visualAcuityOS || '—'}</td>
+                                        <div className="rounded-xl overflow-hidden border border-gray-200 mb-6">
+                                            <table className="w-full text-center">
+                                                <thead>
+                                                    <tr className="bg-gray-50 border-b border-gray-200">
+                                                        <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Показатель</th>
+                                                        <th className="py-3 px-4 font-bold text-primary-600 uppercase text-xs tracking-wider bg-primary-50/50">OD (Правый)</th>
+                                                        <th className="py-3 px-4 font-bold text-teal-600 uppercase text-xs tracking-wider bg-teal-50/50">OS (Левый)</th>
                                                     </tr>
-                                                )}
-                                                {(c.intraocularPressureOD || c.intraocularPressureOS) && (
-                                                    <tr>
-                                                        <td className="border border-gray-300 py-2 px-3 font-medium text-gray-700">ВГД (мм рт.ст.)</td>
-                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.intraocularPressureOD || '—'}</td>
-                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.intraocularPressureOS || '—'}</td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100">
+                                                    {(c.visualAcuityOD || c.visualAcuityOS) && (
+                                                        <tr>
+                                                            <td className="py-3 px-4 font-medium text-gray-600 text-left">Острота зрения (Visus)</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.visualAcuityOD || '—'}</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.visualAcuityOS || '—'}</td>
+                                                        </tr>
+                                                    )}
+                                                    {(c.intraocularPressureOD || c.intraocularPressureOS) && (
+                                                        <tr>
+                                                            <td className="py-3 px-4 font-medium text-gray-600 text-left">ВГД (мм рт.ст.)</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.intraocularPressureOD || '—'}</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.intraocularPressureOS || '—'}</td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     )}
 
                                     {c.diagnosis && (
-                                        <div className="mb-3">
-                                            <span className="text-gray-500 block mb-1">Диагноз:</span>
-                                            <p className="text-gray-900 font-medium">{c.diagnosis}</p>
+                                        <div className="mb-4">
+                                            <span className="text-xs font-bold text-red-400 uppercase mb-1 block">Диагноз</span>
+                                            <p className="text-gray-900 font-medium bg-red-50 p-3 rounded-lg border border-red-100">{c.diagnosis}</p>
                                         </div>
                                     )}
                                     {c.treatment && (
-                                        <div className="mb-3">
-                                            <span className="text-gray-500 block mb-1">Рекомендации / Лечение:</span>
-                                            <p className="text-gray-900">{c.treatment}</p>
+                                        <div className="mb-4">
+                                            <span className="text-xs font-bold text-emerald-500 uppercase mb-1 block">Рекомендации / Лечение</span>
+                                            <p className="text-gray-800 bg-emerald-50 p-3 rounded-lg border border-emerald-100">{c.treatment}</p>
                                         </div>
                                     )}
                                 </div>
@@ -495,44 +512,51 @@ export default function PatientDetailPage() {
                 {/* Последний рецепт (если есть) */}
                 {patient.prescriptions.length > 0 && (
                     <div className="mb-8">
-                        <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-200 pb-1">Актуальный рецепт</h2>
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                            <Eye className="w-5 h-5 text-indigo-500" />
+                            <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Актуальный рецепт</h2>
+                        </div>
                         {(() => {
                             const rx = patient.prescriptions[0];
                             return (
                                 <div className="text-sm">
-                                    <p className="mb-3"><span className="text-gray-500">Выписан:</span> <strong className="text-gray-900">{new Date(rx.prescribedAt).toLocaleDateString('ru-RU')}</strong></p>
-                                    <table className="w-full border-collapse border border-gray-900 text-center mb-3">
-                                        <thead>
-                                            <tr className="bg-gray-100">
-                                                <th className="border border-gray-900 py-2 px-3">Глаз</th>
-                                                <th className="border border-gray-900 py-2 px-3">Sph</th>
-                                                <th className="border border-gray-900 py-2 px-3">Cyl</th>
-                                                <th className="border border-gray-900 py-2 px-3">Ax</th>
-                                                <th className="border border-gray-900 py-2 px-3">Add</th>
-                                                <th className="border border-gray-900 py-2 px-3">PD</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td className="border border-gray-900 py-2 px-3 font-bold">OD</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odSph)}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odCyl)}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{rx.odAx || '—'}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odAdd)}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odPd, false)}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border border-gray-900 py-2 px-3 font-bold">OS</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osSph)}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osCyl)}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{rx.osAx || '—'}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osAdd)}</td>
-                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osPd, false)}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    {rx.pdTotal && <p><span className="text-gray-500">PD общий:</span> <strong className="text-gray-900">{rx.pdTotal} мм</strong></p>}
-                                    {rx.notes && <p className="mt-2"><span className="text-gray-500">Заметки:</span> {rx.notes}</p>}
+                                    <p className="mb-4 flex items-center gap-2"><span className="text-gray-400 font-medium">Выписан:</span> <strong className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md">{new Date(rx.prescribedAt).toLocaleDateString('ru-RU')}</strong></p>
+                                    <div className="rounded-xl overflow-hidden border border-indigo-100 mb-4 shadow-sm">
+                                        <table className="w-full text-center">
+                                            <thead>
+                                                <tr className="bg-indigo-50 border-b border-indigo-100">
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Глаз</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Sph</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Cyl</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Ax</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Add</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">PD</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-indigo-50">
+                                                <tr>
+                                                    <td className="py-3 px-3 font-bold text-primary-600 bg-white">OD</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odSph)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odCyl)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{rx.odAx || '—'}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odAdd)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odPd, false)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="py-3 px-3 font-bold text-teal-600 bg-gray-50/50">OS</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osSph)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osCyl)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{rx.osAx || '—'}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osAdd)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osPd, false)}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="flex gap-8">
+                                        {rx.pdTotal && <p className="bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">PD общий:</span> <strong className="text-gray-900 ml-2">{rx.pdTotal} мм</strong></p>}
+                                        {rx.notes && <p className="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">Заметки:</span> <span className="text-gray-800 ml-2">{rx.notes}</span></p>}
+                                    </div>
                                 </div>
                             );
                         })()}
@@ -540,16 +564,18 @@ export default function PatientDetailPage() {
                 )}
 
                 {/* Footer / Подписи */}
-                <div className="mt-16 pt-8 border-t border-gray-400 flex justify-between text-sm">
-                    <div>
-                        <p className="mb-1 text-gray-500">Дата выдачи:</p>
-                        <p className="font-bold border-b border-gray-400 w-32">{new Date().toLocaleDateString('ru-RU')}</p>
+                <div className="mt-12 pt-8 border-t-2 border-gray-100 flex justify-between items-end text-sm">
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <p className="text-xs font-bold text-gray-400 uppercase mb-1">Документ сформирован</p>
+                        <p className="font-bold text-gray-800 text-base">{new Date().toLocaleDateString('ru-RU')} в {new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}</p>
                     </div>
                     <div className="text-right">
-                        <p className="mb-1 text-gray-500">Врач (ФИО, подпись):</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase mb-2">Врач (ФИО, подпись)</p>
                         <div className="flex gap-4 items-end">
-                            <p className="font-bold border-b border-gray-400 w-48">{consultations.length > 0 && consultations[0].doctor ? consultations[0].doctor.fullName : ''}</p>
-                            <p className="border-b border-gray-400 w-32"></p>
+                            <p className="font-bold text-gray-800 text-lg border-b-2 border-gray-200 pb-1 px-4 min-w-[200px] text-center">
+                                {consultations.length > 0 && consultations[0].doctor ? consultations[0].doctor.fullName : ''}
+                            </p>
+                            <p className="border-b-2 border-gray-200 w-32 pb-1"></p>
                         </div>
                     </div>
                 </div>
