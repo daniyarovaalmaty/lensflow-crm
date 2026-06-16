@@ -369,14 +369,14 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
                 img.onload = resolve;
                 img.onerror = reject;
             });
-            // Располагаем печать поверх М.П., делаем её крупнее и сохраняем пропорции
-            const stampWidth = 110; // Увеличенный размер печати (было 75)
+            // Располагаем печать так, чтобы подпись легла ровно на линию Бухгалтера
+            const stampWidth = 110;
             const stampHeight = stampWidth * (img.height / img.width);
             
-            // Центрируем печать относительно надписи "М.П."
-            // М.П. находится на X = margin + 35. Центр печати будет примерно margin + 40
-            const stampX = margin + 40 - (stampWidth / 2);
-            const stampY = currentY - 5 - (stampHeight / 2);
+            // Сдвигаем печать вправо и чуть вверх, чтобы подпись (справа на картинке) 
+            // попала на линию Бухгалтера (которая начинается от margin + 100)
+            const stampX = margin + 15;
+            const stampY = currentY - 12 - (stampHeight / 2);
             
             doc.addImage(img, 'PNG', stampX, stampY, stampWidth, stampHeight);
         } catch (e) {
