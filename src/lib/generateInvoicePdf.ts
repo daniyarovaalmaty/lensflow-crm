@@ -370,7 +370,7 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
                 img.onerror = reject;
             });
             // Располагаем печать поверх М.П., делаем её крупнее и сохраняем пропорции
-            const stampWidth = 75; // Увеличенный размер печати (было 50)
+            const stampWidth = 110; // Увеличенный размер печати (было 75)
             const stampHeight = stampWidth * (img.height / img.width);
             
             // Центрируем печать относительно надписи "М.П."
