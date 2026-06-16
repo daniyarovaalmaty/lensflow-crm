@@ -1124,7 +1124,7 @@ export default function ProductionHubPage() {
                                                 {[{ label: 'OD', eye: localOd }, { label: 'OS', eye: localOs }].map(({ label, eye: rawEye }) => {
                                                     if (!rawEye) return null;
                                                     const eye = rawEye as any;
-                                                    if (!eye.characteristic) return null;
+                                                    if (!eye.characteristic || Number(eye.qty) === 0) return null;
                                                     return (
                                                     <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                         <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
@@ -1217,7 +1217,7 @@ export default function ProductionHubPage() {
                                     const os = order.config?.eyes?.os;
                                     
                                     const generateLine = (label: string, eye: any) => {
-                                        if (!eye || !eye.characteristic) return null;
+                                        if (!eye || !eye.characteristic || Number(eye.qty) === 0) return null;
                                         const p = [];
                                         if (order.company) p.push(order.company);
                                         p.push(order.patient?.name || '');
