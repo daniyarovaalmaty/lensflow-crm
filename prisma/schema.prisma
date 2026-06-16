@@ -424,6 +424,7 @@ model Contract {
   client      Organization @relation("ContractClient", fields: [clientId], references: [id])
 
   status      String   @default("active") // active | inactive
+  customPrices Json?   // { "productId": 15000, "productId2": 12000 }
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
