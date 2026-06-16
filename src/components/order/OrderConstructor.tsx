@@ -177,8 +177,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
         // Auto-fill form from selected branch
         if (branch.name) setValue('company', branch.name, { shouldValidate: true, shouldDirty: true });
-        if (branch.inn) setValue('inn', branch.inn, { shouldValidate: true, shouldDirty: true });
-        if (branch.deliveryAddress || branch.address) setValue('delivery_address', branch.deliveryAddress || branch.address, { shouldValidate: true, shouldDirty: true });
+        if (branch.inn) setValue('inn', branch.inn || '', { shouldValidate: true, shouldDirty: true });
+        if (branch.deliveryAddress || branch.address) setValue('delivery_address', branch.deliveryAddress || branch.address || '', { shouldValidate: true, shouldDirty: true });
 
         const rType = (branch.recipientType as 'laboratory' | 'distributor') || 'laboratory';
         setRecipientType(rType);
