@@ -378,17 +378,17 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
             });
 
             // 1. Рисуем печать (по центру М.П.)
-            const stampWidth = 45; // Уменьшили размер печати
+            const stampWidth = 55; // Чуть увеличили печать
             const stampHeight = stampWidth * (stampImg.height / stampImg.width);
             const stampX = margin + 40 - (stampWidth / 2);
             const stampY = currentY - 5 - (stampHeight / 2);
             doc.addImage(stampImg, 'PNG', stampX, stampY, stampWidth, stampHeight);
             
-            // 2. Рисуем подпись (на линии Бухгалтера)
-            const sigWidth = 70; // ширина подписи
+            // 2. Рисуем подпись (на линии Руководителя)
+            const sigWidth = 55; // Уменьшили ширину подписи
             const sigHeight = sigWidth * (sigImg.height / sigImg.width);
-            // Линия бухгалтера начинается с margin + 100
-            const sigX = margin + 95;
+            // Линия руководителя идет от margin + 25 до margin + 65
+            const sigX = margin + 35;
             const sigY = currentY - 5 - (sigHeight / 2);
             doc.addImage(sigImg, 'PNG', sigX, sigY, sigWidth, sigHeight);
         } catch (e) {
