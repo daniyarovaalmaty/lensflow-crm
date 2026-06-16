@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         // Look up campaign if campaignId is provided
         let campaign = null;
         if (campaignId) {
-            campaign = await prisma.marketingCampaign.findUnique({
+            campaign = await prisma.marketingCampaign.findFirst({
                 where: { campaignId }
             });
         }

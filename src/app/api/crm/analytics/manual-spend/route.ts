@@ -1,19 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
     try {
-        const { amount } = await req.json();
+        const session = await auth();
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        const { amount, clinicId } = await req.json();
+        const targetClinicId = clinicId || session.user.organizationId;
         
         if (typeof amount !== 'number' || amount < 0) {
             return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
         }
 
         // Find or create the manual campaign
-        let campaign = await prisma.marketingCampaign.findUnique({
-            where: { campaignId: 'manual_spend' }
+        let campaign = await prisma.marketingCampaign.findFirst({
+            where: { campaignId: 'manual_spend', clinicId: targetClinicId }
         });
 
         if (campaign) {
@@ -29,7 +36,8 @@ export async function POST(req: NextRequest) {
                     source: 'manual',
                     status: 'active',
                     dailyBudget: 0,
-                    totalSpend: amount
+                    totalSpend: amount,
+                    clinicId: targetClinicId
                 }
             });
         }

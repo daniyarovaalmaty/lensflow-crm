@@ -20,7 +20,7 @@ export async function GET(req: Request) {
         };
 
         const orgId = session.user.organizationId;
-        let allowedOrgIds = [orgId];
+        let allowedOrgIds: string[] = orgId ? [orgId] : [];
         
         if (orgId) {
             const org = await prisma.organization.findUnique({

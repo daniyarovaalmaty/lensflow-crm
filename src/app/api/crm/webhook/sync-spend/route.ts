@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 1. Get or create MarketingCampaign
-        let campaign = await prisma.marketingCampaign.findUnique({
+        let campaign = await prisma.marketingCampaign.findFirst({
             where: { campaignId }
         });
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
         } else {
             // Update name and budget
             campaign = await prisma.marketingCampaign.update({
-                where: { campaignId },
+                where: { id: campaign.id },
                 data: {
                     name,
                     dailyBudget: Number(dailyBudget) || campaign.dailyBudget
