@@ -169,7 +169,13 @@ export function EyeParametersCard({
                             <input
                                 type="number"
                                 step="any"
-                                {...register(`config.eyes.${eye}.km`, { valueAsNumber: true })}
+                                min="0"
+                                {...register(`config.eyes.${eye}.km`, { 
+                                    valueAsNumber: true,
+                                    onChange: (e) => {
+                                        if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                    }
+                                })}
                                 className="input"
                                 placeholder="44.50"
                             />
@@ -190,7 +196,13 @@ export function EyeParametersCard({
                         <input
                             type="number"
                             step="any"
-                            {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })}
+                            min="0"
+                            {...register(`config.eyes.${eye}.dia`, { 
+                                valueAsNumber: true,
+                                onChange: (e) => {
+                                    if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                }
+                            })}
                             className="input"
                             placeholder="10.6"
                         />
@@ -208,7 +220,13 @@ export function EyeParametersCard({
                             <input
                                 type="number"
                                 step="any"
-                                {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
+                                min="0"
+                                {...register(`config.eyes.${eye}.e1`, { 
+                                    valueAsNumber: true,
+                                    onChange: (e) => {
+                                        if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                    }
+                                })}
                                 className="input"
                                 placeholder="0.00"
                             />
@@ -217,7 +235,13 @@ export function EyeParametersCard({
                                 <input
                                     type="number"
                                     step="any"
-                                    {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
+                                    min="0"
+                                    {...register(`config.eyes.${eye}.e1`, { 
+                                        valueAsNumber: true,
+                                        onChange: (e) => {
+                                            if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                        }
+                                    })}
                                     className="input"
                                     placeholder="0.00"
                                 />
@@ -225,7 +249,13 @@ export function EyeParametersCard({
                                 <input
                                     type="number"
                                     step="any"
-                                    {...register(`config.eyes.${eye}.e2`, { valueAsNumber: true })}
+                                    min="0"
+                                    {...register(`config.eyes.${eye}.e2`, { 
+                                        valueAsNumber: true,
+                                        onChange: (e) => {
+                                            if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                        }
+                                    })}
                                     className="input"
                                     placeholder="0.00"
                                 />
