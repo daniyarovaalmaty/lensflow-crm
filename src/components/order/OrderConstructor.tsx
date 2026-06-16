@@ -126,20 +126,20 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         }
     }, [session?.user?.role]);
 
-    // Load branches for procurement users (with routing config)
+    // Load branches for non-distributor users
     useEffect(() => {
-        if (!isProcurement) return;
+        if (isDistributor) return;
         (async () => {
             try {
                 const res = await fetch('/api/organizations/branches');
                 if (res.ok) setBranches(await res.json());
             } catch (e) { /* ignore */ }
         })();
-    }, [isProcurement]);
+    }, [isDistributor]);
 
-    // Auto-select recipient when branch is selected
+    // Auto-select recipient and contract when branch is selected
     useEffect(() => {
-        if (!selectedBranchId || !isProcurement) return;
+        if (!selectedBranchId) return;
         const branch = branches.find(b => b.id === selectedBranchId);
         if (!branch) return;
         const rType = (branch.recipientType as 'laboratory' | 'distributor') || 'laboratory';
@@ -149,7 +149,22 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         } else {
             setSelectedDistributorId('');
         }
-    }, [selectedBranchId, branches, isProcurement]);
+
+        // Auto-select contract
+        if (contracts.length > 0) {
+            const branchContract = contracts.find(c => c.clientId === selectedBranchId);
+            if (branchContract) {
+                setValue('contract_id', branchContract.id, { shouldValidate: true });
+            } else {
+                const hqContract = contracts.find(c => c.client?.type === 'headquarters' || c.client?.type === 'standalone' || c.clientId === session?.user?.organizationId);
+                if (hqContract) {
+                    setValue('contract_id', hqContract.id, { shouldValidate: true });
+                } else {
+                    setValue('contract_id', '', { shouldValidate: true });
+                }
+            }
+        }
+    }, [selectedBranchId, branches, contracts, setValue, session?.user?.organizationId]);
 
     // Fetch organization profile for auto-fill
     useEffect(() => {
@@ -180,6 +195,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     );
 
     const additionalProducts = useMemo(() => catalog.filter(p => p.category !== 'lens'), [catalog]);
+
+    const availableContracts = useMemo(() => {
+        if (!selectedBranchId) return contracts;
+        return contracts.filter(c => c.clientId === selectedBranchId || c.client?.type === 'headquarters' || c.client?.type === 'standalone' || c.clientId === session?.user?.organizationId);
+    }, [contracts, selectedBranchId, session?.user?.organizationId]);
 
     // Map characteristic code → catalog product
     // When DK=50, it's always a trial lens — find the trial product
@@ -345,8 +365,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             validationErrors.push('Выберите дистрибьютора для этого заказа');
         }
 
-        // Branch validation for procurement
-        if (isProcurement && !selectedBranchId) {
+        // Branch validation
+        if (!isDistributor && branches.length > 0 && !selectedBranchId) {
             validationErrors.push('Выберите филиал для этого заказа');
         }
 
@@ -374,8 +394,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     submitData.labOrgId = partnerLab.id;
                 }
             }
-            // For procurement: set branch as the order's organization
-            if (isProcurement && selectedBranchId) {
+            // Set branch as the order's organization
+            if (!isDistributor && selectedBranchId) {
                 submitData.branchOrgId = selectedBranchId;
             }
             if (rgpPhotos.od || rgpPhotos.os) {
@@ -758,7 +778,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                         />
                     </div>
 
-                    {!isDistributor && !isProcurement && contracts.length > 0 && (
+                    {!isDistributor && availableContracts.length > 0 && (
                         <div className="md:col-span-2">
                             <label htmlFor="contract_id" className="block text-sm font-medium text-gray-700 mb-1.5">
                                 Договор
@@ -769,7 +789,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                 className="input w-full bg-white"
                             >
                                 <option value="">-- Без договора --</option>
-                                {contracts.map(c => (
+                                {availableContracts.map(c => (
                                     <option key={c.id} value={c.id}>
                                         № {c.number} от {new Date(c.date).toLocaleDateString('ru-RU')} ({c.provider?.name}) {c.client?.type === 'branch' ? `[Филиал: ${c.client.name}]` : '[Головная компания]'}
                                     </option>
@@ -780,8 +800,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 </div>
             </motion.div>
 
-            {/* Branch Selection — only for procurement users */}
-            {isProcurement && (
+            {/* Branch Selection */}
+            {!isDistributor && branches.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
