@@ -77,8 +77,8 @@ export default function ProfilePage() {
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const logoInputRef = useRef<HTMLInputElement>(null);
 
-    const isManager = ['optic_manager', 'lab_head'].includes(session?.user?.subRole as string);
-    const hasOrg = ['optic', 'laboratory'].includes(session?.user?.role as string);
+    const isManager = ['optic_manager', 'lab_head', 'dist_head'].includes(session?.user?.subRole as string);
+    const hasOrg = ['optic', 'laboratory', 'distributor'].includes(session?.user?.role as string);
 
     useEffect(() => {
         (async () => {

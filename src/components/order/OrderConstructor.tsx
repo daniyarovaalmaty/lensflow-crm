@@ -84,6 +84,38 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const isDistributor = userRole === 'distributor';
     const canSeePrices = subRole !== 'optic_doctor';
 
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        getValues,
+        watch,
+        formState: { errors },
+    } = useForm<CreateOrderDTO>({
+        resolver: zodResolver(CreateOrderSchema),
+        defaultValues: {
+            optic_id: opticId,
+            doctor: session?.user?.profile?.fullName || '',
+            is_urgent: false,
+            patient: {
+                name: '',
+                phone: '',
+            },
+            company: '',
+            inn: '',
+            delivery_method: '',
+            delivery_address: '',
+            doctor_email: '',
+            config: {
+                type: 'medilens',
+                eyes: {
+                    od: { qty: 1 },
+                    os: { qty: 1 },
+                },
+            },
+        },
+    });
+
     useEffect(() => {
         (async () => {
             try {
@@ -270,37 +302,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         setSelectedProducts(prev => prev.filter(p => p.productId !== productId));
     };
 
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        getValues,
-        watch,
-        formState: { errors },
-    } = useForm<CreateOrderDTO>({
-        resolver: zodResolver(CreateOrderSchema),
-        defaultValues: {
-            optic_id: opticId,
-            doctor: session?.user?.profile?.fullName || '',
-            is_urgent: false,
-            patient: {
-                name: '',
-                phone: '',
-            },
-            company: '',
-            inn: '',
-            delivery_method: '',
-            delivery_address: '',
-            doctor_email: '',
-            config: {
-                type: 'medilens',
-                eyes: {
-                    od: { qty: 1 },
-                    os: { qty: 1 },
-                },
-            },
-        },
-    });
+    // Form has been moved up to fix React hooks linting/compile issues
 
     // Mirror OD to OS — set each field individually to trigger watchers
     const mirrorODtoOS = () => {
