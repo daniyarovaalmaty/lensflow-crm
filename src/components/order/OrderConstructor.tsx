@@ -74,7 +74,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [distributors, setDistributors] = useState<{ id: string; name: string; city?: string }[]>([]);
     const [selectedDistributorId, setSelectedDistributorId] = useState<string>('');
     const [recipientType, setRecipientType] = useState<'laboratory' | 'distributor'>('laboratory');
-    const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string }[]>([]);
+    const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string; inn?: string | null; deliveryAddress?: string | null; address?: string | null; directorName?: string | null }[]>([]);
     const [selectedBranchId, setSelectedBranchId] = useState<string>('');
     const [confirmData, setConfirmData] = useState<any>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -174,6 +174,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         if (!selectedBranchId) return;
         const branch = branches.find(b => b.id === selectedBranchId);
         if (!branch) return;
+
+        // Auto-fill form from selected branch
+        if (branch.name) setValue('company', branch.name, { shouldValidate: true, shouldDirty: true });
+        if (branch.inn) setValue('inn', branch.inn, { shouldValidate: true, shouldDirty: true });
+        if (branch.deliveryAddress || branch.address) setValue('delivery_address', branch.deliveryAddress || branch.address, { shouldValidate: true, shouldDirty: true });
+
         const rType = (branch.recipientType as 'laboratory' | 'distributor') || 'laboratory';
         setRecipientType(rType);
         if (rType === 'distributor' && branch.recipientOrgId) {

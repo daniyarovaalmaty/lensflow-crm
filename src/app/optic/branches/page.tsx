@@ -21,6 +21,7 @@ interface Branch {
     patientsCount: number;
     employees: { id: string; fullName: string; subRole: string }[];
     allowedPartnerIds: string[];
+    inn: string | null;
 }
 
 interface Employee {
@@ -45,7 +46,7 @@ export default function BranchesPage() {
     const [saving, setSaving] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [form, setForm] = useState({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '' });
+    const [form, setForm] = useState({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '', inn: '' });
     const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
     const [allPartners, setAllPartners] = useState<{id: string, name: string}[]>([]);
     const [assigningBranch, setAssigningBranch] = useState<string | null>(null);
@@ -109,7 +110,7 @@ export default function BranchesPage() {
             if (res.ok) {
                 setShowForm(false);
                 setEditingId(null);
-                setForm({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '' });
+                setForm({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '', inn: '' });
                 await loadData();
             } else {
                 const data = await res.json();
@@ -193,6 +194,7 @@ export default function BranchesPage() {
             bankName: branch.bankName || '',
             bik: branch.bik || '',
             iban: branch.iban || '',
+            inn: branch.inn || '',
         });
         setShowForm(true);
     };
@@ -214,7 +216,7 @@ export default function BranchesPage() {
                         </p>
                     </div>
                     <button
-                        onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '' }); }}
+                        onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '', inn: '' }); }}
                         className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" /> Добавить филиал
@@ -237,6 +239,10 @@ export default function BranchesPage() {
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Название *</label>
                                     <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Оптика Алматы-1" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">БИН / ИИН</label>
+                                    <input value={form.inn} onChange={e => setForm(f => ({ ...f, inn: e.target.value }))} placeholder="123456789012" className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>

@@ -40,6 +40,7 @@ export async function GET() {
         bankName: b.bankName,
         bik: b.bik,
         iban: b.iban,
+        inn: b.inn,
         allowedPartnerIds: b.allowedPartnerIds,
         createdAt: b.createdAt,
         usersCount: b._count.users,
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
     const { action } = body;
 
     if (action === 'create') {
-        const { name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban } = body;
+        const { name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban, inn } = body;
         if (!name?.trim()) {
             return NextResponse.json({ error: 'Название филиала обязательно' }, { status: 400 });
         }
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
                 bankName: bankName?.trim() || null,
                 bik: bik?.trim() || null,
                 iban: iban?.trim() || null,
+                inn: inn?.trim() || null,
                 status: 'active',
             },
         });
@@ -113,7 +115,7 @@ export async function POST(request: Request) {
     }
 
     if (action === 'update') {
-        const { branchId, name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban } = body;
+        const { branchId, name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban, inn } = body;
         if (!branchId) return NextResponse.json({ error: 'branchId обязателен' }, { status: 400 });
 
         const branch = await prisma.organization.findFirst({
@@ -133,6 +135,7 @@ export async function POST(request: Request) {
                 ...(bankName !== undefined && { bankName: bankName?.trim() || null }),
                 ...(bik !== undefined && { bik: bik?.trim() || null }),
                 ...(iban !== undefined && { iban: iban?.trim() || null }),
+                ...(inn !== undefined && { inn: inn?.trim() || null }),
             },
         });
 

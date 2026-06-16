@@ -77,8 +77,8 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     const providerIban = order.contract?.provider?.iban || 'KZ48601A861003807741';
 
     const clientName = order.contract?.client?.name || order.company || 'Покупатель не указан';
-    const clientInn = order.contract?.client?.inn || '';
-    const clientAddress = order.contract?.client?.address || '';
+    const clientInn = order.contract?.client?.inn || (order as any).inn || '';
+    const clientAddress = order.contract?.client?.address || (order as any).delivery_address || '';
 
     let contractStr = 'Без договора';
     if (order.contract) {
