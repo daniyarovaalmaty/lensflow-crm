@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -170,6 +170,8 @@ export default function PatientDetailPage() {
     });
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
+
+    const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
         fetch(`/api/patients/${id}`)
@@ -554,101 +556,176 @@ export default function PatientDetailPage() {
             </div>
 
             {/* --- ИНТЕРФЕЙС CRM (Виден на экране, скрыт при печати) --- */}
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 print:hidden">
-                {/* Back */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 print:hidden">
                 <button onClick={() => router.push('/optic/patients')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 mb-6 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> К списку пациентов
                 </button>
 
-                {/* Header */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6 shadow-sm">
-                    <div className="flex items-start gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                            {patient.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                            {isEditing ? (
-                                <input
-                                    type="text" value={editForm.name || ''}
-                                    onChange={e => setEditForm((f: any) => ({ ...f, name: e.target.value }))}
-                                    className="input text-xl font-bold mb-2 w-full"
-                                />
-                            ) : (
-                                <h1 className="text-2xl font-bold text-gray-900 mb-1">{patient.name}</h1>
-                            )}
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                                {patient.gender === 'male' && <span className="text-blue-500 font-medium">♂ Мужской</span>}
-                                {patient.gender === 'female' && <span className="text-pink-500 font-medium">♀ Женский</span>}
-                                {patient.birthDate && <span>{new Date(patient.birthDate).toLocaleDateString('ru-RU')} ({calcAge(patient.birthDate)})</span>}
-                                <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" />{patient.orders.length} заказов</span>
-                                <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{patient.prescriptions.length} рецептов</span>
+                <div className="flex flex-col lg:flex-row gap-8">
+                    
+                    {/* LEFT SIDEBAR */}
+                    <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
+                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-100 p-6 shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-primary-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                            
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-3xl font-bold shadow-md shadow-primary-200 mb-4">
+                                    {patient.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
+                                </div>
+                                
+                                {isEditing ? (
+                                    <input
+                                        type="text" value={editForm.name || ''}
+                                        onChange={e => setEditForm((f: any) => ({ ...f, name: e.target.value }))}
+                                        className="input text-lg font-bold mb-2 w-full text-center"
+                                    />
+                                ) : (
+                                    <h1 className="text-xl font-bold text-gray-900 mb-1">{patient.name}</h1>
+                                )}
+                                
+                                <div className="flex flex-wrap justify-center gap-2 mb-4">
+                                    {patient.gender === 'male' && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium">♂ Мужской</span>}
+                                    {patient.gender === 'female' && <span className="px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 text-xs font-medium">♀ Женский</span>}
+                                    {patient.birthDate && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{calcAge(patient.birthDate)}</span>}
+                                </div>
+                                
+                                <div className="flex gap-2 w-full">
+                                    {isEditing ? (
+                                        <>
+                                            <button onClick={() => setIsEditing(false)} className="btn bg-gray-100 hover:bg-gray-200 flex-1 text-sm"><X className="w-4 h-4 mx-auto" /></button>
+                                            <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-[2] text-sm flex items-center justify-center gap-1">
+                                                <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить'}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button onClick={() => window.print()} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-1 text-sm flex justify-center text-gray-600">
+                                                <Printer className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
+                                                <Edit2 className="w-4 h-4" /> Редактировать
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex gap-2">
-                            {isEditing ? (
-                                <>
-                                    <button onClick={() => setIsEditing(false)} className="btn btn-secondary btn-sm flex items-center gap-1"><X className="w-4 h-4" /> Отмена</button>
-                                    <button onClick={handleSave} disabled={saving} className="btn btn-primary btn-sm flex items-center gap-1">
-                                        <Save className="w-4 h-4" /> {saving ? 'Сохранение...' : 'Сохранить'}
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button onClick={() => window.print()} className="btn bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 btn-sm flex items-center gap-1">
-                                        <Printer className="w-4 h-4" /> Распечатать
-                                    </button>
-                                    <button onClick={() => setIsEditing(true)} className="btn btn-secondary btn-sm flex items-center gap-1">
-                                        <Edit2 className="w-4 h-4" /> Редактировать
-                                    </button>
-                                </>
+
+                            <div className="mt-6 space-y-4 relative z-10">
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
+                                    {isEditing ? (
+                                        <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
+                                    {isEditing ? (
+                                        <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дата рождения</label>
+                                    {isEditing ? (
+                                        <input type="date" value={editForm.birthDate?.split('T')[0] || ''} onChange={e => setEditForm((f: any) => ({ ...f, birthDate: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.birthDate ? <><Calendar className="w-4 h-4 text-primary-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {(isEditing || patient.notes) && (
+                                <div className="mt-6 pt-6 border-t border-gray-100 relative z-10">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Заметки / Анамнез</label>
+                                    {isEditing ? (
+                                        <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={4} placeholder="Аллергии, особенности здоровья..." />
+                                    ) : (
+                                        <p className="text-gray-700 text-sm bg-orange-50/50 rounded-xl p-4 border border-orange-100/50 leading-relaxed">{patient.notes}</p>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Contact info */}
-                    <div className="mt-5 pt-5 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Телефон</label>
-                            {isEditing ? (
-                                <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input w-full" />
-                            ) : (
-                                <p className="flex items-center gap-1.5 text-gray-900 font-medium"><Phone className="w-4 h-4 text-gray-400" />{patient.phone}</p>
-                            )}
+                    {/* MAIN CONTENT AREA */}
+                    <div className="flex-1 min-w-0">
+                        {/* TABS HEADER */}
+                        <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-gray-100 p-1 flex gap-1 mb-6 overflow-x-auto no-scrollbar">
+                            {[
+                                { id: 'overview', icon: LayoutDashboard, label: 'Обзор' },
+                                { id: 'consultations', icon: Activity, label: 'Консультации', count: consultations.length },
+                                { id: 'prescriptions', icon: Eye, label: 'Рецепты', count: patient.prescriptions.length },
+                                { id: 'orders', icon: ClipboardList, label: 'Заказы', count: patient.orders.length },
+                                { id: 'files', icon: Paperclip, label: 'Снимки', count: patient.attachments?.length || 0 }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${activeTab === tab.id ? 'bg-primary-50 text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+                                >
+                                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400'}`} />
+                                    {tab.label}
+                                    {tab.count !== undefined && tab.count > 0 && (
+                                        <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] leading-none ${activeTab === tab.id ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}`}>{tab.count}</span>
+                                    )}
+                                </button>
+                            ))}
                         </div>
-                        <div>
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Email</label>
-                            {isEditing ? (
-                                <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input w-full" />
-                            ) : (
-                                <p className="flex items-center gap-1.5 text-gray-900">{patient.email ? <><Mail className="w-4 h-4 text-gray-400" />{patient.email}</> : '—'}</p>
-                            )}
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Дата рождения</label>
-                            {isEditing ? (
-                                <input type="date" value={editForm.birthDate?.split('T')[0] || ''} onChange={e => setEditForm((f: any) => ({ ...f, birthDate: e.target.value }))} className="input w-full" />
-                            ) : (
-                                <p className="flex items-center gap-1.5 text-gray-900">{patient.birthDate ? <><Calendar className="w-4 h-4 text-gray-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Notes */}
-                    {(isEditing || patient.notes) && (
-                        <div className="mt-4">
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Заметки / Анамнез</label>
-                            {isEditing ? (
-                                <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none" rows={3} placeholder="Аллергии, особенности здоровья..." />
-                            ) : (
-                                <p className="text-gray-700 text-sm bg-amber-50 rounded-lg p-3 border border-amber-100">{patient.notes}</p>
-                            )}
-                        </div>
-                    )}
-                </div>
+                        {/* OVERVIEW TAB */}
+                        {activeTab === 'overview' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2"><Activity className="w-4 h-4 text-teal-500" /> Активность</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Последний визит</p>
+                                            <p className="font-semibold text-gray-900">{consultations.length > 0 ? new Date(consultations[0].visitDate).toLocaleDateString('ru-RU') : 'Нет визитов'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Актуальный рецепт</p>
+                                            <p className="font-semibold text-gray-900">{patient.prescriptions.length > 0 ? new Date(patient.prescriptions[0].prescribedAt).toLocaleDateString('ru-RU') : 'Нет рецептов'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-gray-50 flex gap-2">
+                                        <button onClick={() => setActiveTab('consultations')} className="btn bg-gray-50 hover:bg-gray-100 flex-1 text-xs text-gray-700">Перейти к визитам →</button>
+                                    </div>
+                                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Prescriptions */}
-                    <div>
+                                <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-3xl border border-teal-100/50 p-6 shadow-sm">
+                                    <h3 className="text-sm font-bold text-teal-900 mb-4 flex items-center gap-2"><Eye className="w-4 h-4 text-teal-600" /> Последние показатели</h3>
+                                    {consultations.length > 0 && (consultations[0].visualAcuityOD || consultations[0].visualAcuityOS) ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">Visus OD</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].visualAcuityOD ?? '—'}</p>
+                                            </div>
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">Visus OS</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].visualAcuityOS ?? '—'}</p>
+                                            </div>
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">ВГД OD</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].intraocularPressureOD ?? '—'}</p>
+                                            </div>
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">ВГД OS</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].intraocularPressureOS ?? '—'}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-teal-700/70">Нет данных о зрении в последнем визите.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className={activeTab === 'prescriptions' ? 'block' : 'hidden'}>
+                            {/* Prescriptions */}
+                            <div>
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <Stethoscope className="w-5 h-5 text-primary-600" /> Рецепты на зрение
@@ -736,6 +813,10 @@ export default function PatientDetailPage() {
                         )}
                     </div>
 
+                    </div>
+                </div>
+
+                <div className={activeTab === 'orders' ? 'block' : 'hidden'}>
                     {/* Orders */}
                     <div>
                         <div className="flex items-center justify-between mb-3">
@@ -791,8 +872,9 @@ export default function PatientDetailPage() {
                     </div>
                 </div>
 
-                {/* Consultations */}
-                <div className="mt-6">
+                <div className={activeTab === 'consultations' ? 'block' : 'hidden'}>
+                    {/* Consultations */}
+                    <div className="mt-6">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <Activity className="w-5 h-5 text-teal-600" /> История консультаций
@@ -1012,8 +1094,9 @@ export default function PatientDetailPage() {
                     )}
                 </div>
 
-                {/* Attachments Section */}
-                <div className="mt-6">
+                <div className={activeTab === 'files' ? 'block' : 'hidden'}>
+                    {/* Attachments Section */}
+                    <div className="mt-6">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <Paperclip className="w-5 h-5 text-indigo-600" /> Показатели и Снимки
@@ -1066,7 +1149,10 @@ export default function PatientDetailPage() {
                         </div>
                     )}
                 </div>
+                </div>
 
+                    </div>
+                </div>
             </div>
         </div>
     );
