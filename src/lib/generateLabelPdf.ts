@@ -257,7 +257,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
 
     // ===== CLINIC + Dk =====
     doc.setFont('Roboto', 'normal');
-    doc.setFontSize(4);
+    doc.setFontSize(5); // Увеличенный шрифт клиники
     doc.setTextColor(100, 100, 100);
     let opticName = order.company || order.meta.optic_name || '';
     const lines = doc.splitTextToSize(opticName, 16);
@@ -267,7 +267,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     }
     
     // Bottom-aligned to y=24.5 (which is the baseline for Dk)
-    const lineHeight = 1.4;
+    const lineHeight = 1.8;
     const startY = 24.5 - (displayLines.length - 1) * lineHeight;
     displayLines.forEach((line: string, i: number) => {
         doc.text(line, 2, startY + i * lineHeight);
