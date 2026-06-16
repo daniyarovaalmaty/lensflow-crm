@@ -203,9 +203,23 @@ export default function OpticPartnersPage() {
                                         </div>
                                         <div>
                                             <h3 className="text-base font-bold text-gray-900">{contract.provider?.name || 'Неизвестная лаборатория'}</h3>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5 flex-wrap">
                                                 <Tag className="w-3 h-3" />
                                                 Договор №{contract.number} от {new Date(contract.date).toLocaleDateString('ru-RU')}
+                                                
+                                                {contract.id.startsWith('virtual-') && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setNewContractLab(contract.providerId);
+                                                            setShowAddForm(true);
+                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }}
+                                                        className="ml-1 text-[10px] font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-0.5 rounded transition-colors border border-amber-200"
+                                                    >
+                                                        Внести данные реального договора
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
