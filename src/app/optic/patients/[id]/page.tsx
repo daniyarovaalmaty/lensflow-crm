@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -39,6 +39,9 @@ interface PatientDetail {
     birthDate: string | null;
     gender: string | null;
     notes: string | null;
+    attachments: Array<{
+        id: string; name: string; url: string; type: string; size: number; uploadedAt: string;
+    }> | null;
     doctor: { id: string; fullName: string } | null;
     createdAt: string;
     prescriptions: Prescription[];
@@ -240,6 +243,56 @@ export default function PatientDetailPage() {
         if (!birthDate) return '';
         const age = Math.floor((Date.now() - new Date(birthDate).getTime()) / 31557600000);
         return `${age} лет`;
+    };
+
+    const [uploadingFile, setUploadingFile] = useState(false);
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingFile(true);
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target?.result as string;
+            const newAttachment = {
+                id: Math.random().toString(36).substring(2, 9),
+                name: file.name,
+                url: base64,
+                type: file.type,
+                size: file.size,
+                uploadedAt: new Date().toISOString()
+            };
+
+            const updatedAttachments = [...(patient?.attachments || []), newAttachment];
+
+            try {
+                const res = await fetch(`/api/patients/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ attachments: updatedAttachments }),
+                });
+                if (res.ok) {
+                    setPatient(p => p ? { ...p, attachments: updatedAttachments } : p);
+                }
+            } finally {
+                setUploadingFile(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleDeleteAttachment = async (attId: string) => {
+        if (!confirm('Удалить этот файл?')) return;
+        const updatedAttachments = (patient?.attachments || []).filter(a => a.id !== attId);
+        const res = await fetch(`/api/patients/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ attachments: updatedAttachments }),
+        });
+        if (res.ok) {
+            setPatient(p => p ? { ...p, attachments: updatedAttachments } : p);
+        }
     };
 
     if (isLoading) return (
@@ -674,6 +727,62 @@ export default function PatientDetailPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Attachments Section */}
+                <div className="mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Paperclip className="w-5 h-5 text-indigo-600" /> Показатели и Снимки
+                            {patient.attachments && patient.attachments.length > 0 && (
+                                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{patient.attachments.length}</span>
+                            )}
+                        </h2>
+                        <label className="btn btn-secondary btn-sm flex items-center gap-1 cursor-pointer">
+                            <UploadCloud className="w-4 h-4" /> 
+                            {uploadingFile ? 'Загрузка...' : 'Добавить файл'}
+                            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploadingFile} accept="image/*,application/pdf" />
+                        </label>
+                    </div>
+
+                    {!patient.attachments || patient.attachments.length === 0 ? (
+                        <div className="text-center py-10 bg-white rounded-xl border border-gray-200 border-dashed">
+                            <UploadCloud className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">Снимки с топографа, авторефрактора и другие файлы</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {patient.attachments.map(att => (
+                                <div key={att.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 transition-colors group relative flex flex-col">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600">
+                                            {att.type.startsWith('image/') ? <Eye className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 truncate" title={att.name}>{att.name}</p>
+                                            <p className="text-xs text-gray-500">{(att.size / 1024).toFixed(1)} KB • {new Date(att.uploadedAt).toLocaleDateString('ru-RU')}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {att.type.startsWith('image/') && (
+                                        <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden mb-3 border border-gray-200">
+                                            <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+
+                                    <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100">
+                                        <a href={att.url} download={att.name} className="text-xs text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
+                                            <Download className="w-3.5 h-3.5" /> Скачать
+                                        </a>
+                                        <button onClick={() => handleDeleteAttachment(att.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
             </div>
         </div>
     );

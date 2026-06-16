@@ -42,19 +42,25 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { name, phone, email, birthDate, gender, notes, doctorId } = body;
+    const { name, phone, email, birthDate, gender, notes, doctorId, attachments } = body;
+
+    const updateData: any = {
+        name: name?.trim(),
+        phone: phone?.trim(),
+        email: email?.trim() || null,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        gender: gender || null,
+        notes: notes || null,
+        doctorId: doctorId || null,
+    };
+
+    if (attachments !== undefined) {
+        updateData.attachments = attachments;
+    }
 
     const patient = await prisma.patient.update({
         where: { id: params.id },
-        data: {
-            name: name?.trim(),
-            phone: phone?.trim(),
-            email: email?.trim() || null,
-            birthDate: birthDate ? new Date(birthDate) : null,
-            gender: gender || null,
-            notes: notes || null,
-            doctorId: doctorId || null,
-        },
+        data: updateData,
     });
 
     // Sync to MedMundus if linked

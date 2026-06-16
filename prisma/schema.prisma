@@ -223,6 +223,7 @@ model Patient {
   birthDate      DateTime?
   gender         String?   // male | female
   notes          String?   @db.Text
+  attachments    Json?     // [{ name, url, type, size, uploadedAt }]
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   doctorId       String?

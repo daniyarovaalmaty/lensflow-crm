@@ -134,14 +134,45 @@ export default function DoctorCalendar() {
         setIsModalOpen(true);
     };
 
-    const handleStartConsultation = () => {
+    const handleStartConsultation = async () => {
         if (!selectedAppointment) return;
-        // If patient exists, go to patient card, else create patient first or go to quick consultation
+        
         if (selectedAppointment.patientId) {
             router.push(`/optic/patients/${selectedAppointment.patientId}`);
         } else {
-            toast('Сначала создайте карточку пациента', { icon: 'ℹ️' });
-            router.push('/optic/patients');
+            const toastId = toast.loading('Создание профиля пациента...');
+            try {
+                // Создаем карточку пациента из данных записи
+                const res = await fetch('/api/patients', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: selectedAppointment.patientName || 'Неизвестный пациент',
+                        phone: selectedAppointment.patientPhone || '',
+                        doctorId: session?.user?.id
+                    })
+                });
+                
+                if (res.ok) {
+                    const patient = await res.json();
+                    
+                    // Привязываем запись к новому пациенту
+                    await fetch(`/api/appointments/${selectedAppointment.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ patientId: patient.id })
+                    });
+                    
+                    toast.success('Профиль создан', { id: toastId });
+                    router.push(`/optic/patients/${patient.id}`);
+                } else {
+                    toast.error('Ошибка создания пациента', { id: toastId });
+                    router.push('/optic/patients');
+                }
+            } catch (error) {
+                toast.error('Ошибка сети', { id: toastId });
+                router.push('/optic/patients');
+            }
         }
     };
 
