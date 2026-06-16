@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
     try {
-        const { searchParams } = new URL(req.url);
-        const clinicId = searchParams.get('clinicId');
+        const session = await auth();
+        if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const whereClause: any = { funnel: 'sales' };
-        if (clinicId) whereClause.clinicId = clinicId;
+        const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
+        if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
+
+        const clinicId = user.organizationId;
+
+        const whereClause: any = { funnel: 'sales', clinicId };
 
         // 1. Fetch all leads and counts
         const leads = await prisma.lead.findMany({
