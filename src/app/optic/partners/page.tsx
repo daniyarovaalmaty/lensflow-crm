@@ -37,7 +37,23 @@ export default function OpticPartnersPage() {
 
                 const cRes = await fetch('/api/optic/contracts');
                 if (cRes.ok) {
-                    setContracts(await cRes.json());
+                    const fetchedContracts = await cRes.json();
+                    
+                    // Add virtual contract for defaultLab if missing
+                    const defaultId = data.organization?.defaultLabId;
+                    if (defaultId && !fetchedContracts.some((c: any) => c.providerId === defaultId)) {
+                        const defaultLab = data.laboratories.find((l: any) => l.id === defaultId);
+                        fetchedContracts.unshift({
+                            id: `virtual-${defaultId}`,
+                            number: 'Базовый',
+                            date: new Date().toISOString(),
+                            providerId: defaultId,
+                            provider: defaultLab || { id: defaultId, name: 'Лаборатория по умолчанию' },
+                            customPrices: null
+                        });
+                    }
+                    
+                    setContracts(fetchedContracts);
                 }
             } catch (error) {
                 console.error(error);
