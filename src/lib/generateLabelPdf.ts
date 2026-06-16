@@ -141,11 +141,26 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setTextColor(80, 80, 80);
     doc.text(productName, 44 - qtyW - 1, 3.5, { align: 'right' });
     
-    const colorOd = odQty > 0 ? od.color || '' : '';
-    const colorOs = osQty > 0 ? os.color || '' : '';
+    let colorOd = odQty > 0 ? od.color || '' : '';
+    let colorOs = osQty > 0 ? os.color || '' : '';
+    
+    // Shorten long words if it's going to overlap
+    if ((colorOd.length + colorOs.length) > 20) {
+        colorOd = colorOd.replace(/Optimum/gi, 'Opt.');
+        colorOs = colorOs.replace(/Optimum/gi, 'Opt.');
+    }
+
     const colorStr = colorOd && colorOs && colorOd !== colorOs
         ? `${colorOd}/${colorOs}`
         : colorOd || colorOs || '';
+        
+    let colorFontSize = 4;
+    doc.setFontSize(colorFontSize);
+    while (doc.getTextWidth(colorStr) > 20 && colorFontSize > 2) {
+        colorFontSize -= 0.5;
+        doc.setFontSize(colorFontSize);
+    }
+        
     doc.text(colorStr, 44 - qtyW - 1, 5, { align: 'right' });
 
     // ===== FIRST DIVIDER =====
