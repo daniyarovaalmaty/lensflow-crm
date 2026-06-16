@@ -21,6 +21,7 @@ export default function OpticPartnersPage() {
     const [newContractLab, setNewContractLab] = useState('');
     const [newContractBranch, setNewContractBranch] = useState('');
     const [newContractDocument, setNewContractDocument] = useState<{name: string, data: string, mimeType: string, size: number} | null>(null);
+    const [isWithoutContract, setIsWithoutContract] = useState(false);
     const [creatingContract, setCreatingContract] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
 
@@ -95,9 +96,20 @@ export default function OpticPartnersPage() {
     };
 
     const handleAddContract = async () => {
-        if (!newContractLab || !newContractNumber || !newContractDate) {
-            return toast.error('Заполните все поля');
+        if (!newContractLab) return toast.error('Выберите лабораторию');
+
+        let finalNumber = newContractNumber;
+        let finalDate = newContractDate;
+        let finalDoc = newContractDocument;
+
+        if (isWithoutContract) {
+            finalNumber = 'Без договора';
+            finalDate = new Date().toISOString().split('T')[0];
+            finalDoc = null;
+        } else {
+            if (!newContractNumber || !newContractDate) return toast.error('Заполните все поля');
         }
+
         setCreatingContract(true);
         try {
             const res = await fetch('/api/optic/contracts', {
@@ -105,10 +117,10 @@ export default function OpticPartnersPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     providerId: newContractLab, 
-                    number: newContractNumber, 
-                    date: newContractDate,
+                    number: finalNumber, 
+                    date: finalDate,
                     branchId: newContractBranch || undefined,
-                    document: newContractDocument
+                    document: finalDoc
                 })
             });
             if (res.ok) {
@@ -120,6 +132,7 @@ export default function OpticPartnersPage() {
                 setNewContractLab('');
                 setNewContractBranch('');
                 setNewContractDocument(null);
+                setIsWithoutContract(false);
                 setShowAddForm(false);
             } else {
                 toast.error('Ошибка добавления партнера');
@@ -230,35 +243,50 @@ export default function OpticPartnersPage() {
                                             {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                                         </select>
                                     </div>
-                                    <div className="w-full sm:w-48">
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Номер договора</label>
-                                        <input type="text" value={newContractNumber} onChange={e => setNewContractNumber(e.target.value)} className="input text-sm w-full bg-white" placeholder="№..." />
-                                    </div>
-                                    <div className="w-full sm:w-48">
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Дата договора</label>
-                                        <input type="date" value={newContractDate} onChange={e => setNewContractDate(e.target.value)} className="input text-sm w-full bg-white" />
-                                    </div>
-                                    <div className="w-full sm:w-48">
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Скан договора</label>
-                                        <div className="relative">
+                                    <div className="w-full sm:w-auto flex items-center h-[38px]">
+                                        <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 bg-white border border-gray-200 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
                                             <input 
-                                                type="file" 
-                                                onChange={handleFileChange} 
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                                                accept=".pdf,.doc,.docx,image/*"
+                                                type="checkbox" 
+                                                checked={isWithoutContract}
+                                                onChange={e => setIsWithoutContract(e.target.checked)}
+                                                className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
                                             />
-                                            <div className="input text-sm w-full bg-white flex items-center justify-between overflow-hidden">
-                                                <span className="truncate text-gray-500 text-xs">
-                                                    {newContractDocument ? newContractDocument.name : 'Выберите файл (до 3МБ)'}
-                                                </span>
-                                                <Upload className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
-                                            </div>
-                                        </div>
+                                            <span className="whitespace-nowrap">Без договора</span>
+                                        </label>
                                     </div>
+                                    {!isWithoutContract && (
+                                        <>
+                                            <div className="w-full sm:w-40">
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Номер договора</label>
+                                                <input type="text" value={newContractNumber} onChange={e => setNewContractNumber(e.target.value)} className="input text-sm w-full bg-white" placeholder="№..." />
+                                            </div>
+                                            <div className="w-full sm:w-40">
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Дата договора</label>
+                                                <input type="date" value={newContractDate} onChange={e => setNewContractDate(e.target.value)} className="input text-sm w-full bg-white" />
+                                            </div>
+                                            <div className="w-full sm:w-40">
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Скан договора</label>
+                                                <div className="relative">
+                                                    <input 
+                                                        type="file" 
+                                                        onChange={handleFileChange} 
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                                        accept=".pdf,.doc,.docx,image/*"
+                                                    />
+                                                    <div className="input text-sm w-full bg-white flex items-center justify-between overflow-hidden">
+                                                        <span className="truncate text-gray-500 text-xs">
+                                                            {newContractDocument ? newContractDocument.name : 'Скан (до 3МБ)'}
+                                                        </span>
+                                                        <Upload className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                     <button
                                         onClick={handleAddContract}
                                         disabled={creatingContract}
-                                        className="btn btn-primary text-sm px-6 whitespace-nowrap"
+                                        className="btn btn-primary text-sm px-6 whitespace-nowrap h-[38px]"
                                     >
                                         {creatingContract ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Сохранить'}
                                     </button>
