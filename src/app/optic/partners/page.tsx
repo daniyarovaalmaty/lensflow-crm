@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Store, Building2, Save, Loader2, Tag, Percent, Plus, ChevronDown, ChevronUp, CheckCircle2, FileText, Upload } from 'lucide-react';
+import { Store, Building2, Save, Loader2, Tag, Percent, Plus, ChevronDown, ChevronUp, CheckCircle2, FileText, Upload, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function OpticPartnersPage() {
@@ -149,6 +149,27 @@ export default function OpticPartnersPage() {
             });
         };
         reader.readAsDataURL(file);
+    };
+
+    const handleDeleteContract = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm('Вы действительно хотите удалить этот договор?')) return;
+        
+        try {
+            const res = await fetch(`/api/optic/contracts/${id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                toast.success('Договор удален');
+                if (activeContractId === id) setActiveContractId(null);
+                setContracts(contracts.filter(c => c.id !== id));
+            } else {
+                toast.error('Ошибка при удалении');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Ошибка при удалении');
+        }
     };
 
     if (loading) {
@@ -303,12 +324,23 @@ export default function OpticPartnersPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    {isDefault && (
-                                        <div className="flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                            По умолчанию
-                                        </div>
-                                    )}
+                                    <div className="flex items-center gap-3">
+                                        {isDefault && (
+                                            <div className="flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                По умолчанию
+                                            </div>
+                                        )}
+                                        {!contract.id.startsWith('virtual-') && (
+                                            <button
+                                                onClick={(e) => handleDeleteContract(contract.id, e)}
+                                                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-colors"
+                                                title="Удалить договор"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center gap-2 mt-6">
