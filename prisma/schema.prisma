@@ -300,6 +300,23 @@ model Consultation {
   intraocularPressureOS Float?           // IOP OS
   visualAcuityOD Float?                  // Visual acuity OD (e.g. 0.8)
   visualAcuityOS Float?                  // Visual acuity OS
+
+  // Topography / Keratometry OD
+  k1OD             Float?
+  k2OD             Float?
+  axisOD           Float?
+  astigmatismOD    Float?
+  pachymetryOD     Float?
+  eccentricityOD   Float?
+
+  // Topography / Keratometry OS
+  k1OS             Float?
+  k2OS             Float?
+  axisOS           Float?
+  astigmatismOS    Float?
+  pachymetryOS     Float?
+  eccentricityOS   Float?
+
   notes       String?  @db.Text
   createdAt   DateTime @default(now())
 

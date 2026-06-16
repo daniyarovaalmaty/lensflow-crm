@@ -26,7 +26,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
         visitDate, type, diagnosis, treatment,
         nextVisit, intraocularPressureOD, intraocularPressureOS,
         visualAcuityOD, visualAcuityOS, notes,
+        k1OD, k2OD, axisOD, astigmatismOD, pachymetryOD, eccentricityOD,
+        k1OS, k2OS, axisOS, astigmatismOS, pachymetryOS, eccentricityOS
     } = body;
+
+    const parseNum = (val: any) => (val === '' || val == null || isNaN(parseFloat(val))) ? null : parseFloat(val);
 
     const consultation = await prisma.consultation.create({
         data: {
@@ -37,10 +41,12 @@ export async function POST(request: Request, { params }: { params: { id: string 
             diagnosis: diagnosis || null,
             treatment: treatment || null,
             nextVisit: nextVisit ? new Date(nextVisit) : null,
-            intraocularPressureOD: intraocularPressureOD != null ? parseFloat(intraocularPressureOD) : null,
-            intraocularPressureOS: intraocularPressureOS != null ? parseFloat(intraocularPressureOS) : null,
-            visualAcuityOD: visualAcuityOD != null ? parseFloat(visualAcuityOD) : null,
-            visualAcuityOS: visualAcuityOS != null ? parseFloat(visualAcuityOS) : null,
+            intraocularPressureOD: parseNum(intraocularPressureOD),
+            intraocularPressureOS: parseNum(intraocularPressureOS),
+            visualAcuityOD: parseNum(visualAcuityOD),
+            visualAcuityOS: parseNum(visualAcuityOS),
+            k1OD: parseNum(k1OD), k2OD: parseNum(k2OD), axisOD: parseNum(axisOD), astigmatismOD: parseNum(astigmatismOD), pachymetryOD: parseNum(pachymetryOD), eccentricityOD: parseNum(eccentricityOD),
+            k1OS: parseNum(k1OS), k2OS: parseNum(k2OS), axisOS: parseNum(axisOS), astigmatismOS: parseNum(astigmatismOS), pachymetryOS: parseNum(pachymetryOS), eccentricityOS: parseNum(eccentricityOS),
             notes: notes || null,
         },
         include: { doctor: { select: { fullName: true } } },

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,6 +27,8 @@ interface Consultation {
     intraocularPressureOS: number | null;
     visualAcuityOD: number | null;
     visualAcuityOS: number | null;
+    k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null;
+    k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null;
     notes: string | null;
     doctor: { fullName: string } | null;
 }
@@ -163,6 +165,8 @@ export default function PatientDetailPage() {
         type: 'exam', diagnosis: '', treatment: '', nextVisit: '',
         intraocularPressureOD: '', intraocularPressureOS: '',
         visualAcuityOD: '', visualAcuityOS: '', notes: '',
+        k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
+        k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
     });
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
@@ -228,7 +232,12 @@ export default function PatientDetailPage() {
             const c = await res.json();
             setConsultations(prev => [c, ...prev]);
             setShowConsultForm(false);
-            setConsultForm({ visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '' });
+            setConsultForm({ 
+                visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
+                intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
+                k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
+                k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+            });
         }
         setSavingConsult(false);
     };
@@ -243,6 +252,80 @@ export default function PatientDetailPage() {
         if (!birthDate) return '';
         const age = Math.floor((Date.now() - new Date(birthDate).getTime()) / 31557600000);
         return `${age} лет`;
+    };
+
+    const [parsingAi, setParsingAi] = useState(false);
+
+    const handleAiParse = async (e: React.ChangeEvent<HTMLInputElement>, target: 'prescription' | 'consultation') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setParsingAi(true);
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target?.result as string;
+            try {
+                const res = await fetch('/api/ai/parse-scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 }),
+                });
+
+                if (res.ok) {
+                    const parsed = await res.json();
+                    const data = parsed.data || {};
+
+                    if (target === 'prescription') {
+                        setRxForm((f: any) => ({
+                            ...f,
+                            odSph: data.odSph ?? f.odSph, odCyl: data.odCyl ?? f.odCyl, odAx: data.odAx ?? f.odAx,
+                            odAdd: data.odAdd ?? f.odAdd, odPd: data.odPd ?? f.odPd,
+                            osSph: data.osSph ?? f.osSph, osCyl: data.osCyl ?? f.osCyl, osAx: data.osAx ?? f.osAx,
+                            osAdd: data.osAdd ?? f.osAdd, osPd: data.osPd ?? f.osPd,
+                            pdTotal: data.pdTotal ?? f.pdTotal
+                        }));
+                    } else {
+                        setConsultForm((f: any) => ({
+                            ...f,
+                            visualAcuityOD: data.visualAcuityOD ?? f.visualAcuityOD,
+                            visualAcuityOS: data.visualAcuityOS ?? f.visualAcuityOS,
+                            intraocularPressureOD: data.intraocularPressureOD ?? f.intraocularPressureOD,
+                            intraocularPressureOS: data.intraocularPressureOS ?? f.intraocularPressureOS,
+                            k1OD: data.k1OD ?? f.k1OD, k2OD: data.k2OD ?? f.k2OD, axisOD: data.axisOD ?? f.axisOD,
+                            astigmatismOD: data.astigmatismOD ?? f.astigmatismOD, pachymetryOD: data.pachymetryOD ?? f.pachymetryOD, eccentricityOD: data.eccentricityOD ?? f.eccentricityOD,
+                            k1OS: data.k1OS ?? f.k1OS, k2OS: data.k2OS ?? f.k2OS, axisOS: data.axisOS ?? f.axisOS,
+                            astigmatismOS: data.astigmatismOS ?? f.astigmatismOS, pachymetryOS: data.pachymetryOS ?? f.pachymetryOS, eccentricityOS: data.eccentricityOS ?? f.eccentricityOS
+                        }));
+                    }
+                    
+                    // Auto-upload to attachments
+                    const newAttachment = {
+                        id: Math.random().toString(36).substring(2, 9),
+                        name: file.name,
+                        url: base64,
+                        type: file.type,
+                        size: file.size,
+                        uploadedAt: new Date().toISOString()
+                    };
+                    const updatedAttachments = [...(patient?.attachments || []), newAttachment];
+                    await fetch(`/api/patients/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ attachments: updatedAttachments }),
+                    });
+                    setPatient(p => p ? { ...p, attachments: updatedAttachments } : p);
+
+                } else {
+                    alert('Ошибка при распознавании ИИ');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Сбой запроса к ИИ');
+            } finally {
+                setParsingAi(false);
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const [uploadingFile, setUploadingFile] = useState(false);
@@ -578,7 +661,14 @@ export default function PatientDetailPage() {
                         {/* Rx Form */}
                         {showRxForm && (
                             <div className="bg-white rounded-xl border border-primary-200 p-4 mb-4 shadow-sm">
-                                <h3 className="font-semibold text-gray-900 mb-4">Новый рецепт</h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-semibold text-gray-900">Новый рецепт</h3>
+                                    <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
+                                        <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
+                                        {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
+                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'prescription')} disabled={parsingAi} />
+                                    </label>
+                                </div>
                                 <form onSubmit={handleAddRx}>
                                     <div className="grid grid-cols-2 gap-3 mb-4">
                                         <div>
@@ -718,7 +808,14 @@ export default function PatientDetailPage() {
                     {/* New Consultation Form */}
                     {showConsultForm && (
                         <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
-                            <h3 className="font-semibold text-gray-900 mb-4">Новая запись консультации</h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold text-gray-900">Новая запись консультации</h3>
+                                <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
+                                    <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
+                                    {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'consultation')} disabled={parsingAi} />
+                                </label>
+                            </div>
                             <form onSubmit={handleAddConsult}>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                                     <div className="col-span-2">
@@ -753,6 +850,35 @@ export default function PatientDetailPage() {
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OS (мм рт.)</label>
                                         <input type="number" step="0.5" placeholder="15.0" value={consultForm.intraocularPressureOS} onChange={e => setConsultForm((f: any) => ({ ...f, intraocularPressureOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                </div>
+
+                                {/* Topography metrics */}
+                                <div className="mb-4">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Топография / Кератометрия</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <p className="text-xs font-bold text-gray-600 mb-2">OD — Правый</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OD} onChange={e => setConsultForm((f: any) => ({ ...f, k1OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OD} onChange={e => setConsultForm((f: any) => ({ ...f, k2OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOD} onChange={e => setConsultForm((f: any) => ({ ...f, axisOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOD} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOD} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOD} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <p className="text-xs font-bold text-gray-600 mb-2">OS — Левый</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OS} onChange={e => setConsultForm((f: any) => ({ ...f, k1OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OS} onChange={e => setConsultForm((f: any) => ({ ...f, k2OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOS} onChange={e => setConsultForm((f: any) => ({ ...f, axisOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOS} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOS} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOS} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
