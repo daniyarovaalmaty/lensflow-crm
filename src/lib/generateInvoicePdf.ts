@@ -178,18 +178,20 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     doc.setFont('Roboto', 'normal');
     doc.text('Поставщик:', margin, currentY);
     doc.setFont('Roboto', 'bold');
-    doc.text(`БИН / ИИН ${providerInn}, ${providerName}, ${providerAddress}`, margin + 25, currentY, { maxWidth: pageWidth - margin - 25 });
     
-    const splitProvider = doc.splitTextToSize(`БИН / ИИН ${providerInn}, ${providerName}, ${providerAddress}`, pageWidth - margin - 25);
+    const providerText = `БИН / ИИН ${providerInn}, ${providerName}, ${providerAddress}`;
+    const splitProvider = doc.splitTextToSize(providerText, pageWidth - margin - 35);
+    doc.text(splitProvider, margin + 25, currentY);
     currentY += splitProvider.length * 5 + 2;
 
     // Покупатель
     doc.setFont('Roboto', 'normal');
     doc.text('Покупатель:', margin, currentY);
     doc.setFont('Roboto', 'bold');
+    
     const clientText = clientInn ? `БИН / ИИН ${clientInn}, ${clientName}, ${clientAddress}` : `${clientName}, ${clientAddress}`;
-    doc.text(clientText, margin + 25, currentY, { maxWidth: pageWidth - margin - 25 });
-    const splitClient = doc.splitTextToSize(clientText, pageWidth - margin - 25);
+    const splitClient = doc.splitTextToSize(clientText, pageWidth - margin - 35);
+    doc.text(splitClient, margin + 25, currentY);
     currentY += splitClient.length * 5 + 2;
 
     // Договор
