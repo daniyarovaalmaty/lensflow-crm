@@ -8,6 +8,7 @@ interface LabelOrder {
     order_id: string;
     patient: { name: string };
     meta: { optic_name?: string };
+    company?: string;
     config: {
         eyes: {
             od: EyeData;
@@ -238,7 +239,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(4);
     doc.setTextColor(100, 100, 100);
-    let opticName = order.meta.optic_name || '';
+    let opticName = order.company || order.meta.optic_name || '';
     const lines = doc.splitTextToSize(opticName, 16);
     const displayLines = lines.slice(0, 3);
     if (lines.length > 3) {

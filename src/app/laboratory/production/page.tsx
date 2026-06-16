@@ -1598,6 +1598,7 @@ export default function ProductionHubPage() {
                                                 order_id: order.order_id,
                                                 patient: order.patient,
                                                 meta: order.meta,
+                                                company: order.company,
                                                 config: order.config,
                                                 ready_at: (order as any).ready_at,
                                                 production_started_at: order.production_started_at,
