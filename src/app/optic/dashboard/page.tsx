@@ -195,6 +195,7 @@ export default function OpticDashboard() {
         in_production: orders.filter(o => o.status === 'in_production').length,
         ready: orders.filter(o => o.status === 'ready').length,
         shipped: orders.filter(o => o.status === 'shipped').length,
+        delivered: orders.filter(o => o.status === 'delivered').length,
     };
 
     const toggleExpand = (orderId: string) => {
@@ -491,13 +492,14 @@ export default function OpticDashboard() {
 
                     {/* Stats */}
                     {clinicPerms.canViewFinance && perms.canViewStats && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4 mt-4 sm:mt-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4 mt-4 sm:mt-6">
                             {[
                                 { label: 'Всего', value: stats.total, icon: Package, bg: 'bg-gray-50', text: 'text-gray-700' },
                                 { label: 'Новые', value: stats.new, icon: Clock, bg: 'bg-blue-50', text: 'text-blue-700' },
                                 { label: 'В работе', value: stats.in_production, icon: TruckIcon, bg: 'bg-yellow-50', text: 'text-yellow-700' },
                                 { label: 'Готовы', value: stats.ready, icon: CheckCircle, bg: 'bg-green-50', text: 'text-green-700' },
                                 { label: 'Отгружены', value: stats.shipped, icon: TruckIcon, bg: 'bg-purple-50', text: 'text-purple-700' },
+                                { label: 'Доставлены', value: stats.delivered, icon: MapPin, bg: 'bg-emerald-50', text: 'text-emerald-700' },
                             ].map(s => (
                                 <div key={s.label} className={`rounded-xl p-3 sm:p-4 ${s.bg}`}>
                                     <div className={`text-2xl font-bold mb-0.5 ${s.text}`}>{s.value}</div>
@@ -593,7 +595,7 @@ export default function OpticDashboard() {
 
                 {/* Status Tabs */}
                 <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-                    {(['all', 'new', 'in_production', 'ready', 'shipped'] as const).map((status) => (
+                    {(['all', 'new', 'in_production', 'ready', 'shipped', 'delivered'] as const).map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilter(status)}
