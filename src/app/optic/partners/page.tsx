@@ -133,8 +133,8 @@ export default function OpticPartnersPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Файл слишком большой (макс. 5МБ)');
+        if (file.size > 3 * 1024 * 1024) {
+            toast.error('Файл слишком большой (макс. 3МБ)');
             e.target.value = '';
             return;
         }
@@ -249,7 +249,7 @@ export default function OpticPartnersPage() {
                                             />
                                             <div className="input text-sm w-full bg-white flex items-center justify-between overflow-hidden">
                                                 <span className="truncate text-gray-500 text-xs">
-                                                    {newContractDocument ? newContractDocument.name : 'Выберите файл (до 5МБ)'}
+                                                    {newContractDocument ? newContractDocument.name : 'Выберите файл (до 3МБ)'}
                                                 </span>
                                                 <Upload className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
                                             </div>
