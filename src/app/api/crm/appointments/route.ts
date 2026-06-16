@@ -19,7 +19,30 @@ export async function GET(req: Request) {
             appointmentAt: { not: null }
         };
 
-        if (clinicId) where.clinicId = clinicId;
+        const orgId = session.user.organizationId;
+        let allowedOrgIds = [orgId];
+        
+        if (orgId) {
+            const org = await prisma.organization.findUnique({
+                where: { id: orgId },
+                select: { type: true },
+            });
+
+            if (org?.type === 'headquarters') {
+                const branches = await prisma.organization.findMany({
+                    where: { parentId: orgId, status: 'active' },
+                    select: { id: true },
+                });
+                allowedOrgIds = [orgId, ...branches.map(b => b.id)];
+            }
+        }
+
+        if (clinicId) {
+            where.clinicId = clinicId;
+        } else if (orgId) {
+            where.clinicId = { in: allowedOrgIds };
+        }
+
         if (doctorId) where.doctorId = doctorId;
 
         // Fetch leads with appointments
@@ -36,17 +59,19 @@ export async function GET(req: Request) {
         });
 
         // Also fetch filter options (clinics and doctors that have appointments)
-        // For a more complete filter, we should just fetch all clinics/doctors, but this is fine for now
         const doctors = await prisma.user.findMany({
             where: { 
-                organizationId: session.user.organizationId,
+                organizationId: { in: allowedOrgIds },
                 subRole: { in: ['optic_doctor', 'doctor'] }
             },
             select: { id: true, fullName: true }
         });
         
         const clinics = await prisma.organization.findMany({
-            where: { status: 'active' },
+            where: { 
+                id: { in: allowedOrgIds },
+                status: 'active' 
+            },
             select: { id: true, name: true }
         });
 
