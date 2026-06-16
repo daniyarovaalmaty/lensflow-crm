@@ -69,11 +69,10 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
         else if ((part.startsWith('t') || part.startsWith('T')) && !isNaN(parseFloat(part.substring(1).replace(',', '.')))) {
             eye.tor = parseFloat(part.substring(1).replace(',', '.'));
         }
-        // Fac (compression factor)
         else if (part.toLowerCase().startsWith('fac')) {
             const num = part.substring(3);
             if (num) {
-                eye.compression_factor = parseFloat(num.replace(',', '.'));
+                eye.compression_factor = Math.abs(parseFloat(num.replace(',', '.')));
             }
         }
         // Color
@@ -103,9 +102,9 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
     }
 
     // Fac if it has space (e.g. Fac 1)
-    const facMatch = eyeStr.match(/Fac\s+([+-]?[\d.,]+)/i);
+    const facMatch = eyeStr.match(/Fac\s+([+-]?[\d.,]+)/i) || eyeStr.match(/F\s*([+-]?[\d.,]+)/i);
     if (facMatch) {
-        eye.compression_factor = parseFloat(facMatch[1].replace(',', '.'));
+        eye.compression_factor = Math.abs(parseFloat(facMatch[1].replace(',', '.')));
     }
 
     return eye;

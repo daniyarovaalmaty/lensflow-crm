@@ -311,7 +311,13 @@ export function EyeParametersCard({
                         <input
                             type="number"
                             step="any"
-                            {...register(`config.eyes.${eye}.compression_factor`)}
+                            min="0"
+                            {...register(`config.eyes.${eye}.compression_factor`, { 
+                                valueAsNumber: true,
+                                onChange: (e) => {
+                                    if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                }
+                            })}
                             className="input"
                             placeholder=""
                         />
