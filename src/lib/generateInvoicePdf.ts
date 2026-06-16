@@ -363,22 +363,34 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
     
     if (isMedInn) {
         try {
-            const img = new Image();
-            img.src = '/images/stamp.png';
+            const stampImg = new Image();
+            stampImg.src = '/images/stamp_only.png';
             await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
+                stampImg.onload = resolve;
+                stampImg.onerror = reject;
             });
-            // Располагаем печать так, чтобы подпись легла ровно на линию Бухгалтера
-            const stampWidth = 110;
-            const stampHeight = stampWidth * (img.height / img.width);
             
-            // Сдвигаем печать вправо и чуть вверх, чтобы подпись (справа на картинке) 
-            // попала на линию Бухгалтера (которая начинается от margin + 100)
-            const stampX = margin + 15;
-            const stampY = currentY - 12 - (stampHeight / 2);
+            const sigImg = new Image();
+            sigImg.src = '/images/signature_only.png';
+            await new Promise((resolve, reject) => {
+                sigImg.onload = resolve;
+                sigImg.onerror = reject;
+            });
+
+            // 1. Рисуем печать (по центру М.П.)
+            const stampWidth = 110; 
+            const stampHeight = stampWidth * (stampImg.height / stampImg.width);
+            const stampX = margin + 40 - (stampWidth / 2);
+            const stampY = currentY - 5 - (stampHeight / 2);
+            doc.addImage(stampImg, 'PNG', stampX, stampY, stampWidth, stampHeight);
             
-            doc.addImage(img, 'PNG', stampX, stampY, stampWidth, stampHeight);
+            // 2. Рисуем подпись (на линии Бухгалтера)
+            const sigWidth = 70; // ширина подписи
+            const sigHeight = sigWidth * (sigImg.height / sigImg.width);
+            // Линия бухгалтера начинается с margin + 100
+            const sigX = margin + 95;
+            const sigY = currentY - 5 - (sigHeight / 2);
+            doc.addImage(sigImg, 'PNG', sigX, sigY, sigWidth, sigHeight);
         } catch (e) {
             console.warn('Could not load stamp image', e);
         }
