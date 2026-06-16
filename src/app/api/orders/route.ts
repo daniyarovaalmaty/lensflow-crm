@@ -333,8 +333,10 @@ export async function POST(request: NextRequest) {
         const URGENT_SURCHARGE_PCT = labSettings.urgentSurchargePercent;
         const URGENT_DISCOUNT_PCT = labSettings.urgentDiscountPercent;
         const config = validatedData.config as any;
-        const odChar = config?.eyes?.od?.characteristic || '';
-        const osChar = config?.eyes?.os?.characteristic || '';
+        let odChar = config?.eyes?.od?.characteristic || '';
+        let osChar = config?.eyes?.os?.characteristic || '';
+        if (config?.eyes?.od?.isRgp) odChar = 'rgp';
+        if (config?.eyes?.os?.isRgp) osChar = 'rgp';
         const odQty = Number(config?.eyes?.od?.qty) || 0;
         const osQty = Number(config?.eyes?.os?.qty) || 0;
         const odDk = config?.eyes?.od?.dk || '';

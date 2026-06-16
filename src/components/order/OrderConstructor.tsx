@@ -537,8 +537,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     // Uses priceByDk when available (matches backend calculation)
     // RGP lenses have custom pricing (set by accountant), so price = 0
     // If it's a trial lens (DK 50), the effective product is 'probe'
-    const effectiveOdCharacteristic = isTrialOD ? 'probe' : (odCharacteristic || '');
-    const effectiveOsCharacteristic = isTrialOS ? 'probe' : (osCharacteristic || '');
+    const effectiveOdCharacteristic = isRgpOD ? 'rgp' : (isTrialOD ? 'probe' : (odCharacteristic || ''));
+    const effectiveOsCharacteristic = isRgpOS ? 'rgp' : (isTrialOS ? 'probe' : (osCharacteristic || ''));
     
     const odLensProduct = getLensProduct(effectiveOdCharacteristic);
     const osLensProduct = getLensProduct(effectiveOsCharacteristic);
