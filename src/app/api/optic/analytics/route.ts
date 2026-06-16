@@ -73,15 +73,18 @@ export async function GET(req: NextRequest) {
     });
 
     // 4. CRM Leads conversion funnel
-    const totalLeads = await prisma.lead.count();
+    const totalLeads = await prisma.lead.count({
+        where: { clinicId: orgId, ...dateFilter }
+    });
     const convertedLeads = await prisma.lead.count({
-        where: { stage: 'converted' },
+        where: { clinicId: orgId, stage: 'converted', ...dateFilter },
     });
     const leadConversionRate = totalLeads > 0 ? Number(((convertedLeads / totalLeads) * 100).toFixed(1)) : 0;
 
     // Detailed CRM Pipeline stages
     const leadStages = await prisma.lead.groupBy({
         by: ['stage'],
+        where: { clinicId: orgId, ...dateFilter },
         _count: { _all: true },
     });
     const crmFunnel = leadStages.reduce((acc: any, item) => {
@@ -90,12 +93,16 @@ export async function GET(req: NextRequest) {
     }, {});
 
     // 5. Marketing Spend & ROMI
-    const adSpends = await prisma.adSpend.findMany();
+    const adSpends = await prisma.adSpend.findMany({
+        where: { campaign: { clinicId: orgId }, ...(useDateFilter ? { spendDate: { gte: startDate } } : {}) },
+    });
     const totalMarketingSpend = adSpends.reduce((sum, item) => sum + item.amount, 0);
 
     const leadsWithRevenue = await prisma.lead.findMany({
         where: {
+            clinicId: orgId,
             revenue: { not: null },
+            ...dateFilter,
         },
         select: {
             revenue: true,
