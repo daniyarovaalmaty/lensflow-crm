@@ -144,11 +144,16 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     let colorOd = odQty > 0 ? od.color || '' : '';
     let colorOs = osQty > 0 ? os.color || '' : '';
     
-    // Shorten long words if it's going to overlap
-    if ((colorOd.length + colorOs.length) > 20) {
-        colorOd = colorOd.replace(/Optimum/gi, 'Opt.');
-        colorOs = colorOs.replace(/Optimum/gi, 'Opt.');
-    }
+    // Взять только последнее слово из цвета (например "Optimum extra blue" -> "Blue")
+    const getLastWord = (str: string) => {
+        const words = str.trim().split(' ');
+        if (words.length === 0 || !words[0]) return '';
+        const lastWord = words[words.length - 1];
+        return lastWord.charAt(0).toUpperCase() + lastWord.slice(1).toLowerCase();
+    };
+
+    if (colorOd) colorOd = getLastWord(colorOd);
+    if (colorOs) colorOs = getLastWord(colorOs);
 
     const colorStr = colorOd && colorOs && colorOd !== colorOs
         ? `${colorOd}/${colorOs}`
