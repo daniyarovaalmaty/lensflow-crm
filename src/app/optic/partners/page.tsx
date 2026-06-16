@@ -11,7 +11,12 @@ export default function OpticPartnersPage() {
     const [orgData, setOrgData] = useState<any>(null);
     const [laboratories, setLaboratories] = useState<any[]>([]);
     const [products, setProducts] = useState<any[]>([]);
+    const [contracts, setContracts] = useState<any[]>([]);
     const [selectedLabId, setSelectedLabId] = useState<string>('');
+    const [newContractNumber, setNewContractNumber] = useState('');
+    const [newContractDate, setNewContractDate] = useState('');
+    const [newContractLab, setNewContractLab] = useState('');
+    const [creatingContract, setCreatingContract] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -23,6 +28,11 @@ export default function OpticPartnersPage() {
                 setLaboratories(data.laboratories);
                 setProducts(data.products);
                 setSelectedLabId(data.organization?.defaultLabId || '');
+
+                const cRes = await fetch('/api/optic/contracts');
+                if (cRes.ok) {
+                    setContracts(await cRes.json());
+                }
             } catch (error) {
                 console.error(error);
                 toast.error('Ошибка загрузки данных');
@@ -115,6 +125,97 @@ export default function OpticPartnersPage() {
                                 </>
                             )}
                         </button>
+                    </div>
+                </motion.div>
+
+                {/* Contracts Card */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="card p-6"
+                >
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                            <Tag className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900">Договора</h2>
+                            <p className="text-xs text-gray-500">Ваши договора с лабораториями</p>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto mb-6">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-gray-200">
+                                    <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Номер договора</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Дата</th>
+                                    <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Поставщик</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {contracts.map((c) => (
+                                    <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                        <td className="py-3 px-4 font-medium text-gray-900">{c.number}</td>
+                                        <td className="py-3 px-4 text-sm text-gray-600">{new Date(c.date).toLocaleDateString('ru-RU')}</td>
+                                        <td className="py-3 px-4 text-sm text-gray-600">{c.provider?.name || '—'}</td>
+                                    </tr>
+                                ))}
+                                {contracts.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="py-8 text-center text-gray-500 text-sm">Нет добавленных договоров</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-4">Добавить договор</h3>
+                        <div className="flex flex-col sm:flex-row items-end gap-4">
+                            <div className="flex-1 w-full">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Лаборатория</label>
+                                <select value={newContractLab} onChange={e => setNewContractLab(e.target.value)} className="input text-sm w-full bg-white">
+                                    <option value="">Выберите...</option>
+                                    {laboratories.map(lab => <option key={lab.id} value={lab.id}>{lab.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="w-full sm:w-32">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Номер</label>
+                                <input type="text" value={newContractNumber} onChange={e => setNewContractNumber(e.target.value)} className="input text-sm w-full" placeholder="№..." />
+                            </div>
+                            <div className="w-full sm:w-40">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Дата</label>
+                                <input type="date" value={newContractDate} onChange={e => setNewContractDate(e.target.value)} className="input text-sm w-full" />
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    if (!newContractLab || !newContractNumber || !newContractDate) return toast.error('Заполните все поля');
+                                    setCreatingContract(true);
+                                    try {
+                                        const res = await fetch('/api/optic/contracts', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ providerId: newContractLab, number: newContractNumber, date: newContractDate })
+                                        });
+                                        if (res.ok) {
+                                            toast.success('Договор добавлен');
+                                            const cRes = await fetch('/api/optic/contracts');
+                                            setContracts(await cRes.json());
+                                            setNewContractNumber('');
+                                            setNewContractDate('');
+                                        } else {
+                                            toast.error('Ошибка добавления');
+                                        }
+                                    } finally { setCreatingContract(false); }
+                                }}
+                                disabled={creatingContract}
+                                className="btn btn-primary text-sm px-4 whitespace-nowrap"
+                            >
+                                Добавить
+                            </button>
+                        </div>
                     </div>
                 </motion.div>
 

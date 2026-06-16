@@ -87,6 +87,14 @@ export async function GET(request: NextRequest) {
                 patient: true,
                 createdBy: { select: { fullName: true, email: true } },
                 organization: { select: { name: true } },
+                contract: {
+                    select: {
+                        number: true,
+                        date: true,
+                        provider: { select: { name: true, inn: true, address: true, bankName: true, bik: true, iban: true } },
+                        client: { select: { name: true, inn: true, address: true } }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -164,6 +172,12 @@ export async function GET(request: NextRequest) {
                 price_os: order.priceOs || undefined,
                 delivery_confirmed: (order as any).deliveryConfirmed ?? undefined,
                 lab_org_id: (order as any).labOrgId || null,
+                contract: order.contract ? {
+                    number: order.contract.number,
+                    date: order.contract.date.toISOString(),
+                    provider: order.contract.provider,
+                    client: order.contract.client,
+                } : undefined,
             };
         });
 
@@ -460,6 +474,7 @@ export async function POST(request: NextRequest) {
                         discountPercent: DISCOUNT_PCT,
                         distributorOrgId: body.distributorOrgId || undefined,
                         labOrgId: body.labOrgId || undefined,
+                        contractId: body.contract_id || undefined,
                     },
                     include: {
                         patient: true,

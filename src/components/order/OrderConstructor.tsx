@@ -61,6 +61,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [formErrors, setFormErrors] = useState<string[]>([]);
     const errorsRef = useRef<HTMLDivElement>(null);
     const [distributorClients, setDistributorClients] = useState<any[]>([]);
+    const [contracts, setContracts] = useState<any[]>([]);
     const [smartParseInput, setSmartParseInput] = useState('');
     const [smartParseSuccess, setSmartParseSuccess] = useState(false);
 
@@ -102,7 +103,17 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 if (res.ok) setDistributors(await res.json());
             } catch (e) { /* no distributors is fine */ }
         })();
-    }, []);
+
+        // Fetch user's contracts
+        if (!isDistributor && !isProcurement) {
+            (async () => {
+                try {
+                    const res = await fetch('/api/optic/contracts');
+                    if (res.ok) setContracts(await res.json());
+                } catch (e) {}
+            })();
+        }
+    }, [isDistributor, isProcurement]);
 
     useEffect(() => {
         if (session?.user?.role === 'distributor') {
@@ -746,6 +757,26 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             placeholder="Астана, Пр. Мангилик ел 27"
                         />
                     </div>
+
+                    {!isDistributor && !isProcurement && contracts.length > 0 && (
+                        <div className="md:col-span-2">
+                            <label htmlFor="contract_id" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                Договор
+                            </label>
+                            <select
+                                id="contract_id"
+                                {...register('contract_id')}
+                                className="input w-full bg-white"
+                            >
+                                <option value="">-- Без договора --</option>
+                                {contracts.map(c => (
+                                    <option key={c.id} value={c.id}>
+                                        № {c.number} от {new Date(c.date).toLocaleDateString('ru-RU')} ({c.provider?.name})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
             </motion.div>
 

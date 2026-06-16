@@ -226,6 +226,24 @@ export const OrderSchema = z.object({
         qty: z.number(),
         price: z.number(),
     })).optional(),
+    contract_id: z.string().optional(),
+    contract: z.object({
+        number: z.string(),
+        date: z.string(),
+        provider: z.object({
+            name: z.string(),
+            inn: z.string().optional(),
+            address: z.string().optional(),
+            bankName: z.string().optional(),
+            bik: z.string().optional(),
+            iban: z.string().optional(),
+        }).optional(),
+        client: z.object({
+            name: z.string(),
+            inn: z.string().optional(),
+            address: z.string().optional(),
+        }).optional(),
+    }).optional(),
 });
 
 // ==================== Order Edit & Production Helpers ====================
@@ -264,6 +282,7 @@ export const CreateOrderSchema = OrderSchema.omit({
     production_completed_at: true,
     shipped_at: true,
     edit_deadline: true,
+    contract: true,
 }).extend({
     optic_id: z.string(),
     doctor: z.string().optional(),

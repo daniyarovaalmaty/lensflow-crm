@@ -10,12 +10,34 @@ async function findOrderWithAccess(idOrNumber: string, session: any) {
     // Try by orderNumber first (e.g. "AB44"), then by cuid
     let order = await prisma.order.findUnique({
         where: { orderNumber: idOrNumber },
-        include: { patient: true, organization: { select: { name: true } } },
+        include: { 
+            patient: true, 
+            organization: { select: { name: true } },
+            contract: {
+                select: {
+                    number: true,
+                    date: true,
+                    provider: { select: { name: true, inn: true, address: true, bankName: true, bik: true, iban: true } },
+                    client: { select: { name: true, inn: true, address: true } }
+                }
+            }
+        },
     });
     if (!order) {
         order = await prisma.order.findUnique({
             where: { id: idOrNumber },
-            include: { patient: true, organization: { select: { name: true } } },
+            include: { 
+                patient: true, 
+                organization: { select: { name: true } },
+                contract: {
+                    select: {
+                        number: true,
+                        date: true,
+                        provider: { select: { name: true, inn: true, address: true, bankName: true, bik: true, iban: true } },
+                        client: { select: { name: true, inn: true, address: true } }
+                    }
+                }
+            },
         });
     }
     if (!order) return null;
@@ -87,6 +109,12 @@ function transformOrder(order: any) {
         payment_status: order.paymentStatus,
         defects: (order.defects as any[]) || [],
         comments: (order.comments as any[]) || [],
+        contract: order.contract ? {
+            number: order.contract.number,
+            date: order.contract.date.toISOString(),
+            provider: order.contract.provider,
+            client: order.contract.client,
+        } : undefined,
     };
 }
 

@@ -81,6 +81,10 @@ model Organization {
   // Lab orders (orders forwarded to this lab by a distributor)
   labOrders Order[] @relation("LabOrders")
 
+  // Contracts
+  providedContracts Contract[] @relation("ContractProvider")
+  clientContracts   Contract[] @relation("ContractClient")
+
   @@map("organizations")
 }
 
@@ -395,10 +399,36 @@ model Order {
   labOrgId String?
   labOrg   Organization? @relation("LabOrders", fields: [labOrgId], references: [id])
 
+  // Contract assignment
+  contractId String?
+  contract   Contract? @relation("OrderContract", fields: [contractId], references: [id])
+
   // CRM Lead link
   lead       Lead?
 
   @@map("orders")
+}
+
+// ==================== Contract ====================
+model Contract {
+  id          String   @id @default(cuid())
+  number      String
+  date        DateTime
+  
+  providerId  String
+  provider    Organization @relation("ContractProvider", fields: [providerId], references: [id])
+  
+  clientId    String
+  client      Organization @relation("ContractClient", fields: [clientId], references: [id])
+
+  status      String   @default("active") // active | inactive
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]  @relation("OrderContract")
+
+  @@map("contracts")
 }
 
 enum OrderStatus {
