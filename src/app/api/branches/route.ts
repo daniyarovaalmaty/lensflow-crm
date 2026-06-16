@@ -40,6 +40,7 @@ export async function GET() {
         bankName: b.bankName,
         bik: b.bik,
         iban: b.iban,
+        allowedPartnerIds: b.allowedPartnerIds,
         createdAt: b.createdAt,
         usersCount: b._count.users,
         ordersCount: b._count.orders,
@@ -208,6 +209,42 @@ export async function POST(request: Request) {
 
         await prisma.userBranch.deleteMany({
             where: { userId, branchId },
+        });
+
+        return NextResponse.json({ ok: true });
+    }
+
+    if (action === 'assign_partner') {
+        const { branchId, partnerId } = body;
+        if (!branchId || !partnerId) return NextResponse.json({ error: 'branchId и partnerId обязательны' }, { status: 400 });
+
+        const branch = await prisma.organization.findFirst({
+            where: { id: branchId, parentId: orgId, type: 'branch' },
+        });
+        if (!branch) return NextResponse.json({ error: 'Филиал не найден' }, { status: 404 });
+
+        if (!branch.allowedPartnerIds.includes(partnerId)) {
+            await prisma.organization.update({
+                where: { id: branchId },
+                data: { allowedPartnerIds: { push: partnerId } },
+            });
+        }
+        return NextResponse.json({ ok: true });
+    }
+
+    if (action === 'unassign_partner') {
+        const { branchId, partnerId } = body;
+        if (!branchId || !partnerId) return NextResponse.json({ error: 'branchId и partnerId обязательны' }, { status: 400 });
+
+        const branch = await prisma.organization.findFirst({
+            where: { id: branchId, parentId: orgId, type: 'branch' },
+        });
+        if (!branch) return NextResponse.json({ error: 'Филиал не найден' }, { status: 404 });
+
+        const newPartners = branch.allowedPartnerIds.filter(id => id !== partnerId);
+        await prisma.organization.update({
+            where: { id: branchId },
+            data: { allowedPartnerIds: newPartners },
         });
 
         return NextResponse.json({ ok: true });

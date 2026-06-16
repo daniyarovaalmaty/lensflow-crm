@@ -20,6 +20,7 @@ interface Branch {
     ordersCount: number;
     patientsCount: number;
     employees: { id: string; fullName: string; subRole: string }[];
+    allowedPartnerIds: string[];
 }
 
 interface Employee {
@@ -46,7 +47,9 @@ export default function BranchesPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState({ name: '', address: '', deliveryAddress: '', city: '', phone: '', crmPhone: '', bankName: '', bik: '', iban: '' });
     const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+    const [allPartners, setAllPartners] = useState<{id: string, name: string}[]>([]);
     const [assigningBranch, setAssigningBranch] = useState<string | null>(null);
+    const [assigningPartnerBranch, setAssigningPartnerBranch] = useState<string | null>(null);
     const [editingOrgCrm, setEditingOrgCrm] = useState(false);
     const [orgCrmInput, setOrgCrmInput] = useState('');
 
@@ -73,7 +76,22 @@ export default function BranchesPage() {
         }
     };
 
-    useEffect(() => { loadData(); loadEmployees(); }, [loadData]);
+    const loadPartners = async () => {
+        // Fetch contracts to get the list of laboratories this headquarter works with
+        const res = await fetch('/api/optic/contracts');
+        if (res.ok) {
+            const data = await res.json();
+            const uniquePartners: {id: string, name: string}[] = [];
+            data.forEach((c: any) => {
+                if (c.provider && !uniquePartners.some(p => p.id === c.provider.id)) {
+                    uniquePartners.push({ id: c.provider.id, name: c.provider.name });
+                }
+            });
+            setAllPartners(uniquePartners);
+        }
+    };
+
+    useEffect(() => { loadData(); loadEmployees(); loadPartners(); }, [loadData]);
 
     const handleSubmit = async () => {
         if (!form.name.trim()) return;
@@ -131,6 +149,24 @@ export default function BranchesPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'unassign_employee', branchId, userId }),
+        });
+        await loadData();
+    };
+
+    const handleAssignPartner = async (branchId: string, partnerId: string) => {
+        await fetch('/api/branches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'assign_partner', branchId, partnerId }),
+        });
+        await loadData();
+    };
+
+    const handleUnassignPartner = async (branchId: string, partnerId: string) => {
+        await fetch('/api/branches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'unassign_partner', branchId, partnerId }),
         });
         await loadData();
     };
@@ -355,6 +391,58 @@ export default function BranchesPage() {
                                                         ))}
                                                     {allEmployees.filter(e => !branch.employees.some(be => be.id === e.id)).length === 0 && (
                                                         <p className="text-xs text-indigo-500">Все сотрудники уже назначены</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Partners */}
+                                    <div className="mt-4 pt-4 border-t border-gray-100">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Доступные партнеры (Лаборатории)</span>
+                                            <button
+                                                onClick={() => setAssigningPartnerBranch(assigningPartnerBranch === branch.id ? null : branch.id)}
+                                                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                                            >
+                                                <Plus className="w-3 h-3" /> Назначить
+                                            </button>
+                                        </div>
+
+                                        {(branch.allowedPartnerIds || []).length === 0 ? (
+                                            <p className="text-xs text-amber-500 bg-amber-50 p-2 rounded-lg">Филиал не сможет делать заказы. Назначьте хотя бы одну лабораторию.</p>
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2">
+                                                {(branch.allowedPartnerIds || []).map(partnerId => {
+                                                    const p = allPartners.find(ap => ap.id === partnerId);
+                                                    return (
+                                                        <div key={partnerId} className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-sm">
+                                                            <Building2 className="w-3 h-3" />
+                                                            <span className="font-medium">{p?.name || 'Загрузка...'}</span>
+                                                            <button onClick={() => handleUnassignPartner(branch.id, partnerId)} className="text-blue-300 hover:text-red-500 transition-colors ml-1">
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* Partner assignment dropdown */}
+                                        {assigningPartnerBranch === branch.id && (
+                                            <div className="mt-3 p-3 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                                <p className="text-xs text-blue-700 font-medium mb-2">Выберите лабораторию для филиала:</p>
+                                                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                                                    {allPartners
+                                                        .filter(p => !(branch.allowedPartnerIds || []).includes(p.id))
+                                                        .map(partner => (
+                                                            <button key={partner.id} onClick={() => { handleAssignPartner(branch.id, partner.id); setAssigningPartnerBranch(null); }} className="w-full text-left px-3 py-2 bg-white border border-gray-100 rounded-lg text-sm hover:bg-blue-50 transition-colors flex items-center gap-2">
+                                                                <Building2 className="w-4 h-4 text-gray-400" />
+                                                                <span className="font-medium text-gray-800">{partner.name}</span>
+                                                            </button>
+                                                        ))}
+                                                    {allPartners.filter(p => !(branch.allowedPartnerIds || []).includes(p.id)).length === 0 && (
+                                                        <p className="text-xs text-blue-500">Все ваши партнеры уже назначены или у вас нет договоров.</p>
                                                     )}
                                                 </div>
                                             </div>

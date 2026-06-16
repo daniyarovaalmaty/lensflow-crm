@@ -45,6 +45,7 @@ model Organization {
   discountPercent  Float    @default(0)  // Персональная скидка (%), по умолчанию 0%
   logo             String?  @db.Text     // URL логотипа организации
   metadata         Json?    // Integrations config (ITIGRIS, etc.)
+  allowedPartnerIds String[] @default([]) // Массив ID лабораторий, доступных этому филиалу
 
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())
