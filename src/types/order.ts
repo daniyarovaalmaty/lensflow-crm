@@ -66,7 +66,7 @@ export const OrthoEyeParamsSchema = z.object({
         z.number().int().default(1)
     ),
 }).refine(data => {
-    if (data.characteristic === 'toric') {
+    if (data.characteristic === 'toric' && !data.isRgp) {
         if (data.tor === undefined || data.tor === null || data.tor === 0) {
             return false;
         }
