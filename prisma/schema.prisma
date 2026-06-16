@@ -85,6 +85,8 @@ model Organization {
   providedContracts Contract[] @relation("ContractProvider")
   clientContracts   Contract[] @relation("ContractClient")
 
+  marketingCampaigns MarketingCampaign[]
+
   @@map("organizations")
 }
 
@@ -799,7 +801,7 @@ model Lead {
 
 model MarketingCampaign {
   id           String      @id @default(cuid())
-  campaignId   String      @unique // ID из Meta Ads / Google Ads
+  campaignId   String      // ID из Meta Ads / Google Ads
   name         String
   source       String      // "facebook" | "google" | "yandex"
   status       String      @default("active") // "active" | "paused" | "completed"
@@ -809,6 +811,9 @@ model MarketingCampaign {
   updatedAt    DateTime    @updatedAt
   leads        Lead[]
   spends       AdSpend[]
+
+  clinicId     String?
+  clinic       Organization? @relation(fields: [clinicId], references: [id])
 
   @@map("marketing_campaigns")
 }

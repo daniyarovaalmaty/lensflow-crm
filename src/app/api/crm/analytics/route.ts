@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
 
         // 2. Fetch marketing campaigns and spends
         const campaigns = await prisma.marketingCampaign.findMany({
+            where: { clinicId: clinicId ? clinicId : undefined },
             include: {
                 spends: true
             }
