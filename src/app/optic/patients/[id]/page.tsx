@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -318,7 +318,160 @@ export default function PatientDetailPage() {
 
     return (
         <div className="min-h-screen bg-surface">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+            
+            {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, видна при печати) --- */}
+            <div className="hidden print:block p-8 bg-white text-black font-sans w-full">
+                {/* Header: Логотип и контакты клиники */}
+                <div className="border-b-2 border-gray-900 pb-6 mb-6 flex justify-between items-start">
+                    <div>
+                        <h1 className="text-2xl font-bold uppercase tracking-wider text-gray-900">Медицинская карта</h1>
+                        <p className="text-gray-500 mt-1">Офтальмологический центр LensFlow</p>
+                    </div>
+                    <div className="text-right text-sm text-gray-600">
+                        <p>г. Алматы, ул. Абая 1</p>
+                        <p>+7 (777) 123-45-67</p>
+                        <p>www.lensflow.kz</p>
+                    </div>
+                </div>
+
+                {/* Данные пациента */}
+                <div className="mb-8">
+                    <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-200 pb-1">Пациент</h2>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div><span className="text-gray-500">ФИО:</span> <strong className="text-gray-900">{patient.name}</strong></div>
+                        <div><span className="text-gray-500">Дата рождения:</span> <strong className="text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} ({calcAge(patient.birthDate)})</strong></div>
+                        <div><span className="text-gray-500">Телефон:</span> <strong className="text-gray-900">{patient.phone}</strong></div>
+                        <div><span className="text-gray-500">Email:</span> <strong className="text-gray-900">{patient.email || '—'}</strong></div>
+                        {patient.notes && (
+                            <div className="col-span-2 mt-2">
+                                <span className="text-gray-500 block mb-1">Анамнез / Заметки:</span>
+                                <p className="text-gray-900 bg-gray-50 p-3 rounded">{patient.notes}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Последняя консультация (если есть) */}
+                {consultations.length > 0 && (
+                    <div className="mb-8">
+                        <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-200 pb-1">Последний визит</h2>
+                        {(() => {
+                            const c = consultations[0];
+                            return (
+                                <div className="text-sm">
+                                    <p className="mb-2"><span className="text-gray-500">Дата:</span> <strong className="text-gray-900">{new Date(c.visitDate).toLocaleDateString('ru-RU')}</strong> {c.doctor && <span>(Врач: {c.doctor.fullName})</span>}</p>
+                                    
+                                    {(c.visualAcuityOD || c.visualAcuityOS || c.intraocularPressureOD || c.intraocularPressureOS) && (
+                                        <table className="w-full mt-3 mb-4 border-collapse border border-gray-300 text-center">
+                                            <thead>
+                                                <tr className="bg-gray-100">
+                                                    <th className="border border-gray-300 py-2 px-3 font-semibold text-gray-600">Показатель</th>
+                                                    <th className="border border-gray-300 py-2 px-3 font-semibold text-gray-600">OD (Правый)</th>
+                                                    <th className="border border-gray-300 py-2 px-3 font-semibold text-gray-600">OS (Левый)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {(c.visualAcuityOD || c.visualAcuityOS) && (
+                                                    <tr>
+                                                        <td className="border border-gray-300 py-2 px-3 font-medium text-gray-700">Острота зрения (Visus)</td>
+                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.visualAcuityOD || '—'}</td>
+                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.visualAcuityOS || '—'}</td>
+                                                    </tr>
+                                                )}
+                                                {(c.intraocularPressureOD || c.intraocularPressureOS) && (
+                                                    <tr>
+                                                        <td className="border border-gray-300 py-2 px-3 font-medium text-gray-700">ВГД (мм рт.ст.)</td>
+                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.intraocularPressureOD || '—'}</td>
+                                                        <td className="border border-gray-300 py-2 px-3 font-bold">{c.intraocularPressureOS || '—'}</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    )}
+
+                                    {c.diagnosis && (
+                                        <div className="mb-3">
+                                            <span className="text-gray-500 block mb-1">Диагноз:</span>
+                                            <p className="text-gray-900 font-medium">{c.diagnosis}</p>
+                                        </div>
+                                    )}
+                                    {c.treatment && (
+                                        <div className="mb-3">
+                                            <span className="text-gray-500 block mb-1">Рекомендации / Лечение:</span>
+                                            <p className="text-gray-900">{c.treatment}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
+                {/* Последний рецепт (если есть) */}
+                {patient.prescriptions.length > 0 && (
+                    <div className="mb-8">
+                        <h2 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide border-b border-gray-200 pb-1">Актуальный рецепт</h2>
+                        {(() => {
+                            const rx = patient.prescriptions[0];
+                            return (
+                                <div className="text-sm">
+                                    <p className="mb-3"><span className="text-gray-500">Выписан:</span> <strong className="text-gray-900">{new Date(rx.prescribedAt).toLocaleDateString('ru-RU')}</strong></p>
+                                    <table className="w-full border-collapse border border-gray-900 text-center mb-3">
+                                        <thead>
+                                            <tr className="bg-gray-100">
+                                                <th className="border border-gray-900 py-2 px-3">Глаз</th>
+                                                <th className="border border-gray-900 py-2 px-3">Sph</th>
+                                                <th className="border border-gray-900 py-2 px-3">Cyl</th>
+                                                <th className="border border-gray-900 py-2 px-3">Ax</th>
+                                                <th className="border border-gray-900 py-2 px-3">Add</th>
+                                                <th className="border border-gray-900 py-2 px-3">PD</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="border border-gray-900 py-2 px-3 font-bold">OD</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odSph)}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odCyl)}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{rx.odAx || '—'}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odAdd)}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.odPd, false)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border border-gray-900 py-2 px-3 font-bold">OS</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osSph)}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osCyl)}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{rx.osAx || '—'}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osAdd)}</td>
+                                                <td className="border border-gray-900 py-2 px-3">{fmt(rx.osPd, false)}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    {rx.pdTotal && <p><span className="text-gray-500">PD общий:</span> <strong className="text-gray-900">{rx.pdTotal} мм</strong></p>}
+                                    {rx.notes && <p className="mt-2"><span className="text-gray-500">Заметки:</span> {rx.notes}</p>}
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
+                {/* Footer / Подписи */}
+                <div className="mt-16 pt-8 border-t border-gray-400 flex justify-between text-sm">
+                    <div>
+                        <p className="mb-1 text-gray-500">Дата выдачи:</p>
+                        <p className="font-bold border-b border-gray-400 w-32">{new Date().toLocaleDateString('ru-RU')}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="mb-1 text-gray-500">Врач (ФИО, подпись):</p>
+                        <div className="flex gap-4 items-end">
+                            <p className="font-bold border-b border-gray-400 w-48">{consultations.length > 0 && consultations[0].doctor ? consultations[0].doctor.fullName : ''}</p>
+                            <p className="border-b border-gray-400 w-32"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* --- ИНТЕРФЕЙС CRM (Виден на экране, скрыт при печати) --- */}
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 print:hidden">
                 {/* Back */}
                 <button onClick={() => router.push('/optic/patients')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 mb-6 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> К списку пациентов
@@ -357,9 +510,14 @@ export default function PatientDetailPage() {
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={() => setIsEditing(true)} className="btn btn-secondary btn-sm flex items-center gap-1">
-                                    <Edit2 className="w-4 h-4" /> Редактировать
-                                </button>
+                                <>
+                                    <button onClick={() => window.print()} className="btn bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 btn-sm flex items-center gap-1">
+                                        <Printer className="w-4 h-4" /> Распечатать
+                                    </button>
+                                    <button onClick={() => setIsEditing(true)} className="btn btn-secondary btn-sm flex items-center gap-1">
+                                        <Edit2 className="w-4 h-4" /> Редактировать
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
