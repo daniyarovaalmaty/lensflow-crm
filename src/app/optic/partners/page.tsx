@@ -206,7 +206,7 @@ export default function OpticPartnersPage() {
                                                 type="file" 
                                                 onChange={handleFileChange} 
                                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                                                accept=".pdf,image/*"
+                                                accept=".pdf,.doc,.docx,image/*"
                                             />
                                             <div className="input text-sm w-full bg-white flex items-center justify-between overflow-hidden">
                                                 <span className="truncate text-gray-500 text-xs">
