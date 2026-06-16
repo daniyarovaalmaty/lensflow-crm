@@ -250,6 +250,10 @@ export default function OpticDashboard() {
                 price_od: (order as any).price_od,
                 price_os: (order as any).price_os,
                 products: (order as any).products,
+                contract: (order as any).contract,
+                optic_inn: (order as any).optic_inn,
+                optic_address: (order as any).optic_address,
+                lab_org: (order as any).lab_org,
             });
         });
     };

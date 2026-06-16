@@ -86,7 +86,8 @@ export async function GET(request: NextRequest) {
             include: {
                 patient: true,
                 createdBy: { select: { fullName: true, email: true } },
-                organization: { select: { name: true } },
+                organization: { select: { name: true, inn: true, deliveryAddress: true } },
+                labOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
                 contract: {
                     select: {
                         number: true,
@@ -177,6 +178,16 @@ export async function GET(request: NextRequest) {
                     date: order.contract.date.toISOString(),
                     provider: order.contract.provider,
                     client: order.contract.client,
+                } : undefined,
+                optic_inn: order.organization?.inn || undefined,
+                optic_address: order.organization?.deliveryAddress || undefined,
+                lab_org: order.labOrg ? {
+                    name: order.labOrg.name,
+                    inn: order.labOrg.inn,
+                    address: order.labOrg.deliveryAddress,
+                    bankName: order.labOrg.bankName,
+                    bik: order.labOrg.bik,
+                    iban: order.labOrg.iban,
                 } : undefined,
             };
         });

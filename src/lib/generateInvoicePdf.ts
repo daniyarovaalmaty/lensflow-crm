@@ -37,6 +37,16 @@ interface InvoiceOrder {
             address: string;
         }
     };
+    optic_inn?: string;
+    optic_address?: string;
+    lab_org?: {
+        name: string;
+        inn: string;
+        address: string;
+        bankName: string;
+        bik: string;
+        iban: string;
+    };
 }
 
 const PRICE_PER_LENS = 17500;
@@ -69,24 +79,34 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     const odUnitPrice = order.price_od ?? (odQty > 0 ? PRICE_PER_LENS : 0);
     const osUnitPrice = order.price_os ?? (osQty > 0 ? PRICE_PER_LENS : 0);
 
-    const providerName = order.contract?.provider?.name || 'ТОО "MedInnVision"';
-    const providerInn = order.contract?.provider?.inn || '970121400808';
-    const providerAddress = order.contract?.provider?.address || 'Алматинская обл., Талгарский р-он, с. Талгар, ул. БЕРЕГОВАЯ, д. 72';
-    const providerBank = order.contract?.provider?.bankName || 'АО "Народный Банк Казахстана"';
-    const providerBik = order.contract?.provider?.bik || 'HSBKKZKX';
-    const providerIban = order.contract?.provider?.iban || 'KZ48601A861003807741';
+    const providerName = order.contract?.provider?.name || order.lab_org?.name || 'ТОО "MedInnVision"';
+    const providerInn = order.contract?.provider?.inn || order.lab_org?.inn || '970121400808';
+    const providerAddress = order.contract?.provider?.address || order.lab_org?.address || 'Алматинская обл., Талгарский р-он, с. Талгар, ул. БЕРЕГОВАЯ, д. 72';
+    const providerBank = order.contract?.provider?.bankName || order.lab_org?.bankName || 'АО "Народный Банк Казахстана"';
+    const providerBik = order.contract?.provider?.bik || order.lab_org?.bik || 'HSBKKZKX';
+    const providerIban = order.contract?.provider?.iban || order.lab_org?.iban || 'KZ48601A861003807741';
 
     const clientName = order.contract?.client?.name || order.company || 'Покупатель не указан';
-    const clientInn = order.contract?.client?.inn || (order as any).inn || '';
-    const clientAddress = order.contract?.client?.address || (order as any).delivery_address || '';
+    const clientInn = order.contract?.client?.inn || order.optic_inn || (order as any).inn || '';
+    const clientAddress = order.contract?.client?.address || order.optic_address || (order as any).delivery_address || '';
 
-    let contractStr = 'Без договора';
+    let contractStr = '________________________________________';
     if (order.contract) {
         const cDate = new Date(order.contract.date);
-        contractStr = `№${order.contract.number} от ${cDate.toLocaleDateString('ru-RU')} года`;
+        contractStr = `№${order.contract.number} от ${cDate.toLocaleDateString('ru-RU')} г.`;
     }
 
     let currentY = 15;
+
+    // === LENS FLOW BRANDING ===
+    doc.setFillColor(79, 70, 229); // Indigo-600
+    doc.rect(0, 0, pageWidth, 15, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(16);
+    doc.text('LENS FLOW', margin, 10.5);
+    doc.setTextColor(0, 0, 0); // reset
+    currentY = 25;
 
     // Внимание
     doc.setFontSize(8);
@@ -314,13 +334,19 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     currentY += 15;
 
     // Подписи
-    doc.setFont('Roboto', 'bold');
+    doc.setFont('Roboto', 'normal');
     doc.text('Руководитель', margin, currentY);
     doc.line(margin + 25, currentY, margin + 65, currentY);
     
     doc.text('Бухгалтер', margin + 80, currentY);
     doc.line(margin + 100, currentY, margin + 140, currentY);
 
-    // === SAVE ===
-    doc.save(`Счёт_${order.order_id}.pdf`);
+    // Место печати (М.П.)
+    doc.setFontSize(10);
+    doc.setFont('Roboto', 'bold');
+    doc.setTextColor(150, 150, 150);
+    doc.text('М.П.', margin + 35, currentY - 5);
+    doc.setTextColor(0, 0, 0);
+
+    doc.save(`Счет_на_оплату_№${order.order_id}.pdf`);
 }
