@@ -100,6 +100,24 @@ export async function GET(request: NextRequest) {
             orderBy: { createdAt: 'desc' },
         });
 
+        // Pre-fetch missing contracts for orgs
+        const orgsWithMissingContracts = orders.filter((o: any) => !o.contract && o.organizationId).map((o: any) => o.organizationId);
+        const uniqueOrgs = [...new Set(orgsWithMissingContracts)];
+        const fallbackContracts = await prisma.contract.findMany({
+            where: { clientId: { in: uniqueOrgs as string[] }, status: 'active' },
+            include: {
+                provider: { select: { name: true, inn: true, address: true, bankName: true, bik: true, iban: true } },
+                client: { select: { name: true, inn: true, address: true } }
+            },
+            orderBy: { date: 'desc' }
+        });
+        const contractMap = new Map();
+        fallbackContracts.forEach(c => {
+            if (!contractMap.has(c.clientId)) {
+                contractMap.set(c.clientId, c);
+            }
+        });
+
         // Transform to match frontend expected format
         const transformed = orders.map((order: any) => {
             // Map status enum back to string
@@ -126,6 +144,8 @@ export async function GET(request: NextRequest) {
                 }
                 lensConfig.rgpFiles = stripped;
             }
+
+            const fallbackContract = order.organizationId ? contractMap.get(order.organizationId) : undefined;
 
             return {
                 id: order.id,
@@ -178,7 +198,12 @@ export async function GET(request: NextRequest) {
                     date: order.contract.date.toISOString(),
                     provider: order.contract.provider,
                     client: order.contract.client,
-                } : undefined,
+                } : (fallbackContract ? {
+                    number: fallbackContract.number,
+                    date: fallbackContract.date.toISOString(),
+                    provider: fallbackContract.provider,
+                    client: fallbackContract.client,
+                } : undefined),
                 optic_inn: order.organization?.inn || undefined,
                 optic_address: order.organization?.deliveryAddress || undefined,
                 lab_org: order.labOrg ? {
