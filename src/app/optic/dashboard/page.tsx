@@ -14,6 +14,7 @@ import { getPermissions, SubRoleLabels, getEffectiveClinicPermissions } from '@/
 import type { SubRole } from '@/types/user';
 import FullscreenButton from '@/components/ui/FullscreenButton';
 import QuickNav from '@/components/ui/QuickNav';
+import DoctorCalendar from '@/components/calendar/DoctorCalendar';
 
 const PRICE_PER_LENS = 17500; // fallback for print/expanded details
 
@@ -525,6 +526,13 @@ export default function OpticDashboard() {
                         </Link>
                         <span className="text-xs text-gray-400">Карточки, рецепты, консультации · синхронизация с MedMundus</span>
                     </div>
+                </div>
+            )}
+
+            {/* === DOCTOR CALENDAR === */}
+            {clinicPerms.canViewPatients && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+                    <DoctorCalendar />
                 </div>
             )}
 

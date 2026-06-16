@@ -87,6 +87,7 @@ model Organization {
   clientContracts   Contract[] @relation("ContractClient")
 
   marketingCampaigns MarketingCampaign[]
+  appointments       Appointment[]
 
   @@map("organizations")
 }
@@ -157,6 +158,7 @@ model User {
   patients       Patient[] @relation("DoctorPatients")
   prescriptions  Prescription[] @relation("DoctorPrescriptions")
   consultations  Consultation[] @relation("DoctorConsultations")
+  appointments   Appointment[]  @relation("DoctorAppointments")
 
   openedShifts      CashShift[]       @relation("OpenedShifts")
   closedShifts      CashShift[]       @relation("ClosedShifts")
@@ -238,6 +240,7 @@ model Patient {
   consultations Consultation[]
   sales         Sale[]
   leads         Lead[]
+  appointments  Appointment[]
 
   @@index([organizationId])
   @@index([phone])
@@ -323,6 +326,32 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   @@map("products")
+}
+
+// ==================== Appointment (Doctor Schedule) ====================
+model Appointment {
+  id           String        @id @default(cuid())
+  patientId    String?
+  patient      Patient?      @relation(fields: [patientId], references: [id])
+  patientName  String?
+  patientPhone String?
+  doctorId     String?
+  doctor       User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  clinicId     String?
+  clinic       Organization? @relation(fields: [clinicId], references: [id])
+  
+  date         DateTime
+  duration     Int           @default(30) // in minutes
+  status       String        @default("scheduled") // scheduled | completed | cancelled | no_show
+  type         String        @default("consultation") // consultation | fitting | checkup | other
+  notes        String?       @db.Text
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([doctorId, date])
+  @@index([clinicId])
+  @@map("appointments")
 }
 
 // ==================== Order ====================
