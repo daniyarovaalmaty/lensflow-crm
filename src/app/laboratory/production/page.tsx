@@ -1219,6 +1219,7 @@ export default function ProductionHubPage() {
                                     const generateLine = (label: string, eye: any) => {
                                         if (!eye || !eye.characteristic) return null;
                                         const p = [];
+                                        if (order.company) p.push(order.company);
                                         p.push(order.patient?.name || '');
                                         
                                         if (eye.myorthok) p.push('MyOrthoK');
