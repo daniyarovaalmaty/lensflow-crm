@@ -358,9 +358,16 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
             img.onload = resolve;
             img.onerror = reject;
         });
-        // Располагаем печать поверх М.П., делаем её достаточно крупной (например, 40х40 мм)
-        // Координаты смещены, чтобы печать ложилась красиво на подпись и М.П.
-        doc.addImage(img, 'PNG', margin + 15, currentY - 25, 40, 40);
+        // Располагаем печать поверх М.П., делаем её крупнее и сохраняем пропорции
+        const stampWidth = 50;
+        const stampHeight = stampWidth * (img.height / img.width);
+        
+        // Центрируем печать относительно надписи "М.П."
+        // М.П. находится на X = margin + 35. Центр печати будет примерно margin + 40
+        const stampX = margin + 40 - (stampWidth / 2);
+        const stampY = currentY - 5 - (stampHeight / 2);
+        
+        doc.addImage(img, 'PNG', stampX, stampY, stampWidth, stampHeight);
     } catch (e) {
         console.warn('Could not load stamp image', e);
     }
