@@ -104,7 +104,7 @@ export function generateOrderApplicationPdf(order: OrderData): void {
             String(od.km ?? '—'),
             String(od.tp ?? '—'),
             String(od.dia ?? '—'),
-            od.e1 != null ? String(od.e1) : '—',
+            od.e1 != null ? (od.e2 != null ? `${od.e1}/${od.e2}` : String(od.e1)) : '—',
             String(od.dk ?? '—'),
             String(odQty),
         ]);
@@ -117,7 +117,7 @@ export function generateOrderApplicationPdf(order: OrderData): void {
             String(os.km ?? '—'),
             String(os.tp ?? '—'),
             String(os.dia ?? '—'),
-            os.e1 != null ? String(os.e1) : '—',
+            os.e1 != null ? (os.e2 != null ? `${os.e1}/${os.e2}` : String(os.e1)) : '—',
             String(os.dk ?? '—'),
             String(osQty),
         ]);

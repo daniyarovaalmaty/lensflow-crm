@@ -102,7 +102,7 @@ export async function generateOrderApplicationXlsx(order: OrderData): Promise<vo
             data.km ?? '—',
             data.tp ?? '—',
             data.dia ?? '—',
-            data.e1 != null ? String(data.e1) : '—',
+            data.e1 != null ? (data.e2 != null ? `${data.e1}/${data.e2}` : String(data.e1)) : '—',
             data.dk ?? '—',
             qty,
         ]);
