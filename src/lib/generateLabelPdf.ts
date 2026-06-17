@@ -252,8 +252,15 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     // Row 2 Right (E values stacked)
     doc.setFont('Roboto', 'bold');
     doc.setFontSize(6.5);
-    doc.text(pair(od.e1, os.e1), 44, 18, { align: 'right' });
-    doc.text(pair(od.e2, os.e2), 44, 20.5, { align: 'right' });
+    const hasOd = odQty > 0;
+    const hasOs = osQty > 0;
+    if (hasOd && hasOs) {
+        doc.text(`${fmt(od.e1)}/${fmt(od.e2)}`, 44, 18, { align: 'right' });
+        doc.text(`${fmt(os.e1)}/${fmt(os.e2)}`, 44, 20.5, { align: 'right' });
+    } else {
+        doc.text(fmt(od.e1 ?? os.e1), 44, 18, { align: 'right' });
+        doc.text(fmt(od.e2 ?? os.e2), 44, 20.5, { align: 'right' });
+    }
 
     // ===== CLINIC + Dk =====
     doc.setFont('Roboto', 'normal');
