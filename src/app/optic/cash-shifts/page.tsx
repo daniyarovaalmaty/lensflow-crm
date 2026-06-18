@@ -60,6 +60,7 @@ export default function CashShiftsPage() {
     const [activeShift, setActiveShift] = useState<Shift | null>(null);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modals
     const [openShiftOpen, setOpenShiftOpen] = useState(false);
@@ -123,6 +124,7 @@ export default function CashShiftsPage() {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             const res = await fetch('/api/optic/cash-shifts', {
                 method: 'POST',
@@ -143,6 +145,8 @@ export default function CashShiftsPage() {
             }
         } catch {
             setError('Сбой при открытии смены');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -152,6 +156,7 @@ export default function CashShiftsPage() {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             const res = await fetch(`/api/optic/cash-shifts/${activeShift.id}`, {
                 method: 'POST',
@@ -173,6 +178,8 @@ export default function CashShiftsPage() {
             }
         } catch {
             setError('Сбой при закрытии смены');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -182,6 +189,7 @@ export default function CashShiftsPage() {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             const res = await fetch(`/api/optic/cash-shifts/${activeShift.id}`, {
                 method: 'POST',
@@ -207,6 +215,8 @@ export default function CashShiftsPage() {
             }
         } catch {
             setError('Ошибка транзакции');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -529,8 +539,8 @@ export default function CashShiftsPage() {
                                     className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50">
                                     Отмена
                                 </button>
-                                <button onClick={handleOpenShift}
-                                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm">
+                                <button onClick={handleOpenShift} disabled={isSubmitting}
+                                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm">
                                     Открыть смену
                                 </button>
                             </div>
@@ -576,8 +586,8 @@ export default function CashShiftsPage() {
                                     className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50">
                                     Отмена
                                 </button>
-                                <button onClick={handleCloseShift}
-                                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold shadow-sm">
+                                <button onClick={handleCloseShift} disabled={isSubmitting}
+                                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm">
                                     Закрыть и инкассировать
                                 </button>
                             </div>
@@ -636,8 +646,8 @@ export default function CashShiftsPage() {
                                     className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50">
                                     Отмена
                                 </button>
-                                <button onClick={handleAddTransaction}
-                                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm">
+                                <button onClick={handleAddTransaction} disabled={isSubmitting}
+                                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm">
                                     Провести транзакцию
                                 </button>
                             </div>
