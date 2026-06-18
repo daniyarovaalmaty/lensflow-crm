@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
+import { CreateOrderSchema, type CreateOrderDTO, ColorsByDk } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
 import { ReadOnlyEyeCard } from './ReadOnlyEyeCard';
 import { MediLensCalculator } from './MediLensCalculator';
@@ -621,6 +621,23 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             setValue('notes', currentNotes ? `${currentNotes}\n${parsed.notes}` : parsed.notes, { shouldValidate: true, shouldDirty: true });
         }
 
+        const resolveColor = (dk: string | undefined, colorName: string | undefined) => {
+            if (!dk || !colorName) return undefined;
+            const available = ColorsByDk[dk] || [];
+            const lower = colorName.toLowerCase();
+            let search = '';
+            if (lower.includes('синий') || lower.includes('blue')) search = 'blue';
+            if (lower.includes('фиолет') || lower.includes('violet')) search = 'violet';
+            if (lower.includes('зел') || lower.includes('green')) search = 'green';
+            if (lower.includes('красн') || lower.includes('red')) search = 'red';
+            if (lower.includes('сер') || lower.includes('grey') || lower.includes('gray')) search = 'grey';
+            
+            if (search) {
+                return available.find((c: string) => c.toLowerCase().includes(search)) || colorName;
+            }
+            return colorName;
+        };
+
         // OD
         if (parsed.od) {
             if (parsed.od.characteristic) setValue('config.eyes.od.characteristic', parsed.od.characteristic, { shouldValidate: true, shouldDirty: true });
@@ -637,7 +654,9 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             const odColor = parsed.od.color;
             if (odColor) {
                 setTimeout(() => {
-                    setValue('config.eyes.od.color', odColor, { shouldValidate: true, shouldDirty: true });
+                    const currentDk = getValues('config.eyes.od.dk');
+                    const resolved = resolveColor(currentDk, odColor) || odColor;
+                    setValue('config.eyes.od.color', resolved, { shouldValidate: true, shouldDirty: true });
                 }, 100);
             }
         } else {
@@ -660,7 +679,9 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             const osColor = parsed.os.color;
             if (osColor) {
                 setTimeout(() => {
-                    setValue('config.eyes.os.color', osColor, { shouldValidate: true, shouldDirty: true });
+                    const currentDk = getValues('config.eyes.os.dk');
+                    const resolved = resolveColor(currentDk, osColor) || osColor;
+                    setValue('config.eyes.os.color', resolved, { shouldValidate: true, shouldDirty: true });
                 }, 100);
             }
         } else {
