@@ -523,6 +523,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const hasAnyRgp = isRgpOD || isRgpOS;
 
     const [companyValue, innValue] = watch(['company', 'inn']);
+    const odColor = watch('config.eyes.od.color') || '';
+    const osColor = watch('config.eyes.os.color') || '';
+    const prevOdColorRef = useRef(odColor);
+    const prevOsColorRef = useRef(osColor);
 
     useEffect(() => {
         if (session?.user?.role === 'distributor' && companyValue && distributorClients.length > 0) {
@@ -532,6 +536,54 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             }
         }
     }, [companyValue, distributorClients, innValue, session?.user?.role, setValue]);
+
+    useEffect(() => {
+        if (odDk && osDk && odDk === osDk) {
+            // OD color changed
+            if (odColor !== prevOdColorRef.current) {
+                prevOdColorRef.current = odColor;
+                if (odColor && !osColor) {
+                    const lower = odColor.toLowerCase();
+                    let newOsColor = '';
+                    if (lower.includes('blue')) {
+                        if (lower.includes('f2mid')) newOsColor = 'Contraperm F2Mid green';
+                        else if (lower.includes('extra')) newOsColor = 'Optimum extra violet';
+                        else if (lower.includes('extreme')) newOsColor = 'Optimum extreme violet';
+                        else if (lower.includes('infinite')) newOsColor = 'Optimum infinite red';
+                    } else if (lower.includes('green')) {
+                        if (lower.includes('f2mid')) newOsColor = 'Contraperm F2Mid dark blue';
+                        else if (lower.includes('extra')) newOsColor = 'Optimum extra violet';
+                        else if (lower.includes('extreme')) newOsColor = 'Optimum extreme grey';
+                        else if (lower.includes('infinite')) newOsColor = 'Optimum infinite red';
+                    }
+                    if (newOsColor) {
+                        setValue('config.eyes.os.color', newOsColor, { shouldValidate: true, shouldDirty: true });
+                        prevOsColorRef.current = newOsColor;
+                    }
+                }
+            }
+            
+            // OS color changed
+            if (osColor !== prevOsColorRef.current) {
+                prevOsColorRef.current = osColor;
+                if (osColor && !odColor) {
+                    const lower = osColor.toLowerCase();
+                    let newOdColor = '';
+                    if (lower.includes('violet') || lower.includes('grey') || lower.includes('red')) {
+                        if (lower.includes('extra')) newOdColor = 'Optimum extra blue';
+                        else if (lower.includes('extreme')) newOdColor = 'Optimum extreme blue';
+                        else if (lower.includes('infinite')) newOdColor = 'Optimum infinite blue';
+                    } else if (lower.includes('green') && lower.includes('f2mid')) {
+                        newOdColor = 'Contraperm F2Mid dark blue';
+                    }
+                    if (newOdColor) {
+                        setValue('config.eyes.od.color', newOdColor, { shouldValidate: true, shouldDirty: true });
+                        prevOdColorRef.current = newOdColor;
+                    }
+                }
+            }
+        }
+    }, [odColor, osColor, odDk, osDk, setValue]);
 
     // Lens price from catalog based on characteristic + DK
     // Uses priceByDk when available (matches backend calculation)
