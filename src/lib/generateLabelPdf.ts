@@ -235,19 +235,23 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.text(pair(od.tor, os.tor), 2 + tW, 19);
 
     let fVal = '';
-    if (od.apical_clearance != null || os.apical_clearance != null) {
-        fVal = pair(od.apical_clearance, os.apical_clearance);
-    } else if (od.compression_factor != null || os.compression_factor != null) {
+    let fPrefix = 'F ';
+    if (od.compression_factor != null || os.compression_factor != null) {
         fVal = pair(od.compression_factor, os.compression_factor);
+        fPrefix = 'F ';
+    } else if (od.apical_clearance != null || os.apical_clearance != null) {
+        fVal = pair(od.apical_clearance, os.apical_clearance);
+        fPrefix = 'C ';
     } else {
         fVal = pair(null, null);
+        fPrefix = 'F ';
     }
     const fW = doc.getTextWidth(fVal);
     doc.text(fVal, 23 + 1.5, 19, { align: 'center' });
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(5.5);
-    const fCenterStart = 23 + 1.5 - (fW / 2) - doc.getTextWidth('F ');
-    doc.text('F ', fCenterStart, 19);
+    const fCenterStart = 23 + 1.5 - (fW / 2) - doc.getTextWidth(fPrefix);
+    doc.text(fPrefix, fCenterStart, 19);
 
     // Row 2 Right (E values stacked)
     doc.setFont('Roboto', 'bold');
