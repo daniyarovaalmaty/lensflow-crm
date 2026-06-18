@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Loader2 } from 'lucide-react';
+import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Loader2, Wallet } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -330,6 +330,15 @@ export default function OpticDashboard() {
                                     CRM
                                 </Link>
                             )}
+                            {clinicPerms.canViewFinance && (
+                                <Link
+                                    href="/optic/finances"
+                                    className="flex items-center gap-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors py-2 px-3 rounded-lg"
+                                >
+                                    <Wallet className="w-4 h-4" />
+                                    Финансы и ЗП
+                                </Link>
+                            )}
                             {clinicPerms.canViewPatients && (
                                 <Link
                                     href="/optic/patients"
@@ -456,6 +465,16 @@ export default function OpticDashboard() {
                                 <Target className="w-4 h-4" />
                                 CRM Продажи
                             </Link>
+                            {clinicPerms.canViewFinance && (
+                                <Link
+                                    href="/optic/finances"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                                >
+                                    <Wallet className="w-4 h-4" />
+                                    Финансы и ЗП
+                                </Link>
+                            )}
                             <Link
                                 href="/optic/patients"
                                 onClick={() => setMobileMenuOpen(false)}

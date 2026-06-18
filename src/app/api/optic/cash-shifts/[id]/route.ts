@@ -143,10 +143,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         let expectedDelta = 0;
 
         // In cash registers, cash_in and income increase cash expected, cash_out and expense decrease it
-        if (trans_type === 'income' || trans_type === 'cash_in') {
-            expectedDelta = txAmt;
-        } else if (trans_type === 'expense' || trans_type === 'cash_out') {
-            expectedDelta = -txAmt;
+        // IMPORTANT: We only change physical expected cash if payment method is actual 'cash'
+        if (payment_method === 'cash') {
+            if (trans_type === 'income' || trans_type === 'cash_in') {
+                expectedDelta = txAmt;
+            } else if (trans_type === 'expense' || trans_type === 'cash_out') {
+                expectedDelta = -txAmt;
+            }
         }
 
         const newTx = await prisma.$transaction(async (tx) => {
@@ -161,7 +164,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             });
 
             // Create cash transaction
-            return await tx.cashTransaction.create({
+            const newCashTx = await tx.cashTransaction.create({
                 data: {
                     shiftId: id,
                     cashRegisterId: shift.cashRegisterId,
@@ -175,6 +178,47 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     kaspiStatus: kaspi_status || null,
                 },
             });
+
+            // If it's cash_out (expense), record it in Global Finances to impact P&L
+            if (trans_type === 'cash_out' || trans_type === 'expense') {
+                // Find or create a CompanyAccount for this CashRegister
+                const accountName = `Касса: ${shift.cashRegister.name}`;
+                let account = await tx.companyAccount.findFirst({
+                    where: { organizationId: user.organizationId, name: accountName }
+                });
+
+                if (!account) {
+                    account = await tx.companyAccount.create({
+                        data: {
+                            name: accountName,
+                            organizationId: user.organizationId,
+                            balance: 0,
+                            isActive: true
+                        }
+                    });
+                }
+
+                await tx.financialTransaction.create({
+                    data: {
+                        accountId: account.id,
+                        organizationId: user.organizationId,
+                        type: 'expense',
+                        category: category === 'other' ? 'other' : category, // maps nicely to financial categories
+                        amount: txAmt,
+                        description: `[Изъятие из кассы] ${description || ''}`,
+                        createdById: user.id,
+                        date: new Date()
+                    }
+                });
+
+                // Update company account balance
+                await tx.companyAccount.update({
+                    where: { id: account.id },
+                    data: { balance: { decrement: txAmt } }
+                });
+            }
+
+            return newCashTx;
         });
 
         return NextResponse.json({ ok: true, transaction: newTx }, { status: 201 });

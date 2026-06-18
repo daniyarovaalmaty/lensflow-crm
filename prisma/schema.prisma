@@ -89,6 +89,12 @@ model Organization {
   marketingCampaigns MarketingCampaign[]
   appointments       Appointment[]
 
+  // Finances
+  companyAccounts        CompanyAccount[]
+  financialTransactions  FinancialTransaction[]
+  payrollRules           PayrollRule[]
+  payrollPayouts         PayrollPayout[]
+
   @@map("organizations")
 }
 
@@ -164,6 +170,12 @@ model User {
   closedShifts      CashShift[]       @relation("ClosedShifts")
   cashTransactions  CashTransaction[] @relation("CreatedTransactions")
   branches          UserBranch[]
+
+  // Finances
+  payrollRules           PayrollRule[]
+  payrollPayouts         PayrollPayout[]
+  financialTransactionsCreated FinancialTransaction[] @relation("FinancialTransactionsCreated")
+  financialTransactionsLinked  FinancialTransaction[] @relation("FinancialTransactionsLinked")
 
   @@map("users")
 }
@@ -1057,3 +1069,91 @@ model CashTransaction {
   @@map("cash_transactions")
 }
 
+// ==================== Global Finances (P&L, Accounts, Payroll) ====================
+
+model CompanyAccount {
+  id              String       @id @default(cuid())
+  name            String       // e.g. "Kaspi Pay", "Halyk Bank", "Main Safe"
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  balance         Int          @default(0) // Balance in minimal currency unit (e.g. tiyin, or just tenge if integer)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  transactions    FinancialTransaction[]
+
+  @@map("company_accounts")
+}
+
+model FinancialTransaction {
+  id              String          @id @default(cuid())
+  accountId       String
+  account         CompanyAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  organizationId  String
+  organization    Organization    @relation(fields: [organizationId], references: [id])
+  
+  type            String          // 'income' | 'expense'
+  category        String          // 'rent', 'salary', 'marketing', 'supplier_payment', 'other'
+  amount          Int
+  date            DateTime        @default(now())
+  description     String?
+  
+  createdById     String
+  createdBy       User            @relation("FinancialTransactionsCreated", fields: [createdById], references: [id])
+  
+  // Optional link to a specific user (e.g. for salary payout)
+  linkedUserId    String?
+  linkedUser      User?           @relation("FinancialTransactionsLinked", fields: [linkedUserId], references: [id])
+  
+  // Optional link to payroll payout
+  payrollPayoutId String?
+  payrollPayout   PayrollPayout?  @relation(fields: [payrollPayoutId], references: [id])
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("financial_transactions")
+}
+
+model PayrollRule {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  baseSalary      Int          @default(0) // Fixed monthly salary
+  salesPercent    Float        @default(0) // E.g. 5.0 for 5% from sales
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([organizationId, userId])
+  @@map("payroll_rules")
+}
+
+model PayrollPayout {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  
+  periodStart     DateTime
+  periodEnd       DateTime
+  
+  baseAmount      Int          @default(0)
+  salesAmount     Int          @default(0)
+  totalAmount     Int          @default(0)
+  
+  status          String       @default("calculated") // 'calculated' | 'paid'
+  paidAt          DateTime?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  transactions    FinancialTransaction[]
+
+  @@map("payroll_payouts")
+}

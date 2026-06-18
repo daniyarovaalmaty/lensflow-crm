@@ -274,5 +274,63 @@ export async function POST(req: NextRequest) {
         }
     }
 
+    // --- NEW: Sync payment to active cash shift ---
+    if (dueNow > 0) {
+        try {
+            const activeShift = await prisma.cashShift.findFirst({
+                where: {
+                    status: 'open',
+                    cashRegister: { organizationId: orgId }
+                },
+                orderBy: { openedAt: 'desc' }
+            });
+
+            if (activeShift) {
+                const addTxToShift = async (method: string, amt: number) => {
+                    const expectedDelta = method === 'cash' ? amt : 0;
+                    
+                    await prisma.$transaction(async (tx) => {
+                        await tx.cashShift.update({
+                            where: { id: activeShift.id },
+                            data: { expectedCash: { increment: expectedDelta } }
+                        });
+                        
+                        await tx.cashTransaction.create({
+                            data: {
+                                shiftId: activeShift.id,
+                                cashRegisterId: activeShift.cashRegisterId,
+                                transType: 'income',
+                                paymentMethod: method,
+                                category: 'sale',
+                                amount: amt,
+                                createdById: user.id,
+                                description: `Оплата заказа ${saleNumber}`
+                            }
+                        });
+                    });
+                };
+
+                if (paymentMethod === 'mixed' && invoiceMeta.split) {
+                    // new mixed payments frontend sends invoiceMeta.split: [{ method, label, amount }]
+                    // BUT WAIT, the frontend code we saw used invoiceData.splitPayment and cashAmount/cardAmount/transferAmount!
+                    // Let's support both formats just in case
+                    if (invoiceMeta.split && Array.isArray(invoiceMeta.split)) {
+                         for (const sp of invoiceMeta.split) {
+                             if (sp.amount > 0) await addTxToShift(sp.method, sp.amount);
+                         }
+                    } else if (invoiceMeta.splitPayment) {
+                        if (invoiceMeta.cashAmount) await addTxToShift('cash', invoiceMeta.cashAmount);
+                        if (invoiceMeta.cardAmount) await addTxToShift('card', invoiceMeta.cardAmount);
+                        if (invoiceMeta.transferAmount) await addTxToShift('transfer', invoiceMeta.transferAmount);
+                    }
+                } else {
+                    await addTxToShift(paymentMethod || 'cash', dueNow);
+                }
+            }
+        } catch (e) {
+            console.warn('[SalePOS] Failed to sync sale to cash shift:', e);
+        }
+    }
+
     return NextResponse.json(sale, { status: 201 });
 }
