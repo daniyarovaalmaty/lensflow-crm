@@ -184,14 +184,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 // Find or create a CompanyAccount for this CashRegister
                 const accountName = `Касса: ${shift.cashRegister.name}`;
                 let account = await tx.companyAccount.findFirst({
-                    where: { organizationId: user.organizationId, name: accountName }
+                    where: { organizationId: user.organizationId as string, name: accountName }
                 });
 
                 if (!account) {
                     account = await tx.companyAccount.create({
                         data: {
                             name: accountName,
-                            organizationId: user.organizationId,
+                            organizationId: user.organizationId as string,
                             balance: 0,
                             isActive: true
                         }
