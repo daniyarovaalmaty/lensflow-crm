@@ -253,17 +253,17 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     const fCenterStart = 23 + 1.5 - (fW / 2) - doc.getTextWidth(fPrefix);
     doc.text(fPrefix, fCenterStart, 19);
 
-    // Row 2 Right (E values stacked)
+    // Row 2 Right (E values)
     doc.setFont('Roboto', 'bold');
     doc.setFontSize(6.5);
     const hasOd = odQty > 0;
     const hasOs = osQty > 0;
     if (hasOd && hasOs) {
-        doc.text(`${fmt(od.e1)}/${fmt(od.e2)}`, 44, 18, { align: 'right' });
-        doc.text(`${fmt(os.e1)}/${fmt(os.e2)}`, 44, 20.5, { align: 'right' });
+        doc.text(`E ${fmt(od.e1)}${od.e2 != null ? '/' + fmt(od.e2) : ''}`, 44, 18, { align: 'right' });
+        doc.text(`E ${fmt(os.e1)}${os.e2 != null ? '/' + fmt(os.e2) : ''}`, 44, 20.5, { align: 'right' });
     } else {
-        doc.text(fmt(hasOd ? od.e1 : os.e1), 44, 18, { align: 'right' });
-        doc.text(fmt(hasOd ? od.e2 : os.e2), 44, 20.5, { align: 'right' });
+        const eye = hasOd ? od : os;
+        doc.text(`E ${fmt(eye.e1)}${eye.e2 != null ? '/' + fmt(eye.e2) : ''}`, 44, 18, { align: 'right' });
     }
 
     // ===== CLINIC + Dk =====
