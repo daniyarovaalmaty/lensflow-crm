@@ -201,7 +201,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 await tx.financialTransaction.create({
                     data: {
                         accountId: account.id,
-                        organizationId: user.organizationId,
+                        organizationId: user.organizationId as string,
                         type: 'expense',
                         category: category === 'other' ? 'other' : category, // maps nicely to financial categories
                         amount: txAmt,
