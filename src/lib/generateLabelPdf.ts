@@ -262,8 +262,8 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
         doc.text(`${fmt(od.e1)}/${fmt(od.e2)}`, 44, 18, { align: 'right' });
         doc.text(`${fmt(os.e1)}/${fmt(os.e2)}`, 44, 20.5, { align: 'right' });
     } else {
-        doc.text(fmt(od.e1 ?? os.e1), 44, 18, { align: 'right' });
-        doc.text(fmt(od.e2 ?? os.e2), 44, 20.5, { align: 'right' });
+        doc.text(fmt(hasOd ? od.e1 : os.e1), 44, 18, { align: 'right' });
+        doc.text(fmt(hasOd ? od.e2 : os.e2), 44, 20.5, { align: 'right' });
     }
 
     // ===== CLINIC + Dk =====
