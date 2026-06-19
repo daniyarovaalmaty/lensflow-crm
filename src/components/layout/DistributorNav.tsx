@@ -4,13 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { LayoutDashboard, Users, Settings, LogOut, User, Package, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, User, Package, Menu, X, ShoppingBag, Banknote, Briefcase, BarChart3, Warehouse } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 const navItems = [
     { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
     { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
-    { href: '/distributor/catalog', label: 'Каталог', icon: Package, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
+    { href: '/distributor/local-catalog', label: 'Мой каталог', icon: Briefcase, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
+    { href: '/distributor/warehouse', label: 'Склад', icon: Warehouse, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
+    { href: '/distributor/pos', label: 'Касса', icon: ShoppingBag, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
+    { href: '/distributor/cash-shifts', label: 'Смены', icon: Banknote, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
+    { href: '/distributor/analytics', label: 'Аналитика', icon: BarChart3, roles: ['dist_head', 'dist_admin'] },
     { href: '/distributor/staff', label: 'Сотрудники', icon: User, roles: ['dist_head', 'dist_admin'] },
     { href: '/distributor/settings', label: 'Настройки', icon: Settings, roles: ['dist_head'] },
 ];
