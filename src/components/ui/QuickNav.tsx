@@ -52,8 +52,6 @@ export default function QuickNav() {
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
     const [showDropdown, setShowDropdown] = useState(false);
 
-    if (role === 'distributor') return null;
-
     useEffect(() => {
         if (isManager && isHQ) {
             fetch('/api/branches')
@@ -69,6 +67,8 @@ export default function QuickNav() {
         const saved = localStorage.getItem('lf_selected_branch');
         if (saved) setSelectedBranch(saved);
     }, []);
+
+    if (role === 'distributor') return null;
 
     const handleBranchSelect = (branchId: string) => {
         setSelectedBranch(branchId);
