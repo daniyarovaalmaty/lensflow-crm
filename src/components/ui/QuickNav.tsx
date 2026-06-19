@@ -41,6 +41,7 @@ export default function QuickNav() {
     const { data: session } = useSession();
     const subRole = (session?.user as any)?.subRole;
     const orgType = (session?.user as any)?.orgType;
+    const role = (session?.user as any)?.role;
     const orgName = (session?.user as any)?.organizationName || '';
     const userName = (session?.user as any)?.name || '';
     const isManager = subRole === 'optic_manager';
@@ -50,6 +51,8 @@ export default function QuickNav() {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
     const [showDropdown, setShowDropdown] = useState(false);
+
+    if (role === 'distributor') return null;
 
     useEffect(() => {
         if (isManager && isHQ) {

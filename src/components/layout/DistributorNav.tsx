@@ -10,6 +10,7 @@ import { signOut } from 'next-auth/react';
 const navItems = [
     { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
     { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
+    { href: '/distributor/catalog', label: 'B2B Прайс-лист', icon: Package, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
     { href: '/distributor/local-catalog', label: 'Мой каталог', icon: Briefcase, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
     { href: '/distributor/warehouse', label: 'Склад', icon: Warehouse, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
     { href: '/distributor/pos', label: 'Касса', icon: ShoppingBag, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
