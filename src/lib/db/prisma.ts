@@ -25,7 +25,8 @@ function createPrismaClient() {
                 async deleteMany({ model, args, query }) {
                     const protectedModels = ['OpticProduct', 'Sale', 'SaleItem', 'Order', 'StockDocument', 'StockItem', 'StockMovement', 'Lead', 'Patient'];
                     if (protectedModels.includes(model)) {
-                        if (!args.where || (!args.where.organizationId && !args.where.id)) {
+                        const where: any = args.where;
+                        if (!where || (!where.organizationId && !where.id)) {
                             throw new Error(`[Tenant Isolation] БЛОКИРОВКА: Попытка выполнить глобальный deleteMany для таблицы ${model} без указания organizationId!`);
                         }
                     }
@@ -34,7 +35,8 @@ function createPrismaClient() {
                 async updateMany({ model, args, query }) {
                     const protectedModels = ['OpticProduct', 'Sale', 'SaleItem', 'Order', 'StockDocument', 'StockItem', 'StockMovement', 'Lead', 'Patient'];
                     if (protectedModels.includes(model)) {
-                        if (!args.where || (!args.where.organizationId && !args.where.id)) {
+                        const where: any = args.where;
+                        if (!where || (!where.organizationId && !where.id)) {
                             throw new Error(`[Tenant Isolation] БЛОКИРОВКА: Попытка выполнить глобальный updateMany для таблицы ${model} без указания organizationId!`);
                         }
                     }
