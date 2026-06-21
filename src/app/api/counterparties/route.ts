@@ -4,14 +4,43 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 
 /**
- * GET /api/counterparties - Rich counterparty data for lab
- * Returns doctors (with clinic name) and organizations
+ * GET /api/counterparties - Данные контрагентов для Лаборатории и Дистрибьюторов (ЦКК)
  */
 export async function GET() {
     try {
         const session = await auth();
-        if (!session?.user || session.user.role !== 'laboratory') {
+        
+        if (!session?.user) {
             return new NextResponse('Unauthorized', { status: 401 });
+        }
+
+        // =========================================================================
+        // ЛОГИКА ДЛЯ ДИСТРИБЬЮТОРА (ЦКК): Отдаем его личных контрагентов (как в МойСклад)
+        // =========================================================================
+        if (session.user.role === 'distributor') {
+            const counterparties = await prisma.counterparty.findMany({
+                where: {
+                    distributorId: session.user.id // Фильтруем клиентов только для этого ЦКК
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                    address: true,
+                    balance: true,
+                    createdAt: true,
+                },
+                orderBy: { name: 'asc' },
+            });
+
+            return NextResponse.json(counterparties);
+        }
+
+        // =========================================================================
+        // ЛОГИКА ДЛЯ ЛАБОРАТОРИИ (Оставляем без изменений, чтобы ничего не сломать)
+        // =========================================================================
+        if (session.user.role !== 'laboratory') {
+            return new NextResponse('Forbidden', { status: 403 });
         }
 
         // Get all organizations
@@ -134,6 +163,7 @@ export async function GET() {
             doctors: Array.from(doctorMap.values()).sort((a, b) => b.orders - a.orders),
             clinics: clinics.sort((a: any, b: any) => b.orders - a.orders),
         });
+        
     } catch (error) {
         console.error('GET /api/counterparties error:', error);
         return NextResponse.json({ error: 'Failed' }, { status: 500 });
