@@ -435,14 +435,26 @@ export class ItigrisApiClient {
     }
 
     /**
-     * Get changed clients since a given date.
-     * Useful for incremental sync.
+     * Get clients changed since a given date (incremental sync).
+     * Response is paginated ({ content, last, totalPages, ... }) and items are
+     * SUMMARIES (id, fullName) — callers must fetch full info via getClient(id).
+     * Iterates all pages.
      */
     async getClientChanges(since: string): Promise<ItigrisClient[]> {
-        const resp = await this.http.get('/clients/changes', {
-            params: { since },
-        });
-        return resp.data || [];
+        const all: ItigrisClient[] = [];
+        let page = 0;
+        // hard page cap as a safety net against unbounded loops
+        while (page < 200) {
+            const resp = await this.http.get('/clients/changes', {
+                params: { since, page, size: 100 },
+            });
+            const data = resp.data;
+            const content: ItigrisClient[] = Array.isArray(data) ? data : (data?.content || []);
+            all.push(...content);
+            if (Array.isArray(data) || data?.last === true || content.length === 0) break;
+            page++;
+        }
+        return all;
     }
 
     // ----- Clients: WRITE (two-way sync, LensFlow → ITIGRIS) -----

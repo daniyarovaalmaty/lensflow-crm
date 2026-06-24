@@ -45,15 +45,18 @@ export class ItigrisSyncService {
         };
 
         try {
-            // If we have a `since` date, use incremental changes endpoint
+            // If we have a `since` date, use the incremental changes endpoint.
+            // Changes items are summaries — fetch full client info before upsert.
             if (since) {
-                const clients = await this.api.getClientChanges(since);
-                for (const client of clients) {
+                const changed = await this.api.getClientChanges(since);
+                result.details.push(`Изменено клиентов с ${since}: ${changed.length}`);
+                for (const c of changed) {
                     try {
-                        await this.upsertPatient(client, result);
+                        const full = await this.api.getClient(c.id);
+                        await this.upsertPatient(full, result);
                     } catch (err: any) {
                         result.errors++;
-                        result.details.push(`Ошибка клиента ${client.id}: ${err.message}`);
+                        result.details.push(`Ошибка клиента ${c.id}: ${err.message}`);
                     }
                 }
             } else {
