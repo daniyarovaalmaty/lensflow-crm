@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import { mmUpdatePatient } from '@/lib/mm-patient-bridge';
+import { ItigrisApiClient, ItigrisSyncService } from '@/lib/itigris';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,29 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             });
         } catch (e) {
             console.warn('[PatientSync] MM update failed:', e);
+        }
+    }
+
+    // Sync to ITIGRIS (Optima) if linked and the org has ITIGRIS configured.
+    // Loop-safe: the inbound ITIGRIS→LensFlow sync writes via prisma directly,
+    // not through this route, so it won't bounce back.
+    if (patient.externalId?.startsWith('itigris:') && patient.organizationId) {
+        try {
+            const org = await prisma.organization.findUnique({ where: { id: patient.organizationId } });
+            const itg = (org as any)?.metadata?.itigris;
+            if (itg?.company && itg?.login && itg?.password) {
+                const client = new ItigrisApiClient({
+                    company: itg.company,
+                    login: itg.login,
+                    password: itg.password,
+                    departmentId: Number(itg.departmentId) || 0,
+                    organizationId: patient.organizationId,
+                });
+                const svc = new ItigrisSyncService(client, prisma as any, patient.organizationId);
+                await svc.pushPatient(patient.id); // linked → safe partial update (PUT merge)
+            }
+        } catch (e) {
+            console.warn('[PatientSync] ITIGRIS update failed:', e);
         }
     }
 

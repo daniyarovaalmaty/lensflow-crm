@@ -3,6 +3,7 @@ export { ItigrisSyncService } from './sync';
 export type {
     ItigrisConfig,
     ItigrisClient,
+    ItigrisClientInput,
     ItigrisOrder,
     ItigrisPrescription,
     ItigrisEyeRx,

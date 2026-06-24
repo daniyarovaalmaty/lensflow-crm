@@ -11,6 +11,7 @@ import { PrismaClient } from '@prisma/client';
 import {
     ItigrisApiClient,
     ItigrisClient,
+    ItigrisClientInput,
     ItigrisOrder,
     ItigrisSyncResult,
 } from './client';
@@ -396,6 +397,67 @@ export class ItigrisSyncService {
         results.push(await this.syncOrders());
 
         return results;
+    }
+
+    // ----- Push: LensFlow → ITIGRIS (two-way write-back) -----
+
+    /** Map a LensFlow Patient to an ITIGRIS client input (surname-first split). */
+    private patientToItigrisInput(patient: any): ItigrisClientInput {
+        const parts = String(patient.name || '').trim().split(/\s+/);
+        const familyName = parts[0] || '';
+        const firstName = parts[1] || '';
+        const patronymicName = parts.slice(2).join(' ') || null;
+
+        let day: number | null = null, month: number | null = null, year: number | null = null;
+        if (patient.birthDate) {
+            const d = new Date(patient.birthDate);
+            if (!isNaN(d.getTime())) { day = d.getDate(); month = d.getMonth() + 1; year = d.getFullYear(); }
+        }
+
+        return {
+            firstName,
+            familyName,
+            patronymicName,
+            tel1: patient.phone || null,
+            email: patient.email || null,
+            birthdayDay: day,
+            birthdayMonth: month,
+            birthdayYear: year,
+            gender: patient.gender === 'male' ? true : patient.gender === 'female' ? false : null,
+            comment: patient.notes || null,
+        };
+    }
+
+    /**
+     * Push a LensFlow patient to ITIGRIS.
+     *  - linked (externalId 'itigris:{id}') → safe partial update (PUT merge);
+     *  - not linked → create + PD consent and store the new externalId,
+     *    but only when createIfMissing is set (avoids pushing every CRM lead).
+     * Returns the ITIGRIS client id, or null if nothing was pushed.
+     */
+    async pushPatient(patientId: string, opts: { createIfMissing?: boolean } = {}): Promise<number | null> {
+        const patient = await (this.prisma as any).patient.findUnique({ where: { id: patientId } });
+        if (!patient) return null;
+
+        const input = this.patientToItigrisInput(patient);
+        if (!input.familyName && !input.firstName) return null;
+
+        const linked = typeof patient.externalId === 'string' && patient.externalId.startsWith('itigris:');
+        if (linked) {
+            const clientId = parseInt(patient.externalId.replace('itigris:', ''), 10);
+            if (isNaN(clientId)) return null;
+            await this.api.updateClientPartial(clientId, input);
+            return clientId;
+        }
+
+        if (!opts.createIfMissing) return null;
+
+        const newId = await this.api.createClientWithConsent(input);
+        await (this.prisma as any).patient.update({
+            where: { id: patientId },
+            data: { externalId: `itigris:${newId}`, externalSource: 'itigris' },
+        });
+        return newId;
     }
 
     // ----- Helpers -----

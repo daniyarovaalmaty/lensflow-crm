@@ -64,6 +64,27 @@ export interface ItigrisClient {
     lastSeen?: string | null;
 }
 
+/** Input shape for creating/updating an ITIGRIS client (LensFlow → ITIGRIS). */
+export interface ItigrisClientInput {
+    firstName: string;
+    familyName: string;
+    patronymicName?: string | null;
+    tel1?: string | null;
+    tel2?: string | null;
+    email?: string | null;
+    city?: string | null;
+    address?: string | null;
+    birthdayDay?: number | null;
+    birthdayMonth?: number | null;
+    birthdayYear?: number | null;
+    gender?: boolean | null; // true = male, false = female
+    comment?: string | null;
+    profession?: string | null;
+    employmentPlace?: string | null;
+    // Tolerate extra fields echoed back from client info on a PUT merge.
+    [key: string]: any;
+}
+
 // ===================== Order Types =====================
 
 export interface ItigrisOrder {
@@ -228,8 +249,10 @@ export class ItigrisApiClient {
 
         // Interceptor: auto-attach Bearer token and handle token refresh
         this.http.interceptors.request.use(async (reqConfig) => {
-            // Skip auth header for sign-in endpoint
-            if (reqConfig.url?.includes('/sign/in')) return reqConfig;
+            // Skip token logic for ALL /sign/ endpoints (in/refresh). Otherwise the
+            // /sign/refresh request itself re-enters getValidToken → refresh → … →
+            // infinite recursion (→ OOM) whenever the token looks expired.
+            if (reqConfig.url?.includes('/sign/')) return reqConfig;
 
             const token = await this.getValidToken();
             if (token) {
@@ -238,18 +261,21 @@ export class ItigrisApiClient {
             return reqConfig;
         });
 
-        // Interceptor: auto-refresh on 401
+        // Interceptor: auto-refresh ONCE on 401. The retry is guarded via a
+        // header marker (which survives axios config merging) — relying on a
+        // custom config field is lost on the merged retry config and causes an
+        // infinite refresh→retry loop (→ OOM) when an endpoint keeps returning 401.
         this.http.interceptors.response.use(
             (response) => response,
             async (error: AxiosError) => {
-                const original = error.config;
-                if (error.response?.status === 401 && original && !(original as any)._retried) {
-                    (original as any)._retried = true;
+                const original: any = error.config;
+                const alreadyRetried = original?.headers?.['X-LF-Retried'];
+                const isSignEndpoint = String(original?.url || '').includes('/sign/');
+                if (error.response?.status === 401 && original && !alreadyRetried && !isSignEndpoint) {
                     await this.refreshAccessToken();
+                    original.headers = { ...(original.headers || {}), 'X-LF-Retried': '1' };
                     const token = this.tokens?.accessToken;
-                    if (token && original.headers) {
-                        original.headers.Authorization = `Bearer ${token}`;
-                    }
+                    if (token) original.headers.Authorization = `Bearer ${token}`;
                     return this.http(original);
                 }
                 throw error;
@@ -417,6 +443,68 @@ export class ItigrisApiClient {
             params: { since },
         });
         return resp.data || [];
+    }
+
+    // ----- Clients: WRITE (two-way sync, LensFlow → ITIGRIS) -----
+
+    /**
+     * Create a client in ITIGRIS. Returns the new client id.
+     * NOTE: per the API, a client created this way is always `deleted: true`
+     * (no PD-processing consent is collected), so it stays hidden in the clients
+     * journal until consent is signed. Use createClientWithConsent() for the
+     * full flow, or call signPdAgreement() yourself afterwards.
+     */
+    async createClient(payload: ItigrisClientInput): Promise<number> {
+        const resp = await this.http.post('/clients', payload);
+        return resp.data?.id ?? resp.data;
+    }
+
+    /**
+     * Collect a PERSONAL_DATA_PROCESSING agreement so the client becomes
+     * visible (not deleted) in the journal. Two-step: prepare text, then sign.
+     */
+    async signPdAgreement(clientId: number): Promise<void> {
+        const body = {
+            agreementType: 'PERSONAL_DATA_PROCESSING',
+            collectionMethod: 'QUESTIONNAIRE',
+        };
+        await this.http.post(`/clients/${clientId}/agreements/prepare-text`, body);
+        await this.http.post(`/clients/${clientId}/agreements`, body);
+    }
+
+    /**
+     * Create a client AND collect PD consent so they are visible in ITIGRIS.
+     * Returns the new client id. If the agreement step fails, the client exists
+     * but stays hidden — the error is surfaced so the caller can retry consent.
+     */
+    async createClientWithConsent(payload: ItigrisClientInput): Promise<number> {
+        const id = await this.createClient(payload);
+        try {
+            await this.signPdAgreement(id);
+        } catch (err: any) {
+            throw new Error(`Клиент ${id} создан, но согласие на ПД не подписано: ${err.message}`);
+        }
+        return id;
+    }
+
+    /**
+     * Update a client in ITIGRIS.
+     * IMPORTANT: this is a PUT that REPLACES the whole object. Pass the full
+     * client object with only the fields you want changed. Prefer
+     * updateClientPartial() which merges your patch over the current record.
+     */
+    async updateClient(clientId: number, fullClient: ItigrisClientInput): Promise<void> {
+        await this.http.put(`/clients/${clientId}`, fullClient);
+    }
+
+    /**
+     * Safe partial update: fetch the current client, merge the patch over it,
+     * and PUT the whole object back so no fields are dropped (as the docs advise).
+     */
+    async updateClientPartial(clientId: number, patch: Partial<ItigrisClientInput>): Promise<void> {
+        const current = await this.getClient(clientId);
+        const merged: any = { ...current, ...patch };
+        await this.updateClient(clientId, merged);
     }
 
     // ----- Departments -----
