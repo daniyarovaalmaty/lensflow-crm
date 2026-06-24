@@ -614,14 +614,15 @@ export class ItigrisApiClient {
     // ----- Registry (Appointments) -----
     // Note: Appointments are in legacy API, but journal is in v2
 
-    /** Get registry records (appointment journal) */
+    /** Get registry records (appointment journal). Requires appointmentFrom/appointmentTo (ISO). */
     async getRegistryRecords(params?: {
-        dateFrom?: string;
-        dateTo?: string;
+        appointmentFrom?: string;
+        appointmentTo?: string;
         departmentId?: number;
     }): Promise<any[]> {
         const resp = await this.http.get('/registry-records', { params });
-        return resp.data || [];
+        const d = resp.data;
+        return Array.isArray(d) ? d : (d?.content || []);
     }
 
     // ----- Stock / Remains -----

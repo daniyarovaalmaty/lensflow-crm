@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import QuickNav from '@/components/ui/QuickNav';
-import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap } from 'lucide-react';
+import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap, ClipboardList } from 'lucide-react';
 
 interface SyncResult {
     entity: string;
@@ -124,6 +125,11 @@ export default function ClinicManagerItigrisPage() {
                         <h1 className="text-xl font-bold text-gray-900">Интеграция ITIGRIS Optima</h1>
                         <p className="text-sm text-gray-500">Синхронизация пациентов и заказов с Оптимой v.2</p>
                     </div>
+                    {connected && (
+                        <Link href="/clinic-manager/itigris/browse" className="ml-auto flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium transition-colors">
+                            <ClipboardList className="w-4 h-4" /> Данные из ITIGRIS
+                        </Link>
+                    )}
                 </div>
 
                 {/* Stats when connected */}
