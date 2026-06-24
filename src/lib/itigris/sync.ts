@@ -55,6 +55,11 @@ export class ItigrisSyncService {
                         const full = await this.api.getClient(c.id);
                         await this.upsertPatient(full, result);
                     } catch (err: any) {
+                        // 409 = client belongs to a department we're not signed into — skip, not an error
+                        if (err.response?.status === 409) {
+                            result.details.push(`Клиент ${c.id}: другой департамент (409), пропущен`);
+                            continue;
+                        }
                         result.errors++;
                         result.details.push(`Ошибка клиента ${c.id}: ${err.message}`);
                     }
@@ -79,6 +84,7 @@ export class ItigrisSyncService {
                                 const fullClient = await this.api.getClient(client.id);
                                 await this.upsertPatient(fullClient, result);
                             } catch (err: any) {
+                                if (err.response?.status === 409) continue; // other department — skip
                                 result.errors++;
                                 result.details.push(`Ошибка клиента ${client.id}: ${err.message}`);
                             }
@@ -454,6 +460,11 @@ export class ItigrisSyncService {
         }
 
         if (!opts.createIfMissing) return null;
+
+        // ITIGRIS rejects client creation without a valid birthday.
+        if (!input.birthdayDay || !input.birthdayMonth || !input.birthdayYear) {
+            throw new Error(`Itigris: нельзя создать клиента без даты рождения (пациент ${patientId})`);
+        }
 
         const newId = await this.api.createClientWithConsent(input);
         await (this.prisma as any).patient.update({
