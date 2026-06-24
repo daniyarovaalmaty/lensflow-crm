@@ -17,6 +17,8 @@ interface Patient {
     birthDate: string | null;
     gender: string | null;
     medmundusId: number | null;
+    externalId: string | null;
+    externalSource: string | null;
     createdAt: string;
     _count: { orders: number; prescriptions: number; consultations: number };
     prescriptions: Array<{
@@ -273,6 +275,9 @@ export default function PatientsPage() {
                                             {p.gender === 'female' && <span className="text-xs text-pink-400">♀</span>}
                                             {p.medmundusId && (
                                                 <span className="text-xs bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-medium">MM</span>
+                                            )}
+                                            {p.externalSource === 'itigris' && (
+                                                <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-medium">ITIGRIS</span>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-gray-500">
