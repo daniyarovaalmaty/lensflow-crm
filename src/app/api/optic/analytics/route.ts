@@ -115,18 +115,38 @@ export async function GET(req: NextRequest) {
         : 0;
 
     // 6. Category breakdown
-    const categoryTotals: Record<string, number> = {};
+    const categoryTotals: Record<string, { value: number, quantity: number }> = {};
+    const itemTotals: Record<string, { value: number, quantity: number, category: string }> = {};
+
     sales.forEach(sale => {
         sale.items.forEach(item => {
             const cat = item.category || 'Другое';
-            categoryTotals[cat] = (categoryTotals[cat] || 0) + item.total;
+            if (!categoryTotals[cat]) categoryTotals[cat] = { value: 0, quantity: 0 };
+            categoryTotals[cat].value += item.total;
+            categoryTotals[cat].quantity += item.quantity;
+
+            const name = item.name;
+            if (!itemTotals[name]) itemTotals[name] = { value: 0, quantity: 0, category: cat };
+            itemTotals[name].value += item.total;
+            itemTotals[name].quantity += item.quantity;
         });
     });
 
-    const categoriesBreakdown = Object.entries(categoryTotals).map(([name, value]) => ({
-        name,
-        value,
-    }));
+    const categoriesBreakdown = Object.entries(categoryTotals)
+        .map(([name, data]) => ({
+            name,
+            value: data.value,
+            quantity: data.quantity,
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    const topSellingItems = Object.entries(itemTotals)
+        .map(([name, data]) => ({
+            name,
+            ...data
+        }))
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 15);
 
     // 7. Top 10 Patients by revenue
     const topPatientsGroup = await prisma.sale.groupBy({
@@ -201,6 +221,7 @@ export async function GET(req: NextRequest) {
         },
         crmFunnel,
         categoriesBreakdown,
+        topSellingItems,
         top10Patients,
         dynamics,
     });

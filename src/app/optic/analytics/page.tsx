@@ -65,6 +65,7 @@ export default function OpticAnalyticsPage() {
     const funnel = data?.crmFunnel || {};
     const categories = data?.categoriesBreakdown || [];
     const topPatients = data?.top10Patients || [];
+    const topItems = data?.topSellingItems || [];
     const dynamics = data?.dynamics || [];
 
     // Calculate funnel progression levels for visualization
@@ -268,7 +269,7 @@ export default function OpticAnalyticsPage() {
                                         return (
                                             <div key={i} className="space-y-1.5 text-gray-700">
                                                 <div className="flex justify-between text-xs sm:text-sm font-bold">
-                                                    <span>{cat.name}</span>
+                                                    <span>{cat.name} <span className="text-gray-400 font-medium text-xs ml-1">({cat.quantity || 0} шт.)</span></span>
                                                     <span>{fmt(cat.value)} ₸ ({percentage}%)</span>
                                                 </div>
                                                 <div className="w-full bg-gray-100 rounded-full h-2.5 shadow-inner">
@@ -339,6 +340,49 @@ export default function OpticAnalyticsPage() {
                             </Link>
                         </div>
                     </div>
+                </div>
+
+                {/* Top Selling Items block */}
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                    <div className="flex items-center gap-2 mb-6">
+                        <ShoppingBag className="w-5 h-5 text-fuchsia-500" />
+                        <h2 className="text-sm sm:text-base font-extrabold text-gray-800 uppercase tracking-tight">Позиции по продажам (Топ-15)</h2>
+                    </div>
+
+                    {topItems.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400 text-sm font-medium">Нет данных о продажах</div>
+                    ) : (
+                        <div className="overflow-x-auto -mx-6 sm:mx-0">
+                            <table className="w-full text-left text-xs sm:text-sm">
+                                <thead className="bg-gray-50/80 text-gray-400 font-extrabold text-[10px] uppercase tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-3">Наименование</th>
+                                        <th className="px-4 py-3">Категория</th>
+                                        <th className="px-4 py-3 text-center">Продано</th>
+                                        <th className="px-6 py-3 text-right">Выручка</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {topItems.map((item: any, i: number) => (
+                                        <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                            <td className="px-6 py-3.5 font-extrabold text-gray-800">
+                                                {item.name}
+                                            </td>
+                                            <td className="px-4 py-3.5 text-gray-500 font-medium">
+                                                {item.category}
+                                            </td>
+                                            <td className="px-4 py-3.5 text-center font-bold text-gray-600">
+                                                {item.quantity} шт.
+                                            </td>
+                                            <td className="px-6 py-3.5 text-right font-black text-indigo-700">
+                                                {fmt(item.value)} ₸
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 {/* Sales Dynamics Chart Representation */}
