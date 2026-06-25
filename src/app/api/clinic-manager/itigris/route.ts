@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
-import { ItigrisApiClient, ItigrisSyncService } from '@/lib/itigris';
+import { ItigrisApiClient, ItigrisSyncService, ItigrisLegacyClient } from '@/lib/itigris';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +51,8 @@ export async function GET() {
         login: itigris?.login || null,
         connectedAt: itigris?.connectedAt || null,
         departmentId: itigris?.departmentId || null,
+        legacyClient: itigris?.legacyClient || itigris?.company || null,
+        legacyConnected: !!itigris?.legacyKey,
         syncLogs,
         stats: { patientsCount, ordersCount },
     });
@@ -89,11 +91,39 @@ export async function POST(req: NextRequest) {
             data: {
                 metadata: {
                     ...existingMeta,
-                    itigris: { company, login, password, departmentId: Number(departmentId) || 0, connectedAt: new Date().toISOString() },
+                    // merge — keep legacy fields (legacyClient/legacyKey) intact
+                    itigris: { ...(existingMeta.itigris || {}), company, login, password, departmentId: Number(departmentId) || 0, connectedAt: new Date().toISOString() },
                 },
             } as any,
         });
         return NextResponse.json({ ok: true, message: 'Настройки ITIGRIS сохранены' });
+    }
+
+    // ----- Legacy (key-based) external API -----
+    if (action === 'test_legacy') {
+        const client = body.legacyClient || body.company;
+        const key = body.legacyKey;
+        if (!client || !key) return NextResponse.json({ ok: false, message: 'Укажите компанию и легаси-ключ' });
+        const result = await new ItigrisLegacyClient({ client, key }).test();
+        return NextResponse.json(result);
+    }
+
+    if (action === 'save_legacy') {
+        const key = body.legacyKey;
+        if (!key) return NextResponse.json({ error: 'Укажите легаси-ключ' }, { status: 400 });
+        const org = await prisma.organization.findUnique({ where: { id: orgId } });
+        const existingMeta = (org as any)?.metadata || {};
+        const legacyClient = body.legacyClient || existingMeta.itigris?.company || undefined;
+        await prisma.organization.update({
+            where: { id: orgId },
+            data: {
+                metadata: {
+                    ...existingMeta,
+                    itigris: { ...(existingMeta.itigris || {}), legacyClient, legacyKey: key },
+                },
+            } as any,
+        });
+        return NextResponse.json({ ok: true, message: 'Легаси-доступ сохранён' });
     }
 
     if (action === 'sync' || action === 'sync_delta') {
