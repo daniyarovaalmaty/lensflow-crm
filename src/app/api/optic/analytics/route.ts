@@ -217,6 +217,56 @@ export async function GET(req: NextRequest) {
 
     const dynamics = Object.values(dynamicsMap);
 
+    // 9. Products Summary (Hard lenses, frames, soft lenses, etc.)
+    const productsSummary = {
+        hardLenses: 0,
+        sunGlasses: 0,
+        frames: 0,
+        consultations: 0,
+        softLenses: 0,
+        solutions: 0
+    };
+
+    sales.forEach(sale => {
+        sale.items.forEach(item => {
+            const cat = item.category || '';
+            const nameLower = item.name.toLowerCase();
+
+            // Hard lenses
+            if (nameLower.includes('подбор') || nameLower.includes('ортокератолог') || nameLower.includes('ночных линз')) {
+                if (nameLower.includes('одной')) {
+                    productsSummary.hardLenses += 1 * item.quantity;
+                } else if (nameLower.includes('подбор')) {
+                    productsSummary.hardLenses += 2 * item.quantity;
+                } else {
+                    productsSummary.hardLenses += 1 * item.quantity;
+                }
+            }
+            
+            // Frames (sun & regular)
+            if (cat === 'sun_glasses' || nameLower.includes('солнцезащит')) {
+                productsSummary.sunGlasses += item.quantity;
+            } else if (cat === 'frame' || nameLower.includes('оправа')) {
+                productsSummary.frames += item.quantity;
+            }
+
+            // Consultations
+            if (nameLower.includes('консультация') || nameLower.includes('диагностика')) {
+                productsSummary.consultations += item.quantity;
+            }
+
+            // Soft lenses
+            if (cat === 'contact_lens' || cat === 'spectacle_lens' || nameLower.includes('мкл') || nameLower.includes('мягк')) {
+                productsSummary.softLenses += item.quantity;
+            }
+
+            // Solutions
+            if (cat === 'solution' || nameLower.includes('раствор') || nameLower.includes('one step') || nameLower.includes('avisor')) {
+                productsSummary.solutions += item.quantity;
+            }
+        });
+    });
+
     return NextResponse.json({
         kpi: {
             totalRevenue,
@@ -234,5 +284,6 @@ export async function GET(req: NextRequest) {
         topSellingItems,
         top10Patients,
         dynamics,
+        productsSummary,
     });
 }
