@@ -135,8 +135,9 @@ export default function SalesHistoryPage() {
             validCount++;
             total += s.total;
             if (s.paymentMethod === 'mixed' && s.invoiceData) {
-                if (s.invoiceData.split && Array.isArray(s.invoiceData.split)) {
-                    for (const sp of s.invoiceData.split) {
+                const invData = s.invoiceData as any;
+                if (invData.split && Array.isArray(invData.split)) {
+                    for (const sp of invData.split) {
                         if (sp.method === 'cash') cashTotal += sp.amount;
                         else cardTotal += sp.amount; // card, transfer, kaspi
                     }
