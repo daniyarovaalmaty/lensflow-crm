@@ -25,8 +25,6 @@ interface Appointment {
 
 const APPT_TYPES: Record<string, string> = {
     consultation: 'Консультация',
-    fitting: 'Подбор',
-    checkup: 'Проверка',
     primary_consultation: 'Первичный прием',
     repeat_consultation: 'Повторный прием',
     primary_ok_fitting: 'Первичный подбор ночных линз',
@@ -38,6 +36,7 @@ export default function DoctorCalendar() {
     const { data: session } = useSession();
     const router = useRouter();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [doctors, setDoctors] = useState<any[]>([]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [isLoading, setIsLoading] = useState(true);
 
@@ -49,8 +48,9 @@ export default function DoctorCalendar() {
     const [newApptTime, setNewApptTime] = useState('');
     const [newApptName, setNewApptName] = useState('');
     const [newApptPhone, setNewApptPhone] = useState('');
-    const [newApptType, setNewApptType] = useState('consultation');
+    const [newApptType, setNewApptType] = useState('primary_consultation');
     const [newApptDuration, setNewApptDuration] = useState(30);
+    const [newApptDoctorId, setNewApptDoctorId] = useState('');
 
     const fetchAppointments = async () => {
         try {
@@ -73,6 +73,16 @@ export default function DoctorCalendar() {
     useEffect(() => {
         if (session) {
             fetchAppointments();
+            if ((session.user as any)?.subRole === 'optic_manager') {
+                fetch('/api/clinic-staff')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            setDoctors(data.filter((u: any) => u.subRole === 'optic_doctor'));
+                        }
+                    })
+                    .catch(console.error);
+            }
         }
     }, [session, currentDate]);
 
@@ -88,7 +98,8 @@ export default function DoctorCalendar() {
                     duration: newApptDuration,
                     patientName: newApptName,
                     patientPhone: newApptPhone,
-                    type: newApptType
+                    type: newApptType,
+                    doctorId: newApptDoctorId || undefined
                 })
             });
             if (res.ok) {
@@ -128,8 +139,9 @@ export default function DoctorCalendar() {
     const resetNewApptForm = () => {
         setNewApptName('');
         setNewApptPhone('');
-        setNewApptType('consultation');
+        setNewApptType('primary_consultation');
         setNewApptDuration(30);
+        setNewApptDoctorId('');
     };
 
     const openNewModal = (date?: Date) => {
@@ -375,6 +387,17 @@ export default function DoctorCalendar() {
                                             <input type="number" required min="15" step="15" value={newApptDuration} onChange={e => setNewApptDuration(parseInt(e.target.value))} className="input w-full" />
                                         </div>
                                     </div>
+                                    {(session?.user as any)?.subRole === 'optic_manager' && doctors.length > 0 && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Доктор (необязательно)</label>
+                                            <select value={newApptDoctorId} onChange={e => setNewApptDoctorId(e.target.value)} className="input w-full">
+                                                <option value="">Выберите доктора</option>
+                                                {doctors.map(d => (
+                                                    <option key={d.id} value={d.id}>{d.fullName}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
                                     <div className="pt-4 flex gap-3">
                                         <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 btn btn-secondary">Отмена</button>
                                         <button type="submit" className="flex-1 btn btn-primary">Создать</button>
