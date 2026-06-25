@@ -134,9 +134,16 @@ export default function SalesHistoryPage() {
             if (s.paymentStatus === 'refunded') continue;
             validCount++;
             total += s.total;
-            if (s.paymentMethod === 'mixed' && s.invoiceData?.splitPayment) {
-                cashTotal += s.invoiceData.cashAmount ?? 0;
-                cardTotal += s.invoiceData.cardAmount ?? 0;
+            if (s.paymentMethod === 'mixed' && s.invoiceData) {
+                if (s.invoiceData.split && Array.isArray(s.invoiceData.split)) {
+                    for (const sp of s.invoiceData.split) {
+                        if (sp.method === 'cash') cashTotal += sp.amount;
+                        else cardTotal += sp.amount; // card, transfer, kaspi
+                    }
+                } else if (s.invoiceData.splitPayment) {
+                    cashTotal += s.invoiceData.cashAmount ?? 0;
+                    cardTotal += (s.invoiceData.cardAmount ?? 0) + (s.invoiceData.transferAmount ?? 0);
+                }
             } else if (s.paymentMethod === 'cash') {
                 cashTotal += s.total;
             } else if (s.paymentMethod === 'card' || s.paymentMethod === 'transfer' || s.paymentMethod === 'kaspi' || s.paymentMethod === 'installment12' || s.paymentMethod === 'installment_12') {
