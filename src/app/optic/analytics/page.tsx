@@ -353,7 +353,12 @@ export default function OpticAnalyticsPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                             <div className="bg-blue-50/50 rounded-2xl p-4">
                                 <div className="text-xs font-bold text-gray-500 mb-1">ОК-линзы (жесткие)</div>
-                                <div className="text-xl font-black text-blue-700">{data.productsSummary.hardLenses} шт.</div>
+                                <div className="text-xl font-black text-blue-700">
+                                    {data.productsSummary.hardLenses} шт.
+                                    <span className="block text-[10px] text-gray-400 font-medium mt-1">
+                                        Клиентов (примерно): {Math.floor(data.productsSummary.hardLenses / 2)} чел.
+                                    </span>
+                                </div>
                             </div>
                             <div className="bg-green-50/50 rounded-2xl p-4">
                                 <div className="text-xs font-bold text-gray-500 mb-1">МКЛ (мягкие линзы)</div>
