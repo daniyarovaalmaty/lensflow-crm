@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
 
     // 6. Category breakdown
     const categoryTotals: Record<string, { value: number, quantity: number }> = {};
-    const itemTotals: Record<string, { value: number, quantity: number, category: string }> = {};
+    const itemTotals: Record<string, { value: number, quantity: number, category: string, salesHistory: any[] }> = {};
 
     sales.forEach(sale => {
         sale.items.forEach(item => {
@@ -126,9 +126,19 @@ export async function GET(req: NextRequest) {
             categoryTotals[cat].quantity += item.quantity;
 
             const name = item.name;
-            if (!itemTotals[name]) itemTotals[name] = { value: 0, quantity: 0, category: cat };
+            if (!itemTotals[name]) itemTotals[name] = { value: 0, quantity: 0, category: cat, salesHistory: [] };
             itemTotals[name].value += item.total;
             itemTotals[name].quantity += item.quantity;
+            itemTotals[name].salesHistory.push({
+                saleId: sale.id,
+                saleNumber: sale.saleNumber,
+                date: sale.createdAt,
+                customerName: sale.customerName,
+                customerPhone: sale.customerPhone,
+                paymentMethod: sale.paymentMethod,
+                quantity: item.quantity,
+                total: item.total
+            });
         });
     });
 

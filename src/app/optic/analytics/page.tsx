@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -20,6 +20,7 @@ export default function OpticAnalyticsPage() {
     const [period, setPeriod] = useState('30days');
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
     const loadData = async () => {
         setLoading(true);
@@ -364,20 +365,61 @@ export default function OpticAnalyticsPage() {
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     {topItems.map((item: any, i: number) => (
-                                        <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="px-6 py-3.5 font-extrabold text-gray-800">
-                                                {item.name}
-                                            </td>
-                                            <td className="px-4 py-3.5 text-gray-500 font-medium">
-                                                {item.category}
-                                            </td>
-                                            <td className="px-4 py-3.5 text-center font-bold text-gray-600">
-                                                {item.quantity} шт.
-                                            </td>
-                                            <td className="px-6 py-3.5 text-right font-black text-indigo-700">
-                                                {fmt(item.value)} ₸
-                                            </td>
-                                        </tr>
+                                        <React.Fragment key={i}>
+                                            <tr 
+                                                className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                                onClick={() => setExpandedItem(expandedItem === item.name ? null : item.name)}
+                                            >
+                                                <td className="px-6 py-3.5 font-extrabold text-gray-800">
+                                                    {item.name}
+                                                </td>
+                                                <td className="px-4 py-3.5 text-gray-500 font-medium">
+                                                    {item.category}
+                                                </td>
+                                                <td className="px-4 py-3.5 text-center font-bold text-gray-600">
+                                                    {item.quantity} шт.
+                                                </td>
+                                                <td className="px-6 py-3.5 text-right font-black text-indigo-700">
+                                                    {fmt(item.value)} ₸
+                                                </td>
+                                            </tr>
+                                            {expandedItem === item.name && item.salesHistory && item.salesHistory.length > 0 && (
+                                                <tr>
+                                                    <td colSpan={4} className="px-6 py-4 bg-gray-50/50">
+                                                        <div className="space-y-3">
+                                                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">История продаж позиции</div>
+                                                            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                                                                <table className="w-full text-left text-xs">
+                                                                    <thead className="bg-gray-50 text-gray-400 font-semibold uppercase">
+                                                                        <tr>
+                                                                            <th className="px-4 py-2">Дата</th>
+                                                                            <th className="px-4 py-2">№ Чека</th>
+                                                                            <th className="px-4 py-2">Покупатель</th>
+                                                                            <th className="px-4 py-2 text-center">Кол-во</th>
+                                                                            <th className="px-4 py-2 text-right">Сумма</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody className="divide-y divide-gray-50">
+                                                                        {item.salesHistory.map((sh: any, shi: number) => (
+                                                                            <tr key={shi} className="hover:bg-gray-50">
+                                                                                <td className="px-4 py-2 text-gray-500">{new Date(sh.date).toLocaleDateString('ru-RU')}</td>
+                                                                                <td className="px-4 py-2 font-medium text-gray-700">{sh.saleNumber}</td>
+                                                                                <td className="px-4 py-2 text-gray-700">
+                                                                                    {sh.customerName || 'Без имени'}
+                                                                                    {sh.customerPhone && <div className="text-[10px] text-gray-400">{sh.customerPhone}</div>}
+                                                                                </td>
+                                                                                <td className="px-4 py-2 text-center text-gray-600">{sh.quantity}</td>
+                                                                                <td className="px-4 py-2 text-right font-bold text-gray-800">{fmt(sh.total)} ₸</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </tbody>
                             </table>
