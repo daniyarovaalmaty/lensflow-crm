@@ -509,15 +509,15 @@ export default function OpticAnalyticsPage() {
                                     const maxRev = Math.max(...dynamics.map((x: any) => x.revenue), 1);
                                     const percentHeight = Math.round((d.revenue / maxRev) * 100);
                                     return (
-                                        <div key={idx} className="flex-1 flex flex-col items-center min-w-[20px] group cursor-pointer">
-                                            <div className="w-full bg-violet-100 hover:bg-violet-600 rounded-lg relative transition-all duration-300" style={{ height: `${Math.max(percentHeight, 4)}%` }}>
+                                        <div key={idx} className="flex-1 flex flex-col items-center justify-end min-w-[20px] h-full group cursor-pointer">
+                                            <div className="w-full bg-violet-500 hover:bg-violet-600 rounded-lg relative transition-all duration-300" style={{ height: `${Math.max(percentHeight, 4)}%` }}>
                                                 {d.revenue > 0 && (
                                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-gray-900 text-white text-[9px] font-black rounded-lg px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-md z-30">
                                                         {fmt(d.revenue)} ₸
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className="text-[9px] font-bold text-gray-400 mt-2 rotate-45 sm:rotate-0 block">{d.date}</span>
+                                            <span className="text-[9px] font-bold text-gray-400 mt-2 rotate-45 sm:rotate-0 block w-full text-center">{d.date}</span>
                                         </div>
                                     );
                                 })}
