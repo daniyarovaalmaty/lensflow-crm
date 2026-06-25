@@ -58,6 +58,39 @@ export async function GET(req: Request) {
             }
         });
 
+        // Fetch regular clinic appointments
+        const apptWhere: any = {};
+        if (clinicId) {
+            apptWhere.clinicId = clinicId;
+        } else if (orgId) {
+            apptWhere.clinicId = { in: allowedOrgIds };
+        }
+        if (doctorId) apptWhere.doctorId = doctorId;
+
+        const appointments = await prisma.appointment.findMany({
+            where: apptWhere,
+            include: {
+                doctor: { select: { id: true, fullName: true, email: true } },
+                patient: true
+            }
+        });
+
+        // Map appointments to match Lead format for the frontend calendar
+        const mappedAppointments = appointments.map(app => ({
+            id: `appt-${app.id}`, // prefix to avoid id collision
+            name: app.patientName || app.patient?.name || 'Пациент клиники',
+            phone: app.patientPhone || app.patient?.phone || '—',
+            appointmentAt: app.date,
+            appointmentNotes: app.notes || app.type,
+            doctor: app.doctor ? { id: app.doctor.id, fullName: app.doctor.fullName || app.doctor.email || '' } : null,
+            clinic: null // we don't have clinic name easily accessible here without another join, but it's fine
+        }));
+
+        // Combine and sort
+        const combinedLeads = [...leads, ...mappedAppointments].sort((a: any, b: any) => {
+            return new Date(a.appointmentAt).getTime() - new Date(b.appointmentAt).getTime();
+        });
+
         // Also fetch filter options (clinics and doctors that have appointments)
         const doctors = await prisma.user.findMany({
             where: { 
@@ -75,7 +108,7 @@ export async function GET(req: Request) {
             select: { id: true, name: true }
         });
 
-        return NextResponse.json({ leads, doctors, clinics });
+        return NextResponse.json({ leads: combinedLeads, doctors, clinics });
     } catch (error) {
         console.error('[CRM Appointments GET]', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

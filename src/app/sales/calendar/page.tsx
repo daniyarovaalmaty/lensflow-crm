@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Phone, Filter, Trash2, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Phone, Filter, Trash2, Plus, X, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { format, isSameDay, isToday, isTomorrow, addDays, subDays, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, subMonths, addMonths, subWeeks, addWeeks } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -14,6 +14,15 @@ interface LeadAppointment {
     doctor: { id: string; fullName: string } | null;
     clinic: { id: string; name: string } | null;
 }
+
+const APPT_TYPES: Record<string, string> = {
+    consultation: 'Консультация',
+    primary_consultation: 'Первичный прием',
+    repeat_consultation: 'Повторный прием',
+    primary_ok_fitting: 'Первичный подбор ночных линз',
+    repeat_fitting: 'Повторный подбор',
+    ok_delivery: 'Выдача ночных линз',
+};
 
 export default function CalendarPage() {
     const [appointments, setAppointments] = useState<LeadAppointment[]>([]);
@@ -32,6 +41,8 @@ export default function CalendarPage() {
     const [newDate, setNewDate] = useState('');
     const [newTime, setNewTime] = useState('');
     const [newDoctorId, setNewDoctorId] = useState('');
+    const [newType, setNewType] = useState('primary_consultation');
+    const [newDuration, setNewDuration] = useState(30);
     const [saving, setSaving] = useState(false);
     
     // Detailed view modal for month view
@@ -76,11 +87,16 @@ export default function CalendarPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm('Отменить эту запись?')) return;
-        await fetch(`/api/crm/leads/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ appointmentAt: null })
-        });
+        if (id.startsWith('appt-')) {
+            const realId = id.replace('appt-', '');
+            await fetch(`/api/appointments/${realId}`, { method: 'DELETE' });
+        } else {
+            await fetch(`/api/crm/leads/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appointmentAt: null })
+            });
+        }
         loadData();
     };
 
@@ -119,6 +135,12 @@ export default function CalendarPage() {
                         <Phone className="w-3 h-3 text-gray-400" />
                         {app.phone.replace('@c.us', '')}
                     </div>
+                    {app.appointmentNotes && (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600 truncate mt-1">
+                            <FileText className="w-3 h-3 text-gray-400" />
+                            {APPT_TYPES[app.appointmentNotes] || app.appointmentNotes}
+                        </div>
+                    )}
                     {app.doctor && (
                         <div className="flex items-center gap-1.5 text-xs text-gray-600 truncate">
                             <User className="w-3 h-3 text-gray-400" />
@@ -416,16 +438,30 @@ export default function CalendarPage() {
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Врач</label>
-                                <select
-                                    value={newDoctorId}
-                                    onChange={e => setNewDoctorId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                                >
-                                    <option value="">Выберите врача</option>
-                                    {doctors.map(d => <option key={d.id} value={d.id}>{d.fullName}</option>)}
-                                </select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Тип приема</label>
+                                    <select
+                                        value={newType}
+                                        onChange={e => setNewType(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+                                    >
+                                        {Object.entries(APPT_TYPES).map(([k, v]) => (
+                                            <option key={k} value={k}>{v}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Врач</label>
+                                    <select
+                                        value={newDoctorId}
+                                        onChange={e => setNewDoctorId(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+                                    >
+                                        <option value="">Без врача</option>
+                                        {doctors.map(d => <option key={d.id} value={d.id}>{d.fullName}</option>)}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <div className="p-4 border-t border-gray-100 flex gap-3 bg-gray-50/50">
@@ -440,39 +476,28 @@ export default function CalendarPage() {
                                 onClick={async () => {
                                     setSaving(true);
                                     try {
-                                        let leadId;
-                                        const phoneJid = newPhone.includes('@') ? newPhone : `${newPhone.replace(/[^0-9]/g, '')}@c.us`;
-                                        const res = await fetch('/api/crm/leads', { 
-                                            method: 'POST', 
+                                        const dateTime = new Date(`${newDate}T${newTime}`);
+                                        const res = await fetch('/api/appointments', {
+                                            method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ phone: phoneJid, name: newName, source: 'manual' }) 
+                                            body: JSON.stringify({
+                                                date: dateTime.toISOString(),
+                                                duration: newDuration,
+                                                patientName: newName,
+                                                patientPhone: newPhone,
+                                                type: newType,
+                                                doctorId: newDoctorId || undefined
+                                            })
                                         });
-                                        if (res.ok) {
-                                            const data = await res.json();
-                                            leadId = data.id;
-                                        } else if (res.status === 409) {
-                                            const err = await res.json();
-                                            leadId = err.existingLeadId;
-                                        }
 
-                                        if (leadId) {
-                                            const dateIso = new Date(`${newDate}T${newTime}:00`).toISOString();
-                                            await fetch(`/api/crm/leads/${leadId}`, {
-                                                method: 'PATCH',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ 
-                                                    appointmentAt: dateIso, 
-                                                    assigneeId: newDoctorId, 
-                                                    stage: 'appointment',
-                                                    ...(newName ? { name: newName } : {}) 
-                                                })
-                                            });
+                                        if (res.ok) {
                                             setIsAddModalOpen(false);
                                             setNewName('');
                                             setNewPhone('');
                                             setNewDate('');
                                             setNewTime('');
                                             setNewDoctorId('');
+                                            setNewType('primary_consultation');
                                             loadData();
                                         }
                                     } finally {
