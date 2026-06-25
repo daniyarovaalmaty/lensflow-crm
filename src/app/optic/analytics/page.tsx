@@ -351,33 +351,58 @@ export default function OpticAnalyticsPage() {
                             <h2 className="text-sm sm:text-base font-extrabold text-gray-800 uppercase tracking-tight">Сводка по проданным товарам</h2>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                            <div className="bg-blue-50/50 rounded-2xl p-4">
-                                <div className="text-xs font-bold text-gray-500 mb-1">ОК-линзы (жесткие)</div>
-                                <div className="text-xl font-black text-blue-700">
-                                    {data.productsSummary.hardLenses} шт.
-                                    <span className="block text-[10px] text-gray-400 font-medium mt-1">
+                            <div className="bg-blue-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">ОК-линзы (жесткие)</div>
+                                    <div className="text-xl font-black text-blue-700">
+                                        {data.productsSummary.hardLenses} шт.
+                                    </div>
+                                    <div className="text-[10px] text-gray-400 font-medium mt-0.5">
                                         Клиентов (примерно): {Math.floor(data.productsSummary.hardLenses / 2)} чел.
-                                    </span>
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-blue-100/50 text-sm font-black text-blue-800">
+                                    {fmt(data.productsSummary.hardLensesRevenue)} ₸
                                 </div>
                             </div>
-                            <div className="bg-green-50/50 rounded-2xl p-4">
-                                <div className="text-xs font-bold text-gray-500 mb-1">МКЛ (мягкие линзы)</div>
-                                <div className="text-xl font-black text-green-700">{data.productsSummary.softLenses} шт.</div>
-                            </div>
-                            <div className="bg-orange-50/50 rounded-2xl p-4">
-                                <div className="text-xs font-bold text-gray-500 mb-1">Оправы (С/З и обычные)</div>
-                                <div className="text-xl font-black text-orange-700">
-                                    {data.productsSummary.frames + data.productsSummary.sunGlasses} шт.
-                                    <span className="block text-[10px] text-gray-400 font-medium mt-1">Солнце: {data.productsSummary.sunGlasses} | Обычные: {data.productsSummary.frames}</span>
+                            <div className="bg-green-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">МКЛ (мягкие линзы)</div>
+                                    <div className="text-xl font-black text-green-700">{data.productsSummary.softLenses} шт.</div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-green-100/50 text-sm font-black text-green-800">
+                                    {fmt(data.productsSummary.softLensesRevenue)} ₸
                                 </div>
                             </div>
-                            <div className="bg-purple-50/50 rounded-2xl p-4">
-                                <div className="text-xs font-bold text-gray-500 mb-1">Растворы</div>
-                                <div className="text-xl font-black text-purple-700">{data.productsSummary.solutions} шт.</div>
+                            <div className="bg-orange-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">Оправы (С/З и обычные)</div>
+                                    <div className="text-xl font-black text-orange-700">
+                                        {data.productsSummary.frames + data.productsSummary.sunGlasses} шт.
+                                        <span className="block text-[10px] text-gray-400 font-medium mt-1">Солнце: {data.productsSummary.sunGlasses} | Обычные: {data.productsSummary.frames}</span>
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-orange-100/50 text-sm font-black text-orange-800">
+                                    {fmt(data.productsSummary.framesRevenue + data.productsSummary.sunGlassesRevenue)} ₸
+                                </div>
                             </div>
-                            <div className="bg-rose-50/50 rounded-2xl p-4">
-                                <div className="text-xs font-bold text-gray-500 mb-1">Консультации</div>
-                                <div className="text-xl font-black text-rose-700">{data.productsSummary.consultations} шт.</div>
+                            <div className="bg-purple-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">Растворы</div>
+                                    <div className="text-xl font-black text-purple-700">{data.productsSummary.solutions} шт.</div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-purple-100/50 text-sm font-black text-purple-800">
+                                    {fmt(data.productsSummary.solutionsRevenue)} ₸
+                                </div>
+                            </div>
+                            <div className="bg-rose-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">Консультации</div>
+                                    <div className="text-xl font-black text-rose-700">{data.productsSummary.consultations} шт.</div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-rose-100/50 text-sm font-black text-rose-800">
+                                    {fmt(data.productsSummary.consultationsRevenue)} ₸
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -220,11 +220,17 @@ export async function GET(req: NextRequest) {
     // 9. Products Summary (Hard lenses, frames, soft lenses, etc.)
     const productsSummary = {
         hardLenses: 0,
+        hardLensesRevenue: 0,
         sunGlasses: 0,
+        sunGlassesRevenue: 0,
         frames: 0,
+        framesRevenue: 0,
         consultations: 0,
+        consultationsRevenue: 0,
         softLenses: 0,
-        solutions: 0
+        softLensesRevenue: 0,
+        solutions: 0,
+        solutionsRevenue: 0,
     };
 
     sales.forEach(sale => {
@@ -241,28 +247,34 @@ export async function GET(req: NextRequest) {
                 } else {
                     productsSummary.hardLenses += 1 * item.quantity;
                 }
+                productsSummary.hardLensesRevenue += item.total;
             }
             
             // Frames (sun & regular)
             if (cat === 'sun_glasses' || nameLower.includes('солнцезащит')) {
                 productsSummary.sunGlasses += item.quantity;
+                productsSummary.sunGlassesRevenue += item.total;
             } else if (cat === 'frame' || nameLower.includes('оправа')) {
                 productsSummary.frames += item.quantity;
+                productsSummary.framesRevenue += item.total;
             }
 
             // Consultations
             if (nameLower.includes('консультация') || nameLower.includes('диагностика')) {
                 productsSummary.consultations += item.quantity;
+                productsSummary.consultationsRevenue += item.total;
             }
 
             // Soft lenses
             if (cat === 'contact_lens' || cat === 'spectacle_lens' || nameLower.includes('мкл') || nameLower.includes('мягк')) {
                 productsSummary.softLenses += item.quantity;
+                productsSummary.softLensesRevenue += item.total;
             }
 
             // Solutions
             if (cat === 'solution' || nameLower.includes('раствор') || nameLower.includes('one step') || nameLower.includes('avisor')) {
                 productsSummary.solutions += item.quantity;
+                productsSummary.solutionsRevenue += item.total;
             }
         });
     });
