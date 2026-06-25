@@ -603,6 +603,12 @@ export default function SalesHistoryPage() {
                                                                 <span className="text-gray-500">Кассир</span>
                                                                 <span className="font-medium text-gray-700">{sale.performedByName || '—'}</span>
                                                             </div>
+                                                            {sale.notes && (
+                                                                <div className="flex flex-col text-sm border-t pt-2 mt-2">
+                                                                    <span className="text-gray-500 mb-1">Комментарий:</span>
+                                                                    <span className="font-medium text-gray-700 bg-gray-50 p-2 rounded-lg">{sale.notes}</span>
+                                                                </div>
+                                                            )}
                                                             {sale.subtotal !== sale.total && (
                                                                 <>
                                                                     <div className="flex justify-between items-center text-sm border-t pt-2">
