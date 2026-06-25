@@ -87,6 +87,7 @@ export default function POSPage() {
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [discount, setDiscount] = useState('0');
+    const [discountType, setDiscountType] = useState<'percent' | 'amount'>('percent');
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [trafficSource, setTrafficSource] = useState('Не указано');
     const [mixedCash, setMixedCash] = useState('');
@@ -241,8 +242,13 @@ export default function POSPage() {
 
     // Totals
     const subtotal = cart.reduce((s, c) => s + c.unitPrice * c.quantity, 0);
-    const discountPct = Number(discount) || 0;
-    const discountAmount = Math.round(subtotal * discountPct / 100);
+    const discountVal = Number(discount) || 0;
+    const discountAmount = discountType === 'percent' 
+        ? Math.round(subtotal * discountVal / 100) 
+        : discountVal;
+    const discountPct = discountType === 'percent' 
+        ? discountVal 
+        : (subtotal > 0 ? (discountAmount / subtotal * 100) : 0);
     const total = subtotal - discountAmount;
     const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
@@ -288,6 +294,7 @@ export default function POSPage() {
                     customerName: customerName || undefined,
                     customerPhone: customerPhone || undefined,
                     discountPercent: discountPct,
+                    explicitDiscountAmount: discountType === 'amount' ? discountAmount : undefined,
                     paymentMethod,
                     invoiceData: Object.keys(invoiceData).length > 0 ? invoiceData : undefined,
                     patientId: patientId || undefined,
@@ -301,6 +308,7 @@ export default function POSPage() {
                 setCustomerPhone('');
                 setTrafficSource('Не указано');
                 setDiscount('0');
+                setDiscountType('percent');
                 setPrepayment('');
                 setPatientId(null);
                 setLeadId(null);
@@ -552,12 +560,15 @@ export default function POSPage() {
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="text-xs md:text-sm text-gray-500 font-bold">Скидка:</span>
                                         <div className="flex items-center gap-2">
-                                            <input type="number" min="0" max="100" value={discount}
+                                            <input type="number" min="0" max={discountType === 'percent' ? "100" : undefined} value={discount}
                                                 onChange={e => setDiscount(e.target.value)}
-                                                className="w-14 border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 rounded-xl px-2 py-1.5 text-xs md:text-sm text-center font-extrabold bg-white shadow-sm" />
-                                            <span className="text-xs md:text-sm text-gray-500 font-bold">%</span>
-                                            {discountAmount > 0 && (
-                                                <span className="text-xs md:text-sm text-red-500 font-bold ml-2">−{fmt(discountAmount)} ₸</span>
+                                                className="w-20 border border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 rounded-xl px-2 py-1.5 text-xs md:text-sm text-right font-extrabold bg-white shadow-sm" />
+                                            <div className="flex bg-gray-100 rounded-lg p-0.5">
+                                                <button onClick={() => { if(discountType !== 'percent') { setDiscountType('percent'); setDiscount('0'); } }} className={`px-2 py-1 rounded-md text-xs font-bold transition-colors ${discountType === 'percent' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>%</button>
+                                                <button onClick={() => { if(discountType !== 'amount') { setDiscountType('amount'); setDiscount('0'); } }} className={`px-2 py-1 rounded-md text-xs font-bold transition-colors ${discountType === 'amount' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>₸</button>
+                                            </div>
+                                            {discountAmount > 0 && discountType === 'percent' && (
+                                                <span className="text-xs md:text-sm text-red-500 font-bold ml-2">−{fmt(discountAmount)}</span>
                                             )}
                                         </div>
                                     </div>

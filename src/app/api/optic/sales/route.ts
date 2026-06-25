@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData } = body;
+    const { items, customerName, customerPhone, discountPercent, explicitDiscountAmount, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
@@ -185,7 +185,9 @@ export async function POST(req: NextRequest) {
     }
 
     const discount = Number(discountPercent) || 0;
-    const discountAmount = Math.round(subtotal * discount / 100);
+    const discountAmount = explicitDiscountAmount !== undefined
+        ? Number(explicitDiscountAmount)
+        : Math.round(subtotal * discount / 100);
     const totalAmount = subtotal - discountAmount;
 
     // Prepayment already received earlier — clamp to [0, total]
@@ -214,7 +216,7 @@ export async function POST(req: NextRequest) {
             patientId: patientId || null,
             leadId: finalLeadId || null,
             subtotal,
-            discountPercent: discount,
+            discountPercent: explicitDiscountAmount !== undefined && subtotal > 0 ? (Number(explicitDiscountAmount) / subtotal * 100) : discount,
             discountAmount,
             total: totalAmount,
             paidAmount: totalAmount,
