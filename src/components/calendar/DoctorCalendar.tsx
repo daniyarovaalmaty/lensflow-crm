@@ -23,6 +23,17 @@ interface Appointment {
     notes?: string | null;
 }
 
+const APPT_TYPES: Record<string, string> = {
+    consultation: 'Консультация',
+    fitting: 'Подбор',
+    checkup: 'Проверка',
+    primary_consultation: 'Первичный прием',
+    repeat_consultation: 'Повторный прием',
+    primary_ok_fitting: 'Первичный подбор ночных линз',
+    repeat_fitting: 'Повторный подбор',
+    ok_delivery: 'Выдача ночных линз',
+};
+
 export default function DoctorCalendar() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -249,7 +260,7 @@ export default function DoctorCalendar() {
                                     {appt.patient?.name || appt.patientName || 'Неизвестный пациент'}
                                 </div>
                                 <div className="text-sm text-gray-500 truncate flex items-center gap-2">
-                                    <span className="capitalize">{appt.type === 'consultation' ? 'Прием' : appt.type === 'fitting' ? 'Подбор' : appt.type}</span>
+                                    <span className="capitalize">{APPT_TYPES[appt.type] || appt.type}</span>
                                     {appt.doctor && (
                                         <>
                                             <span>•</span>
@@ -354,9 +365,9 @@ export default function DoctorCalendar() {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Тип приема</label>
                                             <select value={newApptType} onChange={e => setNewApptType(e.target.value)} className="input w-full">
-                                                <option value="consultation">Консультация</option>
-                                                <option value="fitting">Подбор</option>
-                                                <option value="checkup">Проверка</option>
+                                                {Object.entries(APPT_TYPES).map(([val, label]) => (
+                                                    <option key={val} value={val}>{label}</option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div>
