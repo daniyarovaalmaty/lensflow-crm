@@ -1219,7 +1219,7 @@ export default function ProductionHubPage() {
                                     const generateLine = (label: string, eye: any) => {
                                         if (!eye || !eye.characteristic || Number(eye.qty) === 0) return null;
                                         const p = [];
-                                        p.push(order.orderNumber);
+                                        p.push(order.order_id);
                                         if (order.company) p.push(order.company);
                                         p.push(order.patient?.name || '');
                                         
