@@ -126,9 +126,14 @@ export default function ClinicManagerItigrisPage() {
                         <p className="text-sm text-gray-500">Синхронизация пациентов и заказов с Оптимой v.2</p>
                     </div>
                     {connected && (
-                        <Link href="/clinic-manager/itigris/browse" className="ml-auto flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium transition-colors">
-                            <ClipboardList className="w-4 h-4" /> Данные из ITIGRIS
-                        </Link>
+                        <div className="ml-auto flex items-center gap-2">
+                            <Link href="/clinic-manager/itigris/browse" className="flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium transition-colors">
+                                <ClipboardList className="w-4 h-4" /> Данные
+                            </Link>
+                            <Link href="/clinic-manager/itigris/services" className="flex items-center gap-2 px-3 py-2 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-xl text-sm font-medium transition-colors">
+                                <Zap className="w-4 h-4" /> Сервисы
+                            </Link>
+                        </div>
                     )}
                 </div>
 
