@@ -6,7 +6,7 @@ import { Briefcase, ArrowLeft, Save, Play, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface StaffPayroll {
-    user: { id: string; fullName: string; role: string };
+    user: { id: string; fullName: string; role: string; subRole?: string; isDoctor?: boolean };
     rule: { baseSalary: number; salesPercent: number };
     periodSalesTotal: number;
     estimatedSalesBonus: number;
@@ -128,7 +128,7 @@ export default function PayrollPage() {
                                             <div className="text-xs text-gray-400 uppercase mt-0.5">{st.user.role}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {st.user.role === 'doctor' && st.metrics ? (
+                                            {st.user.isDoctor && st.metrics ? (
                                                 <div className="space-y-1 w-40">
                                                     <div className="text-xs text-gray-600 flex items-center justify-between">
                                                         <span>Консультации:</span>

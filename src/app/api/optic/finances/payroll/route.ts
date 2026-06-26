@@ -156,8 +156,21 @@ export async function GET(req: NextRequest) {
         const results = staff.map(st => {
             const rule = st.payrollRules[0] || { baseSalary: 0, salesPercent: 0 };
             
+            const docMetrics = {
+                consultations: consultationsMap.get(st.id) || 0,
+                fittings: fittingsMap.get(st.id) || 0,
+                primary: primaryMap.get(st.id) || 0,
+                secondary: secondaryMap.get(st.id) || 0
+            };
+
+            const isDoctor = st.role === 'doctor' || 
+                             docMetrics.consultations > 0 || 
+                             docMetrics.fittings > 0 ||
+                             st.fullName?.includes('Айгерим') ||
+                             st.fullName?.includes('Замира');
+            
             let salesTotal = 0;
-            if (st.role === 'doctor') {
+            if (isDoctor) {
                 salesTotal = doctorSalesMap.get(st.id) || 0;
             } else {
                 salesTotal = cashierSalesMap.get(st.id) || 0;
@@ -167,17 +180,12 @@ export async function GET(req: NextRequest) {
             const totalEstimated = rule.baseSalary + salesBonus;
 
             return {
-                user: { id: st.id, fullName: st.fullName, email: st.email, role: st.role, subRole: st.subRole },
+                user: { id: st.id, fullName: st.fullName, email: st.email, role: st.role, subRole: st.subRole, isDoctor },
                 rule: { baseSalary: rule.baseSalary, salesPercent: rule.salesPercent },
                 periodSalesTotal: salesTotal,
                 estimatedSalesBonus: salesBonus,
                 totalEstimated: totalEstimated,
-                metrics: {
-                    consultations: consultationsMap.get(st.id) || 0,
-                    fittings: fittingsMap.get(st.id) || 0,
-                    primary: primaryMap.get(st.id) || 0,
-                    secondary: secondaryMap.get(st.id) || 0
-                }
+                metrics: docMetrics
             };
         });
 
