@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const entity = (searchParams.get('entity') || 'clients') as 'clients' | 'orders' | 'full';
+    const entity = (searchParams.get('entity') || 'clients') as 'clients' | 'orders' | 'full' | 'products';
     const onlyOrgId = searchParams.get('orgId');
 
     // Find orgs that have an ITIGRIS config (filter in code — metadata is JSON).
@@ -54,12 +54,13 @@ export async function GET(req: NextRequest) {
             where: { organizationId: org.id, errors: 0, entity: { in: ['clients', 'full'] } },
             orderBy: { syncedAt: 'desc' },
         });
-        const since = entity !== 'orders' ? lastLog?.syncedAt?.toISOString() : undefined;
+        const since = (entity === 'clients' || entity === 'full') ? lastLog?.syncedAt?.toISOString() : undefined;
 
         const t0 = Date.now();
         let results;
         try {
             if (entity === 'orders') results = [await svc.syncOrders()];
+            else if (entity === 'products') results = [await svc.syncProducts()];
             else if (entity === 'full') results = await svc.fullSync(since);
             else results = [await svc.syncClientChanges(since)];
         } catch (e: any) {

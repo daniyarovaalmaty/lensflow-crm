@@ -61,6 +61,7 @@ export default function ItigrisOrderPage() {
     const rx = lc.prescription;
     const lens = lc.lens;
     const frame = lc.frame;
+    const items = Array.isArray(lc.items) ? lc.items : [];
     const orderType = lc.orderType || '';
     const statusInfo = STATUS_MAP[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Clock };
     const StatusIcon = statusInfo.icon;
@@ -272,8 +273,32 @@ export default function ItigrisOrderPage() {
                     </div>
                 )}
 
+                {/* Order line items (goods / frame / services) */}
+                {items.length > 0 && (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-5 shadow-sm">
+                        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
+                            <ShoppingBag className="w-5 h-5 text-green-500" />
+                            Состав заказа
+                        </h2>
+                        <div className="divide-y divide-gray-50">
+                            {items.map((it: any, i: number) => (
+                                <div key={i} className="flex items-center justify-between py-2.5 text-sm">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="font-medium text-gray-800 truncate">{it.name}</span>
+                                        {it.eye && <span className="text-xs text-gray-400 flex-shrink-0">({it.eye})</span>}
+                                        {it.qty > 1 && <span className="text-gray-400 flex-shrink-0">× {it.qty}</span>}
+                                    </div>
+                                    {it.price > 0 && (
+                                        <span className="font-mono text-gray-600 flex-shrink-0 ml-3">{Number(it.price).toLocaleString('ru-RU')} ₸</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* No details */}
-                {!rx && !lens?.od && !lens?.os && !frame && (
+                {!rx && !lens?.od && !lens?.os && !frame && items.length === 0 && (
                     orderType === 'SALE' ? (
                         <div className="bg-green-50 rounded-2xl border border-green-100 p-8 text-center">
                             <ShoppingBag className="w-10 h-10 mx-auto mb-3 text-green-400" />

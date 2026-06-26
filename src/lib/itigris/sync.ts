@@ -282,9 +282,49 @@ export class ItigrisSyncService {
         const odLens = goods.find((g: any) => g.isRight === true);
         const osLens = goods.find((g: any) => g.isRight === false);
 
+        // Full line-item list (all goods + frame + services) so the order card can
+        // show what's actually in the order — especially SALE orders with no Rx.
+        const buildGoodName = (g: any): string => {
+            const p = g.goodParams || {};
+            const parts = [p.brand || p.manufacturer, p.geometry, p.color, p.material]
+                .filter((x: any) => x != null && String(x).trim() !== '');
+            return parts.join(' ').trim() || g.category || 'Товар';
+        };
+        const items: any[] = [];
+        for (const g of goods) {
+            items.push({
+                kind: 'good',
+                category: g.goodParams?.sellableCategory || g.category || null,
+                name: buildGoodName(g),
+                eye: g.isRight === true ? 'OD' : g.isRight === false ? 'OS' : null,
+                qty: g.quantity || 1,
+                price: g.totalSoldPrice || 0,
+            });
+        }
+        if (fullOrder.clientGoods?.frame) {
+            const f = fullOrder.clientGoods.frame;
+            items.push({
+                kind: 'frame',
+                category: 'FRAME',
+                name: [f.type, f.material, f.description].filter(Boolean).join(' ').trim() || 'Оправа',
+                qty: 1,
+                price: f.estimatedPrice || 0,
+            });
+        }
+        for (const s of (fullOrder.servicesInfo?.services || [])) {
+            items.push({
+                kind: 'service',
+                category: 'SERVICE',
+                name: s.serveType?.name || 'Услуга',
+                qty: 1,
+                price: s.soldPrice || 0,
+            });
+        }
+
         return {
             source: 'itigris',
             orderType: fullOrder.type,
+            items,
             prescription: rx ? {
                 od: {
                     sph: rx.sphOd,
