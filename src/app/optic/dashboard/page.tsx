@@ -685,6 +685,14 @@ export default function OpticDashboard() {
                             const isExpanded = expandedOrders.has(order.order_id);
                             const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
                             const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
+                            // ITIGRIS orders use a different lensConfig shape (prescription/lens),
+                            // not the native MediLens eyes.od/os — detect and summarize separately.
+                            const isItigris = String(order.order_id || '').startsWith('ITG-');
+                            const itgType = (order.config as any)?.orderType as string | undefined;
+                            const itgTypeLabel = ({ GLASSES: 'Очки', CONTACT_LENS: 'Контактные линзы', SALE: 'Продажа', REPAIR: 'Ремонт', REPAIR_GLASSES_ORDER: 'Ремонт очков', CHECK_VISION: 'Проверка зрения' } as Record<string, string>)[itgType || ''] || 'Заказ ITIGRIS';
+                            const itgRx = (order.config as any)?.prescription as any;
+                            const itgFmt = (v: any) => v == null ? '—' : (Number(v) > 0 ? '+' : '') + Number(v).toFixed(2);
+                            const itgEye = (e: any) => e ? `Sph ${itgFmt(e.sph)} Cyl ${itgFmt(e.cyl)} Ax ${e.ax != null ? Math.round(e.ax) + '°' : '—'}` : '—';
                             const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
                             const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
                             const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
@@ -760,11 +768,24 @@ export default function OpticDashboard() {
                                                         {order.company}
                                                     </span>
                                                 )}
-                                                <span>Тип: MediLens</span>
+                                                <span>Тип: {isItigris ? itgTypeLabel : 'MediLens'}</span>
                                             </div>
                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
-                                                <span>OD: Km {od.km} | DIA {od.dia} | Dk {od.dk}</span>
-                                                <span>OS: Km {os.km} | DIA {os.dia} | Dk {os.dk}</span>
+                                                {isItigris ? (
+                                                    itgRx ? (
+                                                        <>
+                                                            <span>OD: {itgEye(itgRx.od)}</span>
+                                                            <span>OS: {itgEye(itgRx.os)}</span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="italic text-gray-400">Детали — в карточке заказа</span>
+                                                    )
+                                                ) : (
+                                                    <>
+                                                        <span>OD: Km {od.km} | DIA {od.dia} | Dk {od.dk}</span>
+                                                        <span>OS: Km {os.km} | DIA {os.dia} | Dk {os.dk}</span>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="text-left sm:text-right text-sm text-gray-500 sm:ml-4 flex-shrink-0 flex sm:block items-center gap-3">
@@ -788,7 +809,16 @@ export default function OpticDashboard() {
                                             {isExpanded ? 'Свернуть' : 'Подробнее'}
                                         </button>
 
-                                        {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                        {isItigris && (
+                                            <Link
+                                                href={`/optic/orders/itigris/${order.order_id}`}
+                                                className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium transition-colors ml-2"
+                                            >
+                                                Открыть карточку ITIGRIS →
+                                            </Link>
+                                        )}
+
+                                        {!isItigris && !order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
                                             <button
                                                 onClick={() => setExpediteOrderId(order.order_id)}
                                                 className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors ml-2"
@@ -826,8 +856,8 @@ export default function OpticDashboard() {
                                             </div>
                                         )}
 
-                                        {/* Edit window indicator */}
-                                        {(() => {
+                                        {/* Edit window indicator (native MediLens orders only — ITIGRIS orders are read-only) */}
+                                        {!isItigris && (() => {
                                             const editable = canEditOrder(order);
                                             const remainMs = editWindowRemainingMs(order);
                                             const countdown = formatCountdown(remainMs);
@@ -1043,7 +1073,21 @@ export default function OpticDashboard() {
                                                         </div>
                                                     )}
 
-                                                    {canSeePrices && (
+                                                    {isItigris ? (
+                                                        <Link
+                                                            href={`/optic/orders/itigris/${order.order_id}`}
+                                                            className="flex items-center justify-between bg-orange-50 border border-orange-100 rounded-lg p-3 mt-4 hover:bg-orange-100 transition-colors"
+                                                        >
+                                                            <span className="text-sm font-medium text-orange-700">
+                                                                Полная информация — в карточке ITIGRIS →
+                                                            </span>
+                                                            {canSeePrices && (
+                                                                <span className="text-lg font-bold text-orange-700">
+                                                                    {totalPrice.toLocaleString('ru-RU')} ₸
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                    ) : canSeePrices && (
                                                         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
                                                             <div className="text-sm text-gray-600 space-y-0.5">
                                                                 <div>
