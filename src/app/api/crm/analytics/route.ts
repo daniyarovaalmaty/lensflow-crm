@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
         if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
         const clinicId = user.organizationId;
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0,0,0,0);
 
         const whereClause: any = { funnel: 'sales', clinicId };
 
@@ -118,6 +121,46 @@ export async function GET(req: NextRequest) {
             };
         }).filter(Boolean);
 
+        // 7. Extra analytics by doctors and services based on POS Sales (for users who didn't use the calendar)
+        const currentMonthSales = await prisma.sale.findMany({
+            where: {
+                organizationId: clinicId,
+                createdAt: { gte: startOfMonth }
+            },
+            include: {
+                items: true,
+                patient: {
+                    include: { doctor: true }
+                }
+            }
+        });
+
+        const docStats: Record<string, { count: number, revenue: number }> = {};
+        const srvStats: Record<string, { count: number, revenue: number }> = {};
+
+        currentMonthSales.forEach(sale => {
+            const doctorName = sale.patient?.doctor?.fullName || sale.performedByName || 'Без врача';
+            if (!docStats[doctorName]) docStats[doctorName] = { count: 0, revenue: 0 };
+            docStats[doctorName].count += 1;
+            docStats[doctorName].revenue += sale.total;
+
+            sale.items.forEach(item => {
+                const name = item.name;
+                if (!srvStats[name]) srvStats[name] = { count: 0, revenue: 0 };
+                srvStats[name].count += item.quantity;
+                srvStats[name].revenue += item.total;
+            });
+        });
+
+        const doctorsAnalytics = Object.entries(docStats)
+            .map(([name, data]) => ({ name, ...data }))
+            .sort((a, b) => b.revenue - a.revenue);
+            
+        const servicesAnalytics = Object.entries(srvStats)
+            .map(([name, data]) => ({ name, ...data }))
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 10);
+
         return NextResponse.json({
             kpi: {
                 totalLeads,
@@ -140,7 +183,9 @@ export async function GET(req: NextRequest) {
                 dailyBudget: c.dailyBudget,
                 totalSpend: c.totalSpend,
                 leadsCount: leads.filter((l: any) => l.campaignId === c.id).length
-            }))
+            })),
+            servicesAnalytics,
+            doctorsAnalytics
         });
     } catch (err: any) {
         console.error('Failed to calculate analytics:', err);
