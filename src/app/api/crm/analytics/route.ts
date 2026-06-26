@@ -175,23 +175,27 @@ export async function GET(req: NextRequest) {
                 if (appt) assignedDoctorName = appt.doctor?.fullName || 'Неизвестный врач';
             }
             if (!assignedDoctorName) {
-                // Try matching by name
-                const apptByName = currentMonthAppointments.find(a => 
-                    a.patientName && sale.customerName && 
-                    a.patientName.toLowerCase().trim() === sale.customerName.toLowerCase().trim()
-                );
+                // Try matching by name (fuzzy)
+                const apptByName = currentMonthAppointments.find(a => {
+                    if (!a.patientName || !sale.customerName) return false;
+                    const aName = a.patientName.toLowerCase().trim();
+                    const sName = sale.customerName.toLowerCase().trim();
+                    // Split names into parts and check if there's any intersection of words longer than 3 chars
+                    const aParts = aName.split(' ').filter(p => p.length >= 3);
+                    const sParts = sName.split(' ').filter(p => p.length >= 3);
+                    
+                    if (aParts.length > 0 && sParts.length > 0) {
+                        return aParts.some(ap => sParts.some(sp => ap.includes(sp) || sp.includes(ap)));
+                    }
+                    
+                    return aName.includes(sName) || sName.includes(aName);
+                });
                 if (apptByName) assignedDoctorName = apptByName.doctor?.fullName || 'Неизвестный врач';
             }
             
             // Fallbacks
             if (!assignedDoctorName) {
                 assignedDoctorName = sale.patient?.doctor?.fullName || sale.performedByName || 'Без врача (прямая продажа)';
-            }
-
-            // Custom rule: all lens fittings go to Aigerim
-            const hasFitting = sale.items.some(item => item.name.toLowerCase().includes('подбор'));
-            if (hasFitting) {
-                assignedDoctorName = 'Шораева Айгерим Аскаровна';
             }
 
             if (!docStats[assignedDoctorName]) docStats[assignedDoctorName] = { count: 0, revenue: 0, appointmentsCount: 0, salesCount: 0 };
