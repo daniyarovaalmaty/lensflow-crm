@@ -179,6 +179,12 @@ export async function GET(req: NextRequest) {
                 assignedDoctorName = sale.patient?.doctor?.fullName || sale.performedByName || 'Без врача (прямая продажа)';
             }
 
+            // Custom rule: all lens fittings go to Aigerim
+            const hasFitting = sale.items.some(item => item.name.toLowerCase().includes('подбор'));
+            if (hasFitting) {
+                assignedDoctorName = 'Шораева Айгерим Аскаровна';
+            }
+
             if (!docStats[assignedDoctorName]) docStats[assignedDoctorName] = { count: 0, revenue: 0, appointmentsCount: 0, salesCount: 0 };
             docStats[assignedDoctorName].salesCount += 1;
             docStats[assignedDoctorName].count += 1; // legacy field
