@@ -196,6 +196,61 @@ export interface ItigrisDepartment {
     type: string; // 'STORE' | 'PRODUCTION' | 'DEPOT' | 'OFFICE'
 }
 
+// ===================== Goods / Catalog Types =====================
+
+/** Goods categories exposed by GET /good/remains/{category}. */
+export type ItigrisGoodsCategory =
+    | 'glasses'        // Оправы
+    | 'lenses'         // Очковые линзы
+    | 'sunglasses'     // Солнцезащитные очки
+    | 'contact-lenses' // Контактные линзы
+    | 'accessories';   // Аксессуары
+
+/**
+ * One stock-remains row. Common fields: price, amount, departmentId.
+ * Descriptive fields differ per category (see GET /good/remains/{category}):
+ *   glasses:        manufacturer, brand, model, color, targetGroup, material, type, size, design
+ *   sunglasses:     + frameType, lensesType
+ *   lenses:         manufacturer, brand, refractionIndex, cover, color, diameter, material,
+ *                   geometry, type, lensClass, technology, dioptre, cylinderDioptre, add
+ *   contact-lenses: manufacturer, name, color, curvatureRadius, diameter, wearingPeriod,
+ *                   dioptre, cylinder, axis, add, packageQuantity
+ *   accessories:    category, model
+ */
+export interface ItigrisRemainItem {
+    price?: number | null;
+    amount?: number | null;
+    departmentId?: number;
+    manufacturer?: string | null;
+    brand?: string | null;
+    model?: string | null;
+    name?: string | null;
+    color?: string | null;
+    material?: string | null;
+    type?: string | null;
+    size?: string | null;
+    design?: string | null;
+    targetGroup?: string | null;
+    frameType?: string | null;
+    lensesType?: string | null;
+    refractionIndex?: number | string | null;
+    cover?: string | null;
+    diameter?: number | string | null;
+    geometry?: string | null;
+    lensClass?: string | null;
+    technology?: string | null;
+    dioptre?: number | null;
+    cylinderDioptre?: number | null;
+    cylinder?: number | null;
+    axis?: number | null;
+    add?: number | null;
+    curvatureRadius?: number | string | null;
+    wearingPeriod?: string | null;
+    packageQuantity?: number | null;
+    category?: string | null;
+    [key: string]: any;
+}
+
 // ===================== Prescription Types =====================
 
 export interface ItigrisPrescription {
@@ -627,10 +682,28 @@ export class ItigrisApiClient {
 
     // ----- Stock / Remains -----
 
-    /** Get stock remains (API v.2) */
-    async getRemains(params?: { departmentId?: number }): Promise<any[]> {
-        const resp = await this.http.get('/remains', { params });
-        return resp.data || [];
+    /**
+     * Stock remains for ONE goods category in ONE department.
+     *   GET /good/remains/{category}?departmentId=&page=
+     * Response is a plain JSON array (page-able; empty array means no more pages).
+     * NOTE: requires a user role with stock access — otherwise 403 "Access Denied".
+     */
+    async getRemains(
+        category: ItigrisGoodsCategory,
+        departmentId: number,
+        page = 0,
+    ): Promise<ItigrisRemainItem[]> {
+        const resp = await this.http.get(`/good/remains/${category}`, {
+            params: { departmentId, page },
+        });
+        const d = resp.data;
+        return Array.isArray(d) ? d : (d?.content || []);
+    }
+
+    /** Map of goods type code → human label (GET /good/types). */
+    async getGoodTypes(): Promise<Record<string, string>> {
+        const resp = await this.http.get('/good/types');
+        return resp.data || {};
     }
 }
 

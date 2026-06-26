@@ -12,9 +12,28 @@ import {
     ItigrisApiClient,
     ItigrisClient,
     ItigrisClientInput,
+    ItigrisGoodsCategory,
     ItigrisOrder,
+    ItigrisRemainItem,
     ItigrisSyncResult,
 } from './client';
+
+// ITIGRIS goods category → LensFlow OpticProduct.category
+const GOODS_CATEGORY_MAP: Record<ItigrisGoodsCategory, string> = {
+    'glasses': 'frame',
+    'lenses': 'spectacle_lens',
+    'sunglasses': 'sun_glasses',
+    'contact-lenses': 'contact_lens',
+    'accessories': 'accessory',
+};
+
+const GOODS_CATEGORY_FALLBACK_NAME: Record<ItigrisGoodsCategory, string> = {
+    'glasses': 'Оправа',
+    'lenses': 'Очковая линза',
+    'sunglasses': 'Солнцезащитные очки',
+    'contact-lenses': 'Контактные линзы',
+    'accessories': 'Аксессуар',
+};
 
 // ===================== Sync Service =====================
 
@@ -390,6 +409,206 @@ export class ItigrisSyncService {
                     totalPrice,
                     lensConfig,
                     notes: order.comment ? `ITIGRIS: ${order.comment}` : undefined,
+                },
+            });
+            result.created++;
+        }
+    }
+
+    // ----- Sync Products (catalog / stock remains) -----
+
+    /**
+     * Import the goods catalog from ITIGRIS into OpticProduct.
+     * Iterates every goods category × every store/office department, pages through
+     * /good/remains/{category}, aggregates stock across departments by a stable
+     * signature, and upserts one OpticProduct per distinct variant.
+     * Idempotent: re-running updates stock/price in place (keyed by synthesized sku).
+     */
+    async syncProducts(): Promise<ItigrisSyncResult> {
+        const result: ItigrisSyncResult = {
+            entity: 'products',
+            created: 0,
+            updated: 0,
+            errors: 0,
+            details: [],
+        };
+
+        const categories: ItigrisGoodsCategory[] = [
+            'glasses', 'lenses', 'sunglasses', 'contact-lenses', 'accessories',
+        ];
+
+        try {
+            const departments = await this.api.getDepartments();
+            const storeDepts = departments.filter(d => d.type === 'STORE' || d.type === 'OFFICE');
+            result.details.push(`Филиалов для остатков: ${storeDepts.length}`);
+
+            // signature → aggregated variant (stock summed across departments)
+            const agg = new Map<string, {
+                item: ItigrisRemainItem;
+                category: ItigrisGoodsCategory;
+                stock: number;
+                price: number;
+            }>();
+
+            for (const cat of categories) {
+                let catRows = 0;
+                let accessDenied = false;
+
+                for (const dept of storeDepts) {
+                    const ok = await this.api.signInToDepartment(dept.id);
+                    if (!ok) continue;
+
+                    let page = 0;
+                    while (page < 500) {
+                        let rows: ItigrisRemainItem[];
+                        try {
+                            rows = await this.api.getRemains(cat, dept.id, page);
+                        } catch (err: any) {
+                            if (err.response?.status === 403) { accessDenied = true; break; }
+                            throw err;
+                        }
+                        if (!rows.length) break;
+
+                        for (const row of rows) {
+                            const sig = this.productSignature(cat, row);
+                            const stock = Number(row.amount) || 0;
+                            const price = Number(row.price) || 0;
+                            const ex = agg.get(sig);
+                            if (ex) {
+                                ex.stock += stock;
+                                if (price > ex.price) ex.price = price;
+                            } else {
+                                agg.set(sig, { item: row, category: cat, stock, price });
+                            }
+                            catRows++;
+                        }
+                        page++;
+                    }
+                    if (accessDenied) break;
+                }
+
+                if (accessDenied) {
+                    result.details.push(`${cat}: нет доступа к остаткам (403) — нужна роль со складом`);
+                } else {
+                    result.details.push(`${cat}: строк остатков ${catRows}`);
+                }
+            }
+
+            // Upsert one OpticProduct per distinct variant.
+            for (const [sig, p] of agg) {
+                try {
+                    await this.upsertProduct(sig, p.category, p.item, p.stock, p.price, result);
+                } catch (err: any) {
+                    result.errors++;
+                    result.details.push(`Ошибка товара ${sig}: ${err.message}`);
+                }
+            }
+            result.details.push(`Уникальных позиций: ${agg.size}`);
+        } catch (err: any) {
+            result.errors++;
+            result.details.push(`Ошибка загрузки остатков: ${err.message}`);
+        }
+
+        return result;
+    }
+
+    /** Stable signature for a variant — all descriptive fields (excl. price/amount/dept). */
+    private productSignature(cat: ItigrisGoodsCategory, row: ItigrisRemainItem): string {
+        const idFields: Record<string, any> = { ...row };
+        delete idFields.price;
+        delete idFields.amount;
+        delete idFields.departmentId;
+        const str = cat + '|' + Object.keys(idFields).sort()
+            .map(k => `${k}=${idFields[k] ?? ''}`).join('|');
+        let h = 0;
+        for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+        return `ITG-${cat}-${(h >>> 0).toString(36)}`;
+    }
+
+    /** Human-readable product name built from the category's descriptive fields. */
+    private buildProductName(cat: ItigrisGoodsCategory, row: ItigrisRemainItem): string {
+        const j = (...vals: any[]) =>
+            vals.filter(v => v != null && String(v).trim() !== '').join(' ').trim();
+        let name = '';
+        switch (cat) {
+            case 'glasses':
+            case 'sunglasses':
+                name = j(row.brand || row.manufacturer, row.model, row.color);
+                break;
+            case 'lenses':
+                name = j(
+                    row.brand || row.manufacturer,
+                    row.refractionIndex != null ? `n${row.refractionIndex}` : null,
+                    row.cover,
+                    row.geometry,
+                    row.diameter != null ? `Ø${row.diameter}` : null,
+                );
+                break;
+            case 'contact-lenses':
+                name = j(
+                    row.manufacturer,
+                    row.name,
+                    row.curvatureRadius != null && row.diameter != null
+                        ? `${row.curvatureRadius}/${row.diameter}` : null,
+                    row.dioptre != null ? `${row.dioptre} D` : null,
+                );
+                break;
+            case 'accessories':
+                name = j(row.model, row.category);
+                break;
+        }
+        return name || GOODS_CATEGORY_FALLBACK_NAME[cat];
+    }
+
+    private async upsertProduct(
+        sku: string,
+        cat: ItigrisGoodsCategory,
+        row: ItigrisRemainItem,
+        stock: number,
+        price: number,
+        result: ItigrisSyncResult,
+    ): Promise<void> {
+        const category = GOODS_CATEGORY_MAP[cat];
+        const name = this.buildProductName(cat, row);
+        const brand = row.brand || row.manufacturer || null;
+        const model = row.model || row.name || null;
+
+        // specs = all descriptive fields + source marker (no price/amount/dept)
+        const specs: Record<string, any> = { ...row, source: 'itigris', itigrisCategory: cat };
+        delete specs.price;
+        delete specs.amount;
+        delete specs.departmentId;
+
+        const data = {
+            name,
+            category,
+            type: 'product',
+            brand,
+            model,
+            specs,
+            retailPrice: Math.round(price),
+            currentStock: stock,
+            unit: 'шт',
+            isActive: true,
+        };
+
+        const existing = await (this.prisma as any).opticProduct.findFirst({
+            where: { organizationId: this.orgId, sku },
+        });
+
+        if (existing) {
+            await (this.prisma as any).opticProduct.update({
+                where: { id: existing.id },
+                data,
+            });
+            result.updated++;
+        } else {
+            await (this.prisma as any).opticProduct.create({
+                data: {
+                    ...data,
+                    sku,
+                    slug: sku.toLowerCase(),
+                    organizationId: this.orgId,
                 },
             });
             result.created++;

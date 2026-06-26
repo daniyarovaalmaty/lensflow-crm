@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, ArrowLeft, Shield } from 'lucide-react';
+import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, ArrowLeft, Shield, Package } from 'lucide-react';
 import Link from 'next/link';
 
 interface SyncResult {
@@ -109,6 +109,28 @@ export default function ItigrisSettingsPage() {
         setSyncing(false);
     };
 
+    const handleSyncProducts = async () => {
+        setSyncing(true);
+        setSyncResults(null);
+        setError(null);
+        try {
+            const resp = await fetch('/api/itigris', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'sync', entity: 'products' }),
+            });
+            const data = await resp.json();
+            if (data.ok) {
+                setSyncResults(data.results);
+            } else {
+                setError(data.error || 'Ошибка синхронизации товаров');
+            }
+        } catch {
+            setError('Ошибка синхронизации товаров');
+        }
+        setSyncing(false);
+    };
+
     const handleDisconnect = async () => {
         if (!confirm('Отключить ITIGRIS? Импортированные данные не будут удалены.')) return;
         setDisconnecting(true);
@@ -134,6 +156,7 @@ export default function ItigrisSettingsPage() {
         clients: 'Пациенты',
         orders: 'Заказы',
         prescriptions: 'Рецепты',
+        products: 'Товары (каталог)',
     };
 
     if (loading) {
@@ -316,19 +339,30 @@ export default function ItigrisSettingsPage() {
                 <div className="bg-white border border-gray-200 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-gray-900">Синхронизация</h2>
-                        <button
-                            onClick={handleSync}
-                            disabled={syncing}
-                            className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm font-medium text-white disabled:opacity-50 flex items-center gap-2 transition-colors"
-                        >
-                            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                            {syncing ? 'Синхронизация...' : 'Синхронизировать'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleSync}
+                                disabled={syncing}
+                                className="px-4 py-2.5 bg-orange-600 hover:bg-orange-500 rounded-lg text-sm font-medium text-white disabled:opacity-50 flex items-center gap-2 transition-colors"
+                            >
+                                {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                {syncing ? 'Синхронизация...' : 'Клиенты и заказы'}
+                            </button>
+                            <button
+                                onClick={handleSyncProducts}
+                                disabled={syncing}
+                                className="px-4 py-2.5 bg-white border border-orange-300 hover:bg-orange-50 rounded-lg text-sm font-medium text-orange-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
+                            >
+                                <Package className="w-4 h-4" />
+                                Товары
+                            </button>
+                        </div>
                     </div>
 
                     <p className="text-sm text-gray-500 mb-4">
-                        Импортирует клиентов и заказы из ITIGRIS Optima в LensFlow.
-                        Существующие данные обновятся по телефону или ID, новые — создадутся.
+                        <strong>Клиенты и заказы</strong> — импорт пациентов и заказов (обновление по телефону/ID).{' '}
+                        <strong>Товары</strong> — импорт каталога из остатков ITIGRIS (оправы, линзы, КЛ, аксессуары)
+                        с количеством и ценой. Требует у пользователя ITIGRIS доступ к складу.
                     </p>
 
                     {/* Sync Results */}

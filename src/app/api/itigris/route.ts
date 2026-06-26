@@ -120,6 +120,13 @@ export async function POST(req: NextRequest) {
         const client = new ItigrisApiClient(config);
         const syncService = new ItigrisSyncService(client, prisma as any, orgId);
 
+        // Targeted product/catalog sync (heavy — runs separately from clients/orders).
+        const entity = body.entity as string | undefined;
+        if (entity === 'products') {
+            const r = await syncService.syncProducts();
+            return NextResponse.json({ ok: true, results: [r], syncedAt: new Date().toISOString() });
+        }
+
         const since = body.since as string | undefined;
         const results = await syncService.fullSync(since);
 

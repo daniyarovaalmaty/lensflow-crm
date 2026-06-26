@@ -158,6 +158,33 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, results, syncedAt: new Date().toISOString(), durationMs });
     }
 
+    if (action === 'sync_products') {
+        const config = await getOrgConfig(orgId);
+        if (!config) return NextResponse.json({ error: 'ITIGRIS не подключен' }, { status: 400 });
+
+        const startMs = Date.now();
+        const client = new ItigrisApiClient(config);
+        const syncService = new ItigrisSyncService(client, prisma as any, orgId);
+
+        const r = await syncService.syncProducts();
+        const durationMs = Date.now() - startMs;
+
+        await (prisma as any).itigrisSyncLog.create({
+            data: {
+                organizationId: orgId,
+                entity: 'products',
+                created: r.created,
+                updated: r.updated,
+                errors: r.errors,
+                details: [r],
+                triggeredBy: userId || 'manual',
+                durationMs,
+            },
+        });
+
+        return NextResponse.json({ ok: true, results: [r], syncedAt: new Date().toISOString(), durationMs });
+    }
+
     if (action === 'disconnect') {
         const org = await prisma.organization.findUnique({ where: { id: orgId } });
         const existingMeta = (org as any)?.metadata || {};

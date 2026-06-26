@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import QuickNav from '@/components/ui/QuickNav';
-import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap, ClipboardList } from 'lucide-react';
+import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap, ClipboardList, Package } from 'lucide-react';
 
 interface SyncResult {
     entity: string;
@@ -107,6 +107,16 @@ export default function ClinicManagerItigrisPage() {
         setSyncing(false);
     };
 
+    const handleSyncProducts = async () => {
+        setSyncing(true); setSyncResults(null); setError(null);
+        try {
+            const data = await (await post({ action: 'sync_products' })).json();
+            if (data.ok) { setSyncResults(data.results); await loadData(); }
+            else setError(data.error || 'Ошибка синхронизации товаров');
+        } catch { setError('Ошибка синхронизации товаров'); }
+        setSyncing(false);
+    };
+
     const handleDisconnect = async () => {
         if (!confirm('Отключить ITIGRIS? Импортированные данные останутся.')) return;
         setDisconnecting(true);
@@ -135,7 +145,7 @@ export default function ClinicManagerItigrisPage() {
         setSavingLegacy(false);
     };
 
-    const entityLabels: Record<string, string> = { clients: 'Пациенты', orders: 'Заказы', prescriptions: 'Рецепты', full: 'Полная синхронизация' };
+    const entityLabels: Record<string, string> = { clients: 'Пациенты', orders: 'Заказы', prescriptions: 'Рецепты', full: 'Полная синхронизация', products: 'Товары (каталог)' };
     const fmtDate = (s: string) => new Date(s).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 
     return (
@@ -304,10 +314,14 @@ export default function ClinicManagerItigrisPage() {
                                     {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                                     {syncing ? 'Синхронизация...' : 'Полная'}
                                 </button>
+                                <button onClick={handleSyncProducts} disabled={syncing} className="flex items-center gap-2 px-3 py-2 bg-white border border-orange-300 hover:bg-orange-50 rounded-xl text-sm font-medium text-orange-700 disabled:opacity-50 transition-colors">
+                                    <Package className="w-3.5 h-3.5" /> Товары
+                                </button>
                             </div>
                         </div>
                         <p className="text-sm text-gray-500 mb-5">
-                            Импортирует клиентов и заказы из ITIGRIS → LensFlow. «Обновление» — только изменения с последней синхронизации.
+                            «Полная»/«Обновление» — клиенты и заказы из ITIGRIS → LensFlow. «Товары» — каталог из остатков
+                            ITIGRIS (оправы, линзы, КЛ, аксессуары) с количеством и ценой; требует у пользователя ITIGRIS доступ к складу.
                         </p>
 
                         {syncResults && (
