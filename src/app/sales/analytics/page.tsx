@@ -69,6 +69,9 @@ interface DoctorItem {
     name: string;
     count: number;
     revenue: number;
+    appointmentsCount: number;
+    salesCount: number;
+    conversion: number;
 }
 
 interface ServiceItem {
@@ -471,7 +474,7 @@ export default function MarketingAnalyticsPage() {
                                 <Users className="w-4 h-4" />
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400">На основе проведенных продаж в этом месяце</p>
+                        <p className="text-xs text-gray-400">Связка: Записи в календаре → Оплаты на кассе</p>
                     </div>
                     <div className="p-6">
                         {doctorsAnalytics?.length === 0 ? (
@@ -479,19 +482,40 @@ export default function MarketingAnalyticsPage() {
                         ) : (
                             <div className="space-y-4">
                                 {doctorsAnalytics?.map((doc, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:border-blue-100 transition-all">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold shadow-sm">
-                                                {doc.name.charAt(0).toUpperCase()}
+                                    <div key={idx} className="flex flex-col p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:border-blue-100 transition-all">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold shadow-sm">
+                                                    {doc.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-gray-900">{doc.name}</h4>
+                                                    <p className="text-xs text-gray-500">
+                                                        {doc.appointmentsCount > 0 ? `${doc.appointmentsCount} записей в календаре` : 'Без записи в календаре'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h4 className="text-sm font-bold text-gray-900">{doc.name}</h4>
-                                                <p className="text-xs text-gray-500">{doc.count} продаж</p>
+                                            <div className="text-right">
+                                                <span className="text-sm font-black text-gray-900 block">{fmt(doc.revenue)} ₸</span>
+                                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Выручка</span>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <span className="text-sm font-black text-gray-900 block">{fmt(doc.revenue)} ₸</span>
-                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Выручка</span>
+                                        
+                                        <div className="grid grid-cols-3 gap-2 bg-white rounded-xl p-2 border border-gray-50">
+                                            <div className="text-center">
+                                                <span className="block text-[10px] text-gray-400 uppercase font-bold">Записей</span>
+                                                <span className="text-xs font-black text-gray-700">{doc.appointmentsCount}</span>
+                                            </div>
+                                            <div className="text-center border-l border-r border-gray-50">
+                                                <span className="block text-[10px] text-gray-400 uppercase font-bold">Оплат</span>
+                                                <span className="text-xs font-black text-emerald-600">{doc.salesCount}</span>
+                                            </div>
+                                            <div className="text-center">
+                                                <span className="block text-[10px] text-gray-400 uppercase font-bold">Конверсия</span>
+                                                <span className={`text-xs font-black ${doc.conversion >= 80 ? 'text-emerald-600' : doc.conversion >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                                                    {doc.conversion}%
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

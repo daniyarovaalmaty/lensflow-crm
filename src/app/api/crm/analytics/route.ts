@@ -135,14 +135,54 @@ export async function GET(req: NextRequest) {
             }
         });
 
-        const docStats: Record<string, { count: number, revenue: number }> = {};
+        // 8. Fetch appointments for the same month to calculate Calendar Conversion
+        const currentMonthAppointments = await prisma.appointment.findMany({
+            where: {
+                clinicId,
+                date: { gte: startOfMonth }
+            },
+            include: {
+                doctor: true
+            }
+        });
+
+        const docStats: Record<string, { count: number, revenue: number, appointmentsCount: number, salesCount: number }> = {};
         const srvStats: Record<string, { count: number, revenue: number }> = {};
 
+        // Process Appointments
+        currentMonthAppointments.forEach(appt => {
+            const doctorName = appt.doctor?.fullName || 'Неизвестный врач';
+            if (!docStats[doctorName]) docStats[doctorName] = { count: 0, revenue: 0, appointmentsCount: 0, salesCount: 0 };
+            docStats[doctorName].appointmentsCount += 1;
+        });
+
+        // Process Sales (and link to Doctors if possible)
         currentMonthSales.forEach(sale => {
-            const doctorName = sale.patient?.doctor?.fullName || sale.performedByName || 'Без врача';
-            if (!docStats[doctorName]) docStats[doctorName] = { count: 0, revenue: 0 };
-            docStats[doctorName].count += 1;
-            docStats[doctorName].revenue += sale.total;
+            // How do we link sale to doctor? 
+            // If the patient had an appointment this month, attribute to that doctor.
+            let assignedDoctorName = null;
+            if (sale.patientId) {
+                const appt = currentMonthAppointments.find(a => a.patientId === sale.patientId);
+                if (appt) assignedDoctorName = appt.doctor?.fullName || 'Неизвестный врач';
+            }
+            if (!assignedDoctorName) {
+                // Try matching by name
+                const apptByName = currentMonthAppointments.find(a => 
+                    a.patientName && sale.customerName && 
+                    a.patientName.toLowerCase().trim() === sale.customerName.toLowerCase().trim()
+                );
+                if (apptByName) assignedDoctorName = apptByName.doctor?.fullName || 'Неизвестный врач';
+            }
+            
+            // Fallbacks
+            if (!assignedDoctorName) {
+                assignedDoctorName = sale.patient?.doctor?.fullName || sale.performedByName || 'Без врача (прямая продажа)';
+            }
+
+            if (!docStats[assignedDoctorName]) docStats[assignedDoctorName] = { count: 0, revenue: 0, appointmentsCount: 0, salesCount: 0 };
+            docStats[assignedDoctorName].salesCount += 1;
+            docStats[assignedDoctorName].count += 1; // legacy field
+            docStats[assignedDoctorName].revenue += sale.total;
 
             sale.items.forEach(item => {
                 const name = item.name;
@@ -153,7 +193,16 @@ export async function GET(req: NextRequest) {
         });
 
         const doctorsAnalytics = Object.entries(docStats)
-            .map(([name, data]) => ({ name, ...data }))
+            .map(([name, data]) => {
+                const conversion = data.appointmentsCount > 0 
+                    ? Math.round((data.salesCount / data.appointmentsCount) * 100) 
+                    : 0;
+                return { 
+                    name, 
+                    ...data,
+                    conversion
+                };
+            })
             .sort((a, b) => b.revenue - a.revenue);
             
         const servicesAnalytics = Object.entries(srvStats)
