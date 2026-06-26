@@ -146,7 +146,16 @@ export async function GET(req: NextRequest) {
             }
         });
 
+        const allDoctors = await prisma.user.findMany({
+            where: { organizationId: clinicId, role: 'doctor' }
+        });
+
         const docStats: Record<string, { count: number, revenue: number, appointmentsCount: number, salesCount: number }> = {};
+        allDoctors.forEach(doc => {
+            const doctorName = doc.fullName || 'Без имени';
+            docStats[doctorName] = { count: 0, revenue: 0, appointmentsCount: 0, salesCount: 0 };
+        });
+
         const srvStats: Record<string, { count: number, revenue: number }> = {};
 
         // Process Appointments
