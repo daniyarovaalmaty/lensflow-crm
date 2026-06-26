@@ -193,9 +193,37 @@ export async function GET(req: NextRequest) {
                 if (apptByName) assignedDoctorName = apptByName.doctor?.fullName || 'Неизвестный врач';
             }
             
+            if (!assignedDoctorName) {
+                // Try matching by closest time on the same day
+                const sameDayAppts = currentMonthAppointments.filter(a => 
+                    a.date.getDate() === sale.createdAt.getDate() &&
+                    a.date.getMonth() === sale.createdAt.getMonth() &&
+                    a.date.getFullYear() === sale.createdAt.getFullYear()
+                );
+                
+                if (sameDayAppts.length > 0) {
+                    const saleTime = sale.createdAt.getTime();
+                    const closestAppt = sameDayAppts.reduce((prev, curr) => {
+                        return Math.abs(curr.date.getTime() - saleTime) < Math.abs(prev.date.getTime() - saleTime) ? curr : prev;
+                    });
+                    
+                    // Only match if within 12 hours
+                    if (Math.abs(closestAppt.date.getTime() - saleTime) < 12 * 60 * 60 * 1000) {
+                        assignedDoctorName = closestAppt.doctor?.fullName || 'Неизвестный врач';
+                    }
+                }
+            }
+            
             // Fallbacks
             if (!assignedDoctorName) {
                 assignedDoctorName = sale.patient?.doctor?.fullName || sale.performedByName || 'Без врача (прямая продажа)';
+            }
+
+            // Force assign "подбор" to Aigerim
+            if (sale.items && Array.isArray(sale.items)) {
+                if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор'))) {
+                    assignedDoctorName = 'Шораева Айгерим Аскаровна';
+                }
             }
 
             // If the assigned doctor is not in the actual doctors list, we don't track them in doctor analytics
