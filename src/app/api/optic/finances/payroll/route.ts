@@ -35,9 +35,7 @@ export async function GET(req: NextRequest) {
             include: { payrollRules: true }
         });
 
-        // 2. Calculate sales for each user in the given period
-        // Sales are recorded in the Sale model with performedById, or CashTransaction with createdById. 
-        // We will look at CashTransaction where category === 'sale'
+        // 2. Calculate sales for cashiers (non-doctors) using CashTransaction
         const salesTxs = await prisma.cashTransaction.groupBy({
             by: ['createdById'],
             where: {
@@ -50,14 +48,121 @@ export async function GET(req: NextRequest) {
             }
         });
 
-        const salesMap = new Map();
+        const cashierSalesMap = new Map();
         salesTxs.forEach(tx => {
-            salesMap.set(tx.createdById, tx._sum.amount || 0);
+            cashierSalesMap.set(tx.createdById, tx._sum.amount || 0);
+        });
+
+        // 3. Fetch appointments and calculate metrics for doctors
+        const periodAppointments = await prisma.appointment.findMany({
+            where: {
+                clinicId: user.organizationId,
+                date: dateFilter
+            },
+            include: { doctor: true }
+        });
+
+        const consultationsMap = new Map();
+        const fittingsMap = new Map();
+        const primaryMap = new Map();
+        const secondaryMap = new Map();
+
+        periodAppointments.forEach(appt => {
+            if (!appt.doctorId) return;
+            const docId = appt.doctorId;
+            
+            const isFitting = appt.type.includes('fitting') || appt.type === 'ok_delivery';
+            const isConsultation = appt.type.includes('consultation');
+            const isPrimary = appt.type.includes('primary');
+            const isRepeat = appt.type.includes('repeat');
+
+            if (isFitting) fittingsMap.set(docId, (fittingsMap.get(docId) || 0) + 1);
+            else if (isConsultation) consultationsMap.set(docId, (consultationsMap.get(docId) || 0) + 1);
+
+            if (isPrimary) primaryMap.set(docId, (primaryMap.get(docId) || 0) + 1);
+            else if (isRepeat) secondaryMap.set(docId, (secondaryMap.get(docId) || 0) + 1);
+        });
+
+        // 4. Fetch sales and attribute them to doctors
+        const periodSales = await prisma.sale.findMany({
+            where: {
+                organizationId: user.organizationId,
+                createdAt: dateFilter
+            },
+            include: {
+                items: true,
+                patient: { include: { doctor: true } }
+            }
+        });
+
+        const doctorSalesMap = new Map();
+
+        periodSales.forEach(sale => {
+            let assignedDoctorId = null;
+
+            if (sale.patientId) {
+                const appt = periodAppointments.find(a => a.patientId === sale.patientId);
+                if (appt) assignedDoctorId = appt.doctorId;
+            }
+
+            if (!assignedDoctorId) {
+                const apptByName = periodAppointments.find(a => {
+                    if (!a.patientName || !sale.customerName) return false;
+                    const aName = a.patientName.toLowerCase().trim();
+                    const sName = sale.customerName.toLowerCase().trim();
+                    const aParts = aName.split(' ').filter(p => p.length >= 3);
+                    const sParts = sName.split(' ').filter(p => p.length >= 3);
+                    if (aParts.length > 0 && sParts.length > 0) {
+                        return aParts.some(ap => sParts.some(sp => ap.includes(sp) || sp.includes(ap)));
+                    }
+                    return aName.includes(sName) || sName.includes(aName);
+                });
+                if (apptByName) assignedDoctorId = apptByName.doctorId;
+            }
+
+            if (!assignedDoctorId) {
+                const sameDayAppts = periodAppointments.filter(a => 
+                    a.date.getDate() === sale.createdAt.getDate() &&
+                    a.date.getMonth() === sale.createdAt.getMonth() &&
+                    a.date.getFullYear() === sale.createdAt.getFullYear()
+                );
+                if (sameDayAppts.length > 0) {
+                    const saleTime = sale.createdAt.getTime();
+                    const closestAppt = sameDayAppts.reduce((prev, curr) => {
+                        return Math.abs(curr.date.getTime() - saleTime) < Math.abs(prev.date.getTime() - saleTime) ? curr : prev;
+                    });
+                    if (Math.abs(closestAppt.date.getTime() - saleTime) < 12 * 60 * 60 * 1000) {
+                        assignedDoctorId = closestAppt.doctorId;
+                    }
+                }
+            }
+
+            if (!assignedDoctorId && sale.patient?.doctor?.id) {
+                assignedDoctorId = sale.patient.doctor.id;
+            }
+
+            if (sale.items && Array.isArray(sale.items)) {
+                if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор'))) {
+                    const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
+                    if (aigerim) assignedDoctorId = aigerim.id;
+                }
+            }
+
+            if (assignedDoctorId) {
+                doctorSalesMap.set(assignedDoctorId, (doctorSalesMap.get(assignedDoctorId) || 0) + sale.total);
+            }
         });
 
         const results = staff.map(st => {
             const rule = st.payrollRules[0] || { baseSalary: 0, salesPercent: 0 };
-            const salesTotal = salesMap.get(st.id) || 0;
+            
+            let salesTotal = 0;
+            if (st.role === 'doctor') {
+                salesTotal = doctorSalesMap.get(st.id) || 0;
+            } else {
+                salesTotal = cashierSalesMap.get(st.id) || 0;
+            }
+
             const salesBonus = Math.round(salesTotal * (rule.salesPercent / 100));
             const totalEstimated = rule.baseSalary + salesBonus;
 
@@ -66,7 +171,13 @@ export async function GET(req: NextRequest) {
                 rule: { baseSalary: rule.baseSalary, salesPercent: rule.salesPercent },
                 periodSalesTotal: salesTotal,
                 estimatedSalesBonus: salesBonus,
-                totalEstimated: totalEstimated
+                totalEstimated: totalEstimated,
+                metrics: {
+                    consultations: consultationsMap.get(st.id) || 0,
+                    fittings: fittingsMap.get(st.id) || 0,
+                    primary: primaryMap.get(st.id) || 0,
+                    secondary: secondaryMap.get(st.id) || 0
+                }
             };
         });
 

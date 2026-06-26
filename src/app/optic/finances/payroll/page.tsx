@@ -11,6 +11,12 @@ interface StaffPayroll {
     periodSalesTotal: number;
     estimatedSalesBonus: number;
     totalEstimated: number;
+    metrics?: {
+        consultations: number;
+        fittings: number;
+        primary: number;
+        secondary: number;
+    };
 }
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
@@ -107,6 +113,7 @@ export default function PayrollPage() {
                             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                                 <tr>
                                     <th className="px-6 py-4">Сотрудник</th>
+                                    <th className="px-6 py-4">Метрики приемов</th>
                                     <th className="px-6 py-4">Условия (Оклад + %)</th>
                                     <th className="px-6 py-4">Продажи (Тек. месяц)</th>
                                     <th className="px-6 py-4">Расчет ЗП</th>
@@ -119,6 +126,26 @@ export default function PayrollPage() {
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-gray-900">{st.user.fullName || 'Без имени'}</div>
                                             <div className="text-xs text-gray-400 uppercase mt-0.5">{st.user.role}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {st.user.role === 'doctor' && st.metrics ? (
+                                                <div className="space-y-1 w-40">
+                                                    <div className="text-xs text-gray-600 flex items-center justify-between">
+                                                        <span>Консультации:</span>
+                                                        <span className="font-medium">{st.metrics.consultations}</span>
+                                                    </div>
+                                                    <div className="text-xs text-gray-600 flex items-center justify-between">
+                                                        <span>Подборы:</span>
+                                                        <span className="font-medium">{st.metrics.fittings}</span>
+                                                    </div>
+                                                    <div className="text-xs text-gray-400 mt-1.5 border-t border-gray-100 pt-1.5 flex items-center justify-between">
+                                                        <span>Перв: <span className="text-gray-600 font-medium">{st.metrics.primary}</span></span>
+                                                        <span>Повт: <span className="text-gray-600 font-medium">{st.metrics.secondary}</span></span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-xs text-gray-400 italic">—</div>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             {editingUserId === st.user.id ? (
