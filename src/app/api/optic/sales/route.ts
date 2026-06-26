@@ -12,8 +12,16 @@ export async function GET(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
+    const { searchParams } = new URL(req.url);
+    const statusParam = searchParams.get('status');
+
+    const whereClause: any = { organizationId: user.organizationId };
+    if (statusParam) {
+        whereClause.paymentStatus = statusParam;
+    }
+
     const sales = await prisma.sale.findMany({
-        where: { organizationId: user.organizationId },
+        where: whereClause,
         include: { items: true },
         orderBy: { createdAt: 'desc' },
         take: 200,
@@ -190,16 +198,18 @@ export async function POST(req: NextRequest) {
         : Math.round(subtotal * discount / 100);
     const totalAmount = subtotal - discountAmount;
 
-    // Prepayment already received earlier — clamp to [0, total]
-    const prepayment = Math.min(Math.max(Number(prepaymentAmount) || 0, 0), totalAmount);
-    const dueNow = totalAmount - prepayment;
+    // Prepayment logic: amount paid NOW
+    const isPrepayment = prepaymentAmount !== undefined && prepaymentAmount !== "" && Number(prepaymentAmount) >= 0;
+    const paidNow = isPrepayment ? Math.min(Number(prepaymentAmount), totalAmount) : totalAmount;
+    const remainingDebt = totalAmount - paidNow;
+    const paymentStatus = remainingDebt > 0 ? 'partial' : 'paid';
 
-    // Build invoice metadata (split + prepayment breakdown)
+    // Build invoice metadata
     const invoiceMeta: any = {};
     if (paymentSplit) invoiceMeta.split = paymentSplit;
-    if (prepayment > 0) {
-        invoiceMeta.prepayment = prepayment;
-        invoiceMeta.dueNow = dueNow;
+    if (remainingDebt > 0) {
+        invoiceMeta.prepayment = paidNow;
+        invoiceMeta.remainingDebt = remainingDebt;
     }
 
     // Create sale with items — retry with a fresh number on unique-collision
@@ -219,9 +229,9 @@ export async function POST(req: NextRequest) {
             discountPercent: explicitDiscountAmount !== undefined && subtotal > 0 ? (Number(explicitDiscountAmount) / subtotal * 100) : discount,
             discountAmount,
             total: totalAmount,
-            paidAmount: totalAmount,
+            paidAmount: paidNow,
             paymentMethod: paymentMethod || 'cash',
-            paymentStatus: 'paid',
+            paymentStatus: paymentStatus,
             invoiceData: Object.keys(invoiceMeta).length > 0 ? invoiceMeta : (reqInvoiceData || null),
             performedById: user.id,
             performedByName: user.fullName || user.email,
@@ -277,7 +287,7 @@ export async function POST(req: NextRequest) {
     }
 
     // --- NEW: Sync payment to active cash shift ---
-    if (dueNow > 0) {
+    if (paidNow > 0) {
         try {
             const activeShift = await prisma.cashShift.findFirst({
                 where: {
@@ -326,7 +336,7 @@ export async function POST(req: NextRequest) {
                         if (invoiceMeta.transferAmount) await addTxToShift('transfer', invoiceMeta.transferAmount);
                     }
                 } else {
-                    await addTxToShift(paymentMethod || 'cash', dueNow);
+                    await addTxToShift(paymentMethod || 'cash', paidNow);
                 }
             }
         } catch (e) {
