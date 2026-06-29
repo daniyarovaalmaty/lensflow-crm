@@ -183,11 +183,11 @@ export async function GET(req: NextRequest) {
             if (isValeria) {
                 if (baseSal === 0) baseSal = 200000;
                 
-                // If the bonus is actually for consultations, we can use docMetrics.consultations
-                // For now, I'll use docMetrics.consultations as a fallback if she has no fittings
-                const countForBonus = docMetrics.fittings > 0 ? docMetrics.fittings : docMetrics.consultations;
+                // Currently using docMetrics.fittings from her calendar appointments
+                const countForBonus = docMetrics.fittings;
                 
-                const extraBonus = Math.floor(countForBonus / 10) * 10000;
+                // Bonus: 0 for the first 10, then 10,000 for each subsequent fitting
+                const extraBonus = Math.max(0, countForBonus - 10) * 10000;
                 salesBonus += extraBonus;
             }
             
