@@ -461,7 +461,7 @@ export default function CashShiftsPage() {
                                             <th className="px-6 py-4">Метод оплаты</th>
                                             <th className="px-6 py-4">Сумма</th>
                                             <th className="px-6 py-4">Kaspi Transaction ID</th>
-                                            <th className="px-6 py-4">Время</th>
+                                            <th className="px-6 py-4">Дата и время</th>
                                             <th className="px-6 py-4">Комментарий</th>
                                         </tr>
                                     </thead>
@@ -508,8 +508,11 @@ export default function CashShiftsPage() {
                                                     <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-gray-400">
                                                         {tx.kaspi_transaction_id || '—'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                                        {new Date(tx.created_at).toLocaleTimeString('ru-RU')}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500 text-xs">
+                                                        {new Date(tx.created_at).toLocaleString('ru-RU', {
+                                                            day: '2-digit', month: '2-digit', year: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit', second: '2-digit'
+                                                        }).replace(',', '')}
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-500 max-w-xs truncate">
                                                         {tx.description || '—'}
