@@ -564,7 +564,19 @@ export default function SalesHistoryPage() {
                                                                     {pay.label}
                                                                 </span>
                                                             </div>
-                                                            {sale.paymentMethod === 'mixed' && sale.invoiceData?.splitPayment && (
+                                                            {sale.paymentMethod === 'mixed' && sale.invoiceData && (sale.invoiceData as any).split && Array.isArray((sale.invoiceData as any).split) ? (
+                                                                <div className="bg-orange-50 rounded-xl border border-orange-100 p-3 space-y-1.5">
+                                                                    <div className="text-xs font-semibold text-orange-700 mb-1">Разбивка оплаты:</div>
+                                                                    {(sale.invoiceData as any).split.map((sp: any, idx: number) => (
+                                                                        <div key={idx} className="flex justify-between text-xs">
+                                                                            <span className="text-gray-500 flex items-center gap-1">
+                                                                                {sp.method === 'cash' ? '🪙 ' : sp.method === 'kaspi' ? '🔴 ' : '💳 '}{sp.label || sp.method}
+                                                                            </span>
+                                                                            <span className="font-semibold text-gray-800">{fmt(sp.amount)}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : sale.paymentMethod === 'mixed' && sale.invoiceData?.splitPayment ? (
                                                                 <div className="bg-orange-50 rounded-xl border border-orange-100 p-3 space-y-1.5">
                                                                     <div className="text-xs font-semibold text-orange-700 mb-1">Разбивка оплаты:</div>
                                                                     {sale.invoiceData.cashAmount != null && (
@@ -586,7 +598,7 @@ export default function SalesHistoryPage() {
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                            )}
+                                                            ) : null}
                                                             {sale.invoiceData?.trafficSource && (
                                                                 <div className="flex justify-between items-center text-sm">
                                                                     <span className="text-gray-500">Источник трафика</span>
