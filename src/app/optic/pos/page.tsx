@@ -323,7 +323,7 @@ export default function POSPage() {
                     customerPhone: customerPhone || undefined,
                     discountPercent: discountPct,
                     explicitDiscountAmount: discountType === 'amount' ? discountAmount : undefined,
-                    paymentMethod: paymentMethod === 'mixed' ? undefined : paymentMethod,
+                    paymentMethod: paymentMethod,
                     paymentSplit: paymentMethod === 'mixed' ? activeMixedSplits : undefined,
                     prepaymentAmount: isPrepayment ? paidNow : undefined,
                     invoiceData: Object.keys(invoiceData).length > 0 ? invoiceData : undefined,
