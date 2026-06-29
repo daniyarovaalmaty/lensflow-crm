@@ -714,6 +714,34 @@ model Inventory {
   @@map("inventories")
 }
 
+// ==================== Supplier Order (purchase order — заказ поставщику) ====================
+// A restock order placed to a supplier/counterparty. Does NOT touch own stock
+// until received — on receipt it creates a receipt (приход) that adds stock.
+model SupplierOrder {
+  id              String   @id @default(cuid())
+  organizationId  String
+
+  number          String              // ЗП-0001
+  status          String   @default("draft")  // draft | sent | received | cancelled
+  supplierName    String?
+  supplierOrgId   String?             // counterparty Organization id (optional, no FK)
+
+  items           Json                // [{ productId, name, sku, qty, receivedQty, price }]
+  totalAmount     Int      @default(0)
+  notes           String?
+
+  createdById     String?
+  createdByName   String?
+  sentAt          DateTime?
+  receivedAt      DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("supplier_orders")
+}
+
 // ==================== Sale (POS transaction) ====================
 model Sale {
   id              String   @id @default(cuid())

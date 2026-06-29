@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck } from 'lucide-react';
+import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck } from 'lucide-react';
 import FullscreenButton from '@/components/ui/FullscreenButton';
 
 const baseNavItems = [
@@ -12,6 +12,7 @@ const baseNavItems = [
     { href: '/optic/issue', label: 'Выдать заказ', icon: PackageCheck, color: 'text-teal-500' },
     { href: '/optic/catalog', label: 'Каталог', icon: Package, color: 'text-blue-500' },
     { href: '/optic/warehouse', label: 'Склад', icon: Warehouse, color: 'text-amber-500' },
+    { href: '/optic/supplier-orders', label: 'Закуп', icon: Truck, color: 'text-indigo-500' },
     { href: '/optic/pos', label: 'Касса', icon: ShoppingCart, color: 'text-green-500' },
     { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500' },
     { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500' },
