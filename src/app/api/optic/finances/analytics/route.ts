@@ -63,6 +63,7 @@ export async function GET(req: NextRequest) {
         let totalExpense = 0;
         let incomeCash = 0;
         let incomeNonCash = 0;
+        let totalInvestments = 0;
 
         // Add sales revenue
         sales.forEach(s => {
@@ -76,11 +77,21 @@ export async function GET(req: NextRequest) {
                         if (sp.method === 'cash') incomeCash += Number(sp.amount);
                         else incomeNonCash += Number(sp.amount);
                     });
-                } else if (inv.splitPayment) {
-                    incomeCash += Number(inv.splitPayment.cash || 0);
-                    incomeNonCash += Number(inv.splitPayment.kaspi || 0) + Number(inv.splitPayment.card || 0) + Number(inv.splitPayment.transfer || 0);
                 } else {
-                    incomeNonCash += s.total; // fallback
+                    const cashAmt = Number(inv.cashAmount || inv.cash || 0);
+                    const kaspiAmt = Number(inv.kaspiAmount || inv.kaspi || 0);
+                    const cardAmt = Number(inv.cardAmount || inv.card || 0);
+                    const transferAmt = Number(inv.transferAmount || inv.transfer || 0);
+                    
+                    const nonCashAmt = kaspiAmt + cardAmt + transferAmt;
+                    
+                    if (cashAmt > 0 || nonCashAmt > 0) {
+                        incomeCash += cashAmt;
+                        incomeNonCash += nonCashAmt;
+                    } else {
+                        // Fallback
+                        incomeNonCash += s.total;
+                    }
                 }
             } else {
                 incomeNonCash += s.total;
@@ -90,11 +101,15 @@ export async function GET(req: NextRequest) {
         // Summarize global transactions
         txs.forEach(t => {
             if (t.type === 'income') {
-                totalIncome += t.amount;
-                if (t.account?.name?.toLowerCase().includes('касса')) {
-                    incomeCash += t.amount;
+                if (t.category === 'investment' || t.category === 'инвестиции') {
+                    totalInvestments += t.amount;
                 } else {
-                    incomeNonCash += t.amount;
+                    totalIncome += t.amount;
+                    if (t.account?.name?.toLowerCase().includes('касса')) {
+                        incomeCash += t.amount;
+                    } else {
+                        incomeNonCash += t.amount;
+                    }
                 }
             }
             if (t.type === 'expense') totalExpense += t.amount;
@@ -104,11 +119,19 @@ export async function GET(req: NextRequest) {
         cashTxs.forEach(t => {
             // we only count distinct incomes (not sales, since they are already counted above)
             if (t.transType === 'income' && t.category !== 'sale') {
-                 totalIncome += t.amount;
-                 if (t.paymentMethod === 'cash') incomeCash += t.amount; else incomeNonCash += t.amount;
+                if (t.category === 'investment' || t.category === 'инвестиции') {
+                    totalInvestments += t.amount;
+                } else {
+                    totalIncome += t.amount;
+                    if (t.paymentMethod === 'cash') incomeCash += t.amount; else incomeNonCash += t.amount;
+                }
             } else if (t.transType === 'cash_in' && t.category !== 'other' && t.category !== 'sale') {
-                 totalIncome += t.amount;
-                 if (t.paymentMethod === 'cash') incomeCash += t.amount; else incomeNonCash += t.amount;
+                if (t.category === 'investment' || t.category === 'инвестиции') {
+                    totalInvestments += t.amount;
+                } else {
+                    totalIncome += t.amount;
+                    if (t.paymentMethod === 'cash') incomeCash += t.amount; else incomeNonCash += t.amount;
+                }
             }
         });
 
@@ -121,7 +144,8 @@ export async function GET(req: NextRequest) {
                 incomeCash,
                 incomeNonCash,
                 totalExpense,
-                netProfit
+                netProfit,
+                totalInvestments
             },
             globalTransactionsCount: txs.length,
             cashTransactionsCount: cashTxs.length
