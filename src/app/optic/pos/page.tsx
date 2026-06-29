@@ -700,7 +700,7 @@ export default function POSPage() {
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowCheckout(false)}>
                         <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                            onClick={e => e.stopPropagation()} className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8">
+                            onClick={e => e.stopPropagation()} className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 max-h-[95vh] overflow-y-auto">
                             <h2 className="text-xl font-extrabold text-gray-900 mb-5">Оформление продажи</h2>
 
                             <div className="space-y-4 mb-6">
