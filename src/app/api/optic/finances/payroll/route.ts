@@ -144,7 +144,9 @@ export async function GET(req: NextRequest) {
 
             if (sale.items && Array.isArray(sale.items)) {
                 if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор'))) {
-                    valeriaFittingsMap.set(sale.createdById, (valeriaFittingsMap.get(sale.createdById) || 0) + 1);
+                    if (sale.performedById) {
+                        valeriaFittingsMap.set(sale.performedById, (valeriaFittingsMap.get(sale.performedById) || 0) + 1);
+                    }
                     
                     const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
                     if (aigerim) assignedDoctorId = aigerim.id;
