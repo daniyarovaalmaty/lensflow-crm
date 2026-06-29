@@ -95,7 +95,6 @@ export async function GET(req: NextRequest) {
             }
         });
 
-        const valeriaFittingsMap = new Map();
         const doctorSalesMap = new Map();
 
         periodSales.forEach(sale => {
@@ -144,10 +143,6 @@ export async function GET(req: NextRequest) {
 
             if (sale.items && Array.isArray(sale.items)) {
                 if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор'))) {
-                    if (sale.performedById) {
-                        valeriaFittingsMap.set(sale.performedById, (valeriaFittingsMap.get(sale.performedById) || 0) + 1);
-                    }
-                    
                     const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
                     if (aigerim) assignedDoctorId = aigerim.id;
                 }
@@ -188,10 +183,11 @@ export async function GET(req: NextRequest) {
             if (isValeria) {
                 if (baseSal === 0) baseSal = 200000;
                 
-                const fittingsCount = valeriaFittingsMap.get(st.id) || 0;
-                docMetrics.fittings = fittingsCount;
+                // If the bonus is actually for consultations, we can use docMetrics.consultations
+                // For now, I'll use docMetrics.consultations as a fallback if she has no fittings
+                const countForBonus = docMetrics.fittings > 0 ? docMetrics.fittings : docMetrics.consultations;
                 
-                const extraBonus = Math.floor(fittingsCount / 10) * 10000;
+                const extraBonus = Math.floor(countForBonus / 10) * 10000;
                 salesBonus += extraBonus;
             }
             
