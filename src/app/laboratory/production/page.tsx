@@ -1935,6 +1935,25 @@ export default function ProductionHubPage() {
         );
     };
 
+    const lensAnalytics = useMemo(() => {
+        let total = 0;
+        let od = 0;
+        let os = 0;
+        // Статусы, при которых линзы уже физически изготовлены
+        const manufacturedStatuses = ['ready', 'shipped', 'out_for_delivery', 'delivered', 'accountant_review', 'docs_prep', 'docs_ready'];
+
+        filteredOrders.forEach(o => {
+            if (!manufacturedStatuses.includes(o.status)) return;
+            
+            const eyes = (o as any).config?.eyes || {};
+            const qOd = parseInt(eyes.od?.qty) || 1;
+            const qOs = parseInt(eyes.os?.qty) || 1;
+            if (eyes.od && eyes.od.characteristic) { total += qOd; od += qOd; }
+            if (eyes.os && eyes.os.characteristic) { total += qOs; os += qOs; }
+        });
+        return { total, od, os };
+    }, [filteredOrders]);
+
     // ==================== LOADING STATE ====================
     if (isLoading) {
         return (
@@ -1947,6 +1966,8 @@ export default function ProductionHubPage() {
         );
     }
 
+
+
     // ==================== RENDER ====================
     return (
         <div className="min-h-screen bg-surface">
@@ -1958,9 +1979,14 @@ export default function ProductionHubPage() {
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Производственный хаб</h1>
                             <p className="text-sm text-gray-600 mt-0.5">Управление очередью заказов</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-sm text-gray-500">
-                                Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex flex-col items-end">
+                                <div className="text-sm font-medium text-gray-700">
+                                    Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
+                                </div>
+                                <div className="text-xs text-blue-600 font-medium">
+                                    {lensAnalytics.total} линз (OD: {lensAnalytics.od}, OS: {lensAnalytics.os})
+                                </div>
                             </div>
                             <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                                 <span className="relative flex h-2 w-2">
