@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import QuickNav from '@/components/ui/QuickNav';
-import { PackageCheck, Search, User, Phone, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
+import { PackageCheck, Search, User, Phone, CheckCircle, AlertCircle, Loader2, X, Trash2, Boxes } from 'lucide-react';
 import { OrderStatusLabels, OrderStatusColors, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
 
 interface IssueOrder {
@@ -26,6 +26,9 @@ export default function IssueOrderPage() {
     const [selected, setSelected] = useState<IssueOrder | null>(null);
     const [issuing, setIssuing] = useState(false);
     const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
+    const [products, setProducts] = useState<any[]>([]);
+    const [writeOff, setWriteOff] = useState<{ productId: string; name: string; qty: number; stock: number }[]>([]);
+    const [pick, setPick] = useState('');
 
     const load = () => {
         setLoading(true);
@@ -41,6 +44,8 @@ export default function IssueOrderPage() {
             .finally(() => setLoading(false));
     };
     useEffect(load, []);
+    useEffect(() => { fetch('/api/optic/products').then(r => (r.ok ? r.json() : [])).then(p => setProducts(Array.isArray(p) ? p : [])).catch(() => {}); }, []);
+    useEffect(() => { setWriteOff([]); setPick(''); }, [selected]);
 
     // No search → show only orders ready for pickup. Searching → search across all active orders.
     const filtered = useMemo(() => {
@@ -60,10 +65,11 @@ export default function IssueOrderPage() {
             const res = await fetch(`/api/orders/${encodeURIComponent(order.order_id)}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'delivered' }),
+                body: JSON.stringify({ status: 'delivered', writeOff: writeOff.map(w => ({ productId: w.productId, qty: w.qty })) }),
             });
             if (res.ok) {
-                setToast({ ok: true, text: `Заказ ${order.order_id} выдан` });
+                const wo = writeOff.reduce((s, w) => s + w.qty, 0);
+                setToast({ ok: true, text: `Заказ ${order.order_id} выдан${wo > 0 ? ` · списано: ${wo} шт` : ''}` });
                 setOrders(prev => prev.filter(o => o.order_id !== order.order_id));
                 setSelected(null);
             } else {
@@ -231,6 +237,39 @@ export default function IssueOrderPage() {
                                     </span>
                                 </div>
                             )}
+
+                            {/* Optional: write off stock that physically leaves on issue */}
+                            <div className="border-t border-gray-100 pt-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Boxes className="w-4 h-4 text-gray-400" />
+                                    <span className="text-sm font-medium text-gray-700">Списать со склада (опционально)</span>
+                                </div>
+                                <select
+                                    value={pick}
+                                    onChange={e => {
+                                        const p = products.find((x: any) => x.id === e.target.value);
+                                        if (p && !writeOff.some(w => w.productId === p.id)) setWriteOff([...writeOff, { productId: p.id, name: p.name, qty: 1, stock: p.currentStock ?? 0 }]);
+                                        setPick('');
+                                    }}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm"
+                                >
+                                    <option value="">— добавить товар к списанию —</option>
+                                    {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}{p.currentStock != null ? ` (ост. ${p.currentStock})` : ''}</option>)}
+                                </select>
+                                {products.length === 0 && <p className="text-xs text-gray-400 mt-1">Каталог пуст — нечего списывать.</p>}
+                                {writeOff.length > 0 && (
+                                    <div className="mt-2 space-y-2">
+                                        {writeOff.map((w, i) => (
+                                            <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
+                                                <span className="flex-1 text-sm text-gray-800 truncate">{w.name}</span>
+                                                <input type="number" min={1} value={w.qty} onChange={e => setWriteOff(writeOff.map((x, j) => (j === i ? { ...x, qty: Number(e.target.value) || 0 } : x)))} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center" />
+                                                {w.qty > w.stock && <span className="text-[10px] text-amber-600 whitespace-nowrap">&gt; ост.</span>}
+                                                <button onClick={() => setWriteOff(writeOff.filter((_, j) => j !== i))}><Trash2 className="w-4 h-4 text-gray-400" /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="p-5 border-t border-gray-100 flex gap-3 sticky bottom-0 bg-white">

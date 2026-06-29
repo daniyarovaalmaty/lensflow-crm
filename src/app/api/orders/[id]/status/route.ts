@@ -83,6 +83,28 @@ export async function PATCH(
             include: { patient: true, organization: { select: { name: true } } },
         });
 
+        // Order issue → write off selected stock items (выдача списывает склад).
+        const writeOff = (body as any).writeOff;
+        if (validatedData.status === 'delivered' && Array.isArray(writeOff) && writeOff.length > 0 && order.organizationId) {
+            for (const w of writeOff) {
+                const qty = Number(w.qty) || 0;
+                if (qty <= 0 || !w.productId) continue;
+                await prisma.opticProduct.update({ where: { id: w.productId }, data: { currentStock: { decrement: qty } } }).catch(() => {});
+                await prisma.stockMovement.create({
+                    data: {
+                        organizationId: order.organizationId,
+                        productId: w.productId,
+                        type: 'write_off',
+                        quantity: qty,
+                        documentNumber: order.orderNumber,
+                        reason: `Выдача заказа ${order.orderNumber}`,
+                        performedById: (session.user as any).id || null,
+                        performedByName: (session.user as any).name || null,
+                    },
+                });
+            }
+        }
+
         // Transform to frontend format
         const reverseStatusMap: Record<string, string> = {
             'new_order': 'new', 'in_production': 'in_production', 'ready': 'ready',
