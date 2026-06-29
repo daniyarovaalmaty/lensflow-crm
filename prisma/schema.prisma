@@ -236,6 +236,7 @@ model Patient {
   gender         String?   // male | female
   notes          String?   @db.Text
   attachments    Json?     // [{ name, url, type, size, uploadedAt }]
+  metadata       Json?     // integration extras, e.g. { itigris: { bonuses, cardId, city, profession, ... } }
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   doctorId       String?

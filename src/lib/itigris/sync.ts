@@ -155,6 +155,23 @@ export class ItigrisSyncService {
             },
         });
 
+        // Extra ITIGRIS fields LensFlow's Patient columns don't cover — stash in metadata.itigris.
+        const card: any = (client as any).clientCard || null;
+        const itigrisExtras: any = {
+            cardId: card?.id ?? null,
+            cardSum: card?.sum ?? null,
+            bonuses: card?.bonusesSum ?? null,
+            discount: card?.discount ?? null,            // per-category discount %
+            vipDiscount: (client as any).vipDiscount ?? null,
+            city: client.city ?? null,
+            address: client.address ?? null,
+            profession: client.profession ?? null,
+            employmentPlace: client.employmentPlace ?? null,
+            tel2: client.tel2 ?? null,
+            ordersSum: (client as any).ordersSum ?? null,
+            informationSource: (client as any).informationSource ?? null,
+        };
+
         const patientData = {
             name: fullName,
             phone: phone || client.tel1 || '',
@@ -162,6 +179,7 @@ export class ItigrisSyncService {
             birthDate: birthDate || undefined,
             gender: client.gender === true ? 'male' : client.gender === false ? 'female' : undefined,
             notes: client.comment || undefined,
+            metadata: { ...((existing as any)?.metadata || {}), itigris: itigrisExtras },
             externalId: `itigris:${client.id}`,
             externalSource: 'itigris',
             organizationId: this.orgId,

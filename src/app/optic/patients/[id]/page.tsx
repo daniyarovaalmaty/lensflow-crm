@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Award
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -509,6 +509,45 @@ export default function PatientDetailPage() {
                     </div>
                 )}
 
+                {/* Данные ITIGRIS (доп. поля клиента из Оптимы) */}
+                {(() => {
+                    const itg = (patient as any).metadata?.itigris;
+                    if (!itg) return null;
+                    const rows = ([
+                        itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
+                        itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
+                        itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
+                        itg.city ? { label: 'Город', value: itg.city } : null,
+                        itg.address ? { label: 'Адрес', value: itg.address } : null,
+                        itg.profession ? { label: 'Профессия', value: itg.profession } : null,
+                        itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
+                        itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
+                    ].filter(Boolean)) as { label: string; value: string }[];
+                    if (rows.length === 0) return null;
+                    const d = itg.discount;
+                    return (
+                        <div className="mb-8">
+                            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                                <Award className="w-5 h-5 text-orange-500" />
+                                <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Данные ITIGRIS</h2>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {rows.map((r, i) => (
+                                    <div key={i} className="bg-gray-50 rounded-xl p-3">
+                                        <div className="text-xs text-gray-400 mb-0.5">{r.label}</div>
+                                        <div className="text-sm font-semibold text-gray-900 break-words">{r.value}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            {d && typeof d === 'object' && (
+                                <p className="mt-3 text-xs text-gray-500">
+                                    Скидка по карте: оправы {d.glasses ?? 0}% · солнцезащ. {d.sunglasses ?? 0}% · КЛ {d.contactLenses ?? 0}% · линзы {d.lenses ?? 0}% · аксесс. {d.accessories ?? 0}%
+                                </p>
+                            )}
+                        </div>
+                    );
+                })()}
+
                 {/* Последний рецепт (если есть) */}
                 {patient.prescriptions.length > 0 && (
                     <div className="mb-8">
@@ -751,6 +790,42 @@ export default function PatientDetailPage() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Данные ITIGRIS (доп. поля клиента из Оптимы) */}
+                            {(() => {
+                                const itg = (patient as any).metadata?.itigris;
+                                if (!itg) return null;
+                                const rows = ([
+                                    itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
+                                    itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
+                                    itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
+                                    itg.city ? { label: 'Город', value: itg.city } : null,
+                                    itg.address ? { label: 'Адрес', value: itg.address } : null,
+                                    itg.profession ? { label: 'Профессия', value: itg.profession } : null,
+                                    itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
+                                    itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
+                                ].filter(Boolean)) as { label: string; value: string }[];
+                                if (rows.length === 0) return null;
+                                const d = itg.discount;
+                                return (
+                                    <div id="itigris-data" className="scroll-mt-24">
+                                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-3"><Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS</h2>
+                                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                {rows.map((r, i) => (
+                                                    <div key={i} className="bg-gray-50 rounded-xl p-3">
+                                                        <div className="text-xs text-gray-400 mb-0.5">{r.label}</div>
+                                                        <div className="text-sm font-semibold text-gray-900 break-words">{r.value}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {d && typeof d === 'object' && (
+                                                <p className="mt-3 text-xs text-gray-500">Скидка по карте: оправы {d.glasses ?? 0}% · солнцезащ. {d.sunglasses ?? 0}% · КЛ {d.contactLenses ?? 0}% · линзы {d.lenses ?? 0}% · аксесс. {d.accessories ?? 0}%</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Prescriptions */}
                             <div id="prescriptions" className="scroll-mt-24">
