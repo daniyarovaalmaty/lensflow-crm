@@ -51,9 +51,18 @@ export async function GET(req: NextRequest) {
                 return NextResponse.json({ entity, items: await client.getDepartments() });
 
             case 'clients': {
-                const q = sp.get('q') || 'а';
+                const q = (sp.get('q') || '').trim();
                 const page = Number(sp.get('page')) || 0;
-                return NextResponse.json({ entity, items: await client.searchClients(q, 'FULL_NAME', page, 50) });
+                // ITIGRIS FULL_NAME search ignores searchQuery on some instances (the demo
+                // returns every client regardless) — filter by name server-side so search narrows.
+                let items = await client.searchClients(q || 'а', 'FULL_NAME', page, 100);
+                if (q) {
+                    const ql = q.toLowerCase();
+                    items = items.filter((c: any) =>
+                        [c.familyName, c.firstName, c.patronymicName].filter(Boolean).join(' ').toLowerCase().includes(ql)
+                    );
+                }
+                return NextResponse.json({ entity, items });
             }
 
             case 'orders': {
