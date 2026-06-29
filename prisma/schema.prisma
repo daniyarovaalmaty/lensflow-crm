@@ -291,7 +291,12 @@ model Prescription {
   prescribedAt DateTime @default(now())
   createdAt   DateTime @default(now())
 
+  // External integrations (ITIGRIS, etc.) — e.g. "itigris:order:123"
+  externalId  String?
+  externalSource String?
+
   @@index([patientId])
+  @@index([externalId])
   @@map("prescriptions")
 }
 
@@ -376,11 +381,16 @@ model Appointment {
   type         String        @default("consultation") // consultation | fitting | checkup | other
   notes        String?       @db.Text
 
+  // External integrations (ITIGRIS, etc.) — e.g. "itigris:registry:123"
+  externalId   String?
+  externalSource String?
+
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   @@index([doctorId, date])
   @@index([clinicId])
+  @@index([externalId])
   @@map("appointments")
 }
 

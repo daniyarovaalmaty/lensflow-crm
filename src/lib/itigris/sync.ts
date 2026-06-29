@@ -409,6 +409,11 @@ export class ItigrisSyncService {
         const lensConfig = this.buildLensConfig(fullOrder);
         const orderNumber = `ITG-${order.id}`;
 
+        // Capture the patient's prescription from this order into their Rx history.
+        if (patient?.id && fullOrder) {
+            try { await this.upsertPrescriptionFromOrder(patient.id, fullOrder, order); } catch { /* non-fatal */ }
+        }
+
         const existing = await (this.prisma as any).order.findFirst({
             where: { organizationId: this.orgId, externalId: `itigris:${order.id}` },
         });
@@ -451,6 +456,128 @@ export class ItigrisSyncService {
                     notes: order.comment ? `ITIGRIS: ${order.comment}` : undefined,
                 },
             });
+            result.created++;
+        }
+    }
+
+    /** Upsert a patient Prescription from an order's medical data (idempotent by order id). */
+    private async upsertPrescriptionFromOrder(patientId: string, fullOrder: any, order: ItigrisOrder): Promise<void> {
+        const rx = fullOrder?.medicalData?.prescriptions?.[0];
+        if (!rx) return;
+        // Skip empty prescriptions (no measurable values).
+        const hasData = [rx.sphOd, rx.sphOs, rx.cylOd, rx.cylOs, rx.addOd, rx.addOs].some((v: any) => v != null);
+        if (!hasData) return;
+
+        let prescribedAt = new Date();
+        const rawDate = rx.date || (order as any).createdAt;
+        if (rawDate) { const d = new Date(rawDate); if (!isNaN(d.getTime())) prescribedAt = d; }
+
+        const typeMap: Record<string, string> = { CONTACT_LENS: 'contacts', GLASSES: 'glasses' };
+        const externalId = `itigris:order:${order.id}`;
+        const data: any = {
+            patientId,
+            odSph: rx.sphOd ?? null, odCyl: rx.cylOd ?? null, odAx: rx.axOd ?? null, odAdd: rx.addOd ?? null, odPd: rx.dppOd ?? null,
+            osSph: rx.sphOs ?? null, osCyl: rx.cylOs ?? null, osAx: rx.axOs ?? null, osAdd: rx.addOs ?? null, osPd: rx.dppOs ?? null,
+            pdTotal: rx.dpp ?? null,
+            type: typeMap[fullOrder.type] || 'glasses',
+            notes: [rx.purpose, rx.comments, rx.doctor?.fullName ? `Врач: ${rx.doctor.fullName}` : null].filter(Boolean).join(' · ') || null,
+            prescribedAt,
+            externalId,
+            externalSource: 'itigris',
+        };
+
+        const existing = await (this.prisma as any).prescription.findFirst({ where: { externalId, patientId } });
+        if (existing) {
+            await (this.prisma as any).prescription.update({ where: { id: existing.id }, data });
+        } else {
+            await (this.prisma as any).prescription.create({ data });
+        }
+    }
+
+    // ----- Sync Appointments (registry records) -----
+
+    /**
+     * Import the appointment journal (registry-records) from ITIGRIS into Appointment.
+     * Matches the patient by ITIGRIS client id or phone; idempotent by registry id.
+     */
+    async syncAppointments(): Promise<ItigrisSyncResult> {
+        const result: ItigrisSyncResult = { entity: 'appointments', created: 0, updated: 0, errors: 0, details: [] };
+        try {
+            const departments = await this.api.getDepartments();
+            const storeDepts = departments.filter(d => d.type === 'STORE' || d.type === 'OFFICE');
+
+            const from = new Date(); from.setFullYear(from.getFullYear() - 2);
+            const to = new Date(); to.setFullYear(to.getFullYear() + 1);
+            const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+            for (const dept of storeDepts) {
+                const ok = await this.api.signInToDepartment(dept.id);
+                if (!ok) continue;
+                let records: any[];
+                try {
+                    records = await this.api.getRegistryRecords({ appointmentFrom: fmt(from), appointmentTo: fmt(to), departmentId: dept.id });
+                } catch (err: any) {
+                    if (err.response?.status === 403) { result.details.push(`${dept.name}: нет доступа к записям (403)`); continue; }
+                    throw err;
+                }
+                for (const rec of records) {
+                    try { await this.upsertAppointment(rec, result); }
+                    catch (err: any) { result.errors++; result.details.push(`Ошибка записи ${rec.id}: ${err.message}`); }
+                }
+                result.details.push(`${dept.name}: записей ${records.length}`);
+            }
+        } catch (err: any) {
+            result.errors++;
+            result.details.push(`Ошибка загрузки записей: ${err.message}`);
+        }
+        return result;
+    }
+
+    private async upsertAppointment(rec: any, result: ItigrisSyncResult): Promise<void> {
+        const date = rec.appointmentAt ? new Date(rec.appointmentAt) : null;
+        if (!date || isNaN(date.getTime())) return;
+
+        // Match patient by ITIGRIS client id or normalized phone.
+        const phone = this.normalizePhone(rec.client?.phone);
+        const cid = rec.client?.id;
+        const patient = await (this.prisma as any).patient.findFirst({
+            where: {
+                organizationId: this.orgId,
+                OR: [
+                    ...(cid ? [{ externalId: `itigris:${cid}` }] : []),
+                    ...(phone ? [{ phone }] : []),
+                ],
+            },
+            select: { id: true },
+        });
+
+        const statusMap: Record<string, string> = {
+            CONFIRMED: 'scheduled', SCHEDULED: 'scheduled', WAITING: 'scheduled', NEW: 'scheduled', PLANNED: 'scheduled',
+            FINISHED: 'completed', COMPLETED: 'completed', DONE: 'completed',
+            CANCELLED: 'cancelled', CANCELED: 'cancelled', NO_SHOW: 'no_show',
+        };
+        const status = statusMap[String(rec.status || '').toUpperCase()] || (rec.finishedAt ? 'completed' : 'scheduled');
+
+        const externalId = `itigris:registry:${rec.id}`;
+        const data: any = {
+            patientId: patient?.id || undefined,
+            patientName: rec.client?.fullName || null,
+            patientPhone: rec.client?.phone || null,
+            clinicId: this.orgId,
+            date,
+            status,
+            type: 'consultation',
+            notes: rec.serviceType?.name ? `Itigris: ${rec.serviceType.name}` : null,
+            externalId,
+            externalSource: 'itigris',
+        };
+
+        const existing = await (this.prisma as any).appointment.findFirst({ where: { externalId } });
+        if (existing) {
+            await (this.prisma as any).appointment.update({ where: { id: existing.id }, data });
+            result.updated++;
+        } else {
+            await (this.prisma as any).appointment.create({ data });
             result.created++;
         }
     }
@@ -660,9 +787,10 @@ export class ItigrisSyncService {
     async fullSync(since?: string): Promise<ItigrisSyncResult[]> {
         const results: ItigrisSyncResult[] = [];
 
-        // Order matters: clients first, then orders
+        // Order matters: clients first, then orders, then appointments
         results.push(await this.syncClientChanges(since));
         results.push(await this.syncOrders());
+        results.push(await this.syncAppointments());
 
         return results;
     }
