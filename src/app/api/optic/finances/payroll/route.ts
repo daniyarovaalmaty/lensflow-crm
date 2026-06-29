@@ -183,8 +183,24 @@ export async function GET(req: NextRequest) {
             if (isValeria) {
                 if (baseSal === 0) baseSal = 200000;
                 
-                // Currently using docMetrics.fittings from her calendar appointments
-                const countForBonus = docMetrics.fittings;
+                // Valeria is a salesperson, so we count fittings from the sales she processed at the POS
+                let posFittingsCount = 0;
+                periodSales.forEach(sale => {
+                    if (sale.performedById === staff.id) {
+                        const hasFitting = sale.items?.some((item: any) => 
+                            item.name.toLowerCase().includes('подбор')
+                        );
+                        if (hasFitting) {
+                            posFittingsCount++;
+                        }
+                    }
+                });
+
+                // Total fittings for her bonus is her calendar fittings + POS fittings
+                const countForBonus = docMetrics.fittings + posFittingsCount;
+                
+                // Override the display metrics so it shows up in the table
+                docMetrics.fittings = countForBonus;
                 
                 // Bonus: 0 for the first 10, then 10,000 for each subsequent fitting
                 const extraBonus = Math.max(0, countForBonus - 10) * 10000;
