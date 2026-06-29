@@ -186,7 +186,7 @@ export async function GET(req: NextRequest) {
                 // Valeria is a salesperson, so we count fittings from the sales she processed at the POS
                 let posFittingsCount = 0;
                 periodSales.forEach(sale => {
-                    if (sale.performedById === staff.id) {
+                    if (sale.performedById === valeria.id) {
                         const hasFitting = sale.items?.some((item: any) => 
                             item.name.toLowerCase().includes('подбор')
                         );
