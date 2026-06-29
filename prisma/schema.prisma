@@ -771,6 +771,40 @@ model StockTransfer {
   @@map("stock_transfers")
 }
 
+// ==================== Task (Задания — Optima-style inter-employee tasks) ====================
+// Mirrors Optima's «Календарь заданий»: assign tasks between staff, track by
+// status/due date. No User FK (denormalized assignee/author names) to keep the
+// migration light — same style as SupplierOrder/StockTransfer above.
+model Task {
+  id              String    @id @default(cuid())
+  organizationId  String
+
+  title           String
+  description     String?   @db.Text
+  status          String    @default("new")     // new | in_progress | done | cancelled
+  priority        String    @default("normal")  // low | normal | high
+  dueDate         DateTime?
+
+  assignedById    String?
+  assignedByName  String?
+  assignedToId    String?
+  assignedToName  String?
+
+  // Optional link to another entity (order/patient) for context
+  relatedType     String?               // order | patient
+  relatedId       String?
+  relatedLabel    String?
+
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([assignedToId])
+  @@index([assignedById])
+  @@map("tasks")
+}
+
 // ==================== Sale (POS transaction) ====================
 model Sale {
   id              String   @id @default(cuid())
