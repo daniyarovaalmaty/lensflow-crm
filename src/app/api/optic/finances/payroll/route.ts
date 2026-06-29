@@ -95,6 +95,7 @@ export async function GET(req: NextRequest) {
             }
         });
 
+        const valeriaFittingsMap = new Map();
         const doctorSalesMap = new Map();
 
         periodSales.forEach(sale => {
@@ -143,6 +144,8 @@ export async function GET(req: NextRequest) {
 
             if (sale.items && Array.isArray(sale.items)) {
                 if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор'))) {
+                    valeriaFittingsMap.set(sale.createdById, (valeriaFittingsMap.get(sale.createdById) || 0) + 1);
+                    
                     const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
                     if (aigerim) assignedDoctorId = aigerim.id;
                 }
@@ -163,6 +166,7 @@ export async function GET(req: NextRequest) {
                 secondary: secondaryMap.get(st.id) || 0
             };
 
+            const isValeria = st.fullName?.includes('Валерия');
             const isDoctor = st.role === 'doctor' || 
                              docMetrics.consultations > 0 || 
                              docMetrics.fittings > 0 ||
@@ -176,12 +180,24 @@ export async function GET(req: NextRequest) {
                 salesTotal = cashierSalesMap.get(st.id) || 0;
             }
 
-            const salesBonus = Math.round(salesTotal * (rule.salesPercent / 100));
-            const totalEstimated = rule.baseSalary + salesBonus;
+            let salesBonus = Math.round(salesTotal * (rule.salesPercent / 100));
+            let baseSal = rule.baseSalary;
+            
+            if (isValeria) {
+                if (baseSal === 0) baseSal = 200000;
+                
+                const fittingsCount = valeriaFittingsMap.get(st.id) || 0;
+                docMetrics.fittings = fittingsCount;
+                
+                const extraBonus = Math.floor(fittingsCount / 10) * 10000;
+                salesBonus += extraBonus;
+            }
+            
+            const totalEstimated = baseSal + salesBonus;
 
             return {
-                user: { id: st.id, fullName: st.fullName, email: st.email, role: st.role, subRole: st.subRole, isDoctor },
-                rule: { baseSalary: rule.baseSalary, salesPercent: rule.salesPercent },
+                user: { id: st.id, fullName: st.fullName, email: st.email, role: st.role, subRole: st.subRole, isDoctor: isDoctor || isValeria },
+                rule: { baseSalary: baseSal, salesPercent: rule.salesPercent },
                 periodSalesTotal: salesTotal,
                 estimatedSalesBonus: salesBonus,
                 totalEstimated: totalEstimated,
