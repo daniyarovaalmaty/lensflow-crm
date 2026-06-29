@@ -49,8 +49,22 @@ export async function GET(req: NextRequest) {
             }
         });
 
+        // 3. Get all sales for this period
+        const sales = await prisma.sale.findMany({
+            where: {
+                organizationId: user.organizationId,
+                createdAt: dateFilter,
+                paymentStatus: { not: 'refunded' }
+            }
+        });
+
         let totalIncome = 0;
         let totalExpense = 0;
+
+        // Add sales revenue
+        sales.forEach(s => {
+            totalIncome += s.total;
+        });
 
         // Summarize global transactions
         txs.forEach(t => {
@@ -60,8 +74,10 @@ export async function GET(req: NextRequest) {
 
         // Summarize cash shift transactions
         cashTxs.forEach(t => {
-            // we only count sales or distinct incomes, ignore cash_in/out (which are just register movements)
-            if (t.transType === 'income' || (t.transType === 'cash_in' && t.category !== 'other')) {
+            // we only count distinct incomes (not sales, since they are already counted above)
+            if (t.transType === 'income' && t.category !== 'sale') {
+                 totalIncome += t.amount;
+            } else if (t.transType === 'cash_in' && t.category !== 'other' && t.category !== 'sale') {
                  totalIncome += t.amount;
             }
             // We NO LONGER count cash_out/expense here because they automatically create a FinancialTransaction 
