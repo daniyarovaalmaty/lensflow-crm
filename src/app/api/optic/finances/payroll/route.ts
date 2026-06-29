@@ -96,6 +96,7 @@ export async function GET(req: NextRequest) {
         });
 
         const doctorSalesMap = new Map();
+        const doctorConsultationSalesMap = new Map();
 
         periodSales.forEach(sale => {
             let assignedDoctorId = null;
@@ -150,6 +151,16 @@ export async function GET(req: NextRequest) {
 
             if (assignedDoctorId) {
                 doctorSalesMap.set(assignedDoctorId, (doctorSalesMap.get(assignedDoctorId) || 0) + sale.total);
+                
+                if (sale.items && Array.isArray(sale.items)) {
+                    const consultationItems = sale.items.filter((item: any) => 
+                        typeof item.name === 'string' && item.name.toLowerCase().includes('консультация')
+                    );
+                    const consultationTotal = consultationItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
+                    if (consultationTotal > 0) {
+                        doctorConsultationSalesMap.set(assignedDoctorId, (doctorConsultationSalesMap.get(assignedDoctorId) || 0) + consultationTotal);
+                    }
+                }
             }
         });
 
@@ -179,6 +190,14 @@ export async function GET(req: NextRequest) {
 
             let salesBonus = Math.round(salesTotal * (rule.salesPercent / 100));
             let baseSal = rule.baseSalary;
+            
+            const isZamira = st.fullName?.includes('Замира');
+            if (isZamira) {
+                const consultationSales = doctorConsultationSalesMap.get(st.id) || 0;
+                // Zamira gets 50% from consultation sales. We subtract rule.salesPercent to avoid double-counting
+                const extraConsultationBonus = Math.max(0, Math.round(consultationSales * 0.50 - consultationSales * (rule.salesPercent / 100)));
+                salesBonus += extraConsultationBonus;
+            }
             
             if (isValeria) {
                 if (baseSal === 0) baseSal = 200000;
