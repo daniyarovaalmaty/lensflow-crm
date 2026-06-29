@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
                     const consultationItems = sale.items.filter((item: any) => 
                         typeof item.name === 'string' && item.name.toLowerCase().includes('консультация')
                     );
-                    const consultationTotal = consultationItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
+                    const consultationTotal = consultationItems.reduce((sum, item: any) => sum + (item.total || 0), 0);
                     if (consultationTotal > 0) {
                         doctorConsultationSalesMap.set(assignedDoctorId, (doctorConsultationSalesMap.get(assignedDoctorId) || 0) + consultationTotal);
                     }
