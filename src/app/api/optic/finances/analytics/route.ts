@@ -38,7 +38,8 @@ export async function GET(req: NextRequest) {
             where: {
                 organizationId: user.organizationId,
                 date: dateFilter
-            }
+            },
+            include: { account: true }
         });
 
         // 2. Get cash shift transactions
@@ -60,15 +61,42 @@ export async function GET(req: NextRequest) {
 
         let totalIncome = 0;
         let totalExpense = 0;
+        let incomeCash = 0;
+        let incomeNonCash = 0;
 
         // Add sales revenue
         sales.forEach(s => {
             totalIncome += s.total;
+            if (s.paymentMethod === 'cash') {
+                incomeCash += s.total;
+            } else if (s.paymentMethod === 'mixed' && s.invoiceData) {
+                const inv = s.invoiceData as any;
+                if (inv.split && Array.isArray(inv.split)) {
+                    inv.split.forEach((sp: any) => {
+                        if (sp.method === 'cash') incomeCash += Number(sp.amount);
+                        else incomeNonCash += Number(sp.amount);
+                    });
+                } else if (inv.splitPayment) {
+                    incomeCash += Number(inv.splitPayment.cash || 0);
+                    incomeNonCash += Number(inv.splitPayment.kaspi || 0) + Number(inv.splitPayment.card || 0) + Number(inv.splitPayment.transfer || 0);
+                } else {
+                    incomeNonCash += s.total; // fallback
+                }
+            } else {
+                incomeNonCash += s.total;
+            }
         });
 
         // Summarize global transactions
         txs.forEach(t => {
-            if (t.type === 'income') totalIncome += t.amount;
+            if (t.type === 'income') {
+                totalIncome += t.amount;
+                if (t.account?.name?.toLowerCase().includes('касса')) {
+                    incomeCash += t.amount;
+                } else {
+                    incomeNonCash += t.amount;
+                }
+            }
             if (t.type === 'expense') totalExpense += t.amount;
         });
 
@@ -77,11 +105,11 @@ export async function GET(req: NextRequest) {
             // we only count distinct incomes (not sales, since they are already counted above)
             if (t.transType === 'income' && t.category !== 'sale') {
                  totalIncome += t.amount;
+                 if (t.paymentMethod === 'cash') incomeCash += t.amount; else incomeNonCash += t.amount;
             } else if (t.transType === 'cash_in' && t.category !== 'other' && t.category !== 'sale') {
                  totalIncome += t.amount;
+                 if (t.paymentMethod === 'cash') incomeCash += t.amount; else incomeNonCash += t.amount;
             }
-            // We NO LONGER count cash_out/expense here because they automatically create a FinancialTransaction 
-            // in the global module (linked to the CashRegister CompanyAccount).
         });
 
         const netProfit = totalIncome - totalExpense;
@@ -90,6 +118,8 @@ export async function GET(req: NextRequest) {
             period: dateFilter,
             summary: {
                 totalIncome,
+                incomeCash,
+                incomeNonCash,
                 totalExpense,
                 netProfit
             },

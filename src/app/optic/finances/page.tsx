@@ -31,7 +31,7 @@ export default function FinancesDashboard() {
     const [loading, setLoading] = useState(true);
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [transactions, setTransactions] = useState<Tx[]>([]);
-    const [analytics, setAnalytics] = useState({ totalIncome: 0, totalExpense: 0, netProfit: 0 });
+    const [analytics, setAnalytics] = useState({ totalIncome: 0, incomeCash: 0, incomeNonCash: 0, totalExpense: 0, netProfit: 0 });
 
     const [accountModalOpen, setAccountModalOpen] = useState(false);
     const [txModalOpen, setTxModalOpen] = useState(false);
@@ -141,8 +141,13 @@ export default function FinancesDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Доходы (Кассы + Безнал)</p>
+                            <p className="text-sm font-medium text-gray-500">Доходы (Всего)</p>
                             <p className="text-2xl font-bold text-emerald-600 mt-1">{fmt(analytics.totalIncome)} ₸</p>
+                            <p className="text-[11px] font-medium text-gray-400 mt-1.5 flex gap-2">
+                                <span>Наличные: {fmt(analytics.incomeCash || 0)} ₸</span>
+                                <span className="text-gray-300">|</span>
+                                <span>Безнал: {fmt(analytics.incomeNonCash || 0)} ₸</span>
+                            </p>
                         </div>
                         <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center">
                             <TrendingUp className="w-6 h-6 text-emerald-500" />
