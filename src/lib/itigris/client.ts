@@ -251,25 +251,6 @@ export interface ItigrisRemainItem {
     [key: string]: any;
 }
 
-// ===================== Prescription Types =====================
-
-export interface ItigrisPrescription {
-    id: number;
-    clientId: number;
-    doctorName?: string;
-    date: string;
-    od?: ItigrisEyeRx;
-    os?: ItigrisEyeRx;
-}
-
-export interface ItigrisEyeRx {
-    sph?: number;
-    cyl?: number;
-    ax?: number;
-    add?: number;
-    pd?: number;
-}
-
 // ===================== Sync Result =====================
 
 export interface ItigrisSyncResult {
@@ -658,13 +639,10 @@ export class ItigrisApiClient {
         };
     }
 
-    // ----- Prescriptions -----
-
-    /** Get prescriptions for a client */
-    async getClientPrescriptions(clientId: number): Promise<ItigrisPrescription[]> {
-        const resp = await this.http.get(`/clients/${clientId}/prescriptions`);
-        return resp.data || [];
-    }
+    // NOTE: ITIGRIS v2 has no standalone client-prescriptions endpoint
+    // (GET /clients/{id}/prescriptions → 404). A client's Rx history lives inside
+    // their orders' medicalData and is captured during order sync — see
+    // ItigrisSyncService.upsertPrescriptionFromOrder.
 
     // ----- Registry (Appointments) -----
     // Note: Appointments are in legacy API, but journal is in v2

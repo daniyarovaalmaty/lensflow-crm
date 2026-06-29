@@ -424,8 +424,27 @@ export class ItigrisSyncService {
 
         const lensflowStatus = this.mapOrderStatus(order.status || fullOrder?.status || '');
         const totalPrice = Math.round(order.sum || order.totalAmount || fullOrder?.sum || 0);
-        const lensConfig = this.buildLensConfig(fullOrder);
+        const lensConfig: any = this.buildLensConfig(fullOrder);
         const orderNumber = `ITG-${order.id}`;
+
+        // Payment summary — `paidSum` is present on the order journal object, the
+        // per-client orders list, AND /orders/{id}/full (the latter also carries a
+        // `payments` breakdown by method). Stash in lensConfig for the order card.
+        const paidSum = Math.round(Number(order.paidSum ?? fullOrder?.paidSum ?? 0) || 0);
+        if (totalPrice > 0 || paidSum > 0) {
+            const methods = Array.isArray(fullOrder?.payments)
+                ? fullOrder.payments.map((p: any) => ({ type: p.paymentType, sum: Number(p.sum) || 0 }))
+                : undefined;
+            lensConfig.payment = {
+                sum: totalPrice,
+                paid: paidSum,
+                due: Math.max(0, totalPrice - paidSum),
+                ...(methods && methods.length ? { methods } : {}),
+            };
+        }
+        // Mirror onto the native paymentStatus enum so dashboard badges/filters work.
+        const paymentStatus: 'paid' | 'partial' | 'unpaid' | undefined =
+            totalPrice > 0 ? (paidSum >= totalPrice ? 'paid' : paidSum > 0 ? 'partial' : 'unpaid') : undefined;
 
         // Capture the patient's prescription from this order into their Rx history.
         if (patient?.id && fullOrder) {
@@ -444,6 +463,7 @@ export class ItigrisSyncService {
                     status: lensflowStatus,
                     totalPrice,
                     lensConfig,
+                    ...(paymentStatus ? { paymentStatus } : {}),
                     notes: order.comment ? `ITIGRIS: ${order.comment}` : undefined,
                     patientId: patient?.id || existing.patientId,
                 },
@@ -455,7 +475,7 @@ export class ItigrisSyncService {
             if (existingByNum) {
                 await (this.prisma as any).order.update({
                     where: { id: existingByNum.id },
-                    data: { status: lensflowStatus, totalPrice, lensConfig, patientId: patient?.id || existingByNum.patientId },
+                    data: { status: lensflowStatus, totalPrice, lensConfig, ...(paymentStatus ? { paymentStatus } : {}), patientId: patient?.id || existingByNum.patientId },
                 });
                 result.updated++;
                 return;
@@ -471,6 +491,7 @@ export class ItigrisSyncService {
                     status: lensflowStatus,
                     totalPrice,
                     lensConfig,
+                    ...(paymentStatus ? { paymentStatus } : {}),
                     notes: order.comment ? `ITIGRIS: ${order.comment}` : undefined,
                 },
             });

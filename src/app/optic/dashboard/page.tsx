@@ -691,6 +691,7 @@ export default function OpticDashboard() {
                             const itgType = (order.config as any)?.orderType as string | undefined;
                             const itgTypeLabel = ({ GLASSES: 'Очки', CONTACT_LENS: 'Контактные линзы', SALE: 'Продажа', REPAIR: 'Ремонт', REPAIR_GLASSES_ORDER: 'Ремонт очков', CHECK_VISION: 'Проверка зрения' } as Record<string, string>)[itgType || ''] || 'Заказ ITIGRIS';
                             const itgRx = (order.config as any)?.prescription as any;
+                            const itgPayment = (order.config as any)?.payment as any;
                             const itgFmt = (v: any) => v == null ? '—' : (Number(v) > 0 ? '+' : '') + Number(v).toFixed(2);
                             const itgEye = (e: any) => e ? `Sph ${itgFmt(e.sph)} Cyl ${itgFmt(e.cyl)} Ax ${e.ax != null ? Math.round(e.ax) + '°' : '—'}` : '—';
                             const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
@@ -1076,15 +1077,25 @@ export default function OpticDashboard() {
                                                     {isItigris ? (
                                                         <Link
                                                             href={`/optic/orders/itigris/${order.order_id}`}
-                                                            className="flex items-center justify-between bg-orange-50 border border-orange-100 rounded-lg p-3 mt-4 hover:bg-orange-100 transition-colors"
+                                                            className="block bg-orange-50 border border-orange-100 rounded-lg p-3 mt-4 hover:bg-orange-100 transition-colors"
                                                         >
-                                                            <span className="text-sm font-medium text-orange-700">
-                                                                Полная информация — в карточке ITIGRIS →
-                                                            </span>
-                                                            {canSeePrices && (
-                                                                <span className="text-lg font-bold text-orange-700">
-                                                                    {totalPrice.toLocaleString('ru-RU')} ₸
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-sm font-medium text-orange-700">
+                                                                    Полная информация — в карточке ITIGRIS →
                                                                 </span>
+                                                                {canSeePrices && (
+                                                                    <span className="text-lg font-bold text-orange-700">
+                                                                        {totalPrice.toLocaleString('ru-RU')} ₸
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {canSeePrices && itgPayment && (itgPayment.paid > 0 || itgPayment.due > 0) && (
+                                                                <div className="flex items-center gap-4 mt-2 text-xs">
+                                                                    <span className="text-emerald-700 font-medium">Оплачено: {Number(itgPayment.paid).toLocaleString('ru-RU')} ₸</span>
+                                                                    {itgPayment.due > 0 && (
+                                                                        <span className="text-red-600 font-medium">Остаток: {Number(itgPayment.due).toLocaleString('ru-RU')} ₸</span>
+                                                                    )}
+                                                                </div>
                                                             )}
                                                         </Link>
                                                     ) : canSeePrices && (

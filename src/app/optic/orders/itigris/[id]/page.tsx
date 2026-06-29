@@ -5,8 +5,13 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, Eye, Package, User,
     Building2, Stethoscope, AlertCircle, CheckCircle2, Clock,
-    ShoppingBag, Wrench, Glasses
+    ShoppingBag, Wrench, Glasses, Wallet
 } from 'lucide-react';
+
+const PAY_METHOD_LABELS: Record<string, string> = {
+    CASH: 'Наличные', CARD: 'Карта', CASHLESS: 'Безнал', BANK: 'Безнал',
+    BONUS: 'Бонусы', CERTIFICATE: 'Сертификат', CREDIT: 'Кредит', MIXED: 'Смешанная',
+};
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
     new_order: { label: 'Новый', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Clock },
@@ -144,6 +149,39 @@ export default function ItigrisOrderPage() {
                         )}
                     </div>
                 </div>
+
+                {/* Payment */}
+                {lc.payment && (lc.payment.sum > 0 || lc.payment.paid > 0) && (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-5 shadow-sm">
+                        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
+                            <Wallet className="w-5 h-5 text-emerald-500" />
+                            Оплата
+                        </h2>
+                        <div className="grid grid-cols-3 gap-3 text-center">
+                            <div className="bg-gray-50 rounded-xl p-3">
+                                <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Сумма</div>
+                                <div className="text-lg font-bold text-gray-900">{Number(lc.payment.sum).toLocaleString('ru-RU')} ₸</div>
+                            </div>
+                            <div className="bg-emerald-50 rounded-xl p-3">
+                                <div className="text-xs text-emerald-500 uppercase font-semibold mb-1">Оплачено</div>
+                                <div className="text-lg font-bold text-emerald-700">{Number(lc.payment.paid).toLocaleString('ru-RU')} ₸</div>
+                            </div>
+                            <div className={`rounded-xl p-3 ${lc.payment.due > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+                                <div className={`text-xs uppercase font-semibold mb-1 ${lc.payment.due > 0 ? 'text-red-400' : 'text-gray-400'}`}>Остаток</div>
+                                <div className={`text-lg font-bold ${lc.payment.due > 0 ? 'text-red-600' : 'text-gray-400'}`}>{Number(lc.payment.due).toLocaleString('ru-RU')} ₸</div>
+                            </div>
+                        </div>
+                        {Array.isArray(lc.payment.methods) && lc.payment.methods.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {lc.payment.methods.map((m: any, i: number) => (
+                                    <span key={i} className="text-xs bg-gray-100 text-gray-600 rounded-full px-3 py-1">
+                                        {PAY_METHOD_LABELS[m.type] || m.type}: {Number(m.sum).toLocaleString('ru-RU')} ₸
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Prescription */}
                 {rx && (

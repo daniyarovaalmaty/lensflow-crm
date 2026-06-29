@@ -7,8 +7,6 @@ export type {
     ItigrisClient,
     ItigrisClientInput,
     ItigrisOrder,
-    ItigrisPrescription,
-    ItigrisEyeRx,
     ItigrisSyncResult,
     ItigrisOrderJournalParams,
 } from './client';
