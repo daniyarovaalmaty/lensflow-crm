@@ -742,6 +742,35 @@ model SupplierOrder {
   @@map("supplier_orders")
 }
 
+// ==================== Stock Transfer (between branches — трансфер) ====================
+// Moves stock from one branch to another: deduct source on send, add to
+// destination on receive. Acts as the транспортная накладная.
+model StockTransfer {
+  id              String   @id @default(cuid())
+  number          String              // ТР-0001
+  fromOrgId       String
+  toOrgId         String
+  fromName        String?
+  toName          String?
+
+  status          String   @default("draft")  // draft | sent | received | cancelled
+  items           Json                // [{ productId, name, sku, qty }]
+  totalQty        Int      @default(0)
+  notes           String?
+
+  createdById     String?
+  createdByName   String?
+  sentAt          DateTime?
+  receivedAt      DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([fromOrgId])
+  @@index([toOrgId])
+  @@map("stock_transfers")
+}
+
 // ==================== Sale (POS transaction) ====================
 model Sale {
   id              String   @id @default(cuid())
