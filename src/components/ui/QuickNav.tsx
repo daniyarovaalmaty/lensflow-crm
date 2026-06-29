@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect } from 'react';
-import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import FullscreenButton from '@/components/ui/FullscreenButton';
 
 const baseNavItems = [
@@ -55,6 +55,23 @@ export default function QuickNav() {
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
     const [showDropdown, setShowDropdown] = useState(false);
 
+    // Horizontal scroll arrows for the nav (many tabs overflow on narrower screens).
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
+    const updateArrows = () => {
+        const el = scrollRef.current;
+        if (!el) { setCanLeft(false); setCanRight(false); return; }
+        setCanLeft(el.scrollLeft > 4);
+        setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    };
+    const scrollNav = (dir: number) => scrollRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' });
+    useEffect(() => {
+        const t = setTimeout(updateArrows, 150);
+        window.addEventListener('resize', updateArrows);
+        return () => { clearTimeout(t); window.removeEventListener('resize', updateArrows); };
+    }, [branches.length, isManager, isProcurement]);
+
     useEffect(() => {
         if (isManager && isHQ) {
             fetch('/api/branches')
@@ -90,8 +107,14 @@ export default function QuickNav() {
         <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex items-center justify-between gap-4">
-                    {/* Left: logo for procurement + nav links */}
-                    <div className="flex-1 min-w-0 flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-hide">
+                    {/* Left: nav links — horizontally scrollable with arrows */}
+                    <div className="flex-1 min-w-0 flex items-center">
+                        {canLeft && (
+                            <button onClick={() => scrollNav(-1)} aria-label="Прокрутить меню влево" className="flex-shrink-0 mr-1 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                        )}
+                        <div ref={scrollRef} onScroll={updateArrows} className="flex-1 min-w-0 flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-hide">
                         {isProcurement && (
                             <div className="flex items-center gap-2 mr-3 flex-shrink-0">
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
@@ -121,6 +144,12 @@ export default function QuickNav() {
                                 </Link>
                             );
                         })}
+                        </div>
+                        {canRight && (
+                            <button onClick={() => scrollNav(1)} aria-label="Прокрутить меню вправо" className="flex-shrink-0 ml-1 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
 
                     {/* Right side */}
