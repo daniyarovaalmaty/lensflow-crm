@@ -867,6 +867,32 @@ model RepairOrder {
   @@map("repair_orders")
 }
 
+// ==================== Order Rework / Defect (Переделка/брак по заказу) ====================
+// Records reworks/defects tied to an order: what went wrong, who's responsible
+// (master/diagnosis/seller), cost — gives per-order history + per-employee error
+// accounting (ТЗ). Additive, no FK — same style.
+model OrderRework {
+  id              String    @id @default(cuid())
+  organizationId  String
+
+  orderNumber     String?               // linked order (e.g. ITG-123 / native number)
+  description     String    @db.Text     // что переделываем / в чём брак
+  responsibleType String    @default("master")  // master | diagnosis | seller | other
+  responsibleName String?               // на ком ошибка (для учёта по сотрудникам)
+  cost            Int       @default(0)  // стоимость переделки/брака
+  status          String    @default("open")    // open | resolved
+
+  createdById     String?
+  createdByName   String?
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([orderNumber])
+  @@map("order_reworks")
+}
+
 // ==================== Sale (POS transaction) ====================
 model Sale {
   id              String   @id @default(cuid())
