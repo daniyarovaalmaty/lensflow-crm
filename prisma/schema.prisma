@@ -582,6 +582,13 @@ model OpticProduct {
   unit             String   @default("шт")
   trackSerials     Boolean  @default(false)
 
+  // Expiry / certification / shelf location (ТЗ: срок годности, сертификация мед-товаров, ячейка склада)
+  expiryDate       DateTime?               // срок годности (подсветка красным за полгода)
+  shelfLocation    String?                 // ячейка / полка на складе
+  isMedical        Boolean  @default(false) // товар медицинского назначения (нужна сертификация)
+  certNumber       String?                 // № сертификата
+  certUntil        DateTime?               // сертификат действует до
+
   isPublic         Boolean  @default(false)
   isActive         Boolean  @default(true)
   sortOrder        Int      @default(0)
