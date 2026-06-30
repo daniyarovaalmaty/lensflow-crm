@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import QuickNav from '@/components/ui/QuickNav';
-import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap, ClipboardList, Package } from 'lucide-react';
+import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap, ClipboardList, Package, Send } from 'lucide-react';
 
 interface SyncResult {
     entity: string;
@@ -195,7 +195,7 @@ export default function ClinicManagerItigrisPage() {
                         <h1 className="text-xl font-bold text-gray-900">Интеграция ITIGRIS Optima</h1>
                         <p className="text-sm text-gray-500">Синхронизация пациентов и заказов с Оптимой v.2</p>
                     </div>
-                    {(connected || legacyConnected) && (
+                    {(connected || legacyConnected || remoteConnected) && (
                         <div className="ml-auto flex items-center gap-2">
                             {connected && (
                                 <Link href="/clinic-manager/itigris/browse" className="flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium transition-colors">
@@ -205,6 +205,11 @@ export default function ClinicManagerItigrisPage() {
                             {legacyConnected && (
                                 <Link href="/clinic-manager/itigris/services" className="flex items-center gap-2 px-3 py-2 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-xl text-sm font-medium transition-colors">
                                     <Zap className="w-4 h-4" /> Сервисы
+                                </Link>
+                            )}
+                            {remoteConnected && (
+                                <Link href="/optic/sale-to-optima" className="flex items-center gap-2 px-3 py-2 bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl text-sm font-medium transition-colors">
+                                    <Send className="w-4 h-4" /> Заказ в Оптиму
                                 </Link>
                             )}
                         </div>
