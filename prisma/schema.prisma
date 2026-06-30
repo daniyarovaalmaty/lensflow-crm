@@ -837,6 +837,36 @@ model NewsReadState {
   @@map("news_read_state")
 }
 
+// ==================== Repair (Ремонт — Optima-style repair journal) ====================
+// Walk-in/registered repair intake: accept an item, describe the problem, price it,
+// track status accepted→in_progress→ready→issued. Additive, no FK — same style.
+model RepairOrder {
+  id              String    @id @default(cuid())
+  organizationId  String
+
+  number          String              // Р-0001
+  clientName      String?
+  clientPhone     String?
+
+  itemDescription String              // что сдали в ремонт
+  problem         String?   @db.Text  // описание неисправности
+  price           Int       @default(0)
+  status          String    @default("accepted") // accepted | in_progress | ready | issued | cancelled
+  masterName      String?
+  notes           String?
+
+  readyAt         DateTime?
+  issuedAt        DateTime?
+
+  createdById     String?
+  createdByName   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@map("repair_orders")
+}
+
 // ==================== Sale (POS transaction) ====================
 model Sale {
   id              String   @id @default(cuid())
