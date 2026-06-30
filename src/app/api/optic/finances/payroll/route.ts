@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
 
         const consultationsMap = new Map();
         const fittingsMap = new Map();
+        const fittingsDetailsMap = new Map();
         const primaryMap = new Map();
         const secondaryMap = new Map();
 
@@ -76,8 +77,7 @@ export async function GET(req: NextRequest) {
             const isPrimary = appt.type.includes('primary');
             const isRepeat = appt.type.includes('repeat');
 
-            if (isFitting) fittingsMap.set(docId, (fittingsMap.get(docId) || 0) + 1);
-            else if (isConsultation) consultationsMap.set(docId, (consultationsMap.get(docId) || 0) + 1);
+            if (isConsultation) consultationsMap.set(docId, (consultationsMap.get(docId) || 0) + 1);
 
             if (isPrimary) primaryMap.set(docId, (primaryMap.get(docId) || 0) + 1);
             else if (isRepeat) secondaryMap.set(docId, (secondaryMap.get(docId) || 0) + 1);
@@ -99,9 +99,9 @@ export async function GET(req: NextRequest) {
         const doctorConsultationSalesMap = new Map();
 
         periodSales.forEach(sale => {
-            let assignedDoctorId = null;
+            let assignedDoctorId = sale.doctorId || null;
 
-            if (sale.patientId) {
+            if (!assignedDoctorId && sale.patientId) {
                 const appt = periodAppointments.find(a => a.patientId === sale.patientId);
                 if (appt) assignedDoctorId = appt.doctorId;
             }
@@ -143,11 +143,13 @@ export async function GET(req: NextRequest) {
             }
 
             if (sale.items && Array.isArray(sale.items)) {
-                if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор'))) {
+                if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор') && item.name.toLowerCase().includes('ночн'))) {
                     const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
                     if (aigerim) assignedDoctorId = aigerim.id;
                 }
             }
+
+            (sale as any)._assignedDoctorId = assignedDoctorId;
 
             if (assignedDoctorId) {
                 doctorSalesMap.set(assignedDoctorId, (doctorSalesMap.get(assignedDoctorId) || 0) + sale.total);
@@ -160,6 +162,25 @@ export async function GET(req: NextRequest) {
                     if (consultationTotal > 0) {
                         doctorConsultationSalesMap.set(assignedDoctorId, (doctorConsultationSalesMap.get(assignedDoctorId) || 0) + consultationTotal);
                     }
+
+                    const hasFitting = sale.items.some((item: any) => {
+                        const isFittingByName = typeof item.name === 'string' && item.name.toLowerCase().includes('подбор');
+                        const isFittingByCategory = item.category === 'service_fitting';
+                        if (!isFittingByName && !isFittingByCategory) return false;
+                        
+                        // For Aigerim, ONLY count night lenses!
+                        const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
+                        if (aigerim && assignedDoctorId === aigerim.id) {
+                            return typeof item.name === 'string' && item.name.toLowerCase().includes('ночн');
+                        }
+                        return true;
+                    });
+                    if (hasFitting) {
+                        fittingsMap.set(assignedDoctorId, (fittingsMap.get(assignedDoctorId) || 0) + 1);
+                        const arr = fittingsDetailsMap.get(assignedDoctorId) || [];
+                        arr.push(sale);
+                        fittingsDetailsMap.set(assignedDoctorId, arr);
+                    }
                 }
             }
         });
@@ -167,11 +188,46 @@ export async function GET(req: NextRequest) {
         const results = staff.map(st => {
             const rule = st.payrollRules[0] || { baseSalary: 0, salesPercent: 0 };
             
+            // Build fitting details for the UI from sales
+            const fittingSales = fittingsDetailsMap.get(st.id) || [];
+            const fittingDetails = fittingSales.map((s: any) => {
+                let isInstallment = false;
+                if (s.paymentMethod === 'installment12' || 
+                    (s.invoiceData as any)?.split?.some((sp: any) => sp.method === 'installment12') || 
+                    (s.invoiceData as any)?.splitPayment?.installment12) {
+                    isInstallment = true;
+                }
+
+                const fittingItems = s.items?.filter((item: any) => {
+                    const isFittingByName = typeof item.name === 'string' && item.name.toLowerCase().includes('подбор');
+                    const isFittingByCategory = item.category === 'service_fitting';
+                    if (!isFittingByName && !isFittingByCategory) return false;
+                    
+                    const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
+                    if (aigerim && st.id === aigerim.id) {
+                        return typeof item.name === 'string' && item.name.toLowerCase().includes('ночн');
+                    }
+                    return true;
+                }) || [];
+                const fittingAmount = fittingItems.reduce((sum: number, item: any) => sum + (item.total || 0), 0);
+                const fittingName = fittingItems.length > 0 ? fittingItems[0].name : 'Подбор';
+
+                return {
+                    id: s.id,
+                    date: s.createdAt,
+                    patientName: s.customerName || s.patient?.fullName || 'Неизвестный',
+                    fittingName,
+                    saleAmount: fittingAmount,
+                    isInstallment
+                };
+            });
+
             const docMetrics = {
                 consultations: consultationsMap.get(st.id) || 0,
                 fittings: fittingsMap.get(st.id) || 0,
                 primary: primaryMap.get(st.id) || 0,
-                secondary: secondaryMap.get(st.id) || 0
+                secondary: secondaryMap.get(st.id) || 0,
+                fittingDetails
             };
 
             const isValeria = st.fullName?.includes('Валерия');
@@ -207,7 +263,8 @@ export async function GET(req: NextRequest) {
                 periodSales.forEach(sale => {
                     if (sale.performedById === st.id) {
                         const hasFitting = sale.items?.some((item: any) => 
-                            item.name.toLowerCase().includes('подбор')
+                            (typeof item.name === 'string' && item.name.toLowerCase().includes('подбор')) || 
+                            item.category === 'service_fitting'
                         );
                         if (hasFitting) {
                             posFittingsCount++;
