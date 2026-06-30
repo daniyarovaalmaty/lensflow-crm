@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect, useRef } from 'react';
-import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight, ChevronLeft, ChevronRight, ClipboardList } from 'lucide-react';
+import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight, ChevronLeft, ChevronRight, ClipboardList, Newspaper } from 'lucide-react';
 import FullscreenButton from '@/components/ui/FullscreenButton';
 
 const baseNavItems = [
@@ -18,6 +18,7 @@ const baseNavItems = [
     { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500' },
     { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500' },
     { href: '/optic/tasks', label: 'Задания', icon: ClipboardList, color: 'text-fuchsia-500' },
+    { href: '/optic/news', label: 'Новости', icon: Newspaper, color: 'text-rose-500' },
     { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500' },
 ];
 
@@ -55,6 +56,7 @@ export default function QuickNav() {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
     const [showDropdown, setShowDropdown] = useState(false);
+    const [newsUnread, setNewsUnread] = useState(0);
 
     // Horizontal scroll arrows for the nav (many tabs overflow on narrower screens).
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -88,6 +90,18 @@ export default function QuickNav() {
         const saved = localStorage.getItem('lf_selected_branch');
         if (saved) setSelectedBranch(saved);
     }, []);
+
+    // Unread news badge («Новости (+N)»). Refetched on navigation so it clears
+    // right after the user opens the feed (which marks everything read).
+    useEffect(() => {
+        if (role === 'distributor') return;
+        let active = true;
+        fetch('/api/optic/news/unread')
+            .then(r => (r.ok ? r.json() : { unread: 0 }))
+            .then(d => { if (active) setNewsUnread(d?.unread || 0); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [pathname, role]);
 
     if (role === 'distributor') return null;
 
@@ -142,6 +156,9 @@ export default function QuickNav() {
                                 >
                                     <item.icon className={`w-4 h-4 ${isActive ? 'text-primary-600' : item.color}`} />
                                     {item.label}
+                                    {item.href === '/optic/news' && newsUnread > 0 && (
+                                        <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-rose-500 rounded-full">{newsUnread}</span>
+                                    )}
                                 </Link>
                             );
                         })}

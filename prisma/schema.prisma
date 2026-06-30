@@ -805,6 +805,38 @@ model Task {
   @@map("tasks")
 }
 
+// ==================== News (Новости — Optima-style org announcements) ====================
+// Org announcement feed with a per-user unread counter (the «Новости (+N)» badge).
+// Additive, no User FK — same style as Task/SupplierOrder/StockTransfer.
+model NewsPost {
+  id              String   @id @default(cuid())
+  organizationId  String
+
+  title           String
+  body            String   @db.Text
+  pinned          Boolean  @default(false)
+
+  authorId        String?
+  authorName      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("news_posts")
+}
+
+// One row per user: when they last opened the news feed. Unread = posts newer
+// than lastReadAt (excluding their own). Kept separate to avoid touching User.
+model NewsReadState {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  lastReadAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("news_read_state")
+}
+
 // ==================== Sale (POS transaction) ====================
 model Sale {
   id              String   @id @default(cuid())
