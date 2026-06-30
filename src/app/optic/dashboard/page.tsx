@@ -27,6 +27,19 @@ const SortLabels: Record<SortOption, string> = {
     patient_za: 'Пациент Я → А',
 };
 
+// Left-edge accent colour per order status — visual order tracking in the journal
+// (ТЗ: «подсветка заказов цветом»). Inline hex so it reliably overrides the base border.
+const STATUS_COLOR: Record<string, string> = {
+    new_order: '#60a5fa',        // blue-400
+    in_production: '#fbbf24',    // amber-400
+    rework: '#fbbf24',
+    ready: '#22c55e',            // green-500
+    shipped: '#818cf8',          // indigo-400
+    out_for_delivery: '#818cf8',
+    delivered: '#10b981',        // emerald-500
+    cancelled: '#fca5a5',        // red-300
+};
+
 export default function OpticDashboard() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -711,7 +724,8 @@ export default function OpticDashboard() {
                                     layout
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow p-4 sm:p-5"
+                                    className="bg-white rounded-2xl border border-gray-100 border-l-4 overflow-hidden hover:shadow-lg transition-shadow p-4 sm:p-5"
+                                    style={{ borderLeftColor: STATUS_COLOR[order.status] || '#e5e7eb' }}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                                         <div className="flex-1 min-w-0">
