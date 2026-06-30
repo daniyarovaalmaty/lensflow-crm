@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect, useRef } from 'react';
-import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight, ChevronLeft, ChevronRight, ClipboardList, Newspaper, Wrench, AlertTriangle } from 'lucide-react';
+import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight, ChevronLeft, ChevronRight, ClipboardList, Newspaper, Wrench, AlertTriangle, CalendarPlus } from 'lucide-react';
 import FullscreenButton from '@/components/ui/FullscreenButton';
 
 const baseNavItems = [
@@ -19,6 +19,7 @@ const baseNavItems = [
     { href: '/optic/pos', label: 'Касса', icon: ShoppingCart, color: 'text-green-500' },
     { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500' },
     { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500' },
+    { href: '/optic/booking', label: 'Запись', icon: CalendarPlus, color: 'text-teal-500' },
     { href: '/optic/tasks', label: 'Задания', icon: ClipboardList, color: 'text-fuchsia-500' },
     { href: '/optic/news', label: 'Новости', icon: Newspaper, color: 'text-rose-500' },
     { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500' },

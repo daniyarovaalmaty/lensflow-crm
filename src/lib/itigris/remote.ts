@@ -126,6 +126,15 @@ export class ItigrisRemoteClient {
         });
     }
 
+    // ----- Client lookup -----
+    /** Find a client's id by phone (+optional surname/first name). Returns clientId or error text. */
+    getClient(args: { tel: string; family_name?: string; first_name?: string; noMultiple?: boolean }): Promise<any> {
+        return this.get('remoteClientCard/getClient', {
+            tel: args.tel, family_name: args.family_name, first_name: args.first_name,
+            noMultiple: args.noMultiple ? true : undefined,
+        });
+    }
+
     // ----- Discount card -----
     /** Issue a discount card to an existing (non-deleted) client. */
     registerClientCard(id: string | number, clientId: string | number, departmentId?: number | string): Promise<any> {
