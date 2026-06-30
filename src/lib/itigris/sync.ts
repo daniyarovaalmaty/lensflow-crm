@@ -17,6 +17,7 @@ import {
     ItigrisRemainItem,
     ItigrisSyncResult,
 } from './client';
+import type { ItigrisRemoteClient, RemoteProduct } from './remote';
 
 // ITIGRIS goods category → LensFlow OpticProduct.category
 const GOODS_CATEGORY_MAP: Record<ItigrisGoodsCategory, string> = {
@@ -715,6 +716,59 @@ export class ItigrisSyncService {
             result.details.push(`Ошибка загрузки остатков: ${err.message}`);
         }
 
+        return result;
+    }
+
+    /**
+     * Catalog via LEGACY RemoteAPI (remoteRemains/list) — alternative to the v2
+     * `syncProducts` that needs a store-role v2 user. Uses the RemoteAPI key.
+     * Barcode-less: rows are grouped by params; we aggregate stock by signature
+     * across pages/departments and upsert one OpticProduct per variant.
+     * NOTE: built to the documented contract; field names (amount/count) may need
+     * a tweak on first run with a live key.
+     */
+    async syncProductsLegacy(remote: ItigrisRemoteClient): Promise<ItigrisSyncResult> {
+        const result: ItigrisSyncResult = { entity: 'products', created: 0, updated: 0, errors: 0, details: [] };
+        const cats: [RemoteProduct, ItigrisGoodsCategory][] = [
+            ['glasses', 'glasses'],
+            ['lenses', 'lenses'],
+            ['sunglasses', 'sunglasses'],
+            ['contactlenses', 'contact-lenses'],
+            ['accessories', 'accessories'],
+        ];
+
+        const agg = new Map<string, { item: ItigrisRemainItem; category: ItigrisGoodsCategory; stock: number; price: number }>();
+
+        for (const [rp, cat] of cats) {
+            let catRows = 0;
+            try {
+                let page = 1; // legacy pages are 1-based
+                while (page < 200) {
+                    const rows = await remote.remainsList(rp, undefined, page);
+                    if (!rows.length) break;
+                    for (const row of rows as ItigrisRemainItem[]) {
+                        const sig = this.productSignature(cat, row);
+                        const stock = Number((row as any).amount ?? (row as any).count ?? (row as any).quantity ?? 0) || 0;
+                        const price = Number(row.price) || 0;
+                        const ex = agg.get(sig);
+                        if (ex) { ex.stock += stock; if (price > ex.price) ex.price = price; }
+                        else agg.set(sig, { item: row, category: cat, stock, price });
+                        catRows++;
+                    }
+                    page++;
+                }
+                result.details.push(`${rp}: строк ${catRows}`);
+            } catch (err: any) {
+                const s = err.response?.status;
+                result.details.push(`${rp}: ${s === 401 ? '401 — проверьте RemoteAPI-ключ' : 'ошибка ' + (s || err.message)}`);
+            }
+        }
+
+        for (const [sig, p] of agg) {
+            try { await this.upsertProduct(sig, p.category, p.item, p.stock, p.price, result); }
+            catch (err: any) { result.errors++; result.details.push(`Ошибка товара ${sig}: ${err.message}`); }
+        }
+        result.details.push(`Уникальных позиций: ${agg.size}`);
         return result;
     }
 

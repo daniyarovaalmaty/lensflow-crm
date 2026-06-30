@@ -50,6 +50,12 @@ export default function ClinicManagerItigrisPage() {
     const [testingLegacy, setTestingLegacy] = useState(false);
     const [savingLegacy, setSavingLegacy] = useState(false);
     const [legacyResult, setLegacyResult] = useState<{ ok: boolean; message: string } | null>(null);
+    // RemoteAPI (separate key — catalog + two-way cluster)
+    const [remoteKey, setRemoteKey] = useState('');
+    const [remoteConnected, setRemoteConnected] = useState(false);
+    const [testingRemote, setTestingRemote] = useState(false);
+    const [savingRemote, setSavingRemote] = useState(false);
+    const [remoteResult, setRemoteResult] = useState<{ ok: boolean; message: string } | null>(null);
 
     const loadData = useCallback(async () => {
         try {
@@ -66,6 +72,7 @@ export default function ClinicManagerItigrisPage() {
                 setStats(data.stats);
                 if (data.legacyClient) setLegacyClient(data.legacyClient);
                 setLegacyConnected(!!data.legacyConnected);
+                setRemoteConnected(!!data.remoteConnected);
             }
         } finally {
             setLoading(false);
@@ -143,6 +150,33 @@ export default function ClinicManagerItigrisPage() {
             else setLegacyResult({ ok: false, message: d.error || 'Ошибка сохранения' });
         } catch { setLegacyResult({ ok: false, message: 'Ошибка сохранения' }); }
         setSavingLegacy(false);
+    };
+
+    const handleTestRemote = async () => {
+        setTestingRemote(true); setRemoteResult(null);
+        try { setRemoteResult(await (await post({ action: 'test_remote', remoteClient: legacyClient || company, remoteKey })).json()); }
+        catch { setRemoteResult({ ok: false, message: 'Ошибка проверки' }); }
+        setTestingRemote(false);
+    };
+
+    const handleSaveRemote = async () => {
+        setSavingRemote(true);
+        try {
+            const d = await (await post({ action: 'save_remote', remoteClient: legacyClient || company, remoteKey })).json();
+            if (d.ok) { setRemoteConnected(true); setRemoteResult({ ok: true, message: d.message || 'Сохранено' }); }
+            else setRemoteResult({ ok: false, message: d.error || 'Ошибка сохранения' });
+        } catch { setRemoteResult({ ok: false, message: 'Ошибка сохранения' }); }
+        setSavingRemote(false);
+    };
+
+    const handleSyncProductsLegacy = async () => {
+        setSyncing(true); setSyncResults(null); setError(null);
+        try {
+            const data = await (await post({ action: 'sync_products_legacy' })).json();
+            if (data.ok) { setSyncResults(data.results); await loadData(); }
+            else setError(data.error || 'Ошибка синхронизации каталога (RemoteAPI)');
+        } catch { setError('Ошибка синхронизации каталога (RemoteAPI)'); }
+        setSyncing(false);
     };
 
     const entityLabels: Record<string, string> = { clients: 'Пациенты', orders: 'Заказы', prescriptions: 'Рецепты', full: 'Полная синхронизация', products: 'Товары (каталог)' };
@@ -296,6 +330,37 @@ export default function ClinicManagerItigrisPage() {
                         <button onClick={handleSaveLegacy} disabled={!legacyKey || savingLegacy} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium text-white disabled:opacity-50 transition-colors">
                             {savingLegacy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Сохранить
                         </button>
+                    </div>
+                </div>
+
+                {/* RemoteAPI (separate key — catalog + two-way cluster) */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+                    <div className="flex items-center justify-between mb-1">
+                        <h2 className="text-base font-semibold text-gray-900">RemoteAPI (каталог + двусторонние)</h2>
+                        {remoteConnected && <span className="text-xs text-emerald-600 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Подключено</span>}
+                    </div>
+                    <p className="text-sm text-gray-500 mb-4">Отдельный ключ «для интернет-магазина и мобильного приложения» (выдаёт поддержка Itigris). Открывает каталог товаров и двусторонние сценарии (запись на приём, заказы, бонусы, СМС). Это НЕ легаси-ключ выше.</p>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">RemoteAPI-ключ</label>
+                        <input type="password" value={remoteKey} onChange={e => setRemoteKey(e.target.value)} placeholder={remoteConnected ? '•••••••• (сохранён)' : 'remote api key'} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-400" />
+                    </div>
+                    {remoteResult && (
+                        <div className={`mt-4 p-3 rounded-xl flex items-center gap-2 text-sm ${remoteResult.ok ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                            {remoteResult.ok ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />} {remoteResult.message}
+                        </div>
+                    )}
+                    <div className="flex gap-3 mt-5">
+                        <button onClick={handleTestRemote} disabled={!remoteKey || testingRemote} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 disabled:opacity-50 transition-colors">
+                            {testingRemote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plug className="w-4 h-4" />} Проверить
+                        </button>
+                        <button onClick={handleSaveRemote} disabled={!remoteKey || savingRemote} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium text-white disabled:opacity-50 transition-colors">
+                            {savingRemote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Сохранить
+                        </button>
+                        {remoteConnected && (
+                            <button onClick={handleSyncProductsLegacy} disabled={syncing} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-orange-300 hover:bg-orange-50 rounded-xl text-sm font-medium text-orange-700 disabled:opacity-50 transition-colors ml-auto">
+                                {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />} Товары (RemoteAPI)
+                            </button>
+                        )}
                     </div>
                 </div>
 

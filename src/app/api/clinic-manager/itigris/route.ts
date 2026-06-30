@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
-import { ItigrisApiClient, ItigrisSyncService, ItigrisLegacyClient } from '@/lib/itigris';
+import { ItigrisApiClient, ItigrisSyncService, ItigrisLegacyClient, ItigrisRemoteClient } from '@/lib/itigris';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +18,16 @@ async function getOrgConfig(orgId: string) {
         departmentId: Number(itigris.departmentId) || 0,
         organizationId: orgId,
     };
+}
+
+/** RemoteAPI config ({client, key}) from org metadata, or null if the key isn't set. */
+async function getRemoteConfig(orgId: string): Promise<{ client: string; key: string } | null> {
+    const org = await prisma.organization.findUnique({ where: { id: orgId } });
+    const itigris = ((org as any)?.metadata || {}).itigris;
+    const client = itigris?.remoteClient || itigris?.legacyClient || itigris?.company;
+    const key = itigris?.remoteKey;
+    if (!client || !key) return null;
+    return { client, key };
 }
 
 export async function GET() {
@@ -53,6 +63,8 @@ export async function GET() {
         departmentId: itigris?.departmentId || null,
         legacyClient: itigris?.legacyClient || itigris?.company || null,
         legacyConnected: !!itigris?.legacyKey,
+        remoteClient: itigris?.remoteClient || itigris?.legacyClient || itigris?.company || null,
+        remoteConnected: !!itigris?.remoteKey,
         syncLogs,
         stats: { patientsCount, ordersCount },
     });
@@ -124,6 +136,42 @@ export async function POST(req: NextRequest) {
             } as any,
         });
         return NextResponse.json({ ok: true, message: 'Легаси-доступ сохранён' });
+    }
+
+    // ----- RemoteAPI (separate key — catalog + two-way cluster) -----
+    if (action === 'test_remote') {
+        const client = body.remoteClient || body.legacyClient || body.company;
+        const key = body.remoteKey;
+        if (!client || !key) return NextResponse.json({ ok: false, message: 'Укажите компанию и RemoteAPI-ключ' });
+        const result = await new ItigrisRemoteClient({ client, key }).test();
+        return NextResponse.json(result);
+    }
+
+    if (action === 'save_remote') {
+        const key = body.remoteKey;
+        if (!key) return NextResponse.json({ error: 'Укажите RemoteAPI-ключ' }, { status: 400 });
+        const org = await prisma.organization.findUnique({ where: { id: orgId } });
+        const existingMeta = (org as any)?.metadata || {};
+        const remoteClient = body.remoteClient || existingMeta.itigris?.legacyClient || existingMeta.itigris?.company || undefined;
+        await prisma.organization.update({
+            where: { id: orgId },
+            data: { metadata: { ...existingMeta, itigris: { ...(existingMeta.itigris || {}), remoteClient, remoteKey: key } } } as any,
+        });
+        return NextResponse.json({ ok: true, message: 'RemoteAPI-доступ сохранён' });
+    }
+
+    if (action === 'sync_products_legacy') {
+        const cfg = await getRemoteConfig(orgId);
+        if (!cfg) return NextResponse.json({ error: 'RemoteAPI-ключ не настроен' }, { status: 400 });
+        const startMs = Date.now();
+        const remote = new ItigrisRemoteClient(cfg);
+        const syncService = new ItigrisSyncService(null as any, prisma as any, orgId);
+        const r = await syncService.syncProductsLegacy(remote);
+        const durationMs = Date.now() - startMs;
+        await (prisma as any).itigrisSyncLog.create({
+            data: { organizationId: orgId, entity: 'products', created: r.created, updated: r.updated, errors: r.errors, details: [r], triggeredBy: userId || 'manual', durationMs },
+        });
+        return NextResponse.json({ ok: true, results: [r], syncedAt: new Date().toISOString(), durationMs });
     }
 
     if (action === 'sync' || action === 'sync_delta') {
