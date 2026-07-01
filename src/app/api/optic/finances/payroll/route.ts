@@ -247,6 +247,76 @@ export async function GET(req: NextRequest) {
             let salesBonus = Math.round(salesTotal * (rule.salesPercent / 100));
             let baseSal = rule.baseSalary;
             
+            const isAigerim = st.fullName?.includes('Айгерим');
+            if (isAigerim) {
+                let aigerimSalesBonus = 0;
+                let consultBonus = 0;
+
+                periodSales.forEach(sale => {
+                    if ((sale as any)._assignedDoctorId !== st.id) return;
+                    if (!sale.items || !Array.isArray(sale.items)) return;
+
+                    sale.items.forEach((item: any) => {
+                        const isNightLens = typeof item.name === 'string' && item.name.toLowerCase().includes('подбор') && item.name.toLowerCase().includes('ночн') && !item.name.toLowerCase().includes('консультация');
+                        if (isNightLens) {
+                            let itemTotal = Number(item.total || 0);
+                            let saleTotalNum = Number(sale.total || 0);
+                            let fittingAmount = Math.min(itemTotal, saleTotalNum);
+                            let itemPrice = Number(item.unitPrice || 0);
+                            let quantity = Number(item.quantity || 1);
+
+                            let isHalf = false;
+                            if (fittingAmount <= (itemPrice * 0.6) || item.name.toLowerCase().includes('1 глаз') || item.name.toLowerCase().includes('один глаз')) {
+                                isHalf = true;
+                            }
+
+                            let lensCost = (isHalf ? 25000 : 50000) * quantity;
+
+                            let isInstallment = false;
+                            if (sale.paymentMethod === 'installment12' || sale.paymentMethod === 'installment') isInstallment = true;
+                            const invoiceData = sale.invoiceData as any;
+                            if (invoiceData?.splitPayment?.installment12 || invoiceData?.splitPayment?.installment) isInstallment = true;
+                            if (invoiceData?.split?.some((sp: any) => sp.method === 'installment12' || sp.method === 'installment')) isInstallment = true;
+
+                            let installmentDeduction = isInstallment ? fittingAmount * 0.15 : 0;
+
+                            let baseAmount = fittingAmount - lensCost - installmentDeduction;
+                            if (baseAmount < 0) baseAmount = 0;
+
+                            aigerimSalesBonus += baseAmount * 0.30;
+                        }
+                    });
+                });
+
+                const aigerimPrimaryAppts = periodAppointments.filter(a => a.doctorId === st.id && a.type.includes('primary'));
+                
+                aigerimPrimaryAppts.forEach(appt => {
+                    let apptName = (appt.patientName || '').toLowerCase().trim();
+                    let match = periodSales.find(s => {
+                        const hasConsultationItem = s.items?.some((i: any) => typeof i.name === 'string' && i.name.toLowerCase().includes('консультация'));
+                        if (!hasConsultationItem) return false;
+                        
+                        let saleName = (s.customerName || s.patient?.fullName || '').toLowerCase().trim();
+                        if (!saleName) return false;
+                        const aParts = apptName.split(' ').filter(p => p.length >= 3);
+                        const sParts = saleName.split(' ').filter(p => p.length >= 3);
+                        if (aParts.length > 0 && sParts.length > 0) {
+                            return aParts.some(ap => sParts.some(sp => ap.includes(sp) || sp.includes(ap)));
+                        }
+                        return apptName.includes(saleName) || saleName.includes(apptName);
+                    });
+                    
+                    if (match) {
+                        const consultItem = match.items.find((i: any) => typeof i.name === 'string' && i.name.toLowerCase().includes('консультация'));
+                        if (consultItem) {
+                            consultBonus += Number(consultItem.total || 0) * 0.30;
+                        }
+                    }
+                });
+
+                salesBonus = Math.round(aigerimSalesBonus + consultBonus);
+            }
+            
             const isZamira = st.fullName?.includes('Замира');
             if (isZamira) {
                 const consultationSales = doctorConsultationSalesMap.get(st.id) || 0;
