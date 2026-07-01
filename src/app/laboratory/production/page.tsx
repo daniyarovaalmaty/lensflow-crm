@@ -1085,7 +1085,7 @@ export default function ProductionHubPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => (
+                                        {[{ label: 'OD', eye: od as any }, { label: 'OS', eye: os as any }].map(({ label, eye }) => (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
                                                 <td className="px-3 py-2 text-gray-700">
@@ -1655,7 +1655,7 @@ export default function ProductionHubPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) }].map(({ label, eye }) => (
+                                        {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) as any }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) as any }].map(({ label, eye }) => (
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
                                                 <td className="px-3 py-2 text-gray-700">
