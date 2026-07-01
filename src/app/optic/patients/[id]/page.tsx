@@ -887,7 +887,7 @@ export default function PatientDetailPage() {
                                     )}
                                 </button>
                             ))}
->>>>>>> origin/main
+
                         </div>
 
                         {/* MAIN CONTENT STACK */}
