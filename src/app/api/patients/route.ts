@@ -145,6 +145,31 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'ФИО и телефон обязательны' }, { status: 400 });
     }
 
+    // Deduplication check: if a patient with the exact same normalized phone AND matching name exists, return it
+    const normalizedPhone = phone.replace(/[\s\-\+\(\)]/g, '');
+    if (normalizedPhone.length >= 9) {
+        const existing = await prisma.patient.findFirst({
+            where: {
+                phone: { contains: normalizedPhone.slice(-9) },
+                OR: [
+                    { organizationId: session.user.organizationId || 'none' },
+                    { doctorId: session.user.id }
+                ]
+            }
+        });
+        
+        if (existing) {
+            // Check if name is somewhat similar (e.g. at least one word matches)
+            const nameWords = name.trim().toLowerCase().split(' ');
+            const existingName = existing.name.toLowerCase();
+            const matchesName = nameWords.some((w: string) => w.length > 2 && existingName.includes(w));
+            
+            if (matchesName || nameWords.length === 0 || name.trim().toLowerCase() === 'неизвестный пациент') {
+                return NextResponse.json(existing, { status: 200 }); // Return existing instead of duplicate
+            }
+        }
+    }
+
     // Push to MedMundus first to get their ID
     let medmundusId: number | null = null;
     try {
