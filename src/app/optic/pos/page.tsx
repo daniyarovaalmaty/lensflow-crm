@@ -150,15 +150,7 @@ export default function POSPage() {
         }
     };
 
-    const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-            setIsFullscreen(true);
-        } else {
-            document.exitFullscreen();
-            setIsFullscreen(false);
-        }
-    };
+
 
     useEffect(() => { 
         loadProducts(); 
@@ -435,7 +427,7 @@ export default function POSPage() {
                                                     Итого: {fmt(ps.total)} ₸
                                                 </div>
                                                 <div className="text-xs text-gray-500 mb-4 line-clamp-2">
-                                                    {ps.items.map((i: any) => \`\${i.name} (x\${i.quantity})\`).join(', ')}
+                                                    {ps.items.map((i: any) => `${i.name} (x${i.quantity})`).join(', ')}
                                                 </div>
                                                 <button onClick={() => {
                                                     // Map sale items to cart
