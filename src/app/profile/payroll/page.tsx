@@ -1,11 +1,16 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Banknote, Calculator, DollarSign } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
 import { payrollData } from './data';
+
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'KZT',
+        maximumFractionDigits: 0,
+    }).format(value);
+};
 
 export default function PayrollPage() {
     const { data: session } = useSession();
@@ -67,7 +72,7 @@ export default function PayrollPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="p-6 border-0 shadow-sm ring-1 ring-gray-100/50 bg-white/50 backdrop-blur-sm">
+                <div className="p-6 border-0 shadow-sm ring-1 ring-gray-100/50 bg-white/50 backdrop-blur-sm rounded-xl">
                     <div className="flex flex-col gap-2">
                         <div className="p-2 bg-blue-50 text-blue-600 rounded-xl w-fit">
                             <Calculator className="w-5 h-5" />
@@ -75,8 +80,8 @@ export default function PayrollPage() {
                         <p className="text-sm font-medium text-gray-500 mt-2">Оклад</p>
                         <p className="text-3xl font-bold text-gray-900">{formatCurrency(oklad)}</p>
                     </div>
-                </Card>
-                <Card className="p-6 border-0 shadow-sm ring-1 ring-gray-100/50 bg-white/50 backdrop-blur-sm">
+                </div>
+                <div className="p-6 border-0 shadow-sm ring-1 ring-gray-100/50 bg-white/50 backdrop-blur-sm rounded-xl">
                     <div className="flex flex-col gap-2">
                         <div className="p-2 bg-purple-50 text-purple-600 rounded-xl w-fit">
                             <Banknote className="w-5 h-5" />
@@ -84,8 +89,8 @@ export default function PayrollPage() {
                         <p className="text-sm font-medium text-gray-500 mt-2">Бонус за подборы и услуги</p>
                         <p className="text-3xl font-bold text-gray-900">{formatCurrency(fittingsBonus)}</p>
                     </div>
-                </Card>
-                <Card className="p-6 border-0 shadow-sm ring-1 ring-gray-100/50 bg-white/50 backdrop-blur-sm">
+                </div>
+                <div className="p-6 border-0 shadow-sm ring-1 ring-gray-100/50 bg-white/50 backdrop-blur-sm rounded-xl">
                     <div className="flex flex-col gap-2">
                         <div className="p-2 bg-amber-50 text-amber-600 rounded-xl w-fit">
                             <DollarSign className="w-5 h-5" />
@@ -93,11 +98,11 @@ export default function PayrollPage() {
                         <p className="text-sm font-medium text-gray-500 mt-2">Бонус за консультации</p>
                         <p className="text-3xl font-bold text-gray-900">{formatCurrency(consultationsBonus)}</p>
                     </div>
-                </Card>
+                </div>
             </div>
 
             {/* Table */}
-            <Card className="border-0 shadow-sm ring-1 ring-gray-100/50 overflow-hidden bg-white">
+            <div className="border-0 shadow-sm ring-1 ring-gray-100/50 overflow-hidden bg-white rounded-xl">
                 <div className="px-6 py-5 border-b border-gray-100/80 bg-gray-50/50">
                     <h3 className="font-medium text-gray-900">Детализация: Все услуги (Июнь)</h3>
                 </div>
@@ -125,14 +130,14 @@ export default function PayrollPage() {
                                         <div className="flex items-center justify-end gap-2">
                                             <span className="font-medium text-gray-900">{formatCurrency(row.cost)}</span>
                                             {row.isRassrochka && (
-                                                <Badge variant="secondary" className="bg-orange-100/50 text-orange-700 text-[10px] uppercase tracking-wider font-semibold">
+                                                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-orange-100/50 text-orange-700 text-[10px] uppercase tracking-wider font-semibold">
                                                     Рассрочка
-                                                </Badge>
+                                                </span>
                                             )}
                                             {!row.isRassrochka && (
-                                                <Badge variant="secondary" className="bg-emerald-100/50 text-emerald-700 text-[10px] uppercase tracking-wider font-semibold">
+                                                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-emerald-100/50 text-emerald-700 text-[10px] uppercase tracking-wider font-semibold">
                                                     Обычная
-                                                </Badge>
+                                                </span>
                                             )}
                                         </div>
                                     </td>
@@ -162,7 +167,7 @@ export default function PayrollPage() {
                         </tbody>
                     </table>
                 </div>
-            </Card>
+            </div>
         </div>
     );
 }
