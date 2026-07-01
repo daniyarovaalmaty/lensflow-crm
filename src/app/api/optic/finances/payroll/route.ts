@@ -296,12 +296,12 @@ export async function GET(req: NextRequest) {
                         const hasConsultationItem = s.items?.some((i: any) => typeof i.name === 'string' && i.name.toLowerCase().includes('консультация'));
                         if (!hasConsultationItem) return false;
                         
-                        let saleName = (s.customerName || s.patient?.fullName || '').toLowerCase().trim();
+                        let saleName = (s.customerName || (s as any).patient?.fullName || '').toLowerCase().trim();
                         if (!saleName) return false;
-                        const aParts = apptName.split(' ').filter(p => p.length >= 3);
-                        const sParts = saleName.split(' ').filter(p => p.length >= 3);
+                        const aParts = apptName.split(' ').filter((p: string) => p.length >= 3);
+                        const sParts = saleName.split(' ').filter((p: string) => p.length >= 3);
                         if (aParts.length > 0 && sParts.length > 0) {
-                            return aParts.some(ap => sParts.some(sp => ap.includes(sp) || sp.includes(ap)));
+                            return aParts.some((ap: string) => sParts.some((sp: string) => ap.includes(sp) || sp.includes(ap)));
                         }
                         return apptName.includes(saleName) || saleName.includes(apptName);
                     });

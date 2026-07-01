@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, explicitDiscountAmount, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData } = body;
+    const { items, customerName, customerPhone, discountPercent, explicitDiscountAmount, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData, doctorId } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
@@ -225,6 +225,7 @@ export async function POST(req: NextRequest) {
             customerPhone: customerPhone || null,
             patientId: patientId || null,
             leadId: finalLeadId || null,
+            doctorId: doctorId || null,
             subtotal,
             discountPercent: explicitDiscountAmount !== undefined && subtotal > 0 ? (Number(explicitDiscountAmount) / subtotal * 100) : discount,
             discountAmount,

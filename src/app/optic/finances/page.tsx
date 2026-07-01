@@ -33,6 +33,15 @@ export default function FinancesDashboard() {
     const [transactions, setTransactions] = useState<Tx[]>([]);
     const [analytics, setAnalytics] = useState({ totalIncome: 0, incomeCash: 0, incomeNonCash: 0, totalExpense: 0, netProfit: 0, totalInvestments: 0 });
 
+    const [startDate, setStartDate] = useState(() => {
+        const d = new Date();
+        return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+    });
+    const [endDate, setEndDate] = useState(() => {
+        const d = new Date();
+        return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
+    });
+
     const [accountModalOpen, setAccountModalOpen] = useState(false);
     const [txModalOpen, setTxModalOpen] = useState(false);
     const [txType, setTxType] = useState<'income' | 'expense'>('expense');
@@ -51,10 +60,14 @@ export default function FinancesDashboard() {
     const fetchData = async () => {
         setLoading(true);
         try {
+            let q = '';
+            if (startDate && endDate) {
+                q = `?start=${startDate}T00:00:00.000Z&end=${endDate}T23:59:59.999Z`;
+            }
             const [accRes, txRes, anRes] = await Promise.all([
                 fetch('/api/optic/finances/accounts'),
-                fetch('/api/optic/finances/transactions'),
-                fetch('/api/optic/finances/analytics')
+                fetch('/api/optic/finances/transactions' + q),
+                fetch('/api/optic/finances/analytics' + q)
             ]);
             if (accRes.ok) {
                 const accData = await accRes.json();
@@ -77,7 +90,7 @@ export default function FinancesDashboard() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [startDate, endDate]);
 
     const handleCreateAccount = async () => {
         if (!newAccountName) return;
@@ -122,15 +135,24 @@ export default function FinancesDashboard() {
                             </h1>
                             <p className="text-xs text-gray-500 mt-0.5">Глобальный учет компании: счета, расходы, чистая прибыль</p>
                         </div>
-                        <div className="flex gap-2">
-                            <Link href="/optic/finances/payroll"
-                                className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-sm font-semibold transition-all">
-                                <Briefcase className="w-4 h-4" /> Зарплаты (Калькулятор)
-                            </Link>
-                            <button onClick={() => setAccountModalOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm font-semibold transition-all shadow-sm">
-                                <Landmark className="w-4 h-4" /> Новый счет
-                            </button>
+                        <div className="flex flex-col sm:flex-row items-center gap-2">
+                            <div className="flex items-center gap-2">
+                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} 
+                                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+                                <span className="text-gray-500">-</span>
+                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} 
+                                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" />
+                            </div>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <Link href="/optic/finances/payroll"
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-sm font-semibold transition-all">
+                                    <Briefcase className="w-4 h-4" /> Зарплаты (Калькулятор)
+                                </Link>
+                                <button onClick={() => setAccountModalOpen(true)}
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl text-sm font-semibold transition-all shadow-sm">
+                                    <Landmark className="w-4 h-4" /> Новый счет
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

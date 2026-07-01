@@ -116,6 +116,10 @@ export default function POSPage() {
     const [customName, setCustomName] = useState('');
     const [customPrice, setCustomPrice] = useState('');
 
+    // Doctors
+    const [doctors, setDoctors] = useState<any[]>([]);
+    const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+
     useEffect(() => {
         if (!patientSearch.trim()) {
             setPatients([]);
@@ -173,7 +177,20 @@ export default function POSPage() {
         }
     };
 
-    useEffect(() => { loadProducts(); }, []);
+    useEffect(() => { 
+        loadProducts(); 
+        loadDoctors();
+    }, []);
+
+    const loadDoctors = async () => {
+        try {
+            const res = await fetch('/api/clinic-staff');
+            if (res.ok) {
+                const data = await res.json();
+                setDoctors(data);
+            }
+        } catch(e) {}
+    };
 
     const loadProducts = async () => {
         try {
@@ -329,6 +346,7 @@ export default function POSPage() {
                     invoiceData: Object.keys(invoiceData).length > 0 ? invoiceData : undefined,
                     patientId: patientId || undefined,
                     leadId: leadId || undefined,
+                    doctorId: selectedDoctorId || undefined,
                 }),
             });
             if (res.ok) {
@@ -342,6 +360,7 @@ export default function POSPage() {
                 setPrepayment('');
                 setPatientId(null);
                 setLeadId(null);
+                setSelectedDoctorId('');
                 setPatientSearch('');
                 setMixedPayments({ cash: '', kaspi: '', card: '', installment12: '', transfer: '' });
                 setShowCheckout(false);
@@ -771,6 +790,16 @@ export default function POSPage() {
                                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Телефон</label>
                                     <input type="text" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
                                         placeholder="Необязательно" className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Врач / Специалист</label>
+                                    <select value={selectedDoctorId} onChange={e => setSelectedDoctorId(e.target.value)}
+                                        className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white appearance-none cursor-pointer">
+                                        <option value="">Не выбрано</option>
+                                        {doctors.map(d => (
+                                            <option key={d.id} value={d.id}>{d.fullName}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Откуда узнали о нас?</label>

@@ -1,17 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import prisma from '@/lib/db/prisma';
+const fs = require('fs');
+const path = './src/app/api/optic/finances/accounts/route.ts';
+let content = fs.readFileSync(path, 'utf8');
 
-export const dynamic = 'force-dynamic';
-
-export async function GET(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
-    if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-
-    try {
+const replacement = `
         const accounts = await prisma.companyAccount.findMany({
             where: { organizationId: user.organizationId },
             orderBy: { createdAt: 'asc' },
@@ -53,36 +44,12 @@ export async function GET(req: NextRequest) {
         });
 
         return NextResponse.json(modifiedAccounts);
-    } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
-    }
-}
+`;
 
-export async function POST(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+content = content.replace(
+    /const accounts = await prisma\.companyAccount\.findMany\(\{[\s\S]*?return NextResponse\.json\(accounts\);/,
+    replacement.trim()
+);
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
-    if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-
-    try {
-        const body = await req.json();
-        const { name, initialBalance } = body;
-
-        if (!name) {
-            return NextResponse.json({ error: 'Name is required' }, { status: 400 });
-        }
-
-        const account = await prisma.companyAccount.create({
-            data: {
-                organizationId: user.organizationId,
-                name,
-                balance: initialBalance ? parseInt(initialBalance, 10) : 0,
-            },
-        });
-
-        return NextResponse.json(account, { status: 201 });
-    } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
-    }
-}
+fs.writeFileSync(path, content);
+console.log('Fixed accounts route');

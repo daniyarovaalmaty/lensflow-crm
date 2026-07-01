@@ -26,8 +26,10 @@ export async function POST(req: NextRequest) {
 
     const typeWebhook = body?.typeWebhook;
 
-    // Only handle incoming messages
-    if (typeWebhook !== 'incomingMessageReceived') {
+    const isIncoming = typeWebhook === 'incomingMessageReceived';
+    const isOutgoing = typeWebhook === 'outgoingMessageReceived' || typeWebhook === 'outgoingAPIMessageReceived';
+
+    if (!isIncoming && !isOutgoing) {
         return NextResponse.json({ ok: true, skipped: typeWebhook });
     }
 
@@ -97,13 +99,23 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // Save incoming message
+    // Prevent duplicates for outgoing API messages
+    const idMessage = body?.idMessage;
+    if (idMessage) {
+        const existingMsg = await prisma.chatMessage.findFirst({ where: { externalId: idMessage } });
+        if (existingMsg) {
+            return NextResponse.json({ ok: true, skipped: 'duplicate_outgoing' });
+        }
+    }
+
+    // Save message
     await prisma.chatMessage.create({
         data: {
             leadId: lead.id,
-            direction: 'incoming',
+            direction: isIncoming ? 'incoming' : 'outgoing',
             content: messageText,
             channel: 'whatsapp',
+            externalId: idMessage,
             status: 'delivered',
             sentAt: new Date(),
         },
@@ -127,6 +139,19 @@ export async function POST(req: NextRequest) {
     const botSession = await prisma.botSession.findUnique({
         where: { phone: normalizedPhone }
     });
+
+    if (isOutgoing) {
+        // If human sent a message from phone/web, auto-pause the bot
+        if (botSession?.state !== 'paused') {
+            await prisma.botSession.upsert({
+                where: { phone: normalizedPhone },
+                create: { phone: normalizedPhone, state: 'paused' },
+                update: { state: 'paused' }
+            });
+        }
+        return NextResponse.json({ ok: true, leadId: lead.id, bot: 'auto-paused due to outgoing message' });
+    }
+
     if (botSession?.state === 'paused') {
         return NextResponse.json({ ok: true, bot: 'skipped (paused by manager)' });
     }

@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
             categoryTotals[cat].value += item.total;
             categoryTotals[cat].quantity += item.quantity;
 
-            const name = item.name;
+            const name = item.name.replace(/\s*\(Со?\s*скидкой.*\)/i, '').replace(/\s*\(Скидка.*\)/i, '').trim();
             if (!itemTotals[name]) itemTotals[name] = { value: 0, quantity: 0, category: cat, salesHistory: [] };
             itemTotals[name].value += item.total;
             itemTotals[name].quantity += item.quantity;
@@ -239,7 +239,9 @@ export async function GET(req: NextRequest) {
             const nameLower = item.name.toLowerCase();
 
             // Hard lenses
-            if (nameLower.includes('подбор') || nameLower.includes('ортокератолог') || nameLower.includes('ночных линз')) {
+            if ((nameLower.includes('подбор') && !nameLower.includes('очков') && !nameLower.includes('мягк') && !nameLower.includes('мкл')) || 
+                nameLower.includes('ортокератолог') || 
+                nameLower.includes('ночных линз')) {
                 if (nameLower.includes('одной')) {
                     productsSummary.hardLenses += 1 * item.quantity;
                 } else if (nameLower.includes('подбор')) {

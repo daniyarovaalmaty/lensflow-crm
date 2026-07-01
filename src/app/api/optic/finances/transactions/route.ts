@@ -12,8 +12,29 @@ export async function GET(req: NextRequest) {
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
     try {
+        const url = new URL(req.url);
+        const start = url.searchParams.get('start');
+        const end = url.searchParams.get('end');
+
+        let dateFilter = {};
+        if (start && end) {
+            dateFilter = {
+                gte: new Date(start),
+                lte: new Date(end)
+            };
+        } else {
+            // Default: current month
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            dateFilter = { gte: firstDay, lte: lastDay };
+        }
+
         const txs = await prisma.financialTransaction.findMany({
-            where: { organizationId: user.organizationId },
+            where: { 
+                organizationId: user.organizationId,
+                date: dateFilter
+            },
             orderBy: { date: 'desc' },
             include: {
                 account: { select: { name: true } },

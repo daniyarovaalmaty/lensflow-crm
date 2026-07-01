@@ -161,6 +161,7 @@ model User {
   supportTickets SupportTicket[]
   assignedLeads  Lead[]  @relation("AssignedLeads")
   doctorLeads    Lead[]  @relation("DoctorLeads")
+  doctorSales    Sale[]  @relation("SaleDoctor")
   patients       Patient[] @relation("DoctorPatients")
   prescriptions  Prescription[] @relation("DoctorPrescriptions")
   consultations  Consultation[] @relation("DoctorConsultations")
@@ -725,6 +726,9 @@ model Sale {
 
   invoiceGenerated Boolean @default(false)
   invoiceData      Json?
+
+  doctorId        String?
+  doctor          User?    @relation("SaleDoctor", fields: [doctorId], references: [id])
 
   performedById   String?
   performedByName String?
