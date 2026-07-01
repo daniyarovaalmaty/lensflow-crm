@@ -713,10 +713,6 @@ export default function PatientDetailPage() {
                                                 <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез заболевания (Anamnesis morbi)</label>
                                                 <textarea value={editForm.anamnesisDisease || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisDisease: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
                                             </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез жизни (Anamnesis vitae)</label>
-                                                <textarea value={editForm.anamnesisLife || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisLife: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
-                                            </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 <div>
                                                     <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Аллергоанамнез</label>
@@ -749,13 +745,24 @@ export default function PatientDetailPage() {
                                             {/* Read-only Anamnesis display */}
                                             {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-3 rounded-lg border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
                                             {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-3 rounded-lg border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
-                                            {patient.anamnesisLife && <div><p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Анамнез жизни</p><p className="text-gray-800 text-sm bg-amber-50 p-3 rounded-lg border border-amber-100/50 leading-relaxed">{patient.anamnesisLife}</p></div>}
                                             
                                             <div className="grid grid-cols-2 gap-3">
-                                                {patient.allergies && <div className="bg-rose-50 p-2 rounded border border-rose-100"><p className="text-[10px] font-bold text-rose-500 uppercase mb-0.5">Аллергии</p><p className="text-sm font-medium text-gray-800">{patient.allergies}</p></div>}
-                                                {patient.heredity && <div className="bg-indigo-50 p-2 rounded border border-indigo-100"><p className="text-[10px] font-bold text-indigo-500 uppercase mb-0.5">Наследственность</p><p className="text-sm font-medium text-gray-800">{patient.heredity}</p></div>}
-                                                {patient.medications && <div className="bg-sky-50 p-2 rounded border border-sky-100"><p className="text-[10px] font-bold text-sky-500 uppercase mb-0.5">Медикаменты</p><p className="text-sm font-medium text-gray-800">{patient.medications}</p></div>}
-                                                {patient.surgeries && <div className="bg-emerald-50 p-2 rounded border border-emerald-100"><p className="text-[10px] font-bold text-emerald-600 uppercase mb-0.5">Операции</p><p className="text-sm font-medium text-gray-800">{patient.surgeries}</p></div>}
+                                                <div className="bg-rose-50 p-2 rounded border border-rose-100">
+                                                    <p className="text-[10px] font-bold text-rose-500 uppercase mb-0.5">Аллергоанамнез</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.allergies ? `отягощен/да: ${patient.allergies}` : 'не отягощен/нет'}</p>
+                                                </div>
+                                                <div className="bg-indigo-50 p-2 rounded border border-indigo-100">
+                                                    <p className="text-[10px] font-bold text-indigo-500 uppercase mb-0.5">Наследственность</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.heredity ? `отягощен/да: ${patient.heredity}` : 'не отягощен/нет'}</p>
+                                                </div>
+                                                <div className="bg-sky-50 p-2 rounded border border-sky-100">
+                                                    <p className="text-[10px] font-bold text-sky-500 uppercase mb-0.5">Прием медикаментов</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.medications ? `да: ${patient.medications}` : 'нет'}</p>
+                                                </div>
+                                                <div className="bg-emerald-50 p-2 rounded border border-emerald-100">
+                                                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-0.5">Операции</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.surgeries ? `да: ${patient.surgeries}` : 'нет'}</p>
+                                                </div>
                                             </div>
                                             
                                             {patient.lastCorrection && <div><p className="text-[10px] font-bold text-purple-500 uppercase mb-1">Последняя коррекция</p><p className="text-gray-800 text-sm bg-purple-50 p-3 rounded-lg border border-purple-100/50">{patient.lastCorrection}</p></div>}
