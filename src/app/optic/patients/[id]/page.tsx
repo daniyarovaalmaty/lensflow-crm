@@ -726,23 +726,35 @@ export default function PatientDetailPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-4 relative z-10">
+                            <div className="mt-6 space-y-4 relative z-10 text-left">
+                                {profile?.role !== 'doctor' && (
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
+                                        {isEditing ? (
+                                            <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
+                                        ) : (
+                                            <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone}</p>
+                                        )}
+                                    </div>
+                                )}
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Город / Адрес</label>
                                     {isEditing ? (
-                                        <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
+                                        <input type="text" value={editForm.address || ''} onChange={e => setEditForm((f: any) => ({ ...f, address: e.target.value }))} className="input text-sm w-full" />
                                     ) : (
-                                        <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone}</p>
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.address ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.address}</> : '—'}</p>
                                     )}
                                 </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
-                                    {isEditing ? (
-                                        <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
-                                    ) : (
-                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
-                                    )}
-                                </div>
+                                {profile?.role !== 'doctor' && (
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
+                                        {isEditing ? (
+                                            <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
+                                        ) : (
+                                            <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
+                                        )}
+                                    </div>
+                                )}
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дата рождения</label>
                                     {isEditing ? (
@@ -752,100 +764,6 @@ export default function PatientDetailPage() {
                                     )}
                                 </div>
                             </div>
-
-                            {isEditing && (
-                                <div className="mt-4 space-y-3 relative z-10 bg-gray-50 p-4 rounded-xl border border-gray-100 text-left">
-                                    <h4 className="text-xs font-bold text-gray-700 uppercase mb-2 border-b border-gray-200 pb-1">Дополнительные данные</h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">ИИН</label>
-                                            <input type="text" value={editForm.iin || ''} onChange={e => setEditForm((f: any) => ({ ...f, iin: e.target.value }))} className="input text-sm w-full h-8" placeholder="ИИН" />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Профессия</label>
-                                            <input type="text" value={editForm.profession || ''} onChange={e => setEditForm((f: any) => ({ ...f, profession: e.target.value }))} className="input text-sm w-full h-8" placeholder="Профессия" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Домашний адрес</label>
-                                        <input type="text" value={editForm.address || ''} onChange={e => setEditForm((f: any) => ({ ...f, address: e.target.value }))} className="input text-sm w-full h-8" placeholder="Адрес проживания" />
-                                    </div>
-                                </div>
-                            )}
-
-                            {(isEditing || patient.complaints || patient.anamnesisDisease || patient.anamnesisLife || patient.allergies || patient.heredity || patient.medications || patient.surgeries || patient.notes) && (
-                                <div className="mt-6 pt-6 border-t border-gray-100 relative z-10 text-left">
-                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3 block">Медицинская карта / Анамнез</label>
-                                    
-                                    {isEditing ? (
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Жалобы</label>
-                                                <textarea value={editForm.complaints || ''} onChange={e => setEditForm((f: any) => ({ ...f, complaints: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез заболевания (Anamnesis morbi)</label>
-                                                <textarea value={editForm.anamnesisDisease || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisDisease: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Аллергоанамнез</label>
-                                                    <input type="text" value={editForm.allergies || ''} onChange={e => setEditForm((f: any) => ({ ...f, allergies: e.target.value }))} className="input w-full text-sm" placeholder="Лекарственная, пищевая аллергия" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Наследственность</label>
-                                                    <input type="text" value={editForm.heredity || ''} onChange={e => setEditForm((f: any) => ({ ...f, heredity: e.target.value }))} className="input w-full text-sm" placeholder="Глаукома, СД..." />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Перенесенные операции</label>
-                                                <textarea value={editForm.surgeries || ''} onChange={e => setEditForm((f: any) => ({ ...f, surgeries: e.target.value }))} className="input w-full resize-y text-sm min-h-[40px]" rows={1} />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Постоянный прием медикаментов</label>
-                                                <input type="text" value={editForm.medications || ''} onChange={e => setEditForm((f: any) => ({ ...f, medications: e.target.value }))} className="input w-full text-sm" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Последняя коррекция</label>
-                                                <input type="text" value={editForm.lastCorrection || ''} onChange={e => setEditForm((f: any) => ({ ...f, lastCorrection: e.target.value }))} className="input w-full text-sm" placeholder="Очки, МКЛ (дата)" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Прочие заметки</label>
-                                                <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            {/* Read-only Anamnesis display */}
-                                            {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-3 rounded-lg border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
-                                            {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-3 rounded-lg border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
-                                            
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="bg-rose-50 p-2 rounded border border-rose-100">
-                                                    <p className="text-[10px] font-bold text-rose-500 uppercase mb-0.5">Аллергоанамнез</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.allergies ? `отягощен/да: ${patient.allergies}` : 'не отягощен/нет'}</p>
-                                                </div>
-                                                <div className="bg-indigo-50 p-2 rounded border border-indigo-100">
-                                                    <p className="text-[10px] font-bold text-indigo-500 uppercase mb-0.5">Наследственность</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.heredity ? `отягощен/да: ${patient.heredity}` : 'не отягощен/нет'}</p>
-                                                </div>
-                                                <div className="bg-sky-50 p-2 rounded border border-sky-100">
-                                                    <p className="text-[10px] font-bold text-sky-500 uppercase mb-0.5">Прием медикаментов</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.medications ? `да: ${patient.medications}` : 'нет'}</p>
-                                                </div>
-                                                <div className="bg-emerald-50 p-2 rounded border border-emerald-100">
-                                                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-0.5">Операции</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.surgeries ? `да: ${patient.surgeries}` : 'нет'}</p>
-                                                </div>
-                                            </div>
-                                            
-                                            {patient.lastCorrection && <div><p className="text-[10px] font-bold text-purple-500 uppercase mb-1">Последняя коррекция</p><p className="text-gray-800 text-sm bg-purple-50 p-3 rounded-lg border border-purple-100/50">{patient.lastCorrection}</p></div>}
-                                            
-                                            {patient.notes && <div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Прочие заметки</p><p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100 leading-relaxed">{patient.notes}</p></div>}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
 
                     </div>
@@ -925,6 +843,101 @@ export default function PatientDetailPage() {
                                         <p className="text-sm text-teal-700/70">Нет данных о зрении в последнем визите.</p>
                                     )}
                                 </div>
+
+                                {(isEditing || patient.complaints || patient.anamnesisDisease || patient.anamnesisLife || patient.allergies || patient.heredity || patient.medications || patient.surgeries || patient.notes || patient.iin || patient.profession) && (
+                                    <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                        <h3 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-500" /> Медицинская карта / Анамнез</h3>
+                                        
+                                        {isEditing ? (
+                                            <div className="space-y-6">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">ИИН</label>
+                                                        <input type="text" value={editForm.iin || ''} onChange={e => setEditForm((f: any) => ({ ...f, iin: e.target.value }))} className="input text-sm w-full h-10" placeholder="ИИН" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Профессия</label>
+                                                        <input type="text" value={editForm.profession || ''} onChange={e => setEditForm((f: any) => ({ ...f, profession: e.target.value }))} className="input text-sm w-full h-10" placeholder="Профессия" />
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-4 border-t border-gray-100 space-y-4">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Жалобы</label>
+                                                        <textarea value={editForm.complaints || ''} onChange={e => setEditForm((f: any) => ({ ...f, complaints: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез заболевания (Anamnesis morbi)</label>
+                                                        <textarea value={editForm.anamnesisDisease || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisDisease: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Аллергоанамнез</label>
+                                                            <input type="text" value={editForm.allergies || ''} onChange={e => setEditForm((f: any) => ({ ...f, allergies: e.target.value }))} className="input w-full text-sm h-10" placeholder="Лекарственная, пищевая аллергия" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Наследственность</label>
+                                                            <input type="text" value={editForm.heredity || ''} onChange={e => setEditForm((f: any) => ({ ...f, heredity: e.target.value }))} className="input w-full text-sm h-10" placeholder="Глаукома, СД..." />
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Перенесенные операции</label>
+                                                            <input type="text" value={editForm.surgeries || ''} onChange={e => setEditForm((f: any) => ({ ...f, surgeries: e.target.value }))} className="input w-full text-sm h-10" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Постоянный прием медикаментов</label>
+                                                            <input type="text" value={editForm.medications || ''} onChange={e => setEditForm((f: any) => ({ ...f, medications: e.target.value }))} className="input w-full text-sm h-10" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Последняя коррекция</label>
+                                                        <input type="text" value={editForm.lastCorrection || ''} onChange={e => setEditForm((f: any) => ({ ...f, lastCorrection: e.target.value }))} className="input w-full text-sm h-10" placeholder="Очки, МКЛ (дата)" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Прочие заметки</label>
+                                                        <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-6">
+                                                {(patient.iin || patient.profession) && (
+                                                    <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-100">
+                                                        {patient.iin && <div><p className="text-[10px] font-bold text-gray-400 uppercase mb-1">ИИН</p><p className="text-gray-900 text-sm font-medium">{patient.iin}</p></div>}
+                                                        {patient.profession && <div><p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Профессия</p><p className="text-gray-900 text-sm font-medium">{patient.profession}</p></div>}
+                                                    </div>
+                                                )}
+                                                
+                                                {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-4 rounded-xl border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
+                                                {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-4 rounded-xl border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
+                                                
+                                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                                    <div className="bg-rose-50 p-3 rounded-xl border border-rose-100">
+                                                        <p className="text-[10px] font-bold text-rose-500 uppercase mb-1">Аллергоанамнез</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.allergies ? `отягощен/да: ${patient.allergies}` : 'не отягощен/нет'}</p>
+                                                    </div>
+                                                    <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                                                        <p className="text-[10px] font-bold text-indigo-500 uppercase mb-1">Наследственность</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.heredity ? `отягощен/да: ${patient.heredity}` : 'не отягощен/нет'}</p>
+                                                    </div>
+                                                    <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
+                                                        <p className="text-[10px] font-bold text-sky-500 uppercase mb-1">Прием медикаментов</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.medications ? `да: ${patient.medications}` : 'нет'}</p>
+                                                    </div>
+                                                    <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                                                        <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Операции</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.surgeries ? `да: ${patient.surgeries}` : 'нет'}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                {patient.lastCorrection && <div><p className="text-[10px] font-bold text-purple-500 uppercase mb-1">Последняя коррекция</p><p className="text-gray-800 text-sm bg-purple-50 p-4 rounded-xl border border-purple-100/50">{patient.lastCorrection}</p></div>}
+                                                
+                                                {patient.notes && <div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Прочие заметки</p><p className="text-gray-700 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100 leading-relaxed">{patient.notes}</p></div>}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Prescriptions */}
