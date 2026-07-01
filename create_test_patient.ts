@@ -3,6 +3,8 @@ import prisma from './src/lib/db/prisma';
 async function main() {
     console.log('Создание тестового пациента...');
     
+    const org = await prisma.organization.findFirst();
+
     // Create the test patient
     const patient = await prisma.patient.create({
         data: {
@@ -24,6 +26,7 @@ async function main() {
             surgeries: 'Аппендэктомия в 2010 году.',
             lastCorrection: 'Очки -2.50D (2022 год).',
             notes: 'Создан скриптом для тестирования новых полей анамнеза.',
+            organizationId: org?.id,
         }
     });
 
