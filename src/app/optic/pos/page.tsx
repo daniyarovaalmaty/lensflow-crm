@@ -81,6 +81,10 @@ export default function POSPage() {
     const [mixedCard, setMixedCard] = useState('');
     const [mixedTransfer, setMixedTransfer] = useState('');
     const [saving, setSaving] = useState(false);
+    const [draftSaleId, setDraftSaleId] = useState<string | null>(null);
+
+    // Pending Sales
+    const [pendingSales, setPendingSales] = useState<any[]>([]);
 
     // Patient integration state
     const [patientId, setPatientId] = useState<string | null>(null);
@@ -146,7 +150,31 @@ export default function POSPage() {
         }
     };
 
-    useEffect(() => { loadProducts(); }, []);
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            setIsFullscreen(true);
+        } else {
+            document.exitFullscreen();
+            setIsFullscreen(false);
+        }
+    };
+
+    useEffect(() => { 
+        loadProducts(); 
+        loadPendingSales();
+    }, []);
+
+    const loadPendingSales = async () => {
+        try {
+            const res = await fetch('/api/optic/sales/pending');
+            if (res.ok) {
+                setPendingSales(await res.json());
+            }
+        } catch (e) {
+            console.error('Failed to load pending sales', e);
+        }
+    };
 
     const loadProducts = async () => {
         try {
@@ -261,6 +289,7 @@ export default function POSPage() {
                     invoiceData: Object.keys(invoiceData).length > 0 ? invoiceData : undefined,
                     patientId: patientId || undefined,
                     leadId: leadId || undefined,
+                    draftSaleId: draftSaleId || undefined,
                 }),
             });
             if (res.ok) {
@@ -277,8 +306,10 @@ export default function POSPage() {
                 setMixedCash('');
                 setMixedCard('');
                 setMixedTransfer('');
+                setDraftSaleId(null);
                 setShowCheckout(false);
                 loadProducts(); // refresh stock
+                loadPendingSales(); // refresh pending
             } else {
                 const errData = await res.json();
                 alert(`Ошибка: ${errData.error || 'Неизвестная ошибка сервера'}`);
@@ -360,15 +391,20 @@ export default function POSPage() {
                                     value={search} onChange={e => setSearch(e.target.value)}
                                     className="w-full pl-12 pr-4 py-3.5 md:py-5 border border-gray-200 rounded-2xl text-sm md:text-lg focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 bg-white placeholder-gray-400 transition-all font-medium shadow-sm" />
                             </div>
-                            <div className="flex gap-2">
-                                {[{ key: 'all', label: 'Все' }, { key: 'products', label: 'Товары' }, { key: 'services', label: 'Услуги' }].map(f => (
+                            <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+                                {[{ key: 'all', label: 'Все' }, { key: 'products', label: 'Товары' }, { key: 'services', label: 'Услуги' }, { key: 'pending', label: 'Ожидают оплаты', badge: pendingSales.length }].map(f => (
                                     <button key={f.key} onClick={() => setCategoryFilter(f.key)}
-                                        className={`flex-1 sm:flex-initial px-6 py-3.5 md:py-5 rounded-2xl text-xs md:text-base font-bold whitespace-nowrap transition-all duration-200 active:scale-[0.97] ${
+                                        className={`flex-1 sm:flex-initial px-6 py-3.5 md:py-5 rounded-2xl text-xs md:text-base font-bold whitespace-nowrap transition-all duration-200 active:scale-[0.97] relative ${
                                             categoryFilter === f.key 
                                                 ? 'bg-primary-600 text-white shadow-md shadow-primary-100' 
                                                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm'
                                         }`}>
                                         {f.label}
+                                        {f.badge ? (
+                                            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center shadow-sm">
+                                                {f.badge}
+                                            </span>
+                                        ) : null}
                                     </button>
                                 ))}
                             </div>
@@ -378,6 +414,54 @@ export default function POSPage() {
                         <div className="flex-1 overflow-y-auto pr-1">
                             {loading ? (
                                 <div className="text-center py-16"><div className="animate-spin w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full mx-auto" /></div>
+                            ) : categoryFilter === 'pending' ? (
+                                pendingSales.length === 0 ? (
+                                    <div className="text-center py-16 bg-white border border-gray-200/80 rounded-3xl p-8 shadow-sm">
+                                        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                        <p className="text-base font-bold text-gray-700">Нет неоплаченных счетов</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                                        {pendingSales.map(ps => (
+                                            <div key={ps.id} className="bg-white rounded-2xl border border-orange-200 p-4 shadow-sm relative hover:shadow-md transition-shadow">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h3 className="font-bold text-gray-900">{ps.customerName || 'Неизвестный пациент'}</h3>
+                                                        <p className="text-xs text-gray-500">{new Date(ps.createdAt).toLocaleString('ru-RU')}</p>
+                                                    </div>
+                                                    <span className="bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Ожидает оплаты</span>
+                                                </div>
+                                                <div className="text-sm font-semibold text-gray-800 my-3">
+                                                    Итого: {fmt(ps.total)} ₸
+                                                </div>
+                                                <div className="text-xs text-gray-500 mb-4 line-clamp-2">
+                                                    {ps.items.map((i: any) => \`\${i.name} (x\${i.quantity})\`).join(', ')}
+                                                </div>
+                                                <button onClick={() => {
+                                                    // Map sale items to cart
+                                                    setCart(ps.items.map((i: any) => {
+                                                        const p = products.find(prod => prod.id === i.productId);
+                                                        return {
+                                                            productId: i.productId,
+                                                            name: i.name,
+                                                            category: i.category,
+                                                            type: p ? p.type : 'product',
+                                                            unitPrice: i.unitPrice,
+                                                            quantity: i.quantity,
+                                                            maxStock: p && p.type === 'product' ? p.currentStock : 999
+                                                        };
+                                                    }));
+                                                    setCustomerName(ps.customerName || '');
+                                                    setCustomerPhone(ps.customerPhone || '');
+                                                    setPatientId(ps.patientId);
+                                                    setDraftSaleId(ps.id);
+                                                }} className="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 py-2 rounded-xl text-xs font-bold transition-colors">
+                                                    Перенести в корзину
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
                             ) : filteredProducts.length === 0 ? (
                                 <div className="text-center py-16 bg-white border border-gray-200/80 rounded-3xl p-8 shadow-sm">
                                     <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />

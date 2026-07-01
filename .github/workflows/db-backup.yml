@@ -1,0 +1,40 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Runs at 00:00, 08:00, and 16:00 UTC every day (adjust to your timezone if needed)
+    - cron: '0 0,8,16 * * *'
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+
+      - name: Dump Database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL secret is not set!"
+            exit 1
+          fi
+          supabase db dump --db-url "$DATABASE_URL" -f backup.sql
+          
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-db-backup-${{ github.run_id }}
+          path: backup.sql
+          retention-days: 90

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight
+    Activity, Clock, ChevronRight, Banknote, Search, Minus
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -164,6 +164,13 @@ export default function PatientDetailPage() {
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
 
+    // Invoice Form (Send to Cashier)
+    const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+    const [invoiceProducts, setInvoiceProducts] = useState<any[]>([]);
+    const [invoiceCart, setInvoiceCart] = useState<any[]>([]);
+    const [invoiceSearch, setInvoiceSearch] = useState('');
+    const [savingInvoice, setSavingInvoice] = useState(false);
+
     useEffect(() => {
         fetch(`/api/patients/${id}`)
             .then(r => r.json())
@@ -236,6 +243,67 @@ export default function PatientDetailPage() {
         setConsultations(prev => prev.filter(c => c.id !== cId));
     };
 
+    // Load products for invoice modal
+    const handleOpenInvoice = async () => {
+        setShowInvoiceForm(true);
+        if (invoiceProducts.length === 0) {
+            try {
+                const res = await fetch('/api/optic/products');
+                if (res.ok) setInvoiceProducts(await res.json());
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    };
+
+    const addToInvoiceCart = (p: any) => {
+        setInvoiceCart(prev => {
+            const existing = prev.find(i => i.productId === p.id);
+            if (existing) {
+                return prev.map(i => i.productId === p.id ? { ...i, quantity: i.quantity + 1 } : i);
+            }
+            return [...prev, { productId: p.id, name: p.name, unitPrice: p.retailPrice, quantity: 1 }];
+        });
+    };
+
+    const updateInvoiceCartQty = (productId: string, delta: number) => {
+        setInvoiceCart(prev => prev.map(i => {
+            if (i.productId === productId) {
+                const newQ = i.quantity + delta;
+                return newQ > 0 ? { ...i, quantity: newQ } : i;
+            }
+            return i;
+        }));
+    };
+
+    const removeInvoiceCart = (productId: string) => setInvoiceCart(prev => prev.filter(i => i.productId !== productId));
+
+    const handleSubmitInvoice = async () => {
+        if (!invoiceCart.length) return;
+        setSavingInvoice(true);
+        try {
+            const res = await fetch('/api/optic/sales/draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patientId: id,
+                    items: invoiceCart
+                }),
+            });
+            if (res.ok) {
+                alert('Счет успешно отправлен на кассу!');
+                setShowInvoiceForm(false);
+                setInvoiceCart([]);
+            } else {
+                alert('Ошибка при отправке счета');
+            }
+        } catch (e) {
+            alert('Сетевая ошибка');
+        } finally {
+            setSavingInvoice(false);
+        }
+    };
+
     const calcAge = (birthDate: string | null) => {
         if (!birthDate) return '';
         const age = Math.floor((Date.now() - new Date(birthDate).getTime()) / 31557600000);
@@ -304,9 +372,14 @@ export default function PatientDetailPage() {
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={() => setIsEditing(true)} className="btn btn-secondary btn-sm flex items-center gap-1">
-                                    <Edit2 className="w-4 h-4" /> Редактировать
-                                </button>
+                                <>
+                                    <button onClick={handleOpenInvoice} className="btn bg-orange-100 hover:bg-orange-200 text-orange-800 btn-sm flex items-center gap-1 transition-colors border-none shadow-sm">
+                                        <Banknote className="w-4 h-4" /> Выставить счет на кассу
+                                    </button>
+                                    <button onClick={() => setIsEditing(true)} className="btn btn-secondary btn-sm flex items-center gap-1">
+                                        <Edit2 className="w-4 h-4" /> Редактировать
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -675,6 +748,83 @@ export default function PatientDetailPage() {
                     )}
                 </div>
             </div>
+
+            {/* Modal for Invoice */}
+            {showInvoiceForm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowInvoiceForm(false)}>
+                    <div className="bg-white rounded-3xl max-w-4xl w-full flex overflow-hidden shadow-2xl h-[80vh]" onClick={e => e.stopPropagation()}>
+                        
+                        {/* Left side - Products */}
+                        <div className="w-1/2 md:w-2/3 border-r border-gray-100 flex flex-col bg-gray-50/50">
+                            <div className="p-4 border-b border-gray-200 bg-white">
+                                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                    <Banknote className="w-5 h-5 text-orange-500" /> Выставить счет на кассу
+                                </h3>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input type="text" placeholder="Поиск услуг или товаров..." value={invoiceSearch} onChange={e => setInvoiceSearch(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none" />
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                    {invoiceProducts.filter(p => p.isActive !== false && p.name.toLowerCase().includes(invoiceSearch.toLowerCase())).map(p => (
+                                        <div key={p.id} onClick={() => addToInvoiceCart(p)}
+                                            className="bg-white p-3 border border-gray-200 rounded-xl hover:border-orange-400 hover:shadow-md cursor-pointer transition-all active:scale-95 group">
+                                            <p className="text-sm font-bold text-gray-800 line-clamp-2 group-hover:text-orange-700 transition-colors mb-2">{p.name}</p>
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium">{p.type === 'service' ? 'Услуга' : 'Товар'}</span>
+                                                <span className="font-bold text-gray-900">{fmt(p.retailPrice)} ₸</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right side - Cart */}
+                        <div className="w-1/2 md:w-1/3 flex flex-col bg-white">
+                            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
+                                <h4 className="font-bold text-gray-900">Выбрано</h4>
+                                <button onClick={() => setShowInvoiceForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {invoiceCart.length === 0 ? (
+                                    <p className="text-sm text-gray-400 text-center py-10">Добавьте услуги из списка слева</p>
+                                ) : (
+                                    invoiceCart.map(item => (
+                                        <div key={item.productId} className="flex justify-between items-center gap-2 border-b border-gray-50 pb-3">
+                                            <div className="flex-1">
+                                                <p className="text-xs font-bold text-gray-800 leading-tight">{item.name}</p>
+                                                <p className="text-[10px] text-gray-500 mt-0.5">{fmt(item.unitPrice)} ₸</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-0.5 border border-gray-200">
+                                                    <button onClick={() => updateInvoiceCartQty(item.productId, -1)} className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded text-gray-600"><Minus className="w-3 h-3" /></button>
+                                                    <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                                                    <button onClick={() => updateInvoiceCartQty(item.productId, 1)} className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded text-gray-600"><Plus className="w-3 h-3" /></button>
+                                                </div>
+                                                <button onClick={() => removeInvoiceCart(item.productId)} className="text-red-400 hover:text-red-600 p-1"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            <div className="p-5 border-t border-gray-100 bg-gray-50 space-y-4">
+                                <div className="flex justify-between items-center text-lg font-black text-gray-900">
+                                    <span>Итого:</span>
+                                    <span className="text-orange-600">{fmt(invoiceCart.reduce((s, i) => s + (i.unitPrice * i.quantity), 0))} ₸</span>
+                                </div>
+                                <button onClick={handleSubmitInvoice} disabled={invoiceCart.length === 0 || savingInvoice}
+                                    className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl disabled:opacity-50 transition-all shadow-md active:scale-95">
+                                    {savingInvoice ? 'Отправка...' : 'Отправить на кассу'}
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
