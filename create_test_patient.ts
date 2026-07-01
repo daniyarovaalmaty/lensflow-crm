@@ -3,7 +3,7 @@ import prisma from './src/lib/db/prisma';
 async function main() {
     console.log('Создание тестового пациента...');
     
-    const org = await prisma.organization.findFirst();
+    const org = await prisma.organization.findFirst({ where: { id: 'org-demo-neweye' } }) || await prisma.organization.findFirst();
 
     // Create the test patient
     const patient = await prisma.patient.create({
