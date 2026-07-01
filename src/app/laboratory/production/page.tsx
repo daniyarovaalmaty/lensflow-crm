@@ -1080,56 +1080,6 @@ export default function ProductionHubPage() {
                                 <span className="text-xs font-semibold text-gray-700">Параметры линз</span>
                             </div>
                             <div className="overflow-x-auto">
-<<<<<<< HEAD
-                                <table className="w-full text-xs">
-                                    <thead>
-                                        <tr className="bg-gray-50 border-b border-gray-200">
-                                            <th className="text-left px-3 py-2 font-semibold text-gray-600">Глаз</th>
-                                            <th className="text-left px-3 py-2 font-semibold text-gray-600">Характеристика</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Km</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">TP</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">DIA</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">E</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">SPH</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">CYL</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">AX</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Тор.</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Пробная</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Апик. клиренс</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Фактор компр.</th>
-                                            <th className="text-center px-2 py-2 font-semibold text-gray-600">Кол-во</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {[{ label: 'OD', eye: od as any }, { label: 'OS', eye: os as any }].map(({ label, eye }) => (
-                                            <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
-                                                <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
-                                                <td className="px-3 py-2 text-gray-700">
-                                                    {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
-                                                    {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
-                                                    {(eye as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
-                                                </td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.sph ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.cyl ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.ax ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.tor ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.color ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.apical_clearance ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>
-                                                <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-=======
                                 {(() => {
                                     const localOd = (order.config as any)?.eyes?.od;
                                     const localOs = (order.config as any)?.eyes?.os;
@@ -1372,7 +1322,6 @@ export default function ProductionHubPage() {
                                         </>
                                     );
                                 })()}
->>>>>>> origin/main
                             </div>
                         </div>
 
@@ -1918,14 +1867,10 @@ export default function ProductionHubPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-<<<<<<< HEAD
-                                        {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) as any }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) as any }].map(({ label, eye }) => (
-=======
                                         {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) }].map(({ label, eye: rawEye }) => {
                                             const eye = rawEye as any;
                                             if (!eye.characteristic) return null;
                                             return (
->>>>>>> origin/main
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
                                                 <td className="px-3 py-2 text-gray-700">
