@@ -54,6 +54,8 @@ export default function DistributorDashboard() {
     const [requestReason, setRequestReason] = useState('');
     const [commentText, setCommentText] = useState('');
     const [sendingComment, setSendingComment] = useState(false);
+    const [expediteOrderId, setExpediteOrderId] = useState<string | null>(null);
+    const [isExpediting, setIsExpediting] = useState(false);
     const [tick, setTick] = useState(0);
 
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
@@ -95,6 +97,25 @@ export default function DistributorDashboard() {
                 if (labs.length > 0) setPartnerLabId(labs[0].id);
             }
         } catch {}
+    };
+
+    const handleExpediteOrder = async () => {
+        if (!expediteOrderId) return;
+        try {
+            setIsExpediting(true);
+            const res = await fetch(`/api/orders/${expediteOrderId}/urgent`, { method: 'POST' });
+            if (res.ok) {
+                setExpediteOrderId(null);
+                loadOrders();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to expedite order');
+            }
+        } catch (error) {
+            console.error('Failed to expedite order:', error);
+        } finally {
+            setIsExpediting(false);
+        }
     };
 
     // ==================== FILTERING ====================
@@ -197,47 +218,49 @@ export default function DistributorDashboard() {
     const getOrderPrice = (order: Order) => {
         const od = order.config?.eyes?.od || { qty: 0 };
         const os = order.config?.eyes?.os || { qty: 0 };
-        return order.total_price || ((Number(od.qty) || 0) + (Number(os.qty) || 0)) * PRICE_PER_LENS;
+        const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+        const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
+        return order.total_price || (odQty + osQty) * PRICE_PER_LENS;
     };
 
-    const ParamRow = ({ label, value }: { label: string; value: any }) => (
+    const renderParamRow = (label: string, value: any) => (
         <div className="flex justify-between text-xs py-1 border-b border-gray-100">
             <span className="text-gray-500">{label}</span>
             <span className="font-medium text-gray-800">{value != null && value !== '' ? String(value) : '—'}</span>
         </div>
     );
 
-    const EyeBlock = ({ label, eye }: { label: string; eye: any }) => (
+    const renderEyeBlock = (label: string, eye: any) => (
         <div>
             <h5 className="text-xs font-semibold text-gray-700 mb-1 mt-2">{label}</h5>
             <div className="bg-gray-50 rounded-lg p-3 space-y-0">
-                <ParamRow label="Характеристика" value={eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null} />
-                <ParamRow label="RGP" value={eye.isRgp ? 'Да' : 'Нет'} />
-                <ParamRow label="MyOrthoK" value={eye.myorthok ? 'Да' : 'Нет'} />
-                <ParamRow label="Km" value={eye.isRgp ? null : eye.km} />
-                <ParamRow label="TP" value={eye.tp} />
-                <ParamRow label="DIA" value={eye.dia} />
-                <ParamRow label="E" value={eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null} />
+                {renderParamRow("Характеристика", eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null)}
+                {renderParamRow("RGP", eye.isRgp ? 'Да' : 'Нет')}
+                {renderParamRow("MyOrthoK", eye.myorthok ? 'Да' : 'Нет')}
+                {renderParamRow("Km", eye.isRgp ? null : eye.km)}
+                {renderParamRow("TP", eye.tp)}
+                {renderParamRow("DIA", eye.dia)}
+                {renderParamRow("E", eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null)}
                 {(eye.sph != null || eye.cyl != null || eye.ax != null) && (
                     <>
-                        <ParamRow label="SPH" value={eye.sph} />
-                        <ParamRow label="CYL" value={eye.cyl} />
-                        <ParamRow label="AX" value={eye.ax} />
+                        {renderParamRow("SPH", eye.sph)}
+                        {renderParamRow("CYL", eye.cyl)}
+                        {renderParamRow("AX", eye.ax)}
                     </>
                 )}
-                <ParamRow label="Тор." value={eye.tor} />
-                <ParamRow label="Dk" value={eye.dk} />
-                <ParamRow label="Пробная" value={(eye.dk === '50' || eye.trial) ? 'Да' : 'Нет'} />
-                <ParamRow label="Цвет" value={eye.color || null} />
-                <ParamRow label="Апик. клиренс" value={eye.apical_clearance} />
-                <ParamRow label="Фактор компр." value={eye.compression_factor} />
-                <ParamRow label="Кол-во" value={eye.qty} />
+                {renderParamRow("Тор.", eye.tor)}
+                {renderParamRow("Dk", eye.dk)}
+                {renderParamRow("Пробная", (eye.dk === '50' || eye.trial) ? 'Да' : 'Нет')}
+                {renderParamRow("Цвет", eye.color || null)}
+                {renderParamRow("Апик. клиренс", eye.apical_clearance)}
+                {renderParamRow("Фактор компр.", eye.compression_factor)}
+                {renderParamRow("Кол-во", eye.qty)}
             </div>
         </div>
     );
 
     // ==================== KANBAN CARD ====================
-    const KanbanCard = ({ order }: { order: Order }) => {
+    const renderKanbanCard = (order: Order) => {
         const od = order.config?.eyes?.od || { km: '-', dk: '-', qty: 0 };
         const charLabel = od.characteristic
             ? CharacteristicLabels[od.characteristic as Characteristic] : '—';
@@ -247,6 +270,7 @@ export default function DistributorDashboard() {
 
         return (
             <div
+                key={order.order_id}
                 onClick={() => setSelectedOrderId(order.order_id)}
                 className="card cursor-pointer hover:shadow-md transition-all group hover:border-blue-200"
             >
@@ -358,9 +382,7 @@ export default function DistributorDashboard() {
     };
 
     // ==================== KANBAN COLUMN ====================
-    const Column = ({ title, icon: Icon, orders: colOrders, color }: {
-        title: string; icon: any; orders: Order[]; color: string;
-    }) => (
+    const renderColumn = (title: string, Icon: any, colOrders: Order[], color: string) => (
         <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[220px]">
             <div className={`card mb-3 ${color}`}>
                 <div className="flex items-center gap-2">
@@ -373,18 +395,19 @@ export default function DistributorDashboard() {
             </div>
             <div className="space-y-3">
                 {colOrders.length === 0 ? (
-                    <div className="card text-center py-8 text-gray-400">
-                        <p className="text-sm">Нет заказов</p>
+                    <div className="flex-1 flex flex-col items-center justify-center text-gray-400 py-8 opacity-50 border-2 border-dashed border-gray-200 rounded-xl m-2">
+                        <Package className="w-8 h-8 mb-2" />
+                        <span className="text-xs font-medium">Нет заказов</span>
                     </div>
                 ) : (
-                    colOrders.map(order => <KanbanCard key={order.order_id} order={order} />)
+                    colOrders.map(order => renderKanbanCard(order))
                 )}
             </div>
         </div>
     );
 
     // ==================== ORDER MODAL ====================
-    const OrderModal = () => {
+    const renderOrderModal = () => {
         if (!selectedOrder) return null;
         const order = selectedOrder;
         const od = order.config?.eyes?.od || { km: '-', dia: '-', dk: '-', qty: 0 };
@@ -403,7 +426,6 @@ export default function DistributorDashboard() {
                     onClick={e => e.stopPropagation()}
                     className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mb-[5vh] max-h-[90vh] overflow-y-auto"
                 >
-                    {/* Header */}
                     <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 rounded-t-2xl z-10">
                         <div className="flex items-center justify-between">
                             <div>
@@ -423,9 +445,7 @@ export default function DistributorDashboard() {
                         </div>
                     </div>
 
-                    {/* Body */}
                     <div className="px-4 sm:px-6 py-4 space-y-4">
-                        {/* Status + Badges */}
                         <div className="flex flex-wrap items-center gap-2">
                             <span className={`badge ${OrderStatusColors[order.status === 'rework' ? 'in_production' : order.status]}`}>
                                 {OrderStatusLabels[order.status === 'rework' ? 'in_production' : order.status]}
@@ -446,7 +466,6 @@ export default function DistributorDashboard() {
                             })()}
                         </div>
 
-                        {/* Patient & Doctor */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <h4 className="text-xs font-semibold text-gray-400 uppercase mb-1">Пациент</h4>
@@ -460,7 +479,6 @@ export default function DistributorDashboard() {
                             </div>
                         </div>
 
-                        {/* Delivery */}
                         {order.delivery_method && (
                             <div className="text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
                                 <span className="font-medium">Доставка:</span> {order.delivery_method}
@@ -473,13 +491,11 @@ export default function DistributorDashboard() {
                             </div>
                         )}
 
-                        {/* Eyes */}
-                        <div className="grid grid-cols-2 gap-4">
-                            {od.km != null && <EyeBlock label="OD (правый)" eye={od} />}
-                            {os.km != null && <EyeBlock label="OS (левый)" eye={os} />}
+                        <div className={`grid ${Number(od?.qty || 0) > 0 && Number(os?.qty || 0) > 0 ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                            {Number(od?.qty || 0) > 0 && renderEyeBlock("Правый (OD)", od)}
+                            {Number(os?.qty || 0) > 0 && renderEyeBlock("Левый (OS)", os)}
                         </div>
 
-                        {/* Price */}
                         {canSeePrices && (
                             <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                                 <span className="text-sm font-medium text-gray-600">Итого</span>
@@ -487,7 +503,6 @@ export default function DistributorDashboard() {
                             </div>
                         )}
 
-                        {/* Edit window indicator and Requests */}
                         {(() => {
                             const editable = canEditOrder(order);
                             const remainMs = editWindowRemainingMs(order);
@@ -514,11 +529,19 @@ export default function DistributorDashboard() {
                                             <Pencil className="w-4 h-4" />
                                             Доступно редактирование
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex flex-wrap items-center gap-3">
                                             {countdown && !order.is_urgent && (
                                                 <span className="text-xs text-amber-600 flex items-center gap-1">
                                                     <Clock className="w-3.5 h-3.5" /> ещё {countdown}
                                                 </span>
+                                            )}
+                                            {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setExpediteOrderId(order.order_id); }}
+                                                    className="text-xs flex items-center gap-1 text-amber-600 hover:text-amber-700 font-medium transition-colors"
+                                                >
+                                                    <Zap className="w-3.5 h-3.5" /> Ускорить
+                                                </button>
                                             )}
                                             <Link href={`/distributor/orders/${order.order_id}/edit`} onClick={(e) => { e.stopPropagation(); document.body.style.overflow = ''; }} className="text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-lg font-medium transition-colors">
                                                 Изменить
@@ -541,21 +564,30 @@ export default function DistributorDashboard() {
                                             <span className="text-xs text-red-500"><XCircle className="w-3.5 h-3.5 inline mr-1" /> Отклонено</span>
                                         )}
                                     </div>
-                                    {!hasPendingRequest && (
-                                        <div className="flex items-center gap-2">
-                                            <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_edit'); setRequestReason(''); }} className="flex-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
-                                                <Pencil className="w-3.5 h-3.5" /> Запросить ред.
+                                    <div className="flex flex-col gap-2">
+                                        {!hasPendingRequest && (
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_edit'); setRequestReason(''); }} className="flex-1 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+                                                    <Pencil className="w-3.5 h-3.5" /> Запросить ред.
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_cancel'); setRequestReason(''); }} className="flex-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
+                                                    <X className="w-3.5 h-3.5" /> Запросить отмену
+                                                </button>
+                                            </div>
+                                        )}
+                                        {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setExpediteOrderId(order.order_id); }}
+                                                className="w-full text-xs text-amber-600 bg-amber-50 hover:bg-amber-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1 mt-1 transition-colors border border-amber-200/50"
+                                            >
+                                                <Zap className="w-3.5 h-3.5" /> Ускорить заказ
                                             </button>
-                                            <button onClick={(e) => { e.stopPropagation(); setShowRequestModal(order.order_id); setRequestType('request_cancel'); setRequestReason(''); }} className="flex-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg font-medium flex items-center justify-center gap-1">
-                                                <X className="w-3.5 h-3.5" /> Запросить отмену
-                                            </button>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             );
                         })()}
 
-                        {/* Request modal (inside order modal) */}
                         {showRequestModal === order.order_id && (
                             <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3" onClick={e => e.stopPropagation()}>
                                 <p className="text-sm font-medium text-amber-800">
@@ -597,7 +629,6 @@ export default function DistributorDashboard() {
                             </div>
                         )}
 
-                        {/* Comments Section */}
                         <div className="bg-gray-50 rounded-xl p-4 mt-4">
                             <h4 className="text-xs font-semibold text-gray-400 uppercase mb-3 flex items-center gap-1.5">
                                 <MessageCircle className="w-3.5 h-3.5" /> Комментарии
@@ -692,9 +723,7 @@ export default function DistributorDashboard() {
                             </div>
                         </div>
 
-                        {/* Actions */}
                         <div className="flex gap-2 pt-2">
-                            {/* Self-fulfilled actions */}
                             {isSelfFulfilled(order) && order.status === 'in_production' && (
                                 <button onClick={() => { updateStatus(order.order_id, 'ready'); setSelectedOrderId(null); }}
                                     className="flex-1 btn bg-green-600 hover:bg-green-700 text-white text-sm py-2.5 rounded-xl font-medium">
@@ -714,7 +743,6 @@ export default function DistributorDashboard() {
                                 </button>
                             )}
 
-                            {/* Lab order: confirm delivery */}
                             {isLabOrder(order) && order.status === 'out_for_delivery' && (
                                 <button onClick={() => { updateStatus(order.order_id, 'delivered'); setSelectedOrderId(null); }}
                                     className="flex-1 btn bg-teal-600 hover:bg-teal-700 text-white text-sm py-2.5 rounded-xl font-medium">
@@ -738,7 +766,6 @@ export default function DistributorDashboard() {
     // ==================== RENDER ====================
     return (
         <div className="min-h-screen bg-surface">
-            {/* Page Header */}
             <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -760,7 +787,6 @@ export default function DistributorDashboard() {
                 </div>
             </div>
 
-            {/* Stats */}
             {perms.canViewStats && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
@@ -780,9 +806,7 @@ export default function DistributorDashboard() {
                     </div>
                 )}
 
-            {/* Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-                {/* Search + Clinic filter */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
                     <div className="flex gap-2 flex-1 sm:max-w-md">
                         <div className="relative flex-1">
@@ -809,7 +833,6 @@ export default function DistributorDashboard() {
                     </div>
                 </div>
 
-                {/* ==================== KANBAN ==================== */}
                 {(
                     isLoading ? (
                         <div className="grid grid-cols-5 gap-4">
@@ -819,19 +842,63 @@ export default function DistributorDashboard() {
                         </div>
                     ) : (
                         <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory sm:snap-none">
-                            <Column title="Новые" icon={Clock} orders={ordersByStatus.new} color="bg-blue-50 text-blue-700" />
-                            <Column title="В производстве" icon={TruckIcon} orders={ordersByStatus.in_production} color="bg-yellow-50 text-yellow-700" />
-                            <Column title="Готовы" icon={CheckCircle} orders={ordersByStatus.ready} color="bg-green-50 text-green-700" />
-                            <Column title="Отгружены" icon={Truck} orders={ordersByStatus.shipped} color="bg-purple-50 text-purple-700" />
-                            <Column title="Доставлены" icon={Package} orders={ordersByStatus.delivered} color="bg-teal-50 text-teal-700" />
+                            {renderColumn("Новые", Clock, ordersByStatus.new, "bg-blue-50 text-blue-700")}
+                            {renderColumn("В производстве", TruckIcon, ordersByStatus.in_production, "bg-yellow-50 text-yellow-700")}
+                            {renderColumn("Готовы", CheckCircle, ordersByStatus.ready, "bg-green-50 text-green-700")}
+                            {renderColumn("Отгружены", Truck, ordersByStatus.shipped, "bg-purple-50 text-purple-700")}
+                            {renderColumn("Доставлены", Package, ordersByStatus.delivered, "bg-teal-50 text-teal-700")}
                         </div>
                     )
                 )}
             </div>
 
-            {/* Order Modal */}
             <AnimatePresence>
-                {selectedOrderId && <OrderModal />}
+                {selectedOrderId && selectedOrder && renderOrderModal()}
+            </AnimatePresence>
+
+            {/* Expedite Order Modal */}
+            <AnimatePresence>
+                {expediteOrderId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        onClick={() => setExpediteOrderId(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                                <Zap className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Ускорить заказ {expediteOrderId}?</h3>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Стоимость заказа будет увеличена согласно наценке за срочность (по умолчанию +25%). Время на редактирование будет завершено.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setExpediteOrderId(null)}
+                                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+                                    disabled={isExpediting}
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={handleExpediteOrder}
+                                    className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center"
+                                    disabled={isExpediting}
+                                >
+                                    {isExpediting ? <span className="animate-pulse">...</span> : 'Подтвердить'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
             </AnimatePresence>
         </div>
     );

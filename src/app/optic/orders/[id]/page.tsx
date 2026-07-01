@@ -198,8 +198,8 @@ export default function OrderViewPage() {
                             )}
                             {(od || os) ? (
                                 <div className="space-y-4">
-                                    {od && <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={od} qty={Number(od.qty || 1)} />}
-                                    {os && <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={os} qty={Number(os.qty || 1)} />}
+                                    {od?.characteristic && (od.qty != null ? Number(od.qty) : 1) > 0 && <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={od} qty={od.qty != null ? Number(od.qty) : 1} />}
+                                    {os?.characteristic && (os.qty != null ? Number(os.qty) : 1) > 0 && <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={os} qty={os.qty != null ? Number(os.qty) : 1} />}
                                 </div>
                             ) : (
                                 <p className="text-sm text-gray-400 italic">Параметры не указаны</p>

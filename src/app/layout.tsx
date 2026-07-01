@@ -51,14 +51,31 @@ export default function RootLayout({
                 <SessionProvider>
                     {children}
                 </SessionProvider>
-                <Script id="sw-register" strategy="afterInteractive">
+                <Script id="sw-cleanup" strategy="beforeInteractive">
                     {`
+                        // Auto-heal: a previous deploy registered a service worker that
+                        // intercepted POST requests and broke API calls (orders/sales).
+                        // Unregister it, clear its caches, and reload once so the current
+                        // page is no longer controlled by it.
                         if ('serviceWorker' in navigator) {
-                            window.addEventListener('load', () => {
-                                navigator.serviceWorker.register('/sw.js')
-                                    .then(reg => console.log('SW registered:', reg.scope))
-                                    .catch(err => console.log('SW registration failed:', err));
-                            });
+                            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                                if (!regs.length) return;
+                                Promise.all(regs.map(function (r) { return r.unregister(); }))
+                                    .then(function () {
+                                        if (window.caches && caches.keys) {
+                                            return caches.keys().then(function (keys) {
+                                                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+                                            });
+                                        }
+                                    })
+                                    .then(function () {
+                                        if (navigator.serviceWorker.controller && !sessionStorage.getItem('sw-healed')) {
+                                            sessionStorage.setItem('sw-healed', '1');
+                                            location.reload();
+                                        }
+                                    })
+                                    .catch(function () {});
+                            }).catch(function () {});
                         }
                     `}
                 </Script>

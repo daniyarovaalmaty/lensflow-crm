@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -20,6 +20,7 @@ export default function OpticAnalyticsPage() {
     const [period, setPeriod] = useState('30days');
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
     const loadData = async () => {
         setLoading(true);
@@ -65,6 +66,7 @@ export default function OpticAnalyticsPage() {
     const funnel = data?.crmFunnel || {};
     const categories = data?.categoriesBreakdown || [];
     const topPatients = data?.top10Patients || [];
+    const topItems = data?.topSellingItems || [];
     const dynamics = data?.dynamics || [];
 
     // Calculate funnel progression levels for visualization
@@ -268,7 +270,7 @@ export default function OpticAnalyticsPage() {
                                         return (
                                             <div key={i} className="space-y-1.5 text-gray-700">
                                                 <div className="flex justify-between text-xs sm:text-sm font-bold">
-                                                    <span>{cat.name}</span>
+                                                    <span>{cat.name} <span className="text-gray-400 font-medium text-xs ml-1">({cat.quantity || 0} шт.)</span></span>
                                                     <span>{fmt(cat.value)} ₸ ({percentage}%)</span>
                                                 </div>
                                                 <div className="w-full bg-gray-100 rounded-full h-2.5 shadow-inner">
@@ -341,6 +343,155 @@ export default function OpticAnalyticsPage() {
                     </div>
                 </div>
 
+                {/* Products Summary block */}
+                {data?.productsSummary && (
+                    <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm mb-6">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Activity className="w-5 h-5 text-indigo-500" />
+                            <h2 className="text-sm sm:text-base font-extrabold text-gray-800 uppercase tracking-tight">Сводка по проданным товарам</h2>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                            <div className="bg-blue-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">ОК-линзы (жесткие)</div>
+                                    <div className="text-xl font-black text-blue-700">
+                                        {data.productsSummary.hardLenses} шт.
+                                    </div>
+                                    <div className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                        Клиентов (примерно): {Math.floor(data.productsSummary.hardLenses / 2)} чел.
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-blue-100/50 text-sm font-black text-blue-800">
+                                    {fmt(data.productsSummary.hardLensesRevenue)} ₸
+                                </div>
+                            </div>
+                            <div className="bg-green-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">МКЛ (мягкие линзы)</div>
+                                    <div className="text-xl font-black text-green-700">{data.productsSummary.softLenses} шт.</div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-green-100/50 text-sm font-black text-green-800">
+                                    {fmt(data.productsSummary.softLensesRevenue)} ₸
+                                </div>
+                            </div>
+                            <div className="bg-orange-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">Оправы (С/З и обычные)</div>
+                                    <div className="text-xl font-black text-orange-700">
+                                        {data.productsSummary.frames + data.productsSummary.sunGlasses} шт.
+                                        <span className="block text-[10px] text-gray-400 font-medium mt-1">Солнце: {data.productsSummary.sunGlasses} | Обычные: {data.productsSummary.frames}</span>
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-orange-100/50 text-sm font-black text-orange-800">
+                                    {fmt(data.productsSummary.framesRevenue + data.productsSummary.sunGlassesRevenue)} ₸
+                                </div>
+                            </div>
+                            <div className="bg-purple-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">Растворы</div>
+                                    <div className="text-xl font-black text-purple-700">{data.productsSummary.solutions} шт.</div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-purple-100/50 text-sm font-black text-purple-800">
+                                    {fmt(data.productsSummary.solutionsRevenue)} ₸
+                                </div>
+                            </div>
+                            <div className="bg-rose-50/50 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-500 mb-1">Консультации</div>
+                                    <div className="text-xl font-black text-rose-700">{data.productsSummary.consultations} шт.</div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-rose-100/50 text-sm font-black text-rose-800">
+                                    {fmt(data.productsSummary.consultationsRevenue)} ₸
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Top Selling Items block */}
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                    <div className="flex items-center gap-2 mb-6">
+                        <ShoppingBag className="w-5 h-5 text-fuchsia-500" />
+                        <h2 className="text-sm sm:text-base font-extrabold text-gray-800 uppercase tracking-tight">Позиции по продажам (Топ-15)</h2>
+                    </div>
+
+                    {topItems.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400 text-sm font-medium">Нет данных о продажах</div>
+                    ) : (
+                        <div className="overflow-x-auto -mx-6 sm:mx-0">
+                            <table className="w-full text-left text-xs sm:text-sm">
+                                <thead className="bg-gray-50/80 text-gray-400 font-extrabold text-[10px] uppercase tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-3">Наименование</th>
+                                        <th className="px-4 py-3">Категория</th>
+                                        <th className="px-4 py-3 text-center">Продано</th>
+                                        <th className="px-6 py-3 text-right">Выручка</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {topItems.map((item: any, i: number) => (
+                                        <React.Fragment key={i}>
+                                            <tr 
+                                                className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                                onClick={() => setExpandedItem(expandedItem === item.name ? null : item.name)}
+                                            >
+                                                <td className="px-6 py-3.5 font-extrabold text-gray-800">
+                                                    {item.name}
+                                                </td>
+                                                <td className="px-4 py-3.5 text-gray-500 font-medium">
+                                                    {item.category}
+                                                </td>
+                                                <td className="px-4 py-3.5 text-center font-bold text-gray-600">
+                                                    {item.quantity} шт.
+                                                </td>
+                                                <td className="px-6 py-3.5 text-right font-black text-indigo-700">
+                                                    {fmt(item.value)} ₸
+                                                </td>
+                                            </tr>
+                                            {expandedItem === item.name && item.salesHistory && item.salesHistory.length > 0 && (
+                                                <tr>
+                                                    <td colSpan={4} className="px-6 py-4 bg-gray-50/50">
+                                                        <div className="space-y-3">
+                                                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">История продаж позиции</div>
+                                                            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                                                                <table className="w-full text-left text-xs">
+                                                                    <thead className="bg-gray-50 text-gray-400 font-semibold uppercase">
+                                                                        <tr>
+                                                                            <th className="px-4 py-2">Дата</th>
+                                                                            <th className="px-4 py-2">№ Чека</th>
+                                                                            <th className="px-4 py-2">Покупатель</th>
+                                                                            <th className="px-4 py-2 text-center">Кол-во</th>
+                                                                            <th className="px-4 py-2 text-right">Сумма</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody className="divide-y divide-gray-50">
+                                                                        {item.salesHistory.map((sh: any, shi: number) => (
+                                                                            <tr key={shi} className="hover:bg-gray-50">
+                                                                                <td className="px-4 py-2 text-gray-500">{new Date(sh.date).toLocaleDateString('ru-RU')}</td>
+                                                                                <td className="px-4 py-2 font-medium text-gray-700">{sh.saleNumber}</td>
+                                                                                <td className="px-4 py-2 text-gray-700">
+                                                                                    {sh.customerName || 'Без имени'}
+                                                                                    {sh.customerPhone && <div className="text-[10px] text-gray-400">{sh.customerPhone}</div>}
+                                                                                </td>
+                                                                                <td className="px-4 py-2 text-center text-gray-600">{sh.quantity}</td>
+                                                                                <td className="px-4 py-2 text-right font-bold text-gray-800">{fmt(sh.total)} ₸</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
                 {/* Sales Dynamics Chart Representation */}
                 <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
                     <div className="flex items-center gap-2 mb-6">
@@ -358,15 +509,15 @@ export default function OpticAnalyticsPage() {
                                     const maxRev = Math.max(...dynamics.map((x: any) => x.revenue), 1);
                                     const percentHeight = Math.round((d.revenue / maxRev) * 100);
                                     return (
-                                        <div key={idx} className="flex-1 flex flex-col items-center min-w-[20px] group cursor-pointer">
-                                            <div className="w-full bg-violet-100 hover:bg-violet-600 rounded-lg relative transition-all duration-300" style={{ height: `${Math.max(percentHeight, 4)}%` }}>
+                                        <div key={idx} className="flex-1 flex flex-col items-center justify-end min-w-[20px] h-full group cursor-pointer">
+                                            <div className="w-full bg-violet-500 hover:bg-violet-600 rounded-lg relative transition-all duration-300" style={{ height: `${Math.max(percentHeight, 4)}%` }}>
                                                 {d.revenue > 0 && (
                                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-gray-900 text-white text-[9px] font-black rounded-lg px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-md z-30">
                                                         {fmt(d.revenue)} ₸
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className="text-[9px] font-bold text-gray-400 mt-2 rotate-45 sm:rotate-0 block">{d.date}</span>
+                                            <span className="text-[9px] font-bold text-gray-400 mt-2 rotate-45 sm:rotate-0 block w-full text-center">{d.date}</span>
                                         </div>
                                     );
                                 })}

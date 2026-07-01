@@ -18,7 +18,7 @@ interface Patient {
     gender: string | null;
     medmundusId: number | null;
     createdAt: string;
-    _count: { orders: number; prescriptions: number };
+    _count: { orders: number; prescriptions: number; consultations: number };
     prescriptions: Array<{
         odSph: number | null; odCyl: number | null;
         osSph: number | null; osCyl: number | null;
@@ -52,7 +52,10 @@ export default function PatientsPage() {
 
     const [patients, setPatients] = useState<Patient[]>([]);
     const [total, setTotal] = useState(0);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [q, setQ] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -70,34 +73,55 @@ export default function PatientsPage() {
             const data = await res.json();
             setDedupMsg(data.message || 'Готово');
             setTimeout(() => setDedupMsg(''), 5000);
-            load('', false); // reload list
+            load('', 1, false); // reload list
         } finally {
             setIsSyncing(false);
         }
     };
 
-    const load = useCallback(async (query = '', noSync = false) => {
-        if (!noSync) setIsSyncing(true);
-        setIsLoading(true);
+    const load = useCallback(async (query = '', pageNum = 1, noSync = false) => {
+        if (pageNum === 1) {
+            setIsLoading(true);
+            if (!noSync) setIsSyncing(true);
+        } else {
+            setIsLoadingMore(true);
+        }
+        
         try {
-            const params = new URLSearchParams({ q: query });
-            if (noSync) params.set('noSync', '1');
+            const params = new URLSearchParams({ q: query, page: pageNum.toString() });
+            if (noSync || pageNum > 1) params.set('noSync', '1');
+            
             const res = await fetch(`/api/patients?${params}`);
             const data = await res.json();
-            setPatients(data.patients || []);
+            
+            if (pageNum === 1) {
+                setPatients(data.patients || []);
+            } else {
+                setPatients(prev => [...prev, ...(data.patients || [])]);
+            }
+            
             setTotal(data.total || 0);
+            setPage(data.page || pageNum);
+            setHasMore(data.page < data.pages);
         } finally {
             setIsLoading(false);
+            setIsLoadingMore(false);
             setIsSyncing(false);
         }
     }, []);
 
-    useEffect(() => { load('', false); }, [load]);
+    useEffect(() => { load('', 1, false); }, [load]);
 
     const handleSearch = (val: string) => {
         setQ(val);
         clearTimeout(searchTimer.current);
-        searchTimer.current = setTimeout(() => load(val, true), 400);
+        searchTimer.current = setTimeout(() => load(val, 1, true), 400);
+    };
+
+    const handleLoadMore = () => {
+        if (!isLoadingMore && hasMore) {
+            load(q, page + 1, true);
+        }
     };
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -167,7 +191,7 @@ export default function PatientsPage() {
                             <span className="hidden sm:inline">Дедубликация</span>
                         </button>
                         <button
-                            onClick={() => load(q, false)}
+                            onClick={() => load(q, 1, false)}
                             title="Синхронизировать с MedMundus"
                             className="p-2 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
                         >
@@ -253,6 +277,7 @@ export default function PatientsPage() {
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-gray-500">
                                             {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
+                                            <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.consultations} прием.</span>
                                             <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.orders} заказ.</span>
                                             <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{p._count.prescriptions} рецепт.</span>
                                         </div>
@@ -268,6 +293,23 @@ export default function PatientsPage() {
                                 </Link>
                             );
                         })}
+                        
+                        {hasMore && (
+                            <div className="pt-4 pb-2 flex justify-center">
+                                <button
+                                    onClick={handleLoadMore}
+                                    disabled={isLoadingMore}
+                                    className="btn btn-secondary w-full sm:w-auto px-8"
+                                >
+                                    {isLoadingMore ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            Загрузка...
+                                        </>
+                                    ) : 'Показать еще'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

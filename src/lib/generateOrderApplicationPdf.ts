@@ -34,8 +34,8 @@ export function generateOrderApplicationPdf(order: OrderData): void {
 
     const od = order.config?.eyes?.od || {};
     const os = order.config?.eyes?.os || {};
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
 
     // === HEADER ===
     doc.setFontSize(18);
@@ -97,27 +97,27 @@ export function generateOrderApplicationPdf(order: OrderData): void {
     const lensHead = ['Глаз', 'Наименование (1С)', 'Km', 'Tp', 'DIA', 'e', 'Dk', 'Кол-во'];
     const lensBody: string[][] = [];
 
-    if (odQty > 0) {
+    if (od.characteristic && odQty > 0) {
         lensBody.push([
             'OD',
             order.document_name_od || `${od.characteristic || ''} DK ${od.dk || ''}`.trim(),
             String(od.km ?? '—'),
             String(od.tp ?? '—'),
             String(od.dia ?? '—'),
-            od.e1 != null ? String(od.e1) : '—',
+            od.e1 != null ? (od.e2 != null ? `${od.e1}/${od.e2}` : String(od.e1)) : '—',
             String(od.dk ?? '—'),
             String(odQty),
         ]);
     }
 
-    if (osQty > 0) {
+    if (os.characteristic && osQty > 0) {
         lensBody.push([
             'OS',
             order.document_name_os || `${os.characteristic || ''} DK ${os.dk || ''}`.trim(),
             String(os.km ?? '—'),
             String(os.tp ?? '—'),
             String(os.dia ?? '—'),
-            os.e1 != null ? String(os.e1) : '—',
+            os.e1 != null ? (os.e2 != null ? `${os.e1}/${os.e2}` : String(os.e1)) : '—',
             String(os.dk ?? '—'),
             String(osQty),
         ]);

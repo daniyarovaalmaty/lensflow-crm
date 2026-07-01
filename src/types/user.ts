@@ -409,10 +409,10 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewOrders: true,
     },
     sales_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
-    dist_head: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
-    dist_admin: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
-    dist_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
-    dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: true },
+    dist_head: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true },
+    dist_admin: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true },
+    dist_manager: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: false, canViewOrders: true },
+    dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true },
 };
 
 export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {

@@ -41,6 +41,7 @@ export default function QuickNav() {
     const { data: session } = useSession();
     const subRole = (session?.user as any)?.subRole;
     const orgType = (session?.user as any)?.orgType;
+    const role = (session?.user as any)?.role;
     const orgName = (session?.user as any)?.organizationName || '';
     const userName = (session?.user as any)?.name || '';
     const isManager = subRole === 'optic_manager';
@@ -67,6 +68,8 @@ export default function QuickNav() {
         if (saved) setSelectedBranch(saved);
     }, []);
 
+    if (role === 'distributor') return null;
+
     const handleBranchSelect = (branchId: string) => {
         setSelectedBranch(branchId);
         localStorage.setItem('lf_selected_branch', branchId);
@@ -83,9 +86,9 @@ export default function QuickNav() {
     return (
         <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                     {/* Left: logo for procurement + nav links */}
-                    <div className="flex items-center gap-3 overflow-x-auto py-2 scrollbar-hide -mx-1">
+                    <div className="flex-1 min-w-0 flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-hide">
                         {isProcurement && (
                             <div className="flex items-center gap-2 mr-3 flex-shrink-0">
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
@@ -104,7 +107,7 @@ export default function QuickNav() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                                         isActive
                                             ? 'bg-primary-50 text-primary-700 font-semibold'
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'

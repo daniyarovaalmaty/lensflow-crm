@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
-import { handleWhatsAppBot } from '@/lib/whatsapp-bot';
 
 const WEBHOOK_SECRET = process.env.WHATSAPP_WEBHOOK_SECRET || '';
 
@@ -27,8 +26,10 @@ export async function POST(req: NextRequest) {
 
     const typeWebhook = body?.typeWebhook;
 
-    // Only handle incoming messages
-    if (typeWebhook !== 'incomingMessageReceived') {
+    const isIncoming = typeWebhook === 'incomingMessageReceived';
+    const isOutgoing = typeWebhook === 'outgoingMessageReceived' || typeWebhook === 'outgoingAPIMessageReceived';
+
+    if (!isIncoming && !isOutgoing) {
         return NextResponse.json({ ok: true, skipped: typeWebhook });
     }
 
@@ -98,13 +99,23 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // Save incoming message
+    // Prevent duplicates for outgoing API messages
+    const idMessage = body?.idMessage;
+    if (idMessage) {
+        const existingMsg = await prisma.chatMessage.findFirst({ where: { externalId: idMessage } });
+        if (existingMsg) {
+            return NextResponse.json({ ok: true, skipped: 'duplicate_outgoing' });
+        }
+    }
+
+    // Save message
     await prisma.chatMessage.create({
         data: {
             leadId: lead.id,
-            direction: 'incoming',
+            direction: isIncoming ? 'incoming' : 'outgoing',
             content: messageText,
             channel: 'whatsapp',
+            externalId: idMessage,
             status: 'delivered',
             sentAt: new Date(),
         },
@@ -128,6 +139,19 @@ export async function POST(req: NextRequest) {
     const botSession = await prisma.botSession.findUnique({
         where: { phone: normalizedPhone }
     });
+
+    if (isOutgoing) {
+        // If human sent a message from phone/web, auto-pause the bot
+        if (botSession?.state !== 'paused') {
+            await prisma.botSession.upsert({
+                where: { phone: normalizedPhone },
+                create: { phone: normalizedPhone, state: 'paused' },
+                update: { state: 'paused' }
+            });
+        }
+        return NextResponse.json({ ok: true, leadId: lead.id, bot: 'auto-paused due to outgoing message' });
+    }
+
     if (botSession?.state === 'paused') {
         return NextResponse.json({ ok: true, bot: 'skipped (paused by manager)' });
     }
@@ -135,7 +159,9 @@ export async function POST(req: NextRequest) {
     // Run AI bot asynchronously (don't block webhook response)
     // Vercel has 30s timeout so we run it synchronously but catch errors
     try {
-        await handleWhatsAppBot(normalizedPhone, messageText);
+        // TEMPORARY GLOBAL BOT DISABLE (per user request)
+        // await handleWhatsAppBot(normalizedPhone, messageText);
+        console.log('[WhatsApp Bot] Disabled globally, skipped message for', normalizedPhone);
     } catch (err: any) {
         console.error('[WhatsApp Bot Error]', err?.message);
         // Bot failed silently — message was still saved

@@ -32,12 +32,20 @@ model Organization {
   bankName         String?  // Название банка
   bik              String?  // БИК банка
   iban             String?  // IBAN / расчётный счёт
+  bankName2        String?  // Название банка 2
+  bik2             String?  // БИК банка 2
+  iban2            String?  // IBAN / расчётный счёт 2
+  bankName3        String?  // Название банка 3
+  bik3             String?  // БИК банка 3
+  iban3            String?  // IBAN / расчётный счёт 3
   directorName     String?  // ФИО руководителя
+  registrationDate String?  // Дата регистрации
   contactPerson    String?  // Контактное лицо
   contactPhone     String?  // Телефон контактного лица
   discountPercent  Float    @default(0)  // Персональная скидка (%), по умолчанию 0%
   logo             String?  @db.Text     // URL логотипа организации
   metadata         Json?    // Integrations config (ITIGRIS, etc.)
+  allowedPartnerIds String[] @default([]) // Массив ID лабораторий, доступных этому филиалу
 
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())
@@ -73,6 +81,19 @@ model Organization {
 
   // Lab orders (orders forwarded to this lab by a distributor)
   labOrders Order[] @relation("LabOrders")
+
+  // Contracts
+  providedContracts Contract[] @relation("ContractProvider")
+  clientContracts   Contract[] @relation("ContractClient")
+
+  marketingCampaigns MarketingCampaign[]
+  appointments       Appointment[]
+
+  // Finances
+  companyAccounts        CompanyAccount[]
+  financialTransactions  FinancialTransaction[]
+  payrollRules           PayrollRule[]
+  payrollPayouts         PayrollPayout[]
 
   @@map("organizations")
 }
@@ -140,14 +161,22 @@ model User {
   supportTickets SupportTicket[]
   assignedLeads  Lead[]  @relation("AssignedLeads")
   doctorLeads    Lead[]  @relation("DoctorLeads")
+  doctorSales    Sale[]  @relation("SaleDoctor")
   patients       Patient[] @relation("DoctorPatients")
   prescriptions  Prescription[] @relation("DoctorPrescriptions")
   consultations  Consultation[] @relation("DoctorConsultations")
+  appointments   Appointment[]  @relation("DoctorAppointments")
 
   openedShifts      CashShift[]       @relation("OpenedShifts")
   closedShifts      CashShift[]       @relation("ClosedShifts")
   cashTransactions  CashTransaction[] @relation("CreatedTransactions")
   branches          UserBranch[]
+
+  // Finances
+  payrollRules           PayrollRule[]
+  payrollPayouts         PayrollPayout[]
+  financialTransactionsCreated FinancialTransaction[] @relation("FinancialTransactionsCreated")
+  financialTransactionsLinked  FinancialTransaction[] @relation("FinancialTransactionsLinked")
 
   @@map("users")
 }
@@ -207,6 +236,7 @@ model Patient {
   birthDate      DateTime?
   gender         String?   // male | female
   notes          String?   @db.Text
+  attachments    Json?     // [{ name, url, type, size, uploadedAt }]
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   doctorId       String?
@@ -216,6 +246,20 @@ model Patient {
   externalId     String?  // e.g. "itigris:12345"
   externalSource String?  // e.g. "itigris"
 
+  // General Medical / Anamnesis
+  iin              String?
+  address          String?
+  profession       String?
+  complaints       String?   @db.Text
+  anamnesisDisease String?   @db.Text
+  anamnesisLife    String?   @db.Text
+  allergies        String?   @db.Text
+  heredity         String?   @db.Text
+  medications      String?   @db.Text
+  dispensary       String?   @db.Text
+  surgeries        String?   @db.Text
+  lastCorrection   String?   @db.Text
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
 
@@ -224,6 +268,7 @@ model Patient {
   consultations Consultation[]
   sales         Sale[]
   leads         Lead[]
+  appointments  Appointment[]
 
   @@index([organizationId])
   @@index([phone])
@@ -282,6 +327,29 @@ model Consultation {
   intraocularPressureOS Float?           // IOP OS
   visualAcuityOD Float?                  // Visual acuity OD (e.g. 0.8)
   visualAcuityOS Float?                  // Visual acuity OS
+
+  // Topography / Keratometry OD
+  k1OD             Float?
+  k2OD             Float?
+  axisOD           Float?
+  astigmatismOD    Float?
+  pachymetryOD     Float?
+  eccentricityOD   Float?
+
+  // Topography / Keratometry OS
+  k1OS             Float?
+  k2OS             Float?
+  axisOS           Float?
+  astigmatismOS    Float?
+  pachymetryOS     Float?
+  eccentricityOS   Float?
+
+  // Lens Fitting & Refraction (Free Text)
+  lensFittingOD    String?   @db.Text
+  lensFittingOS    String?   @db.Text
+  refractionOD     String?   @db.Text
+  refractionOS     String?   @db.Text
+
   notes       String?  @db.Text
   createdAt   DateTime @default(now())
 
@@ -300,7 +368,8 @@ model Product {
   code        String?  // Код товара
   description String?
   price       Int      @default(0)
-  priceByDk   Json?    // { "50": 7600, "100": 18500, ... } DK-specific prices for lenses
+  priceByDk   Json?    // { "50": 7600, "100": 18500, ... } DK-specific prices for lenses (clinic/optic price)
+  distributorPriceByDk Json? // { "50": 7600, "100": 18500, ... } DK-specific prices for distributors
   unit        String   @default("шт")
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
@@ -308,6 +377,32 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   @@map("products")
+}
+
+// ==================== Appointment (Doctor Schedule) ====================
+model Appointment {
+  id           String        @id @default(cuid())
+  patientId    String?
+  patient      Patient?      @relation(fields: [patientId], references: [id])
+  patientName  String?
+  patientPhone String?
+  doctorId     String?
+  doctor       User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  clinicId     String?
+  clinic       Organization? @relation(fields: [clinicId], references: [id])
+  
+  date         DateTime
+  duration     Int           @default(30) // in minutes
+  status       String        @default("scheduled") // scheduled | completed | cancelled | no_show
+  type         String        @default("consultation") // consultation | fitting | checkup | other
+  notes        String?       @db.Text
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([doctorId, date])
+  @@index([clinicId])
+  @@map("appointments")
 }
 
 // ==================== Order ====================
@@ -387,10 +482,38 @@ model Order {
   labOrgId String?
   labOrg   Organization? @relation("LabOrders", fields: [labOrgId], references: [id])
 
+  // Contract assignment
+  contractId String?
+  contract   Contract? @relation("OrderContract", fields: [contractId], references: [id])
+
   // CRM Lead link
   lead       Lead?
 
   @@map("orders")
+}
+
+// ==================== Contract ====================
+model Contract {
+  id          String   @id @default(cuid())
+  number      String
+  date        DateTime
+  
+  providerId  String
+  provider    Organization @relation("ContractProvider", fields: [providerId], references: [id])
+  
+  clientId    String
+  client      Organization @relation("ContractClient", fields: [clientId], references: [id])
+
+  status      String   @default("active") // active | inactive
+  customPrices Json?   // { "productId": 15000, "productId2": 12000 }
+  document    Json?    // { name: string, data: string (base64), mimeType: string, size: number }
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]  @relation("OrderContract")
+
+  @@map("contracts")
 }
 
 enum OrderStatus {
@@ -624,6 +747,9 @@ model Sale {
   invoiceGenerated Boolean @default(false)
   invoiceData      Json?
 
+  doctorId        String?
+  doctor          User?    @relation("SaleDoctor", fields: [doctorId], references: [id])
+
   performedById   String?
   performedByName String?
   notes           String?
@@ -675,6 +801,7 @@ enum LeadSource {
 enum LeadStage {
   new_lead       @map("new")
   contacted
+  follow_up
   qualified
   appointment
   visited
@@ -760,7 +887,7 @@ model Lead {
 
 model MarketingCampaign {
   id           String      @id @default(cuid())
-  campaignId   String      @unique // ID из Meta Ads / Google Ads
+  campaignId   String      // ID из Meta Ads / Google Ads
   name         String
   source       String      // "facebook" | "google" | "yandex"
   status       String      @default("active") // "active" | "paused" | "completed"
@@ -770,6 +897,9 @@ model MarketingCampaign {
   updatedAt    DateTime    @updatedAt
   leads        Lead[]
   spends       AdSpend[]
+
+  clinicId     String?
+  clinic       Organization? @relation(fields: [clinicId], references: [id])
 
   @@map("marketing_campaigns")
 }
@@ -963,3 +1093,91 @@ model CashTransaction {
   @@map("cash_transactions")
 }
 
+// ==================== Global Finances (P&L, Accounts, Payroll) ====================
+
+model CompanyAccount {
+  id              String       @id @default(cuid())
+  name            String       // e.g. "Kaspi Pay", "Halyk Bank", "Main Safe"
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  balance         Int          @default(0) // Balance in minimal currency unit (e.g. tiyin, or just tenge if integer)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  transactions    FinancialTransaction[]
+
+  @@map("company_accounts")
+}
+
+model FinancialTransaction {
+  id              String          @id @default(cuid())
+  accountId       String
+  account         CompanyAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  organizationId  String
+  organization    Organization    @relation(fields: [organizationId], references: [id])
+  
+  type            String          // 'income' | 'expense'
+  category        String          // 'rent', 'salary', 'marketing', 'supplier_payment', 'other'
+  amount          Int
+  date            DateTime        @default(now())
+  description     String?
+  
+  createdById     String
+  createdBy       User            @relation("FinancialTransactionsCreated", fields: [createdById], references: [id])
+  
+  // Optional link to a specific user (e.g. for salary payout)
+  linkedUserId    String?
+  linkedUser      User?           @relation("FinancialTransactionsLinked", fields: [linkedUserId], references: [id])
+  
+  // Optional link to payroll payout
+  payrollPayoutId String?
+  payrollPayout   PayrollPayout?  @relation(fields: [payrollPayoutId], references: [id])
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("financial_transactions")
+}
+
+model PayrollRule {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  baseSalary      Int          @default(0) // Fixed monthly salary
+  salesPercent    Float        @default(0) // E.g. 5.0 for 5% from sales
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([organizationId, userId])
+  @@map("payroll_rules")
+}
+
+model PayrollPayout {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  
+  periodStart     DateTime
+  periodEnd       DateTime
+  
+  baseAmount      Int          @default(0)
+  salesAmount     Int          @default(0)
+  totalAmount     Int          @default(0)
+  
+  status          String       @default("calculated") // 'calculated' | 'paid'
+  paidAt          DateTime?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  transactions    FinancialTransaction[]
+
+  @@map("payroll_payouts")
+}

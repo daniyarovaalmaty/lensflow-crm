@@ -33,9 +33,15 @@ export async function GET() {
         id: b.id,
         name: b.name,
         address: b.address,
+        deliveryAddress: b.deliveryAddress,
         city: b.city,
         phone: b.phone,
         crmPhone: b.crmPhone,
+        bankName: b.bankName,
+        bik: b.bik,
+        iban: b.iban,
+        inn: b.inn,
+        allowedPartnerIds: b.allowedPartnerIds,
         createdAt: b.createdAt,
         usersCount: b._count.users,
         ordersCount: b._count.orders,
@@ -66,7 +72,7 @@ export async function POST(request: Request) {
     const { action } = body;
 
     if (action === 'create') {
-        const { name, address, city, phone, crmPhone } = body;
+        const { name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban, inn } = body;
         if (!name?.trim()) {
             return NextResponse.json({ error: 'Название филиала обязательно' }, { status: 400 });
         }
@@ -93,9 +99,14 @@ export async function POST(request: Request) {
                 type: 'branch',
                 parentId: orgId,
                 address: address?.trim() || null,
+                deliveryAddress: deliveryAddress?.trim() || null,
                 city: city?.trim() || null,
                 phone: phone?.trim() || null,
                 crmPhone: crmPhone?.trim() || null,
+                bankName: bankName?.trim() || null,
+                bik: bik?.trim() || null,
+                iban: iban?.trim() || null,
+                inn: inn?.trim() || null,
                 status: 'active',
             },
         });
@@ -104,7 +115,7 @@ export async function POST(request: Request) {
     }
 
     if (action === 'update') {
-        const { branchId, name, address, city, phone, crmPhone } = body;
+        const { branchId, name, address, deliveryAddress, city, phone, crmPhone, bankName, bik, iban, inn } = body;
         if (!branchId) return NextResponse.json({ error: 'branchId обязателен' }, { status: 400 });
 
         const branch = await prisma.organization.findFirst({
@@ -117,9 +128,14 @@ export async function POST(request: Request) {
             data: {
                 ...(name && { name: name.trim() }),
                 ...(address !== undefined && { address: address?.trim() || null }),
+                ...(deliveryAddress !== undefined && { deliveryAddress: deliveryAddress?.trim() || null }),
                 ...(city !== undefined && { city: city?.trim() || null }),
                 ...(phone !== undefined && { phone: phone?.trim() || null }),
                 ...(crmPhone !== undefined && { crmPhone: crmPhone?.trim() || null }),
+                ...(bankName !== undefined && { bankName: bankName?.trim() || null }),
+                ...(bik !== undefined && { bik: bik?.trim() || null }),
+                ...(iban !== undefined && { iban: iban?.trim() || null }),
+                ...(inn !== undefined && { inn: inn?.trim() || null }),
             },
         });
 
@@ -196,6 +212,42 @@ export async function POST(request: Request) {
 
         await prisma.userBranch.deleteMany({
             where: { userId, branchId },
+        });
+
+        return NextResponse.json({ ok: true });
+    }
+
+    if (action === 'assign_partner') {
+        const { branchId, partnerId } = body;
+        if (!branchId || !partnerId) return NextResponse.json({ error: 'branchId и partnerId обязательны' }, { status: 400 });
+
+        const branch = await prisma.organization.findFirst({
+            where: { id: branchId, parentId: orgId, type: 'branch' },
+        });
+        if (!branch) return NextResponse.json({ error: 'Филиал не найден' }, { status: 404 });
+
+        if (!branch.allowedPartnerIds.includes(partnerId)) {
+            await prisma.organization.update({
+                where: { id: branchId },
+                data: { allowedPartnerIds: { push: partnerId } },
+            });
+        }
+        return NextResponse.json({ ok: true });
+    }
+
+    if (action === 'unassign_partner') {
+        const { branchId, partnerId } = body;
+        if (!branchId || !partnerId) return NextResponse.json({ error: 'branchId и partnerId обязательны' }, { status: 400 });
+
+        const branch = await prisma.organization.findFirst({
+            where: { id: branchId, parentId: orgId, type: 'branch' },
+        });
+        if (!branch) return NextResponse.json({ error: 'Филиал не найден' }, { status: 404 });
+
+        const newPartners = branch.allowedPartnerIds.filter(id => id !== partnerId);
+        await prisma.organization.update({
+            where: { id: branchId },
+            data: { allowedPartnerIds: newPartners },
         });
 
         return NextResponse.json({ ok: true });

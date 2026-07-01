@@ -189,7 +189,7 @@ export default function CounterpartiesPage() {
                     <div className="flex items-start justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Контрагенты</h1>
-                            <p className="text-sm text-gray-500 mt-0.5">Оптики и клиники-партнёры ЦКК</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Ваши оптики и клиники-партнёры</p>
                         </div>
                         <button
                             onClick={() => { resetForm(); setShowAdd(true); }}

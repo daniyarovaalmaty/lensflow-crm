@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
         console.log(`[Webhook] Type: ${typeWebhook}`, JSON.stringify(body).substring(0, 200));
 
         // Handle incoming messages
-        if (typeWebhook === 'incomingMessageReceived') {
-            const chatId = senderData?.chatId;
+        if (typeWebhook === 'incomingMessageReceived' || typeWebhook === 'outgoingMessageReceived' || typeWebhook === 'outgoingAPIMessageReceived') {
+            const chatId = senderData?.chatId || body.messageData?.chatId;
             const senderName = senderData?.senderName || senderData?.sender;
 
             if (!chatId || !messageData) {
@@ -55,14 +55,40 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ status: 'ignored', reason: 'empty message' });
             }
 
-            // Process with chatbot
-            const handled = await processIncomingMessage(chatId, messageText, senderName);
+            if (typeWebhook === 'incomingMessageReceived') {
+                // Extract receiver phone (the Green API instance number)
+                const receiverPhone = instanceData?.wid?.replace('@c.us', '');
 
-            return NextResponse.json({
-                status: 'ok',
-                handled,
-                chatId,
-            });
+                // Process with chatbot (this also saves the incoming message)
+                const handled = await processIncomingMessage(chatId, messageText, senderName, receiverPhone);
+
+                return NextResponse.json({
+                    status: 'ok',
+                    handled,
+                    chatId,
+                });
+            } else {
+                // Save outgoing message (from bot or other phone instances)
+                const { default: prisma } = await import('@/lib/db/prisma');
+                const lead = await prisma.lead.findFirst({ where: { phone: chatId } });
+                if (lead) {
+                    await prisma.chatMessage.create({
+                        data: {
+                            leadId: lead.id,
+                            channel: 'whatsapp',
+                            direction: 'outgoing',
+                            messageType: 'text',
+                            content: messageText,
+                            status: 'sent'
+                        },
+                    });
+                }
+                return NextResponse.json({
+                    status: 'ok',
+                    saved: !!lead,
+                    chatId,
+                });
+            }
         }
 
         // Handle message status updates (delivered, read)

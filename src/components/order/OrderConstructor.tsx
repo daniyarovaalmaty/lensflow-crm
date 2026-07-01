@@ -5,11 +5,12 @@ import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { CreateOrderSchema, type CreateOrderDTO } from '@/types/order';
+import { CreateOrderSchema, type CreateOrderDTO, ColorsByDk } from '@/types/order';
 import { EyeParametersCard } from './EyeParametersCard';
 import { ReadOnlyEyeCard } from './ReadOnlyEyeCard';
 import { MediLensCalculator } from './MediLensCalculator';
-import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye, Factory, X } from 'lucide-react';
+import { Copy, Package, User, Building2, Truck, Receipt, Zap, Clock, Plus, Minus, Droplets, Wrench, ShoppingCart, Camera, Eye, Factory, X, Sparkles, CheckCircle } from 'lucide-react';
+import { parseOrderTableRow } from '@/lib/orderParser';
 
 interface CatalogProduct {
     id: string;
@@ -19,6 +20,7 @@ interface CatalogProduct {
     description: string | null;
     price?: number; // undefined for doctors
     priceByDk?: Record<string, number> | null; // DK-specific prices: { "50": 15000, "100": 18500, ... }
+    distributorPriceByDk?: Record<string, number> | null; // Distributor-specific DK prices
     unit: string;
 }
 
@@ -59,6 +61,9 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [formErrors, setFormErrors] = useState<string[]>([]);
     const errorsRef = useRef<HTMLDivElement>(null);
     const [distributorClients, setDistributorClients] = useState<any[]>([]);
+    const [contracts, setContracts] = useState<any[]>([]);
+    const [smartParseInput, setSmartParseInput] = useState('');
+    const [smartParseSuccess, setSmartParseSuccess] = useState(false);
 
     const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
@@ -69,7 +74,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [distributors, setDistributors] = useState<{ id: string; name: string; city?: string }[]>([]);
     const [selectedDistributorId, setSelectedDistributorId] = useState<string>('');
     const [recipientType, setRecipientType] = useState<'laboratory' | 'distributor'>('laboratory');
-    const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string }[]>([]);
+    const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string; inn?: string | null; deliveryAddress?: string | null; address?: string | null; directorName?: string | null }[]>([]);
     const [selectedBranchId, setSelectedBranchId] = useState<string>('');
     const [confirmData, setConfirmData] = useState<any>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -78,132 +83,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const isProcurement = subRole === 'optic_procurement';
     const isDistributor = userRole === 'distributor';
     const canSeePrices = subRole !== 'optic_doctor';
-
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch('/api/catalog');
-                if (res.ok) {
-                    const data = await res.json();
-                    setCatalog(data);
-                }
-            } catch (e) { console.error(e); }
-        })();
-    }, []);
-
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch('/api/distributors');
-                if (res.ok) setDistributors(await res.json());
-            } catch (e) { /* no distributors is fine */ }
-        })();
-    }, []);
-
-    useEffect(() => {
-        if (session?.user?.role === 'distributor') {
-            fetch('/api/distributor/clients')
-                .then(r => r.json())
-                .then(data => {
-                    if (Array.isArray(data)) setDistributorClients(data);
-                })
-                .catch(err => console.error('Failed to fetch distributor clients:', err));
-        }
-    }, [session?.user?.role]);
-
-    // Load branches for procurement users (with routing config)
-    useEffect(() => {
-        if (!isProcurement) return;
-        (async () => {
-            try {
-                const res = await fetch('/api/organizations/branches');
-                if (res.ok) setBranches(await res.json());
-            } catch (e) { /* ignore */ }
-        })();
-    }, [isProcurement]);
-
-    // Auto-select recipient when branch is selected
-    useEffect(() => {
-        if (!selectedBranchId || !isProcurement) return;
-        const branch = branches.find(b => b.id === selectedBranchId);
-        if (!branch) return;
-        const rType = (branch.recipientType as 'laboratory' | 'distributor') || 'laboratory';
-        setRecipientType(rType);
-        if (rType === 'distributor' && branch.recipientOrgId) {
-            setSelectedDistributorId(branch.recipientOrgId);
-        } else {
-            setSelectedDistributorId('');
-        }
-    }, [selectedBranchId, branches, isProcurement]);
-
-    // Fetch organization profile for auto-fill
-    useEffect(() => {
-        if (!session?.user?.organizationId) return;
-        (async () => {
-            try {
-                const res = await fetch('/api/profile');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.organization) {
-                        const org = data.organization;
-                        if (org.name) setValue('company', org.name);
-                        if (org.inn) setValue('inn', org.inn);
-                        if (org.address) setValue('delivery_address', org.address);
-                        if (org.discountPercent != null) setOrgDiscount(org.discountPercent);
-                        if (org.defaultLab) setPartnerLab(org.defaultLab);
-                    }
-                }
-            } catch (e) { console.error(e); }
-        })();
-    }, [session?.user?.organizationId]);
-
-    // Lens products from catalog (matched by description field = characteristic code)
-    const VALID_LENS_DESCRIPTIONS = new Set(['toric', 'spherical', 'rgp', 'probe']);
-    const lensProducts = useMemo(
-        () => catalog.filter(p => p.category === 'lens' && p.description != null && VALID_LENS_DESCRIPTIONS.has(p.description)),
-        [catalog]
-    );
-
-    const additionalProducts = useMemo(() => catalog.filter(p => p.category !== 'lens'), [catalog]);
-
-    // Map characteristic code → catalog product
-    const getLensProduct = (characteristic: string) => {
-        return lensProducts.find(p => p.description === characteristic);
-    };
-
-    // Get price for a lens based on DK (mirrors backend getLensPrice logic)
-    const getLensPrice = (product: CatalogProduct | undefined, dk: string): number => {
-        if (!product) return 0;
-        if (product.priceByDk && typeof product.priceByDk === 'object') {
-            const dkPrice = product.priceByDk[dk];
-            if (dkPrice != null) return dkPrice;
-        }
-        return product.price || 0;
-    };
-
-    const addProduct = (product: CatalogProduct) => {
-        setSelectedProducts(prev => {
-            const existing = prev.find(p => p.productId === product.id);
-            if (existing) {
-                return prev.map(p => p.productId === product.id ? { ...p, qty: p.qty + 1 } : p);
-            }
-            return [...prev, { productId: product.id, name: product.name, category: product.category, qty: 1, price: product.price || 0 }];
-        });
-    };
-
-    const updateProductQty = (productId: string, delta: number) => {
-        setSelectedProducts(prev => {
-            return prev.map(p => {
-                if (p.productId !== productId) return p;
-                const newQty = p.qty + delta;
-                return newQty <= 0 ? null! : { ...p, qty: newQty };
-            }).filter(Boolean);
-        });
-    };
-
-    const removeProduct = (productId: string) => {
-        setSelectedProducts(prev => prev.filter(p => p.productId !== productId));
-    };
 
     const {
         register,
@@ -237,6 +116,200 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         },
     });
 
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/catalog');
+                if (res.ok) {
+                    const data = await res.json();
+                    setCatalog(data);
+                }
+            } catch (e) { console.error(e); }
+        })();
+    }, []);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/distributors');
+                if (res.ok) setDistributors(await res.json());
+            } catch (e) { /* no distributors is fine */ }
+        })();
+
+        // Fetch user's contracts
+        if (!isDistributor && !isProcurement) {
+            (async () => {
+                try {
+                    const res = await fetch('/api/optic/contracts');
+                    if (res.ok) setContracts(await res.json());
+                } catch (e) {}
+            })();
+        }
+    }, [isDistributor, isProcurement]);
+
+    useEffect(() => {
+        if (session?.user?.role === 'distributor') {
+            fetch('/api/distributor/clients')
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data)) setDistributorClients(data);
+                })
+                .catch(err => console.error('Failed to fetch distributor clients:', err));
+        }
+    }, [session?.user?.role]);
+
+    // Load branches for non-distributor users
+    useEffect(() => {
+        if (isDistributor) return;
+        (async () => {
+            try {
+                const res = await fetch('/api/organizations/branches');
+                if (res.ok) setBranches(await res.json());
+            } catch (e) { /* ignore */ }
+        })();
+    }, [isDistributor]);
+
+    // Auto-select recipient and contract when branch is selected
+    useEffect(() => {
+        if (!selectedBranchId) return;
+        const branch = branches.find(b => b.id === selectedBranchId);
+        if (!branch) return;
+
+        // Auto-fill form from selected branch
+        if (branch.name) setValue('company', branch.name, { shouldValidate: true, shouldDirty: true });
+        if (branch.inn) setValue('inn', branch.inn || '', { shouldValidate: true, shouldDirty: true });
+        if (branch.deliveryAddress || branch.address) setValue('delivery_address', branch.deliveryAddress || branch.address || '', { shouldValidate: true, shouldDirty: true });
+
+        const rType = (branch.recipientType as 'laboratory' | 'distributor') || 'laboratory';
+        setRecipientType(rType);
+        if (rType === 'distributor' && branch.recipientOrgId) {
+            setSelectedDistributorId(branch.recipientOrgId);
+        } else {
+            setSelectedDistributorId('');
+        }
+
+        // Auto-select contract
+        if (contracts.length > 0) {
+            const branchContract = contracts.find(c => c.clientId === selectedBranchId);
+            if (branchContract) {
+                setValue('contract_id', branchContract.id, { shouldValidate: true });
+            } else {
+                const hqContract = contracts.find(c => c.client?.type === 'headquarters' || c.client?.type === 'standalone' || c.clientId === session?.user?.organizationId);
+                if (hqContract) {
+                    setValue('contract_id', hqContract.id, { shouldValidate: true });
+                } else {
+                    setValue('contract_id', '', { shouldValidate: true });
+                }
+            }
+        }
+    }, [selectedBranchId, branches, contracts, setValue, session?.user?.organizationId]);
+
+    // Fetch organization profile for auto-fill
+    useEffect(() => {
+        if (!session?.user?.organizationId) return;
+        (async () => {
+            try {
+                const res = await fetch('/api/profile');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.organization) {
+                        const org = data.organization;
+                        if (org.name) setValue('company', org.name);
+                        if (org.inn) setValue('inn', org.inn);
+                        if (org.address) setValue('delivery_address', org.address);
+                        if (org.discountPercent != null) setOrgDiscount(org.discountPercent);
+                        if (org.defaultLab) setPartnerLab(org.defaultLab);
+                    }
+                }
+            } catch (e) { console.error(e); }
+        })();
+    }, [session?.user?.organizationId]);
+
+    // Lens products from catalog (matched by description field = characteristic code)
+    const VALID_LENS_DESCRIPTIONS = new Set(['toric', 'spherical', 'rgp', 'probe', 'trial']);
+    const lensProducts = useMemo(
+        () => catalog.filter(p => p.category === 'lens' && p.description != null && VALID_LENS_DESCRIPTIONS.has(p.description)),
+        [catalog]
+    );
+
+    const additionalProducts = useMemo(() => catalog.filter(p => p.category !== 'lens'), [catalog]);
+
+    const availableContracts = useMemo(() => {
+        if (!selectedBranchId) return contracts;
+        return contracts.filter(c => c.clientId === selectedBranchId || c.client?.type === 'headquarters' || c.client?.type === 'standalone' || c.clientId === session?.user?.organizationId);
+    }, [contracts, selectedBranchId, session?.user?.organizationId]);
+
+    // Map characteristic code → catalog product
+    // When DK=50, it's always a trial lens — find the trial product
+    const getLensProduct = (characteristic: string, dk?: string) => {
+        // DK 50 or the "Пробная" (probe) characteristic = trial lens.
+        // Catalog stores the trial product with description 'trial'.
+        if (dk === '50' || characteristic === 'probe') {
+            const trialProduct = lensProducts.find(p =>
+                p.sku === 'ML-TRIAL-DK50' ||
+                (p.description && p.description.toLowerCase().includes('trial')) ||
+                p.description === 'probe'
+            );
+            if (trialProduct) return trialProduct;
+        }
+        return lensProducts.find(p => p.description === characteristic);
+    };
+
+    // Get price for a lens based on DK (mirrors backend getLensPrice logic)
+    // For distributors, use distributorPriceByDk if available
+    const getLensPrice = (product: CatalogProduct | undefined, dk: string): number => {
+        if (!product) return 0;
+        // Distributor pricing
+        if (isDistributor && product.distributorPriceByDk && typeof product.distributorPriceByDk === 'object') {
+            const dkPrice = product.distributorPriceByDk[dk];
+            if (dkPrice != null) return dkPrice;
+        }
+        // Standard pricing
+        if (product.priceByDk && typeof product.priceByDk === 'object') {
+            const dkPrice = product.priceByDk[dk];
+            if (dkPrice != null) return dkPrice;
+        }
+        return product.price || 0;
+    };
+
+    // Representative price for the "Тип линз" card. Prefer DK-based pricing
+    // (distributor prices for distributors) so the card matches what the order
+    // actually charges; fall back to the base `price` field.
+    const getLensDisplayPrice = (product: CatalogProduct): number => {
+        const dkMap = (isDistributor && product.distributorPriceByDk) || product.priceByDk;
+        if (dkMap && typeof dkMap === 'object') {
+            const vals = Object.values(dkMap).filter((v): v is number => typeof v === 'number' && v > 0);
+            if (vals.length) return Math.min(...vals);
+        }
+        return product.price || 0;
+    };
+
+    const addProduct = (product: CatalogProduct) => {
+        setSelectedProducts(prev => {
+            const existing = prev.find(p => p.productId === product.id);
+            if (existing) {
+                return prev.map(p => p.productId === product.id ? { ...p, qty: p.qty + 1 } : p);
+            }
+            return [...prev, { productId: product.id, name: product.name, category: product.category, qty: 1, price: product.price || 0 }];
+        });
+    };
+
+    const updateProductQty = (productId: string, delta: number) => {
+        setSelectedProducts(prev => {
+            return prev.map(p => {
+                if (p.productId !== productId) return p;
+                const newQty = p.qty + delta;
+                return newQty <= 0 ? null! : { ...p, qty: newQty };
+            }).filter(Boolean);
+        });
+    };
+
+    const removeProduct = (productId: string) => {
+        setSelectedProducts(prev => prev.filter(p => p.productId !== productId));
+    };
+
+    // Form has been moved up to fix React hooks linting/compile issues
+
     // Mirror OD to OS — set each field individually to trigger watchers
     const mirrorODtoOS = () => {
         const odValues = getValues('config.eyes.od');
@@ -256,6 +329,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
     // Form submission
     const onFormSubmit = async (data: CreateOrderDTO) => {
+        if (isSubmitting) return;
         // Custom validation: ensure key fields are filled
         const validationErrors: string[] = [];
 
@@ -299,8 +373,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             validationErrors.push('Выберите дистрибьютора для этого заказа');
         }
 
-        // Branch validation for procurement
-        if (isProcurement && !selectedBranchId) {
+        // Branch validation
+        if (!isDistributor && branches.length > 0 && !selectedBranchId) {
             validationErrors.push('Выберите филиал для этого заказа');
         }
 
@@ -328,8 +402,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     submitData.labOrgId = partnerLab.id;
                 }
             }
-            // For procurement: set branch as the order's organization
-            if (isProcurement && selectedBranchId) {
+            // Set branch as the order's organization
+            if (!isDistributor && selectedBranchId) {
                 submitData.branchOrgId = selectedBranchId;
             }
             if (rgpPhotos.od || rgpPhotos.os) {
@@ -393,6 +467,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     };
 
     const doSubmit = async () => {
+        if (isSubmitting) return;
         setIsSubmitting(true);
         try {
             await onSubmit(confirmData);
@@ -448,6 +523,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const hasAnyRgp = isRgpOD || isRgpOS;
 
     const [companyValue, innValue] = watch(['company', 'inn']);
+    const odColor = watch('config.eyes.od.color') || '';
+    const osColor = watch('config.eyes.os.color') || '';
+    const prevOdColorRef = useRef(odColor);
+    const prevOsColorRef = useRef(osColor);
 
     useEffect(() => {
         if (session?.user?.role === 'distributor' && companyValue && distributorClients.length > 0) {
@@ -458,12 +537,60 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         }
     }, [companyValue, distributorClients, innValue, session?.user?.role, setValue]);
 
+    useEffect(() => {
+        if (odDk && osDk && odDk === osDk) {
+            // OD color changed
+            if (odColor !== prevOdColorRef.current) {
+                prevOdColorRef.current = odColor;
+                if (odColor && !osColor) {
+                    const lower = odColor.toLowerCase();
+                    let newOsColor = '';
+                    if (lower.includes('blue')) {
+                        if (lower.includes('f2mid')) newOsColor = 'Contraperm F2Mid green';
+                        else if (lower.includes('extra')) newOsColor = 'Optimum extra violet';
+                        else if (lower.includes('extreme')) newOsColor = 'Optimum extreme violet';
+                        else if (lower.includes('infinite')) newOsColor = 'Optimum infinite red';
+                    } else if (lower.includes('green')) {
+                        if (lower.includes('f2mid')) newOsColor = 'Contraperm F2Mid dark blue';
+                        else if (lower.includes('extra')) newOsColor = 'Optimum extra violet';
+                        else if (lower.includes('extreme')) newOsColor = 'Optimum extreme grey';
+                        else if (lower.includes('infinite')) newOsColor = 'Optimum infinite red';
+                    }
+                    if (newOsColor) {
+                        setValue('config.eyes.os.color', newOsColor, { shouldValidate: true, shouldDirty: true });
+                        prevOsColorRef.current = newOsColor;
+                    }
+                }
+            }
+            
+            // OS color changed
+            if (osColor !== prevOsColorRef.current) {
+                prevOsColorRef.current = osColor;
+                if (osColor && !odColor) {
+                    const lower = osColor.toLowerCase();
+                    let newOdColor = '';
+                    if (lower.includes('violet') || lower.includes('grey') || lower.includes('red')) {
+                        if (lower.includes('extra')) newOdColor = 'Optimum extra blue';
+                        else if (lower.includes('extreme')) newOdColor = 'Optimum extreme blue';
+                        else if (lower.includes('infinite')) newOdColor = 'Optimum infinite blue';
+                    } else if (lower.includes('green') && lower.includes('f2mid')) {
+                        newOdColor = 'Contraperm F2Mid dark blue';
+                    }
+                    if (newOdColor) {
+                        setValue('config.eyes.od.color', newOdColor, { shouldValidate: true, shouldDirty: true });
+                        prevOdColorRef.current = newOdColor;
+                    }
+                }
+            }
+        }
+    }, [odColor, osColor, odDk, osDk, setValue]);
+
     // Lens price from catalog based on characteristic + DK
     // Uses priceByDk when available (matches backend calculation)
     // RGP lenses have custom pricing (set by accountant), so price = 0
     // If it's a trial lens (DK 50), the effective product is 'probe'
-    const effectiveOdCharacteristic = isTrialOD ? 'probe' : (odCharacteristic || '');
-    const effectiveOsCharacteristic = isTrialOS ? 'probe' : (osCharacteristic || '');
+    const effectiveOdCharacteristic = isRgpOD ? 'rgp' : (isTrialOD ? 'probe' : (odCharacteristic || ''));
+    const effectiveOsCharacteristic = isRgpOS ? 'rgp' : (isTrialOS ? 'probe' : (osCharacteristic || ''));
     
     const odLensProduct = getLensProduct(effectiveOdCharacteristic);
     const osLensProduct = getLensProduct(effectiveOsCharacteristic);
@@ -481,8 +608,127 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const urgentSurcharge = isUrgent ? Math.round(priceAfterDiscount * urgentSurchargePct / 100) : 0;
     const totalPrice = priceAfterDiscount + urgentSurcharge;
 
+    const handleSmartParse = () => {
+        if (!smartParseInput.trim()) return;
+        const parsed = parseOrderTableRow(smartParseInput);
+        
+        if (parsed.company) setValue('company', parsed.company, { shouldValidate: true, shouldDirty: true });
+        if (parsed.patientName) setValue('patient.name', parsed.patientName, { shouldValidate: true, shouldDirty: true });
+        
+        // Notes
+        if (parsed.notes) {
+            const currentNotes = getValues('notes') || '';
+            setValue('notes', currentNotes ? `${currentNotes}\n${parsed.notes}` : parsed.notes, { shouldValidate: true, shouldDirty: true });
+        }
+
+        const resolveColor = (dk: string | undefined, colorName: string | undefined) => {
+            if (!dk || !colorName) return undefined;
+            const available = ColorsByDk[dk] || [];
+            const lower = colorName.toLowerCase();
+            let search = '';
+            if (lower.includes('синий') || lower.includes('blue')) search = 'blue';
+            if (lower.includes('фиолет') || lower.includes('violet')) search = 'violet';
+            if (lower.includes('зел') || lower.includes('green')) search = 'green';
+            if (lower.includes('красн') || lower.includes('red')) search = 'red';
+            if (lower.includes('сер') || lower.includes('grey') || lower.includes('gray')) search = 'grey';
+            
+            if (search) {
+                return available.find((c: string) => c.toLowerCase().includes(search)) || colorName;
+            }
+            return colorName;
+        };
+
+        // OD
+        if (parsed.od) {
+            if (parsed.od.characteristic) setValue('config.eyes.od.characteristic', parsed.od.characteristic, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.km !== undefined) setValue('config.eyes.od.km', parsed.od.km, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.tp !== undefined) setValue('config.eyes.od.tp', parsed.od.tp, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.dia !== undefined) setValue('config.eyes.od.dia', parsed.od.dia, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.tor !== undefined) setValue('config.eyes.od.tor', parsed.od.tor, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.e1 !== undefined) setValue('config.eyes.od.e1', parsed.od.e1, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.e2 !== undefined) setValue('config.eyes.od.e2', parsed.od.e2, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.dk) setValue('config.eyes.od.dk', parsed.od.dk as any, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.compression_factor !== undefined) setValue('config.eyes.od.compression_factor', parsed.od.compression_factor, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.myorthok !== undefined) setValue('config.eyes.od.myorthok', parsed.od.myorthok, { shouldValidate: true, shouldDirty: true });
+            if (parsed.od.qty !== undefined) setValue('config.eyes.od.qty', parsed.od.qty, { shouldValidate: true, shouldDirty: true });
+            const odColor = parsed.od.color;
+            if (odColor) {
+                setTimeout(() => {
+                    const currentDk = getValues('config.eyes.od.dk');
+                    const resolved = resolveColor(currentDk, odColor) || odColor;
+                    setValue('config.eyes.od.color', resolved, { shouldValidate: true, shouldDirty: true });
+                }, 100);
+            }
+        } else {
+            setValue('config.eyes.od.qty', 0, { shouldValidate: true, shouldDirty: true });
+        }
+
+        // OS
+        if (parsed.os) {
+            if (parsed.os.characteristic) setValue('config.eyes.os.characteristic', parsed.os.characteristic, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.km !== undefined) setValue('config.eyes.os.km', parsed.os.km, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.tp !== undefined) setValue('config.eyes.os.tp', parsed.os.tp, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.dia !== undefined) setValue('config.eyes.os.dia', parsed.os.dia, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.tor !== undefined) setValue('config.eyes.os.tor', parsed.os.tor, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.e1 !== undefined) setValue('config.eyes.os.e1', parsed.os.e1, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.e2 !== undefined) setValue('config.eyes.os.e2', parsed.os.e2, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.dk) setValue('config.eyes.os.dk', parsed.os.dk as any, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.compression_factor !== undefined) setValue('config.eyes.os.compression_factor', parsed.os.compression_factor, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.myorthok !== undefined) setValue('config.eyes.os.myorthok', parsed.os.myorthok, { shouldValidate: true, shouldDirty: true });
+            if (parsed.os.qty !== undefined) setValue('config.eyes.os.qty', parsed.os.qty, { shouldValidate: true, shouldDirty: true });
+            const osColor = parsed.os.color;
+            if (osColor) {
+                setTimeout(() => {
+                    const currentDk = getValues('config.eyes.os.dk');
+                    const resolved = resolveColor(currentDk, osColor) || osColor;
+                    setValue('config.eyes.os.color', resolved, { shouldValidate: true, shouldDirty: true });
+                }, 100);
+            }
+        } else {
+            setValue('config.eyes.os.qty', 0, { shouldValidate: true, shouldDirty: true });
+        }
+
+        setSmartParseSuccess(true);
+        setTimeout(() => setSmartParseSuccess(false), 3000);
+    };
+
     return (
         <form onSubmit={handleSubmit(onFormSubmit, onFormError)} className="max-w-5xl mx-auto space-y-8">
+            {isDistributor && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card border-2 border-emerald-100 bg-emerald-50/30">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <Sparkles className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900">Умная вставка из таблицы</h2>
+                            <p className="text-sm text-gray-500">Скопируйте строку заказа из Excel и вставьте сюда</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <input 
+                            type="text" 
+                            value={smartParseInput}
+                            onChange={e => setSmartParseInput(e.target.value)}
+                            placeholder="2026 06 10    ZKK 11    Ердос Темирлан    2    Toric..."
+                            className="input flex-1 font-mono text-sm bg-white"
+                        />
+                        <button 
+                            type="button" 
+                            onClick={handleSmartParse}
+                            className="btn btn-primary whitespace-nowrap gap-2 bg-emerald-600 hover:bg-emerald-700 border-transparent text-white"
+                        >
+                            <Sparkles className="w-4 h-4" /> Заполнить форму
+                        </button>
+                    </div>
+                    {smartParseSuccess && (
+                        <p className="text-sm text-emerald-600 mt-3 font-medium flex items-center gap-1.5">
+                            <CheckCircle className="w-4 h-4" /> Форма успешно заполнена! Проверьте данные ниже.
+                        </p>
+                    )}
+                </motion.div>
+            )}
+
             {/* Urgency Picker */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -612,11 +858,31 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             placeholder="Астана, Пр. Мангилик ел 27"
                         />
                     </div>
+
+                    {!isDistributor && availableContracts.length > 0 && (
+                        <div className="md:col-span-2">
+                            <label htmlFor="contract_id" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                Договор
+                            </label>
+                            <select
+                                id="contract_id"
+                                {...register('contract_id')}
+                                className="input w-full bg-white"
+                            >
+                                <option value="">-- Без договора --</option>
+                                {availableContracts.map(c => (
+                                    <option key={c.id} value={c.id}>
+                                        № {c.number} от {new Date(c.date).toLocaleDateString('ru-RU')} ({c.provider?.name}) {c.client?.type === 'branch' ? `[Филиал: ${c.client.name}]` : '[Головная компания]'}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
             </motion.div>
 
-            {/* Branch Selection — only for procurement users */}
-            {isProcurement && (
+            {/* Branch Selection */}
+            {!isDistributor && branches.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -992,22 +1258,9 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     });
                 }} />
 
-                {/* OD (Right Eye) */}
-                <EyeParametersCard
-                    eye="od"
-                    label="OD (Правый глаз)"
-                    register={register}
-                    errors={errors}
-                    watch={watch}
-                    setValue={setValue}
-                    disabled={singleEye === 'os'}
-                    rgpFile={rgpPhotos.od}
-                    onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, od: file ?? undefined }))}
-                />
-
                 {/* Mirror Button */}
                 {singleEye === 'both' && (
-                    <div className="flex justify-center">
+                    <div className="flex justify-center mb-4">
                         <button
                             type="button"
                             onClick={mirrorODtoOS}
@@ -1019,18 +1272,33 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     </div>
                 )}
 
-                {/* OS (Left Eye) */}
-                <EyeParametersCard
-                    eye="os"
-                    label="OS (Левый глаз)"
-                    register={register}
-                    errors={errors}
-                    watch={watch}
-                    setValue={setValue}
-                    disabled={singleEye === 'od'}
-                    rgpFile={rgpPhotos.os}
-                    onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, os: file ?? undefined }))}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* OD (Right Eye) */}
+                    <EyeParametersCard
+                        eye="od"
+                        label="OD (Правый глаз)"
+                        register={register}
+                        errors={errors}
+                        watch={watch}
+                        setValue={setValue}
+                        disabled={singleEye === 'os'}
+                        rgpFile={rgpPhotos.od}
+                        onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, od: file ?? undefined }))}
+                    />
+
+                    {/* OS (Left Eye) */}
+                    <EyeParametersCard
+                        eye="os"
+                        label="OS (Левый глаз)"
+                        register={register}
+                        errors={errors}
+                        watch={watch}
+                        setValue={setValue}
+                        disabled={singleEye === 'od'}
+                        rgpFile={rgpPhotos.os}
+                        onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, os: file ?? undefined }))}
+                    />
+                </div>
             </motion.div>
 
             {/* Lens Type — shows lens products from catalog linked to characteristics */}
@@ -1054,6 +1322,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     {lensProducts.map(product => {
                         const isSelected = odLensProduct?.id === product.id || osLensProduct?.id === product.id;
                         const isRgp = product.description === 'rgp';
+                        // When this lens is selected for an eye, show the exact price for
+                        // that eye's DK; otherwise show the lowest price as a reference.
+                        const cardPrice =
+                            (odLensProduct?.id === product.id && odDk) ? getLensPrice(product, odDk) :
+                            (osLensProduct?.id === product.id && osDk) ? getLensPrice(product, osDk) :
+                            getLensDisplayPrice(product);
                         return (
                             <div
                                 key={product.id}
@@ -1065,7 +1339,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                 <p className="font-semibold text-sm text-gray-900">{product.name}</p>
                                 {canSeePrices && (
                                     <p className={`text-xs mt-1 ${isRgp ? 'text-amber-600 font-medium' : 'text-gray-500'}`}>
-                                        {isRgp ? 'Цена индивидуальная' : `${(product.price || 0).toLocaleString('ru-RU')} ₸/${product.unit}`}
+                                        {isRgp ? 'Цена индивидуальная' : `${cardPrice.toLocaleString('ru-RU')} ₸/${product.unit}`}
                                     </p>
                                 )}
                                 {isSelected && (
@@ -1203,13 +1477,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
                     <div className="space-y-3">
                         {/* Lens prices from characteristic */}
-                        {odLensProduct && (odLensProduct.price ?? 0) > 0 && (
+                        {odLensProduct && odUnitPrice > 0 && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600">OD: {odLensProduct.name} × {odQty}</span>
                                 <span className="font-medium text-gray-900">{odLensPrice.toLocaleString('ru-RU')} ₸</span>
                             </div>
                         )}
-                        {osLensProduct && (osLensProduct.price ?? 0) > 0 && (
+                        {osLensProduct && osUnitPrice > 0 && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-600">OS: {osLensProduct.name} × {osQty}</span>
                                 <span className="font-medium text-gray-900">{osLensPrice.toLocaleString('ru-RU')} ₸</span>
@@ -1332,10 +1606,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             </div>
 
                             <div className="space-y-4">
-                                {Number(confirmData.config?.eyes?.od?.qty) > 0 && (
+                                {confirmData.config?.eyes?.od?.characteristic && Number(confirmData.config?.eyes?.od?.qty) > 0 && (
                                     <ReadOnlyEyeCard eye="od" label="OD (Правый глаз)" config={confirmData.config.eyes.od} qty={Number(confirmData.config.eyes.od.qty)} />
                                 )}
-                                {Number(confirmData.config?.eyes?.os?.qty) > 0 && (
+                                {confirmData.config?.eyes?.os?.characteristic && Number(confirmData.config?.eyes?.os?.qty) > 0 && (
                                     <ReadOnlyEyeCard eye="os" label="OS (Левый глаз)" config={confirmData.config.eyes.os} qty={Number(confirmData.config.eyes.os.qty)} />
                                 )}
                             </div>

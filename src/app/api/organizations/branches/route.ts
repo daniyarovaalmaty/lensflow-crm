@@ -30,7 +30,7 @@ export async function GET() {
         hqMetadata = org.metadata as any;
         const children = await prisma.organization.findMany({
             where: { parentId: orgId, type: 'branch' },
-            select: { id: true, name: true },
+            select: { id: true, name: true, inn: true, deliveryAddress: true, address: true, directorName: true },
             orderBy: { name: 'asc' },
         });
         branches = children;
@@ -44,12 +44,13 @@ export async function GET() {
 
         const siblings = await prisma.organization.findMany({
             where: { parentId: org.parentId, type: 'branch' },
-            select: { id: true, name: true },
+            select: { id: true, name: true, inn: true, deliveryAddress: true, address: true, directorName: true },
             orderBy: { name: 'asc' },
         });
         branches = siblings;
     } else {
-        branches = [{ id: org.id, name: org.name }];
+        const orgFull = await prisma.organization.findUnique({ where: { id: org.id } });
+        branches = [{ id: org.id, name: org.name, inn: orgFull?.inn, deliveryAddress: orgFull?.deliveryAddress, address: orgFull?.address, directorName: orgFull?.directorName }] as any;
     }
 
     // Inject routing config into each branch

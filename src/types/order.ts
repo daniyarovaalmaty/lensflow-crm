@@ -19,10 +19,10 @@ export const CharacteristicLabels: Record<Characteristic, string> = {
 
 // ==================== Color options per Dk ====================
 export const ColorsByDk: Record<string, string[]> = {
-    '50': ['Тёмно-синий', 'Тёмно-зелёный'],
-    '100': ['Синий', 'Зелёный', 'Фиолетовый'],
-    '125': ['Синий', 'Зелёный', 'Фиолетовый', 'Красный'],
-    '180': ['Голубой', 'Салатовый'],
+    '50': ['Contraperm F2Mid dark blue', 'Contraperm F2Mid green'],
+    '100': ['Optimum extra blue', 'Optimum extra green', 'Optimum extra violet'],
+    '125': ['Optimum extreme blue', 'Optimum extreme green', 'Optimum extreme violet', 'Optimum extreme grey'],
+    '180': ['Optimum infinite blue', 'Optimum infinite green', 'Optimum infinite red'],
 };
 
 // ==================== Preprocess helpers ====================
@@ -65,6 +65,16 @@ export const OrthoEyeParamsSchema = z.object({
         (val) => (val === '' || val === null || val === undefined || Number.isNaN(Number(val)) ? 1 : Number(val)),
         z.number().int().default(1)
     ),
+}).refine(data => {
+    if (data.characteristic === 'toric' && !data.isRgp) {
+        if (data.tor === undefined || data.tor === null || data.tor === 0) {
+            return false;
+        }
+    }
+    return true;
+}, {
+    message: "Для торической линзы значение Тор. обязательно",
+    path: ["tor"]
 });
 
 export type OrthoEyeParams = z.infer<typeof OrthoEyeParamsSchema>;
@@ -216,27 +226,48 @@ export const OrderSchema = z.object({
         qty: z.number(),
         price: z.number(),
     })).optional(),
+    contract_id: z.string().optional(),
+    contract: z.object({
+        number: z.string(),
+        date: z.string(),
+        provider: z.object({
+            name: z.string(),
+            inn: z.string().optional(),
+            address: z.string().optional(),
+            bankName: z.string().optional(),
+            bik: z.string().optional(),
+            iban: z.string().optional(),
+        }).optional(),
+        client: z.object({
+            name: z.string(),
+            inn: z.string().optional(),
+            address: z.string().optional(),
+        }).optional(),
+    }).optional(),
 });
 
 // ==================== Order Edit & Production Helpers ====================
 /** Doctor can edit: only when status is 'new' AND edit_deadline has not passed */
-export function canEditOrder(order: Order): boolean {
+export function canEditOrder(order: Order, serverTimeOffsetMs: number = 0): boolean {
     if (order.status !== 'new') return false;
     if (!order.edit_deadline) return true;
-    return new Date() < new Date(order.edit_deadline);
+    const realNow = Date.now() + serverTimeOffsetMs;
+    return realNow < new Date(order.edit_deadline).getTime();
 }
 
 /** Engineer can start production: urgent orders immediately, normal after edit_deadline */
-export function canStartProduction(order: Order): boolean {
+export function canStartProduction(order: Order, serverTimeOffsetMs: number = 0): boolean {
     if (order.is_urgent) return true;
     if (!order.edit_deadline) return true;
-    return new Date() >= new Date(order.edit_deadline);
+    const realNow = Date.now() + serverTimeOffsetMs;
+    return realNow >= new Date(order.edit_deadline).getTime();
 }
 
 /** Returns remaining ms until edit_deadline (0 if passed) */
-export function editWindowRemainingMs(order: Order): number {
+export function editWindowRemainingMs(order: Order, serverTimeOffsetMs: number = 0): number {
     if (!order.edit_deadline) return 0;
-    return Math.max(0, new Date(order.edit_deadline).getTime() - Date.now());
+    const realNow = Date.now() + serverTimeOffsetMs;
+    return Math.max(0, new Date(order.edit_deadline).getTime() - realNow);
 }
 
 export type Order = z.infer<typeof OrderSchema>;
@@ -251,6 +282,7 @@ export const CreateOrderSchema = OrderSchema.omit({
     production_completed_at: true,
     shipped_at: true,
     edit_deadline: true,
+    contract: true,
 }).extend({
     optic_id: z.string(),
     doctor: z.string().optional(),

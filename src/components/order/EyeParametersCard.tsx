@@ -114,7 +114,7 @@ export function EyeParametersCard({
 
             {/* Row 1: Характеристика + RGP checkbox + Km + TP + DIA */}
             <div className="space-y-5">
-                <div className={`grid grid-cols-2 ${isRgp ? 'sm:grid-cols-3' : 'sm:grid-cols-5'} gap-3`}>
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                     {/* Характеристика */}
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Характеристика <span className="text-red-500">*</span></label>
@@ -169,7 +169,13 @@ export function EyeParametersCard({
                             <input
                                 type="number"
                                 step="any"
-                                {...register(`config.eyes.${eye}.km`, { valueAsNumber: true })}
+                                min="0"
+                                {...register(`config.eyes.${eye}.km`, { 
+                                    valueAsNumber: true,
+                                    onChange: (e) => {
+                                        if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                    }
+                                })}
                                 className="input"
                                 placeholder="44.50"
                             />
@@ -190,7 +196,13 @@ export function EyeParametersCard({
                         <input
                             type="number"
                             step="any"
-                            {...register(`config.eyes.${eye}.dia`, { valueAsNumber: true })}
+                            min="0"
+                            {...register(`config.eyes.${eye}.dia`, { 
+                                valueAsNumber: true,
+                                onChange: (e) => {
+                                    if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                }
+                            })}
                             className="input"
                             placeholder="10.6"
                         />
@@ -198,7 +210,7 @@ export function EyeParametersCard({
                 </div>
 
                 {/* Row 2: E + Тог. + Dk + Пробная + Цвет */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                     {/* E — single for spherical, double (slash) for toric/RGP */}
                     <div className={isSpherical ? '' : 'col-span-2 sm:col-span-2'}>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
@@ -208,7 +220,13 @@ export function EyeParametersCard({
                             <input
                                 type="number"
                                 step="any"
-                                {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
+                                min="0"
+                                {...register(`config.eyes.${eye}.e1`, { 
+                                    valueAsNumber: true,
+                                    onChange: (e) => {
+                                        if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                    }
+                                })}
                                 className="input"
                                 placeholder="0.00"
                             />
@@ -217,7 +235,13 @@ export function EyeParametersCard({
                                 <input
                                     type="number"
                                     step="any"
-                                    {...register(`config.eyes.${eye}.e1`, { valueAsNumber: true })}
+                                    min="0"
+                                    {...register(`config.eyes.${eye}.e1`, { 
+                                        valueAsNumber: true,
+                                        onChange: (e) => {
+                                            if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                        }
+                                    })}
                                     className="input"
                                     placeholder="0.00"
                                 />
@@ -225,7 +249,13 @@ export function EyeParametersCard({
                                 <input
                                     type="number"
                                     step="any"
-                                    {...register(`config.eyes.${eye}.e2`, { valueAsNumber: true })}
+                                    min="0"
+                                    {...register(`config.eyes.${eye}.e2`, { 
+                                        valueAsNumber: true,
+                                        onChange: (e) => {
+                                            if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                        }
+                                    })}
                                     className="input"
                                     placeholder="0.00"
                                 />
@@ -244,6 +274,9 @@ export function EyeParametersCard({
                                 className="input"
                                 placeholder="0.00"
                             />
+                            {errors?.config?.eyes?.[eye]?.tor && (
+                                <p className="mt-1 text-xs text-red-600">{errors.config.eyes[eye]?.tor?.message}</p>
+                            )}
                         </div>
                     )}
 
@@ -308,7 +341,13 @@ export function EyeParametersCard({
                         <input
                             type="number"
                             step="any"
-                            {...register(`config.eyes.${eye}.compression_factor`)}
+                            min="0"
+                            {...register(`config.eyes.${eye}.compression_factor`, { 
+                                valueAsNumber: true,
+                                onChange: (e) => {
+                                    if (e.target.value < 0) e.target.value = Math.abs(e.target.value);
+                                }
+                            })}
                             className="input"
                             placeholder=""
                         />

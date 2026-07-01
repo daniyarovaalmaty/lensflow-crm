@@ -17,12 +17,22 @@ export async function GET(req: Request) {
         // Fetch user's organization
         const organization = await prisma.organization.findUnique({
             where: { id: userOrgId },
-            select: { id: true, name: true, defaultLabId: true, discountPercent: true }
+            select: { id: true, name: true, type: true, defaultLabId: true, discountPercent: true, allowedPartnerIds: true }
         });
 
-        // Fetch all laboratories
+        // Filter laboratories for branches
+        let labQuery: any = { type: 'laboratory' };
+        if (organization?.type === 'branch') {
+            if (organization.allowedPartnerIds && organization.allowedPartnerIds.length > 0) {
+                labQuery.id = { in: organization.allowedPartnerIds };
+            } else {
+                labQuery.id = { in: [] }; // No labs allowed if array is empty
+            }
+        }
+
+        // Fetch laboratories
         const laboratories = await prisma.organization.findMany({
-            where: { type: 'laboratory' },
+            where: labQuery,
             select: { id: true, name: true }
         });
 

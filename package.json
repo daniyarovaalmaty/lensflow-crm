@@ -8,7 +8,9 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "update-distributor-prices": "ts-node --compiler-options {\"module\":\"commonjs\"} scripts/update-distributor-prices.ts",
+    "add-dk50-trial": "ts-node --compiler-options {\"module\":\"commonjs\"} prisma/add-dk50-trial.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -25,6 +27,7 @@
     "dotenv": "^17.3.1",
     "exceljs": "^4.4.0",
     "framer-motion": "^11.0.3",
+    "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.14.0",
     "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.12.3",
@@ -33,6 +36,7 @@
     "lucide-react": "^0.314.0",
     "next": "^14.1.0",
     "next-auth": "^5.0.0-beta.30",
+    "number-to-words-ru": "^2.4.1",
     "pg": "^8.21.0",
     "prisma": "^7.8.0",
     "react": "^18.2.0",

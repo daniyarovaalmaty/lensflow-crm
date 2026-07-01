@@ -21,9 +21,19 @@ const FALLBACK_PRICE_PER_LENS = 17_500;
 
 function calcOrderTotal(order: Order, urgentPct: number = 0): number {
     if (order.total_price && order.total_price > 0) return order.total_price;
-    const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 })?.qty ?? 0;
-    const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 })?.qty ?? 0;
-    const base = (Number(od) + Number(os)) * FALLBACK_PRICE_PER_LENS;
+    const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
+    const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
+    
+    // Check saved prices first, then fallback to type-based defaults
+    const odPrice = (order as any).price_od ?? (od.characteristic === 'toric' ? 18_500 : FALLBACK_PRICE_PER_LENS);
+    const osPrice = (order as any).price_os ?? (os.characteristic === 'toric' ? 18_500 : FALLBACK_PRICE_PER_LENS);
+    
+    const additionalProducts = (order as any).products as Array<{ name: string; qty: number; price: number }> || [];
+    const productsSum = additionalProducts.reduce((s, p) => s + (p.price || 0) * (p.qty || 1), 0);
+
+    const base = (odQty * odPrice) + (osQty * osPrice) + productsSum;
     const pct = (order as any).discount_percent ?? 0;
     const disc = Math.round(base * pct / 100);
     const after = base - disc;

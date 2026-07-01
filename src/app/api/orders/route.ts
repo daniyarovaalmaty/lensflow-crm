@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
             // Distributor sees only orders assigned to them
             where.distributorOrgId = session.user.organizationId;
         } else if (session.user.role === 'optic') {
-            if (session.user.subRole === 'optic_procurement') {
-                // Procurement sees orders for ALL branches of their parent org
+            if (session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager') {
+                // Procurement and Managers see orders for ALL branches of their parent org
                 const orgId = session.user.organizationId;
                 // Find the headquarters (parent) and all its branches
                 const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
@@ -86,9 +86,37 @@ export async function GET(request: NextRequest) {
             include: {
                 patient: true,
                 createdBy: { select: { fullName: true, email: true } },
-                organization: { select: { name: true } },
+                organization: { select: { name: true, inn: true, deliveryAddress: true } },
+                labOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
+                distributorOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
+                contract: {
+                    select: {
+                        number: true,
+                        date: true,
+                        provider: { select: { name: true, inn: true, address: true, bankName: true, bik: true, iban: true } },
+                        client: { select: { name: true, inn: true, address: true } }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' },
+        });
+
+        // Pre-fetch missing contracts for orgs
+        const orgsWithMissingContracts = orders.filter((o: any) => !o.contract && o.organizationId).map((o: any) => o.organizationId);
+        const uniqueOrgs = [...new Set(orgsWithMissingContracts)];
+        const fallbackContracts = await prisma.contract.findMany({
+            where: { clientId: { in: uniqueOrgs as string[] }, status: 'active' },
+            include: {
+                provider: { select: { name: true, inn: true, address: true, bankName: true, bik: true, iban: true } },
+                client: { select: { name: true, inn: true, address: true } }
+            },
+            orderBy: { date: 'desc' }
+        });
+        const contractMap = new Map();
+        fallbackContracts.forEach(c => {
+            if (!contractMap.has(c.clientId)) {
+                contractMap.set(c.clientId, c);
+            }
         });
 
         // Transform to match frontend expected format
@@ -117,6 +145,8 @@ export async function GET(request: NextRequest) {
                 }
                 lensConfig.rgpFiles = stripped;
             }
+
+            const fallbackContract = order.organizationId ? contractMap.get(order.organizationId) : undefined;
 
             return {
                 id: order.id,
@@ -164,6 +194,35 @@ export async function GET(request: NextRequest) {
                 price_os: order.priceOs || undefined,
                 delivery_confirmed: (order as any).deliveryConfirmed ?? undefined,
                 lab_org_id: (order as any).labOrgId || null,
+                contract: order.contract ? {
+                    number: order.contract.number,
+                    date: order.contract.date.toISOString(),
+                    provider: order.contract.provider,
+                    client: order.contract.client,
+                } : (fallbackContract ? {
+                    number: fallbackContract.number,
+                    date: fallbackContract.date.toISOString(),
+                    provider: fallbackContract.provider,
+                    client: fallbackContract.client,
+                } : undefined),
+                optic_inn: order.organization?.inn || undefined,
+                optic_address: order.organization?.deliveryAddress || undefined,
+                lab_org: order.labOrg ? {
+                    name: order.labOrg.name,
+                    inn: order.labOrg.inn,
+                    address: order.labOrg.deliveryAddress,
+                    bankName: order.labOrg.bankName,
+                    bik: order.labOrg.bik,
+                    iban: order.labOrg.iban,
+                } : undefined,
+                distributor_org: order.distributorOrg ? {
+                    name: order.distributorOrg.name,
+                    inn: order.distributorOrg.inn,
+                    address: order.distributorOrg.deliveryAddress,
+                    bankName: order.distributorOrg.bankName,
+                    bik: order.distributorOrg.bik,
+                    iban: order.distributorOrg.iban,
+                } : undefined,
             };
         });
 
@@ -274,8 +333,10 @@ export async function POST(request: NextRequest) {
         const URGENT_SURCHARGE_PCT = labSettings.urgentSurchargePercent;
         const URGENT_DISCOUNT_PCT = labSettings.urgentDiscountPercent;
         const config = validatedData.config as any;
-        const odChar = config?.eyes?.od?.characteristic || '';
-        const osChar = config?.eyes?.os?.characteristic || '';
+        let odChar = config?.eyes?.od?.characteristic || '';
+        let osChar = config?.eyes?.os?.characteristic || '';
+        if (config?.eyes?.od?.isRgp) odChar = 'rgp';
+        if (config?.eyes?.os?.isRgp) osChar = 'rgp';
         const odQty = Number(config?.eyes?.od?.qty) || 0;
         const osQty = Number(config?.eyes?.os?.qty) || 0;
         const odDk = config?.eyes?.od?.dk || '';
@@ -293,8 +354,8 @@ export async function POST(request: NextRequest) {
 
         if (odChar || osChar) {
             const lensProducts = await prisma.product.findMany({
-                where: { category: 'lens', description: { in: [odChar, osChar].filter(Boolean) } },
-                select: { description: true, price: true, priceByDk: true, name1c: true },
+                where: { category: 'lens', isActive: true },
+                select: { description: true, sku: true, price: true, priceByDk: true, distributorPriceByDk: true, name1c: true },
             });
 
             // Load custom price list: distributor or optic org
@@ -340,6 +401,11 @@ export async function POST(request: NextRequest) {
                     const charPrice = distPriceList.lenses?.[charKey]?.[dkKey];
                     if (charPrice != null) return charPrice;
                 }
+                // Distributor-specific catalog prices (mirrors frontend getLensPrice)
+                if (session.user.role === 'distributor' && product.distributorPriceByDk && typeof product.distributorPriceByDk === 'object') {
+                    const dp = (product.distributorPriceByDk as Record<string, number>)[dk];
+                    if (dp != null) return dp;
+                }
                 // Global catalog fallback
                 if (product.priceByDk && typeof product.priceByDk === 'object') {
                     const dkPrice = (product.priceByDk as Record<string, number>)[dk];
@@ -350,9 +416,21 @@ export async function POST(request: NextRequest) {
 
 
 
-            const productMap = new Map(lensProducts.map((p: any) => [p.description, p]));
-            const odProduct: any = productMap.get(odChar);
-            const osProduct: any = productMap.get(osChar);
+            // Resolve catalog product for a characteristic. "Пробная" (probe) / DK 50
+            // map to the trial product (catalog description = 'trial').
+            const resolveLensProduct = (char: string, dk: string, isTrial: boolean): any => {
+                if (isTrial || dk === '50' || char === 'probe') {
+                    const trial = lensProducts.find((p: any) =>
+                        p.sku === 'ML-TRIAL-DK50' ||
+                        (p.description && p.description.toLowerCase().includes('trial')) ||
+                        p.description === 'probe'
+                    );
+                    if (trial) return trial;
+                }
+                return lensProducts.find((p: any) => p.description === char);
+            };
+            const odProduct: any = odChar ? resolveLensProduct(odChar, odDk, odTrial) : undefined;
+            const osProduct: any = osChar ? resolveLensProduct(osChar, osDk, osTrial) : undefined;
 
             odUnitPrice = odProduct ? getLensPrice(odProduct, odDk, odChar, odTrial) : 0;
             osUnitPrice = osProduct ? getLensPrice(osProduct, osDk, osChar, osTrial) : 0;
@@ -443,6 +521,7 @@ export async function POST(request: NextRequest) {
                         discountPercent: DISCOUNT_PCT,
                         distributorOrgId: body.distributorOrgId || undefined,
                         labOrgId: body.labOrgId || undefined,
+                        contractId: body.contract_id || undefined,
                     },
                     include: {
                         patient: true,

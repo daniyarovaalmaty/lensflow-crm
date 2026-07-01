@@ -3,6 +3,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { RobotoRegular } from './fonts/roboto-regular';
+import { numberToWordsRu } from './numberToWordsRu';
 
 interface InvoiceOrder {
     order_id: string;
@@ -18,15 +19,49 @@ interface InvoiceOrder {
     price_od?: number;
     price_os?: number;
     products?: Array<{ name: string; qty: number; price: number }>;
+    
+    contract?: {
+        number: string;
+        date: string; // ISO or Date string
+        provider?: {
+            name: string;
+            inn: string;
+            address: string;
+            bankName: string;
+            bik: string;
+            iban: string;
+        };
+        client?: {
+            name: string;
+            inn: string;
+            address: string;
+        }
+    };
+    optic_inn?: string;
+    optic_address?: string;
+    lab_org?: {
+        name: string;
+        inn: string;
+        address: string;
+        bankName: string;
+        bik: string;
+        iban: string;
+    };
+    distributor_org?: {
+        name: string;
+        inn: string;
+        address: string;
+        bankName: string;
+        bik: string;
+        iban: string;
+    };
 }
 
-const PRICE_PER_LENS = 17500; // fallback
+const PRICE_PER_LENS = 17500;
 
-export function generateInvoicePdf(order: InvoiceOrder): void {
+export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // Register Cyrillic font — register as both normal AND bold
-    // so autoTable can never fall back to Helvetica for bold text
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'bold');
@@ -34,48 +69,148 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
-    const contentWidth = pageWidth - margin * 2;
-
+    
     const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
     const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-    const odQty = Number(od.qty) || 0;
-    const osQty = Number(os.qty) || 0;
+    const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+    const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
     const additionalProducts = order.products || [];
     const discountPct = order.discount_percent ?? 0;
     const isUrgent = order.is_urgent || false;
     const URGENT_PCT = 25;
-    const dateStr = new Date(order.meta.created_at).toLocaleDateString('ru-RU');
-    const fmt = (n: number) => n.toLocaleString('ru-RU');
+    const orderDate = new Date(order.meta.created_at);
+    
+    const formatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+    const dateStr = formatter.format(orderDate).replace(' г.', '');
+    const fmt = (n: number) => n.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     const odUnitPrice = order.price_od ?? (odQty > 0 ? PRICE_PER_LENS : 0);
     const osUnitPrice = order.price_os ?? (osQty > 0 ? PRICE_PER_LENS : 0);
 
-    // === HEADER ===
-    doc.setFontSize(18);
-    doc.setTextColor(37, 99, 235); // blue
-    doc.text('LensFlow', margin, 20);
+    const providerName = order.contract?.provider?.name || order.distributor_org?.name || order.lab_org?.name || 'ТОО "MedInnVision"';
+    const providerInn = order.contract?.provider?.inn || order.distributor_org?.inn || order.lab_org?.inn || '970121400808';
+    const providerAddress = order.contract?.provider?.address || order.distributor_org?.address || order.lab_org?.address || 'Алматинская обл., Талгарский р-он, с. Талгар, ул. БЕРЕГОВАЯ, д. 72';
+    const providerBank = order.contract?.provider?.bankName || order.distributor_org?.bankName || order.lab_org?.bankName || 'АО "Народный Банк Казахстана"';
+    const providerBik = order.contract?.provider?.bik || order.distributor_org?.bik || order.lab_org?.bik || 'HSBKKZKX';
+    const providerIban = order.contract?.provider?.iban || order.distributor_org?.iban || order.lab_org?.iban || 'KZ48601A861003807741';
 
+    const clientName = order.contract?.client?.name || order.company || 'Покупатель не указан';
+    const clientInn = order.contract?.client?.inn || order.optic_inn || (order as any).inn || '';
+    const clientAddress = order.contract?.client?.address || order.optic_address || (order as any).delivery_address || '';
+
+    let contractStr = '________________________________________';
+    if (order.contract) {
+        const cDate = new Date(order.contract.date);
+        contractStr = `№${order.contract.number} от ${cDate.toLocaleDateString('ru-RU')} г.`;
+    }
+
+    let currentY = 15;
+
+    // === LENS FLOW BRANDING ===
+    doc.setFillColor(79, 70, 229); // Indigo-600
+    doc.rect(0, 0, pageWidth, 15, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(16);
+    doc.text('LENS FLOW', margin, 10.5);
+    doc.setTextColor(0, 0, 0); // reset
+    currentY = 25;
+
+    // Внимание
+    doc.setFontSize(8);
+    doc.setFont('Roboto', 'normal');
+    doc.text('Внимание! Оплата данного счета означает согласие с условиями поставки товара. Уведомление об оплате', margin, currentY);
+    doc.text('обязательно, в противном случае не гарантируется наличие товара на складе. Товар отпускается по факту', margin, currentY + 4);
+    doc.text('прихода денег на р/с Поставщика, самовывозом, при наличии доверенности и документов удостоверяющих личность.', margin, currentY + 8);
+    
+    currentY += 15;
+
+    // Образец платежного поручения
+    doc.setFontSize(10);
+    doc.setFont('Roboto', 'bold');
+    doc.text('Образец платежного поручения', margin, currentY);
+    currentY += 2;
+
+    autoTable(doc, {
+        startY: currentY,
+        margin: { left: margin, right: margin },
+        theme: 'plain',
+        styles: {
+            font: 'Roboto',
+            fontSize: 9,
+            lineColor: [0, 0, 0],
+            lineWidth: 0.2,
+            cellPadding: 2,
+        },
+        body: [
+            [
+                { content: `Бенефициар:\n${providerName}`, rowSpan: 2 },
+                { content: 'ИИК' },
+                { content: 'Кбе' }
+            ],
+            [
+                { content: providerIban },
+                { content: '19' } // Кбе 19 по умолчанию
+            ],
+            [
+                { content: `Банк бенефициара:\n${providerBank}`, rowSpan: 2 },
+                { content: 'БИК' },
+                { content: 'Код назначения платежа' }
+            ],
+            [
+                { content: providerBik },
+                { content: '855' } // КНП 855
+            ]
+        ],
+        columnStyles: {
+            0: { cellWidth: 100 },
+            1: { cellWidth: 50 },
+            2: { cellWidth: 'auto' },
+        }
+    });
+
+    // @ts-ignore
+    currentY = doc.lastAutoTable.finalY + 10;
+
+    // Заголовок Счета
     doc.setFontSize(14);
-    doc.setTextColor(17, 17, 17);
-    doc.text(`Счёт №${order.order_id}`, pageWidth - margin, 18, { align: 'right' });
+    doc.setFont('Roboto', 'bold');
+    doc.text(`Счет на оплату №${order.order_id} от ${dateStr} г.`, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 3;
+    doc.setLineWidth(0.5);
+    doc.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 8;
 
+    // Поставщик
     doc.setFontSize(10);
-    doc.setTextColor(107, 114, 128);
-    doc.text(`от ${dateStr}`, pageWidth - margin, 24, { align: 'right' });
+    doc.setFont('Roboto', 'normal');
+    doc.text('Поставщик:', margin, currentY);
+    doc.setFont('Roboto', 'bold');
+    
+    const providerText = `БИН / ИИН ${providerInn}, ${providerName}, ${providerAddress}`;
+    const splitProvider = doc.splitTextToSize(providerText, pageWidth - margin - 35);
+    doc.text(splitProvider, margin + 25, currentY);
+    currentY += splitProvider.length * 5 + 2;
 
-    // Blue line
-    doc.setDrawColor(37, 99, 235);
-    doc.setLineWidth(0.8);
-    doc.line(margin, 28, pageWidth - margin, 28);
+    // Покупатель
+    doc.setFont('Roboto', 'normal');
+    doc.text('Покупатель:', margin, currentY);
+    doc.setFont('Roboto', 'bold');
+    
+    const clientText = clientInn ? `БИН / ИИН ${clientInn}, ${clientName}, ${clientAddress}` : `${clientName}, ${clientAddress}`;
+    const splitClient = doc.splitTextToSize(clientText, pageWidth - margin - 35);
+    doc.text(splitClient, margin + 25, currentY);
+    currentY += splitClient.length * 5 + 2;
 
-    // === PATIENT INFO ===
-    doc.setFontSize(10);
-    doc.setTextColor(17, 17, 17);
-    let infoText = `Пациент: ${order.patient.name}  |  Врач: ${order.meta.doctor || '—'}`;
-    if (order.company) infoText += `  |  Компания: ${order.company}`;
-    doc.text(infoText, margin, 36);
+    // Договор
+    doc.setFont('Roboto', 'normal');
+    doc.text('Договор:', margin, currentY);
+    doc.setFont('Roboto', 'bold');
+    doc.text(contractStr, margin + 25, currentY);
+    
+    currentY += 10;
 
-    // === TABLE ===
+    // === ТАБЛИЦА ТОВАРОВ ===
     const tableRows: (string | number)[][] = [];
     let rowNum = 1;
     let subtotal = 0;
@@ -83,28 +218,26 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
     if (odQty > 0) {
         const lineTotal = odQty * odUnitPrice;
         subtotal += lineTotal;
-        const params = `Km ${od.km || '—'}, DIA ${od.dia || '—'}, Dk ${od.dk || '—'}`;
         tableRows.push([
             rowNum++,
-            order.document_name_od || 'MediLens — OD',
-            params,
+            order.document_name_od || 'Линзы контактные',
             odQty,
-            `${fmt(odUnitPrice)} ₸`,
-            `${fmt(lineTotal)} ₸`
+            'шт',
+            fmt(odUnitPrice),
+            fmt(lineTotal)
         ]);
     }
 
     if (osQty > 0) {
         const lineTotal = osQty * osUnitPrice;
         subtotal += lineTotal;
-        const params = `Km ${os.km || '—'}, DIA ${os.dia || '—'}, Dk ${os.dk || '—'}`;
         tableRows.push([
             rowNum++,
-            order.document_name_os || 'MediLens — OS',
-            params,
+            order.document_name_os || 'Линзы контактные',
             osQty,
-            `${fmt(osUnitPrice)} ₸`,
-            `${fmt(lineTotal)} ₸`
+            'шт',
+            fmt(osUnitPrice),
+            fmt(lineTotal)
         ]);
     }
 
@@ -116,36 +249,36 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
         tableRows.push([
             rowNum++,
             prod.name,
-            '—',
             pQty,
-            `${fmt(pPrice)} ₸`,
-            `${fmt(lineTotal)} ₸`
+            'шт',
+            fmt(pPrice),
+            fmt(lineTotal)
         ]);
     }
 
     autoTable(doc, {
-        startY: 42,
+        startY: currentY,
         margin: { left: margin, right: margin },
-        head: [['№', 'Наименование', 'Параметры', 'Кол-во', 'Цена', 'Сумма']],
+        head: [['№', 'Наименование', 'Кол-во', 'Ед.', 'Цена', 'Сумма']],
         body: tableRows,
         styles: {
             fontSize: 9,
             cellPadding: 3,
-            lineColor: [229, 231, 235],
-            lineWidth: 0.3,
+            lineColor: [0, 0, 0],
+            lineWidth: 0.2,
             font: 'Roboto',
+            textColor: [0, 0, 0]
         },
         headStyles: {
-            fillColor: [243, 244, 246],
-            textColor: [55, 65, 81],
-            fontSize: 8,
-            font: 'Roboto',
-            fontStyle: 'normal',
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            fontStyle: 'bold',
+            halign: 'center'
         },
         columnStyles: {
             0: { cellWidth: 10, halign: 'center' },
             1: { cellWidth: 'auto' },
-            2: { cellWidth: 35, halign: 'center', fontSize: 8 },
+            2: { cellWidth: 15, halign: 'center' },
             3: { cellWidth: 15, halign: 'center' },
             4: { cellWidth: 25, halign: 'right' },
             5: { cellWidth: 25, halign: 'right' },
@@ -153,44 +286,115 @@ export function generateInvoicePdf(order: InvoiceOrder): void {
         theme: 'grid',
     });
 
-    // === TOTALS ===
     const discountAmt = Math.round(subtotal * discountPct / 100);
     const afterDiscount = subtotal - discountAmt;
     const urgentAmt = isUrgent ? Math.round(afterDiscount * URGENT_PCT / 100) : 0;
     const grandTotal = order.total_price || (afterDiscount + urgentAmt);
 
-    // @ts-ignore - autoTable adds lastAutoTable
-    let y = (doc as any).lastAutoTable.finalY + 10;
+    // @ts-ignore
+    currentY = doc.lastAutoTable.finalY;
 
-    doc.setFontSize(10);
-    doc.setTextColor(107, 114, 128);
-    doc.text('Сумма без скидки:', pageWidth - margin - 50, y);
-    doc.setTextColor(17, 17, 17);
-    doc.text(`${fmt(subtotal)} ₸`, pageWidth - margin, y, { align: 'right' });
-
-    y += 7;
-    doc.setTextColor(5, 150, 105); // green
-    doc.text(`Скидка ${discountPct}%:`, pageWidth - margin - 50, y);
-    doc.text(`-${fmt(discountAmt)} ₸`, pageWidth - margin, y, { align: 'right' });
-
+    // Итоговые строки
+    const finalTableData = [];
+    if (discountPct > 0) {
+        finalTableData.push(['', '', '', '', 'Итого:', fmt(subtotal)]);
+        finalTableData.push(['', '', '', '', `Скидка ${discountPct}%:`, `-${fmt(discountAmt)}`]);
+    }
     if (isUrgent) {
-        y += 7;
-        doc.setTextColor(217, 119, 6); // amber
-        doc.text(`Срочность +${URGENT_PCT}%:`, pageWidth - margin - 50, y);
-        doc.text(`+${fmt(urgentAmt)} ₸`, pageWidth - margin, y, { align: 'right' });
+        finalTableData.push(['', '', '', '', `Срочность +${URGENT_PCT}%:`, `+${fmt(urgentAmt)}`]);
+    }
+    finalTableData.push(['', '', '', '', 'Итого к оплате:', fmt(grandTotal)]);
+
+    autoTable(doc, {
+        startY: currentY,
+        margin: { left: margin, right: margin },
+        body: finalTableData,
+        theme: 'plain',
+        styles: {
+            fontSize: 9,
+            font: 'Roboto',
+            fontStyle: 'bold',
+            textColor: [0, 0, 0],
+            cellPadding: 2,
+        },
+        columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 15 },
+            3: { cellWidth: 15 },
+            4: { cellWidth: 35, halign: 'right' },
+            5: { cellWidth: 25, halign: 'right' },
+        }
+    });
+
+    // @ts-ignore
+    currentY = doc.lastAutoTable.finalY + 5;
+
+    // Сумма прописью
+    doc.setFont('Roboto', 'normal');
+    doc.text(`Всего наименований ${rowNum - 1}, на сумму ${fmt(grandTotal)} KZT`, margin, currentY);
+    currentY += 6;
+    
+    doc.setFont('Roboto', 'bold');
+    doc.text(`Всего к оплате: ${numberToWordsRu(grandTotal)} тенге 00 тиын`, margin, currentY);
+    currentY += 2;
+    doc.setLineWidth(0.5);
+    doc.line(margin, currentY, pageWidth - margin, currentY);
+
+    currentY += 15;
+
+    // Подписи
+    doc.setFont('Roboto', 'normal');
+    doc.text('Руководитель', margin, currentY);
+    doc.line(margin + 25, currentY, margin + 65, currentY);
+    
+    doc.text('Бухгалтер', margin + 80, currentY);
+    doc.line(margin + 100, currentY, margin + 140, currentY);
+
+    // Место печати (М.П.)
+    doc.setFontSize(10);
+    doc.setFont('Roboto', 'bold');
+    doc.setTextColor(150, 150, 150);
+    doc.text('М.П.', margin + 35, currentY - 5);
+    doc.setTextColor(0, 0, 0);
+
+    // Добавляем печать MedInnVision (только если поставщик MedInnVision)
+    const isMedInn = providerName.toLowerCase().includes('medinn');
+    
+    if (isMedInn) {
+        try {
+            const stampImg = new Image();
+            stampImg.src = '/images/stamp_only.png';
+            await new Promise((resolve, reject) => {
+                stampImg.onload = resolve;
+                stampImg.onerror = reject;
+            });
+            
+            const sigImg = new Image();
+            sigImg.src = '/images/signature_only.png';
+            await new Promise((resolve, reject) => {
+                sigImg.onload = resolve;
+                sigImg.onerror = reject;
+            });
+
+            // 1. Рисуем печать (по центру М.П.)
+            const stampWidth = 55; // Чуть увеличили печать
+            const stampHeight = stampWidth * (stampImg.height / stampImg.width);
+            const stampX = margin + 40 - (stampWidth / 2);
+            const stampY = currentY - 5 - (stampHeight / 2);
+            doc.addImage(stampImg, 'PNG', stampX, stampY, stampWidth, stampHeight);
+            
+            // 2. Рисуем подпись (на линии Руководителя)
+            const sigWidth = 55; // Уменьшили ширину подписи
+            const sigHeight = sigWidth * (sigImg.height / sigImg.width);
+            // Линия руководителя идет от margin + 25 до margin + 65
+            const sigX = margin + 35;
+            const sigY = currentY - 5 - (sigHeight / 2);
+            doc.addImage(sigImg, 'PNG', sigX, sigY, sigWidth, sigHeight);
+        } catch (e) {
+            console.warn('Could not load stamp image', e);
+        }
     }
 
-    y += 3;
-    doc.setDrawColor(229, 231, 235);
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - margin - 80, y, pageWidth - margin, y);
-
-    y += 8;
-    doc.setFontSize(14);
-    doc.setTextColor(17, 17, 17);
-    doc.text('Итого:', pageWidth - margin - 50, y);
-    doc.text(`${fmt(grandTotal)} ₸`, pageWidth - margin, y, { align: 'right' });
-
-    // === SAVE ===
-    doc.save(`Счёт_${order.order_id}.pdf`);
+    doc.save(`Счет_на_оплату_№${order.order_id}.pdf`);
 }

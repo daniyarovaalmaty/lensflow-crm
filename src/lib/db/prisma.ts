@@ -2,20 +2,56 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 
-const globalForPrisma = globalThis as unknown as {
-    prisma: PrismaClient | undefined;
-};
-
 function createPrismaClient() {
-    const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/lensflow';
-    const pool = new pg.Pool({ connectionString });
+    const connectionString = process.env.DATABASE_URL || process.env.DIRECT_URL || 'postgresql://localhost:5432/lensflow';
+    
+    const pool = new pg.Pool({ 
+        connectionString,
+        max: 5,
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 20000
+    });
     const adapter = new PrismaPg(pool);
 
-    return new PrismaClient({
+    const client = new PrismaClient({
         adapter,
         log: process.env.NODE_ENV === 'development' ? ['query'] : [],
-    } as any);
+    });
+
+    // Tenant Isolation Middleware
+    return client.$extends({
+        query: {
+            $allModels: {
+                async deleteMany({ model, args, query }) {
+                    const protectedModels = ['OpticProduct', 'Sale', 'SaleItem', 'Order', 'StockDocument', 'StockItem', 'StockMovement', 'Lead', 'Patient'];
+                    if (protectedModels.includes(model)) {
+                        const where: any = args.where;
+                        if (!where || (!where.organizationId && !where.id)) {
+                            throw new Error(`[Tenant Isolation] БЛОКИРОВКА: Попытка выполнить глобальный deleteMany для таблицы ${model} без указания organizationId!`);
+                        }
+                    }
+                    return query(args);
+                },
+                async updateMany({ model, args, query }) {
+                    const protectedModels = ['OpticProduct', 'Sale', 'SaleItem', 'Order', 'StockDocument', 'StockItem', 'StockMovement', 'Lead', 'Patient'];
+                    if (protectedModels.includes(model)) {
+                        const where: any = args.where;
+                        if (!where || (!where.organizationId && !where.id)) {
+                            throw new Error(`[Tenant Isolation] БЛОКИРОВКА: Попытка выполнить глобальный updateMany для таблицы ${model} без указания organizationId!`);
+                        }
+                    }
+                    return query(args);
+                }
+            }
+        }
+    });
 }
+
+type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>;
+
+const globalForPrisma = globalThis as unknown as {
+    prisma: ExtendedPrismaClient | undefined;
+};
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 

@@ -65,11 +65,28 @@ interface CampaignItem {
     leadsCount: number;
 }
 
+interface DoctorItem {
+    name: string;
+    count: number;
+    revenue: number;
+    appointmentsCount: number;
+    salesCount: number;
+    conversion: number;
+}
+
+interface ServiceItem {
+    name: string;
+    count: number;
+    revenue: number;
+}
+
 interface AnalyticsData {
     kpi: KPI;
     funnel: FunnelItem[];
     sources: SourceItem[];
     campaigns: CampaignItem[];
+    doctorsAnalytics: DoctorItem[];
+    servicesAnalytics: ServiceItem[];
 }
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
@@ -144,7 +161,7 @@ export default function MarketingAnalyticsPage() {
         );
     }
 
-    const { kpi, sources, campaigns } = data;
+    const { kpi, sources, campaigns, doctorsAnalytics, servicesAnalytics } = data;
 
     return (
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 py-8 pb-20">
@@ -444,6 +461,101 @@ export default function MarketingAnalyticsPage() {
                         </table>
                     </div>
                 )}
+            </div>
+
+            {/* 4. Doctors and Services (Retroactive POS Analytics) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                {/* Doctors Analytics */}
+                <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-50">
+                        <div className="flex items-center justify-between mb-1">
+                            <h2 className="text-lg font-bold text-gray-900">Аналитика по врачам</h2>
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                                <Users className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-400">Связка: Записи в календаре → Оплаты на кассе</p>
+                    </div>
+                    <div className="p-6">
+                        {doctorsAnalytics?.length === 0 ? (
+                            <div className="text-center py-6 text-gray-400 text-sm font-medium">Нет данных по врачам за этот месяц</div>
+                        ) : (
+                            <div className="space-y-4">
+                                {doctorsAnalytics?.map((doc, idx) => (
+                                    <div key={idx} className="flex flex-col p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:border-blue-100 transition-all">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold shadow-sm">
+                                                    {doc.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-gray-900">{doc.name}</h4>
+                                                    <p className="text-xs text-gray-500">
+                                                        {doc.appointmentsCount > 0 ? `${doc.appointmentsCount} записей в календаре` : 'Без записи в календаре'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-sm font-black text-gray-900 block">{fmt(doc.revenue)} ₸</span>
+                                                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Выручка</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-3 gap-2 bg-white rounded-xl p-2 border border-gray-50">
+                                            <div className="text-center">
+                                                <span className="block text-[10px] text-gray-400 uppercase font-bold">Записей</span>
+                                                <span className="text-xs font-black text-gray-700">{doc.appointmentsCount}</span>
+                                            </div>
+                                            <div className="text-center border-l border-r border-gray-50">
+                                                <span className="block text-[10px] text-gray-400 uppercase font-bold">Оплат</span>
+                                                <span className="text-xs font-black text-emerald-600">{doc.salesCount}</span>
+                                            </div>
+                                            <div className="text-center">
+                                                <span className="block text-[10px] text-gray-400 uppercase font-bold">Конверсия</span>
+                                                <span className={`text-xs font-black ${doc.conversion >= 80 ? 'text-emerald-600' : doc.conversion >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                                                    {doc.conversion}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Services Analytics */}
+                <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-50">
+                        <div className="flex items-center justify-between mb-1">
+                            <h2 className="text-lg font-bold text-gray-900">Популярные услуги (Топ-10)</h2>
+                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                                <Activity className="w-4 h-4" />
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-400">На основе чеков в этом месяце</p>
+                    </div>
+                    <div className="p-6">
+                        {servicesAnalytics?.length === 0 ? (
+                            <div className="text-center py-6 text-gray-400 text-sm font-medium">Нет проданных услуг за этот месяц</div>
+                        ) : (
+                            <div className="space-y-3">
+                                {servicesAnalytics?.map((srv, idx) => (
+                                    <div key={idx} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs font-bold text-gray-400 w-4">{idx + 1}.</span>
+                                            <span className="text-sm font-bold text-gray-700 truncate max-w-[200px] sm:max-w-[250px]">{srv.name}</span>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-right">
+                                            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-lg">{srv.count} шт</span>
+                                            <span className="text-sm font-black text-emerald-600 w-24">{fmt(srv.revenue)} ₸</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

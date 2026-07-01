@@ -20,8 +20,8 @@ function buildUserReturn(user: any, org: any | null) {
         role: user.role,
         subRole: user.subRole,
         organizationId: user.organizationId,
-        orgType: org?.type || 'standalone',
-        parentOrgId: org?.parentId || null,
+        orgType: org?.type || 'standalone',   // may be undefined in older DB — defaults to standalone
+        parentOrgId: org?.parentId || null,   // may be undefined in older DB — defaults to null
         permissions: user.permissions,
         profile: {
             fullName: user.fullName,

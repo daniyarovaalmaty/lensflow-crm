@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, Banknote, Search, Minus
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,6 +27,12 @@ interface Consultation {
     intraocularPressureOS: number | null;
     visualAcuityOD: number | null;
     visualAcuityOS: number | null;
+    k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null;
+    k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null;
+    lensFittingOD: string | null;
+    lensFittingOS: string | null;
+    refractionOD: string | null;
+    refractionOS: string | null;
     notes: string | null;
     doctor: { fullName: string } | null;
 }
@@ -38,7 +44,22 @@ interface PatientDetail {
     email: string | null;
     birthDate: string | null;
     gender: string | null;
+    iin: string | null;
+    address: string | null;
+    profession: string | null;
+    complaints: string | null;
+    anamnesisDisease: string | null;
+    anamnesisLife: string | null;
+    allergies: string | null;
+    heredity: string | null;
+    medications: string | null;
+    dispensary: string | null;
+    surgeries: string | null;
+    lastCorrection: string | null;
     notes: string | null;
+    attachments: Array<{
+        id: string; name: string; url: string; type: string; size: number; uploadedAt: string;
+    }> | null;
     doctor: { id: string; fullName: string } | null;
     createdAt: string;
     prescriptions: Prescription[];
@@ -160,6 +181,8 @@ export default function PatientDetailPage() {
         type: 'exam', diagnosis: '', treatment: '', nextVisit: '',
         intraocularPressureOD: '', intraocularPressureOS: '',
         visualAcuityOD: '', visualAcuityOS: '', notes: '',
+        k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
+        k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
     });
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
@@ -170,6 +193,7 @@ export default function PatientDetailPage() {
     const [invoiceCart, setInvoiceCart] = useState<any[]>([]);
     const [invoiceSearch, setInvoiceSearch] = useState('');
     const [savingInvoice, setSavingInvoice] = useState(false);
+    const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
         fetch(`/api/patients/${id}`)
@@ -232,7 +256,12 @@ export default function PatientDetailPage() {
             const c = await res.json();
             setConsultations(prev => [c, ...prev]);
             setShowConsultForm(false);
-            setConsultForm({ visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '' });
+            setConsultForm({ 
+                visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
+                intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
+                k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
+                k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+            });
         }
         setSavingConsult(false);
     };
@@ -310,6 +339,130 @@ export default function PatientDetailPage() {
         return `${age} лет`;
     };
 
+    const [parsingAi, setParsingAi] = useState(false);
+
+    const handleAiParse = async (e: React.ChangeEvent<HTMLInputElement>, target: 'prescription' | 'consultation') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setParsingAi(true);
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target?.result as string;
+            try {
+                const res = await fetch('/api/ai/parse-scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 }),
+                });
+
+                if (res.ok) {
+                    const parsed = await res.json();
+                    const data = parsed.data || {};
+
+                    if (target === 'prescription') {
+                        setRxForm((f: any) => ({
+                            ...f,
+                            odSph: data.odSph ?? f.odSph, odCyl: data.odCyl ?? f.odCyl, odAx: data.odAx ?? f.odAx,
+                            odAdd: data.odAdd ?? f.odAdd, odPd: data.odPd ?? f.odPd,
+                            osSph: data.osSph ?? f.osSph, osCyl: data.osCyl ?? f.osCyl, osAx: data.osAx ?? f.osAx,
+                            osAdd: data.osAdd ?? f.osAdd, osPd: data.osPd ?? f.osPd,
+                            pdTotal: data.pdTotal ?? f.pdTotal
+                        }));
+                    } else {
+                        setConsultForm((f: any) => ({
+                            ...f,
+                            visualAcuityOD: data.visualAcuityOD ?? f.visualAcuityOD,
+                            visualAcuityOS: data.visualAcuityOS ?? f.visualAcuityOS,
+                            intraocularPressureOD: data.intraocularPressureOD ?? f.intraocularPressureOD,
+                            intraocularPressureOS: data.intraocularPressureOS ?? f.intraocularPressureOS,
+                            k1OD: data.k1OD ?? f.k1OD, k2OD: data.k2OD ?? f.k2OD, axisOD: data.axisOD ?? f.axisOD,
+                            astigmatismOD: data.astigmatismOD ?? f.astigmatismOD, pachymetryOD: data.pachymetryOD ?? f.pachymetryOD, eccentricityOD: data.eccentricityOD ?? f.eccentricityOD,
+                            k1OS: data.k1OS ?? f.k1OS, k2OS: data.k2OS ?? f.k2OS, axisOS: data.axisOS ?? f.axisOS,
+                            astigmatismOS: data.astigmatismOS ?? f.astigmatismOS, pachymetryOS: data.pachymetryOS ?? f.pachymetryOS, eccentricityOS: data.eccentricityOS ?? f.eccentricityOS
+                        }));
+                    }
+                    
+                    // Auto-upload to attachments
+                    const newAttachment = {
+                        id: Math.random().toString(36).substring(2, 9),
+                        name: file.name,
+                        url: base64,
+                        type: file.type,
+                        size: file.size,
+                        uploadedAt: new Date().toISOString()
+                    };
+                    const updatedAttachments = [...(patient?.attachments || []), newAttachment];
+                    await fetch(`/api/patients/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ attachments: updatedAttachments }),
+                    });
+                    setPatient(p => p ? { ...p, attachments: updatedAttachments } : p);
+
+                } else {
+                    alert('Ошибка при распознавании ИИ');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Сбой запроса к ИИ');
+            } finally {
+                setParsingAi(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const [uploadingFile, setUploadingFile] = useState(false);
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingFile(true);
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64 = event.target?.result as string;
+            const newAttachment = {
+                id: Math.random().toString(36).substring(2, 9),
+                name: file.name,
+                url: base64,
+                type: file.type,
+                size: file.size,
+                uploadedAt: new Date().toISOString()
+            };
+
+            const updatedAttachments = [...(patient?.attachments || []), newAttachment];
+
+            try {
+                const res = await fetch(`/api/patients/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ attachments: updatedAttachments }),
+                });
+                if (res.ok) {
+                    setPatient(p => p ? { ...p, attachments: updatedAttachments } : p);
+                }
+            } finally {
+                setUploadingFile(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleDeleteAttachment = async (attId: string) => {
+        if (!confirm('Удалить этот файл?')) return;
+        const updatedAttachments = (patient?.attachments || []).filter(a => a.id !== attId);
+        const res = await fetch(`/api/patients/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ attachments: updatedAttachments }),
+        });
+        if (res.ok) {
+            setPatient(p => p ? { ...p, attachments: updatedAttachments } : p);
+        }
+    };
+
     if (isLoading) return (
         <div className="min-h-screen bg-surface flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full" />
@@ -333,35 +486,359 @@ export default function PatientDetailPage() {
 
     return (
         <div className="min-h-screen bg-surface">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-                {/* Back */}
+            
+            {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, видна при печати) --- */}
+            <div className="hidden print:block p-8 bg-white text-gray-800 font-sans w-full" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                {/* Header: Логотип и контакты клиники */}
+                <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 p-6 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md">
+                            <Stethoscope className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
+                            <p className="text-primary-600 font-medium mt-1">Офтальмологический центр LensFlow</p>
+                        </div>
+                    </div>
+                    <div className="text-right text-sm text-gray-500 space-y-1">
+                        <p className="flex items-center justify-end gap-2"><MapPin className="w-3.5 h-3.5 text-primary-400" /> г. Алматы, ул. Абая 1</p>
+                        <p className="flex items-center justify-end gap-2"><Phone className="w-3.5 h-3.5 text-primary-400" /> +7 (777) 123-45-67</p>
+                        <p className="flex items-center justify-end gap-2"><Globe className="w-3.5 h-3.5 text-primary-400" /> www.lensflow.kz</p>
+                    </div>
+                </div>
+
+                {/* Данные пациента */}
+                <div className="mb-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                        <User className="w-5 h-5 text-primary-500" />
+                        <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
+                    </div>
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">ФИО</span> <strong className="text-lg text-gray-900">{patient.name}</strong></div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Дата рождения</span> <strong className="text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
+                        {patient.notes && (
+                            <div className="col-span-2 mt-2 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                                <span className="text-xs font-bold text-orange-400 uppercase mb-1 block">Анамнез / Заметки</span>
+                                <p className="text-gray-800 leading-relaxed">{patient.notes}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Последняя консультация (если есть) */}
+                {consultations.length > 0 && (
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                            <Activity className="w-5 h-5 text-teal-500" />
+                            <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Последний визит</h2>
+                        </div>
+                        {(() => {
+                            const c = consultations[0];
+                            return (
+                                <div className="text-sm">
+                                    <div className="flex items-center gap-4 mb-4 bg-teal-50 text-teal-800 px-4 py-2 rounded-lg font-medium inline-flex">
+                                        <Calendar className="w-4 h-4 text-teal-600" />
+                                        <span>{new Date(c.visitDate).toLocaleDateString('ru-RU')}</span>
+                                        {c.doctor && <span className="border-l border-teal-200 pl-4 ml-2">Врач: {c.doctor.fullName}</span>}
+                                    </div>
+                                    
+                                    {(c.visualAcuityOD || c.visualAcuityOS || c.intraocularPressureOD || c.intraocularPressureOS) && (
+                                        <div className="rounded-xl overflow-hidden border border-gray-200 mb-6">
+                                            <table className="w-full text-center">
+                                                <thead>
+                                                    <tr className="bg-gray-50 border-b border-gray-200">
+                                                        <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Показатель</th>
+                                                        <th className="py-3 px-4 font-bold text-primary-600 uppercase text-xs tracking-wider bg-primary-50/50">OD (Правый)</th>
+                                                        <th className="py-3 px-4 font-bold text-teal-600 uppercase text-xs tracking-wider bg-teal-50/50">OS (Левый)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100">
+                                                    {(c.visualAcuityOD || c.visualAcuityOS) && (
+                                                        <tr>
+                                                            <td className="py-3 px-4 font-medium text-gray-600 text-left">Острота зрения (Visus)</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.visualAcuityOD || '—'}</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.visualAcuityOS || '—'}</td>
+                                                        </tr>
+                                                    )}
+                                                    {(c.intraocularPressureOD || c.intraocularPressureOS) && (
+                                                        <tr>
+                                                            <td className="py-3 px-4 font-medium text-gray-600 text-left">ВГД (мм рт.ст.)</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.intraocularPressureOD || '—'}</td>
+                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.intraocularPressureOS || '—'}</td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+
+                                    {c.diagnosis && (
+                                        <div className="mb-4">
+                                            <span className="text-xs font-bold text-red-400 uppercase mb-1 block">Диагноз</span>
+                                            <p className="text-gray-900 font-medium bg-red-50 p-3 rounded-lg border border-red-100">{c.diagnosis}</p>
+                                        </div>
+                                    )}
+                                    {c.treatment && (
+                                        <div className="mb-4">
+                                            <span className="text-xs font-bold text-emerald-500 uppercase mb-1 block">Рекомендации / Лечение</span>
+                                            <p className="text-gray-800 bg-emerald-50 p-3 rounded-lg border border-emerald-100">{c.treatment}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
+                {/* Последний рецепт (если есть) */}
+                {patient.prescriptions.length > 0 && (
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                            <Eye className="w-5 h-5 text-indigo-500" />
+                            <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Актуальный рецепт</h2>
+                        </div>
+                        {(() => {
+                            const rx = patient.prescriptions[0];
+                            return (
+                                <div className="text-sm">
+                                    <p className="mb-4 flex items-center gap-2"><span className="text-gray-400 font-medium">Выписан:</span> <strong className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md">{new Date(rx.prescribedAt).toLocaleDateString('ru-RU')}</strong></p>
+                                    <div className="rounded-xl overflow-hidden border border-indigo-100 mb-4 shadow-sm">
+                                        <table className="w-full text-center">
+                                            <thead>
+                                                <tr className="bg-indigo-50 border-b border-indigo-100">
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Глаз</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Sph</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Cyl</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Ax</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Add</th>
+                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">PD</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-indigo-50">
+                                                <tr>
+                                                    <td className="py-3 px-3 font-bold text-primary-600 bg-white">OD</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odSph)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odCyl)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{rx.odAx || '—'}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odAdd)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odPd, false)}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="py-3 px-3 font-bold text-teal-600 bg-gray-50/50">OS</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osSph)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osCyl)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{rx.osAx || '—'}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osAdd)}</td>
+                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osPd, false)}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="flex gap-8">
+                                        {rx.pdTotal && <p className="bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">PD общий:</span> <strong className="text-gray-900 ml-2">{rx.pdTotal} мм</strong></p>}
+                                        {rx.notes && <p className="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">Заметки:</span> <span className="text-gray-800 ml-2">{rx.notes}</span></p>}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
+                {/* Footer / Подписи */}
+                <div className="mt-12 pt-8 border-t-2 border-gray-100 flex justify-between items-end text-sm">
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <p className="text-xs font-bold text-gray-400 uppercase mb-1">Документ сформирован</p>
+                        <p className="font-bold text-gray-800 text-base">{new Date().toLocaleDateString('ru-RU')} в {new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs font-bold text-gray-400 uppercase mb-2">Врач (ФИО, подпись)</p>
+                        <div className="flex gap-4 items-end">
+                            <p className="font-bold text-gray-800 text-lg border-b-2 border-gray-200 pb-1 px-4 min-w-[200px] text-center">
+                                {consultations.length > 0 && consultations[0].doctor ? consultations[0].doctor.fullName : ''}
+                            </p>
+                            <p className="border-b-2 border-gray-200 w-32 pb-1"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* --- ИНТЕРФЕЙС CRM (Виден на экране, скрыт при печати) --- */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 print:hidden">
                 <button onClick={() => router.push('/optic/patients')} className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 mb-6 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> К списку пациентов
                 </button>
 
-                {/* Header */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6 shadow-sm">
-                    <div className="flex items-start gap-5">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                            {patient.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                            {isEditing ? (
-                                <input
-                                    type="text" value={editForm.name || ''}
-                                    onChange={e => setEditForm((f: any) => ({ ...f, name: e.target.value }))}
-                                    className="input text-xl font-bold mb-2 w-full"
-                                />
-                            ) : (
-                                <h1 className="text-2xl font-bold text-gray-900 mb-1">{patient.name}</h1>
-                            )}
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                                {patient.gender === 'male' && <span className="text-blue-500 font-medium">♂ Мужской</span>}
-                                {patient.gender === 'female' && <span className="text-pink-500 font-medium">♀ Женский</span>}
-                                {patient.birthDate && <span>{new Date(patient.birthDate).toLocaleDateString('ru-RU')} ({calcAge(patient.birthDate)})</span>}
-                                <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" />{patient.orders.length} заказов</span>
-                                <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{patient.prescriptions.length} рецептов</span>
+                <div className="flex flex-col lg:flex-row gap-8">
+                    
+                    {/* LEFT SIDEBAR */}
+                    <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
+                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-100 p-6 shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-primary-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                            
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-3xl font-bold shadow-md shadow-primary-200 mb-4">
+                                    {patient.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
+                                </div>
+                                
+                                {isEditing ? (
+                                    <input
+                                        type="text" value={editForm.name || ''}
+                                        onChange={e => setEditForm((f: any) => ({ ...f, name: e.target.value }))}
+                                        className="input text-lg font-bold mb-2 w-full text-center"
+                                    />
+                                ) : (
+                                    <h1 className="text-xl font-bold text-gray-900 mb-1">{patient.name}</h1>
+                                )}
+                                
+                                <div className="flex flex-wrap justify-center gap-2 mb-4">
+                                    {patient.gender === 'male' && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium">♂ Мужской</span>}
+                                    {patient.gender === 'female' && <span className="px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 text-xs font-medium">♀ Женский</span>}
+                                    {patient.birthDate && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{calcAge(patient.birthDate)}</span>}
+                                </div>
+                                
+                                <div className="flex gap-2 w-full">
+                                    {isEditing ? (
+                                        <>
+                                            <button onClick={() => setIsEditing(false)} className="btn bg-gray-100 hover:bg-gray-200 flex-1 text-sm"><X className="w-4 h-4 mx-auto" /></button>
+                                            <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-[2] text-sm flex items-center justify-center gap-1">
+                                                <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить'}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button onClick={() => window.print()} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-1 text-sm flex justify-center text-gray-600">
+                                                <Printer className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
+                                                <Edit2 className="w-4 h-4" /> Редактировать
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
+
+                            <div className="mt-6 space-y-4 relative z-10">
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
+                                    {isEditing ? (
+                                        <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
+                                    {isEditing ? (
+                                        <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дата рождения</label>
+                                    {isEditing ? (
+                                        <input type="date" value={editForm.birthDate?.split('T')[0] || ''} onChange={e => setEditForm((f: any) => ({ ...f, birthDate: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.birthDate ? <><Calendar className="w-4 h-4 text-primary-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {isEditing && (
+                                <div className="mt-4 space-y-3 relative z-10 bg-gray-50 p-4 rounded-xl border border-gray-100 text-left">
+                                    <h4 className="text-xs font-bold text-gray-700 uppercase mb-2 border-b border-gray-200 pb-1">Дополнительные данные</h4>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">ИИН</label>
+                                            <input type="text" value={editForm.iin || ''} onChange={e => setEditForm((f: any) => ({ ...f, iin: e.target.value }))} className="input text-sm w-full h-8" placeholder="ИИН" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Профессия</label>
+                                            <input type="text" value={editForm.profession || ''} onChange={e => setEditForm((f: any) => ({ ...f, profession: e.target.value }))} className="input text-sm w-full h-8" placeholder="Профессия" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Домашний адрес</label>
+                                        <input type="text" value={editForm.address || ''} onChange={e => setEditForm((f: any) => ({ ...f, address: e.target.value }))} className="input text-sm w-full h-8" placeholder="Адрес проживания" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {(isEditing || patient.complaints || patient.anamnesisDisease || patient.anamnesisLife || patient.allergies || patient.heredity || patient.medications || patient.surgeries || patient.notes) && (
+                                <div className="mt-6 pt-6 border-t border-gray-100 relative z-10 text-left">
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3 block">Медицинская карта / Анамнез</label>
+                                    
+                                    {isEditing ? (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Жалобы</label>
+                                                <textarea value={editForm.complaints || ''} onChange={e => setEditForm((f: any) => ({ ...f, complaints: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез заболевания (Anamnesis morbi)</label>
+                                                <textarea value={editForm.anamnesisDisease || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisDisease: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Аллергоанамнез</label>
+                                                    <input type="text" value={editForm.allergies || ''} onChange={e => setEditForm((f: any) => ({ ...f, allergies: e.target.value }))} className="input w-full text-sm" placeholder="Лекарственная, пищевая аллергия" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Наследственность</label>
+                                                    <input type="text" value={editForm.heredity || ''} onChange={e => setEditForm((f: any) => ({ ...f, heredity: e.target.value }))} className="input w-full text-sm" placeholder="Глаукома, СД..." />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Перенесенные операции</label>
+                                                <textarea value={editForm.surgeries || ''} onChange={e => setEditForm((f: any) => ({ ...f, surgeries: e.target.value }))} className="input w-full resize-y text-sm min-h-[40px]" rows={1} />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Постоянный прием медикаментов</label>
+                                                <input type="text" value={editForm.medications || ''} onChange={e => setEditForm((f: any) => ({ ...f, medications: e.target.value }))} className="input w-full text-sm" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Последняя коррекция</label>
+                                                <input type="text" value={editForm.lastCorrection || ''} onChange={e => setEditForm((f: any) => ({ ...f, lastCorrection: e.target.value }))} className="input w-full text-sm" placeholder="Очки, МКЛ (дата)" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Прочие заметки</label>
+                                                <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {/* Read-only Anamnesis display */}
+                                            {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-3 rounded-lg border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
+                                            {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-3 rounded-lg border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
+                                            
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="bg-rose-50 p-2 rounded border border-rose-100">
+                                                    <p className="text-[10px] font-bold text-rose-500 uppercase mb-0.5">Аллергоанамнез</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.allergies ? `отягощен/да: ${patient.allergies}` : 'не отягощен/нет'}</p>
+                                                </div>
+                                                <div className="bg-indigo-50 p-2 rounded border border-indigo-100">
+                                                    <p className="text-[10px] font-bold text-indigo-500 uppercase mb-0.5">Наследственность</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.heredity ? `отягощен/да: ${patient.heredity}` : 'не отягощен/нет'}</p>
+                                                </div>
+                                                <div className="bg-sky-50 p-2 rounded border border-sky-100">
+                                                    <p className="text-[10px] font-bold text-sky-500 uppercase mb-0.5">Прием медикаментов</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.medications ? `да: ${patient.medications}` : 'нет'}</p>
+                                                </div>
+                                                <div className="bg-emerald-50 p-2 rounded border border-emerald-100">
+                                                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-0.5">Операции</p>
+                                                    <p className="text-sm font-medium text-gray-800">{patient.surgeries ? `да: ${patient.surgeries}` : 'нет'}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            {patient.lastCorrection && <div><p className="text-[10px] font-bold text-purple-500 uppercase mb-1">Последняя коррекция</p><p className="text-gray-800 text-sm bg-purple-50 p-3 rounded-lg border border-purple-100/50">{patient.lastCorrection}</p></div>}
+                                            
+                                            {patient.notes && <div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Прочие заметки</p><p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100 leading-relaxed">{patient.notes}</p></div>}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div className="flex gap-2">
                             {isEditing ? (
@@ -384,50 +861,85 @@ export default function PatientDetailPage() {
                         </div>
                     </div>
 
-                    {/* Contact info */}
-                    <div className="mt-5 pt-5 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Телефон</label>
-                            {isEditing ? (
-                                <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input w-full" />
-                            ) : (
-                                <p className="flex items-center gap-1.5 text-gray-900 font-medium"><Phone className="w-4 h-4 text-gray-400" />{patient.phone}</p>
-                            )}
+                    {/* MAIN CONTENT AREA */}
+                    <div className="flex-1 min-w-0">
+                        {/* TABS HEADER */}
+                        <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-gray-100 p-1 flex gap-1 mb-6 overflow-x-auto no-scrollbar sticky top-4 z-20">
+                            {[
+                                { id: 'overview', icon: LayoutDashboard, label: 'Обзор' },
+                                { id: 'consultations', icon: Activity, label: 'Консультации', count: consultations.length },
+                                { id: 'prescriptions', icon: Eye, label: 'Рецепты', count: patient.prescriptions.length },
+                                { id: 'orders', icon: ClipboardList, label: 'Заказы', count: patient.orders.length },
+                                { id: 'files', icon: Paperclip, label: 'Снимки', count: patient.attachments?.length || 0 }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                        setActiveTab(tab.id);
+                                        document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth' });
+                                    }}
+                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${activeTab === tab.id ? 'bg-primary-50 text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+                                >
+                                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-600' : 'text-gray-400'}`} />
+                                    {tab.label}
+                                    {tab.count !== undefined && tab.count > 0 && (
+                                        <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] leading-none ${activeTab === tab.id ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}`}>{tab.count}</span>
+                                    )}
+                                </button>
+                            ))}
+>>>>>>> origin/main
                         </div>
-                        <div>
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Email</label>
-                            {isEditing ? (
-                                <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input w-full" />
-                            ) : (
-                                <p className="flex items-center gap-1.5 text-gray-900">{patient.email ? <><Mail className="w-4 h-4 text-gray-400" />{patient.email}</> : '—'}</p>
-                            )}
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Дата рождения</label>
-                            {isEditing ? (
-                                <input type="date" value={editForm.birthDate?.split('T')[0] || ''} onChange={e => setEditForm((f: any) => ({ ...f, birthDate: e.target.value }))} className="input w-full" />
-                            ) : (
-                                <p className="flex items-center gap-1.5 text-gray-900">{patient.birthDate ? <><Calendar className="w-4 h-4 text-gray-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Notes */}
-                    {(isEditing || patient.notes) && (
-                        <div className="mt-4">
-                            <label className="text-xs font-semibold text-gray-400 uppercase mb-1 block">Заметки / Анамнез</label>
-                            {isEditing ? (
-                                <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none" rows={3} placeholder="Аллергии, особенности здоровья..." />
-                            ) : (
-                                <p className="text-gray-700 text-sm bg-amber-50 rounded-lg p-3 border border-amber-100">{patient.notes}</p>
-                            )}
-                        </div>
-                    )}
-                </div>
+                        {/* MAIN CONTENT STACK */}
+                        <div className="space-y-16 pb-32">
+                            {/* OVERVIEW SECTION */}
+                            <div id="overview" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-24">
+                                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                    <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2"><Activity className="w-4 h-4 text-teal-500" /> Активность</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Последний визит</p>
+                                            <p className="font-semibold text-gray-900">{consultations.length > 0 ? new Date(consultations[0].visitDate).toLocaleDateString('ru-RU') : 'Нет визитов'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Актуальный рецепт</p>
+                                            <p className="font-semibold text-gray-900">{patient.prescriptions.length > 0 ? new Date(patient.prescriptions[0].prescribedAt).toLocaleDateString('ru-RU') : 'Нет рецептов'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-gray-50 flex gap-2">
+                                        <button onClick={() => setActiveTab('consultations')} className="btn bg-gray-50 hover:bg-gray-100 flex-1 text-xs text-gray-700">Перейти к визитам →</button>
+                                    </div>
+                                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Prescriptions */}
-                    <div>
+                                <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-3xl border border-teal-100/50 p-6 shadow-sm">
+                                    <h3 className="text-sm font-bold text-teal-900 mb-4 flex items-center gap-2"><Eye className="w-4 h-4 text-teal-600" /> Последние показатели</h3>
+                                    {consultations.length > 0 && (consultations[0].visualAcuityOD || consultations[0].visualAcuityOS) ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">Visus OD</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].visualAcuityOD ?? '—'}</p>
+                                            </div>
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">Visus OS</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].visualAcuityOS ?? '—'}</p>
+                                            </div>
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">ВГД OD</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].intraocularPressureOD ?? '—'}</p>
+                                            </div>
+                                            <div className="bg-white/60 backdrop-blur rounded-xl p-3">
+                                                <p className="text-[10px] uppercase font-bold text-teal-600/70 mb-1">ВГД OS</p>
+                                                <p className="text-lg font-mono font-bold text-teal-900">{consultations[0].intraocularPressureOS ?? '—'}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-teal-700/70">Нет данных о зрении в последнем визите.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Prescriptions */}
+                            <div id="prescriptions" className="scroll-mt-24">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <Stethoscope className="w-5 h-5 text-primary-600" /> Рецепты на зрение
@@ -440,7 +952,14 @@ export default function PatientDetailPage() {
                         {/* Rx Form */}
                         {showRxForm && (
                             <div className="bg-white rounded-xl border border-primary-200 p-4 mb-4 shadow-sm">
-                                <h3 className="font-semibold text-gray-900 mb-4">Новый рецепт</h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-semibold text-gray-900">Новый рецепт</h3>
+                                    <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
+                                        <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
+                                        {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
+                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'prescription')} disabled={parsingAi} />
+                                    </label>
+                                </div>
                                 <form onSubmit={handleAddRx}>
                                     <div className="grid grid-cols-2 gap-3 mb-4">
                                         <div>
@@ -509,7 +1028,7 @@ export default function PatientDetailPage() {
                     </div>
 
                     {/* Orders */}
-                    <div>
+                    <div id="orders" className="scroll-mt-24">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <ClipboardList className="w-5 h-5 text-primary-600" /> История заказов
@@ -561,10 +1080,9 @@ export default function PatientDetailPage() {
                             </div>
                         )}
                     </div>
-                </div>
 
-                {/* Consultations */}
-                <div className="mt-6">
+                    {/* Consultations */}
+                    <div id="consultations" className="scroll-mt-24">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <Activity className="w-5 h-5 text-teal-600" /> История консультаций
@@ -580,7 +1098,14 @@ export default function PatientDetailPage() {
                     {/* New Consultation Form */}
                     {showConsultForm && (
                         <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
-                            <h3 className="font-semibold text-gray-900 mb-4">Новая запись консультации</h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold text-gray-900">Новая запись консультации</h3>
+                                <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
+                                    <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
+                                    {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'consultation')} disabled={parsingAi} />
+                                </label>
+                            </div>
                             <form onSubmit={handleAddConsult}>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                                     <div className="col-span-2">
@@ -618,10 +1143,69 @@ export default function PatientDetailPage() {
                                     </div>
                                 </div>
 
+                                {/* Topography metrics */}
+                                <div className="mb-4">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Топография / Кератометрия</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <p className="text-xs font-bold text-gray-600 mb-2">OD — Правый</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OD} onChange={e => setConsultForm((f: any) => ({ ...f, k1OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OD} onChange={e => setConsultForm((f: any) => ({ ...f, k2OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOD} onChange={e => setConsultForm((f: any) => ({ ...f, axisOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOD} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOD} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOD} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <p className="text-xs font-bold text-gray-600 mb-2">OS — Левый</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OS} onChange={e => setConsultForm((f: any) => ({ ...f, k1OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OS} onChange={e => setConsultForm((f: any) => ({ ...f, k2OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOS} onChange={e => setConsultForm((f: any) => ({ ...f, axisOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOS} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOS} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOS} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Lens Fitting and Refraction (Free Text) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                        <h4 className="text-xs font-bold text-blue-800 uppercase mb-2">Подбор линз (Параметры)</h4>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OD — Правый</label>
+                                                <input type="text" value={consultForm.lensFittingOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA, Paragon 10.5..." />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OS — Левый</label>
+                                                <input type="text" value={consultForm.lensFittingOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA..." />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                                        <h4 className="text-xs font-bold text-purple-800 uppercase mb-2">Рефрактометрия (ROL)</h4>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
+                                                <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
+                                                <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="space-y-3 mb-4">
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Диагноз / Клинические данные</label>
-                                        <textarea value={consultForm.diagnosis} onChange={e => setConsultForm((f: any) => ({ ...f, diagnosis: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
+                                        <textarea value={consultForm.diagnosis || ''} onChange={e => setConsultForm((f: any) => ({ ...f, diagnosis: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">План лечения / Рекомендации</label>
@@ -715,6 +1299,24 @@ export default function PatientDetailPage() {
                                                         </div>
                                                     </div>
                                                 )}
+                                                {(c.lensFittingOD || c.lensFittingOS) && (
+                                                    <div className="bg-blue-50/50 rounded-lg p-3 border border-blue-100">
+                                                        <p className="text-xs font-semibold text-blue-700 mb-2">Подбор линз</p>
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div><span className="text-blue-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.lensFittingOD || '—'}</span></div>
+                                                            <div><span className="text-blue-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.lensFittingOS || '—'}</span></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {(c.refractionOD || c.refractionOS) && (
+                                                    <div className="bg-purple-50/50 rounded-lg p-3 border border-purple-100">
+                                                        <p className="text-xs font-semibold text-purple-700 mb-2">Рефрактометрия</p>
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div><span className="text-purple-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.refractionOD || '—'}</span></div>
+                                                            <div><span className="text-purple-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.refractionOS || '—'}</span></div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 {c.diagnosis && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
@@ -746,6 +1348,65 @@ export default function PatientDetailPage() {
                             })}
                         </div>
                     )}
+                </div>
+
+                {/* Attachments Section */}
+                <div id="files" className="scroll-mt-24">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Paperclip className="w-5 h-5 text-indigo-600" /> Показатели и Снимки
+                            {patient.attachments && patient.attachments.length > 0 && (
+                                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{patient.attachments.length}</span>
+                            )}
+                        </h2>
+                        <label className="btn btn-secondary btn-sm flex items-center gap-1 cursor-pointer">
+                            <UploadCloud className="w-4 h-4" /> 
+                            {uploadingFile ? 'Загрузка...' : 'Добавить файл'}
+                            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploadingFile} accept="image/*,application/pdf" />
+                        </label>
+                    </div>
+
+                    {!patient.attachments || patient.attachments.length === 0 ? (
+                        <div className="text-center py-10 bg-white rounded-xl border border-gray-200 border-dashed">
+                            <UploadCloud className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">Снимки с топографа, авторефрактора и другие файлы</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {patient.attachments.map(att => (
+                                <div key={att.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 transition-colors group relative flex flex-col">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600">
+                                            {att.type.startsWith('image/') ? <Eye className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 truncate" title={att.name}>{att.name}</p>
+                                            <p className="text-xs text-gray-500">{(att.size / 1024).toFixed(1)} KB • {new Date(att.uploadedAt).toLocaleDateString('ru-RU')}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {att.type.startsWith('image/') && (
+                                        <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden mb-3 border border-gray-200">
+                                            <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+
+                                    <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100">
+                                        <a href={att.url} download={att.name} className="text-xs text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
+                                            <Download className="w-3.5 h-3.5" /> Скачать
+                                        </a>
+                                        <button onClick={() => handleDeleteAttachment(att.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                </div>
+
+                    </div>
                 </div>
             </div>
 

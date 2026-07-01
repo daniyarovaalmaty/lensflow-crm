@@ -33,6 +33,7 @@ interface LeadCard {
 const STAGES = [
     { key: 'new_lead', label: 'Новые', icon: UserPlus, color: 'bg-blue-100 text-blue-700' },
     { key: 'contacted', label: 'Связались', icon: Phone, color: 'bg-indigo-100 text-indigo-700' },
+    { key: 'follow_up', label: 'Связаться позже', icon: Clock, color: 'bg-orange-100 text-orange-700' },
     { key: 'qualified', label: 'Квалифицирован', icon: Target, color: 'bg-violet-100 text-violet-700' },
     { key: 'appointment', label: 'Записан', icon: Calendar, color: 'bg-emerald-100 text-emerald-700' },
     { key: 'visited', label: 'Пришёл', icon: User, color: 'bg-teal-100 text-teal-700' },
@@ -78,6 +79,19 @@ export default function SalesPipelinePage() {
     const [googleConnected, setGoogleConnected] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [analytics, setAnalytics] = useState<any>(null);
+    const [doctors, setDoctors] = useState<{id: string, fullName: string}[]>([]);
+    
+    // Appointment state
+    const [appointmentDate, setAppointmentDate] = useState('');
+    const [appointmentTime, setAppointmentTime] = useState('');
+    const [appointmentDoctorId, setAppointmentDoctorId] = useState('');
+    const [savingAppointment, setSavingAppointment] = useState(false);
+
+    // Task state
+    const [taskDate, setTaskDate] = useState('');
+    const [taskTime, setTaskTime] = useState('');
+    const [taskMessage, setTaskMessage] = useState('');
+    const [savingTask, setSavingTask] = useState(false);
 
 
     const handleSendWA = async (lead: LeadCard) => {
@@ -114,6 +128,12 @@ export default function SalesPipelinePage() {
             if (analyticsRes.ok) {
                 const analyticsData = await analyticsRes.json();
                 setAnalytics(analyticsData);
+            }
+
+            const apptRes = await fetch('/api/crm/appointments');
+            if (apptRes.ok) {
+                const apptData = await apptRes.json();
+                setDoctors(apptData.doctors || []);
             }
         } catch (err) {
             console.error('Failed to fetch leads:', err);
@@ -506,15 +526,167 @@ export default function SalesPipelinePage() {
                                 </div>
 
                                 {/* Appointment */}
-                                {selectedLead.appointmentAt && (
+                                {selectedLead.appointmentAt ? (
                                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                                        <div className="flex items-center gap-2 text-emerald-700 font-medium text-sm">
-                                            <Calendar className="w-4 h-4" />
-                                            Запись: {new Date(selectedLead.appointmentAt).toLocaleDateString('ru-RU', {
-                                                weekday: 'long', day: 'numeric', month: 'long',
-                                                hour: '2-digit', minute: '2-digit',
-                                            })}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-emerald-700 font-medium text-sm">
+                                                <Calendar className="w-4 h-4" />
+                                                Запись: {new Date(selectedLead.appointmentAt).toLocaleDateString('ru-RU', {
+                                                    weekday: 'long', day: 'numeric', month: 'long',
+                                                    hour: '2-digit', minute: '2-digit',
+                                                })}
+                                            </div>
+                                            <button 
+                                                onClick={async () => {
+                                                    if (!confirm('Отменить запись?')) return;
+                                                    await fetch(`/api/crm/leads/${selectedLead.id}`, {
+                                                        method: 'PATCH',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ appointmentAt: null }),
+                                                    });
+                                                    fetchLeads();
+                                                    setSelectedLeadId(null);
+                                                }}
+                                                className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                            >
+                                                Отменить
+                                            </button>
                                         </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                                        <label className="text-xs text-blue-800 font-semibold mb-3 flex items-center gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5" /> Добавить запись на прием
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Дата</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={appointmentDate}
+                                                    onChange={e => setAppointmentDate(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Время</label>
+                                                <input 
+                                                    type="time" 
+                                                    value={appointmentTime}
+                                                    onChange={e => setAppointmentTime(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="text-[10px] text-gray-500 mb-1 block">Врач</label>
+                                            <select 
+                                                value={appointmentDoctorId}
+                                                onChange={e => setAppointmentDoctorId(e.target.value)}
+                                                className="w-full text-xs px-2 py-1.5 border border-blue-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                                            >
+                                                <option value="">Выберите врача</option>
+                                                {doctors.map(d => (
+                                                    <option key={d.id} value={d.id}>{d.fullName}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <button 
+                                            disabled={!appointmentDate || !appointmentTime || !appointmentDoctorId || savingAppointment}
+                                            onClick={async () => {
+                                                setSavingAppointment(true);
+                                                try {
+                                                    const dateIso = new Date(`${appointmentDate}T${appointmentTime}:00`).toISOString();
+                                                    await fetch(`/api/crm/leads/${selectedLead.id}`, {
+                                                        method: 'PATCH',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        // Update stage to "appointment" automatically
+                                                        body: JSON.stringify({ 
+                                                            appointmentAt: dateIso,
+                                                            assigneeId: appointmentDoctorId,
+                                                            stage: 'appointment'
+                                                        }),
+                                                    });
+                                                    setAppointmentDate('');
+                                                    setAppointmentTime('');
+                                                    setAppointmentDoctorId('');
+                                                    fetchLeads();
+                                                    setSelectedLeadId(null);
+                                                } finally {
+                                                    setSavingAppointment(false);
+                                                }
+                                            }}
+                                            className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors"
+                                        >
+                                            {savingAppointment ? 'Сохранение...' : 'Записать клиента'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Task (Связаться позже) */}
+                                {selectedLead.stage !== 'follow_up' && selectedLead.stage !== 'converted' && selectedLead.stage !== 'lost' && !selectedLead.appointmentAt && (
+                                    <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                                        <label className="text-xs text-orange-800 font-semibold mb-3 flex items-center gap-1.5">
+                                            <Clock className="w-3.5 h-3.5" /> Поставить задачу (Связаться позже)
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Дата</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={taskDate}
+                                                    onChange={e => setTaskDate(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-orange-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-gray-500 mb-1 block">Время</label>
+                                                <input 
+                                                    type="time" 
+                                                    value={taskTime}
+                                                    onChange={e => setTaskTime(e.target.value)}
+                                                    className="w-full text-xs px-2 py-1.5 border border-orange-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="text-[10px] text-gray-500 mb-1 block">Комментарий</label>
+                                            <input 
+                                                type="text"
+                                                placeholder="Например: Перезвонить после обеда"
+                                                value={taskMessage}
+                                                onChange={e => setTaskMessage(e.target.value)}
+                                                className="w-full text-xs px-2 py-1.5 border border-orange-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white"
+                                            />
+                                        </div>
+                                        <button 
+                                            disabled={!taskDate || !taskTime || !taskMessage || savingTask}
+                                            onClick={async () => {
+                                                setSavingTask(true);
+                                                try {
+                                                    const dateIso = new Date(`${taskDate}T${taskTime}:00`).toISOString();
+                                                    await fetch('/api/crm/tasks', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ 
+                                                            leadId: selectedLead.id,
+                                                            scheduledAt: dateIso,
+                                                            message: taskMessage
+                                                        }),
+                                                    });
+                                                    setTaskDate('');
+                                                    setTaskTime('');
+                                                    setTaskMessage('');
+                                                    fetchLeads();
+                                                    setSelectedLeadId(null);
+                                                } finally {
+                                                    setSavingTask(false);
+                                                }
+                                            }}
+                                            className="w-full py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors"
+                                        >
+                                            {savingTask ? 'Сохранение...' : 'Добавить задачу'}
+                                        </button>
                                     </div>
                                 )}
 
@@ -712,124 +884,71 @@ export default function SalesPipelinePage() {
                 )}
             </AnimatePresence>
 
-            {/* Рекламный Трафик & Интеграции Modal */}
+            {/* Manual Ad Spend Modal */}
             <AnimatePresence>
                 {showIntegrationsModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowIntegrationsModal(false)} />
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="bg-white rounded-2xl p-6 max-w-lg w-full border border-gray-100 shadow-xl"
+                            className="bg-white rounded-2xl p-6 max-w-sm w-full border border-gray-100 shadow-xl z-10"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-bold text-gray-900">Интеграция трафика (Meta / Google)</h3>
+                                <h3 className="text-xl font-bold text-gray-900">Рекламный бюджет</h3>
                                 <button onClick={() => setShowIntegrationsModal(false)} className="btn btn-ghost btn-sm btn-circle">
                                     <X className="w-5 h-5 text-gray-500" />
                                 </button>
                             </div>
                             
-                            <div className="space-y-6">
-                                {/* Meta panel */}
-                                <div className="p-4 rounded-xl border border-gray-100 bg-slate-50/50 flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-bold text-gray-900">Meta Ads (Facebook & Instagram)</h4>
-                                        <p className="text-xs text-gray-500">Синхронизация рекламного бюджета и лид-форм Meta</p>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setMetaConnected(!metaConnected);
-                                            alert(metaConnected ? 'Meta Ads отключен' : 'Meta Ads успешно подключен!');
-                                        }}
-                                        className={`btn btn-sm ${metaConnected ? 'btn-success text-white' : 'btn-outline'}`}
-                                    >
-                                        {metaConnected ? 'Подключено' : 'Подключить'}
-                                    </button>
+                            <div className="space-y-4">
+                                <p className="text-sm text-gray-500">
+                                    Укажите общую сумму, потраченную на рекламу за текущий период. Это позволит CRM рассчитать стоимость привлечения лида (CPL), клиента (CAC) и возврат инвестиций (ROMI).
+                                </p>
+                                
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1 block">Общая сумма расходов (₸)</label>
+                                    <input 
+                                        type="number"
+                                        placeholder="Например: 150000"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-sm"
+                                        id="manualAdSpendInput"
+                                    />
                                 </div>
-
-                                {/* Google panel */}
-                                <div className="p-4 rounded-xl border border-gray-100 bg-slate-50/50 flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-bold text-gray-900">Google Ads</h4>
-                                        <p className="text-xs text-gray-500">Импорт суточных бюджетов из Google Search & GDN</p>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setGoogleConnected(!googleConnected);
-                                            alert(googleConnected ? 'Google Ads отключен' : 'Google Ads API подключен успешно!');
-                                        }}
-                                        className={`btn btn-sm ${googleConnected ? 'btn-success text-white' : 'btn-outline'}`}
-                                    >
-                                        {googleConnected ? 'Подключено' : 'Подключить'}
-                                    </button>
-                                </div>
-
-                                {/* Demo traffic trigger */}
-                                <div className="p-6 rounded-xl border border-dashed border-blue-200 bg-blue-50/50 text-center">
-                                    <h4 className="font-bold text-blue-900 mb-2">Симуляция рекламного трафика</h4>
-                                    <p className="text-xs text-blue-700 mb-4">
-                                        Запустите демо-генератор, чтобы автоматически начислить рекламный бюджет в Google Ads и Meta Ads, а также привлечь 2 новых лида из Instagram и Google Webhook.
-                                    </p>
-                                    <button
-                                        onClick={async () => {
-                                            setSyncing(true);
-                                            try {
-                                                // Sync Meta spend
-                                                await fetch('/api/crm/webhook/sync-spend', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({
-                                                        campaignId: 'meta_spring_1',
-                                                        name: 'Весеннее промо Линзы (Instagram)',
-                                                        source: 'facebook',
-                                                        dailyBudget: 5000,
-                                                        spendDate: new Date().toISOString(),
-                                                        amount: 15000
-                                                    })
-                                                });
-
-                                                // Sync Google spend
-                                                await fetch('/api/crm/webhook/sync-spend', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({
-                                                        campaignId: 'google_search_1',
-                                                        name: 'Контекст Ночные Линзы',
-                                                        source: 'google',
-                                                        dailyBudget: 8000,
-                                                        spendDate: new Date().toISOString(),
-                                                        amount: 24000
-                                                    })
-                                                });
-
-                                                // Ingest leads via webhook
-                                                const leadsPayloads = [
-                                                    { name: 'Анель Куралова', phone: '+77073335566', city: 'Алматы', source: 'instagram', campaignId: 'meta_spring_1', utmSource: 'instagram', utmMedium: 'cpc', utmCampaign: 'lens_conversion' },
-                                                    { name: 'Тимур Рахимов', phone: '+77019998877', city: 'Астана', source: 'google', campaignId: 'google_search_1', utmSource: 'google', utmMedium: 'cpc', utmCampaign: 'night_lenses' }
-                                                ];
-
-                                                for (const lead of leadsPayloads) {
-                                                    await fetch('/api/crm/webhook/incoming', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify(lead)
-                                                    });
-                                                }
-
-                                                alert('Рекламный трафик и суточные бюджеты успешно синхронизированы!');
-                                                fetchLeads();
-                                            } catch (err) {
-                                                alert('Ошибка симуляции.');
-                                            } finally {
-                                                setSyncing(false);
-                                            }
-                                        }}
-                                        disabled={syncing}
-                                        className="btn btn-primary w-full"
-                                    >
-                                        {syncing ? 'Синхронизация...' : 'Запустить рекламный трафик'}
-                                    </button>
-                                </div>
+                            </div>
+                            
+                            <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-4">
+                                <button 
+                                    onClick={() => setShowIntegrationsModal(false)} 
+                                    className="btn bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                >
+                                    Отмена
+                                </button>
+                                <button 
+                                    onClick={async () => {
+                                        const input = document.getElementById('manualAdSpendInput') as HTMLInputElement | null;
+                                        if (!input) return;
+                                        const amount = Number(input.value) || 0;
+                                        if (amount < 0) return alert('Введите корректную сумму');
+                                        
+                                        try {
+                                            const res = await fetch('/api/crm/analytics/manual-spend', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ amount })
+                                            });
+                                            if (!res.ok) throw new Error('Ошибка');
+                                            window.location.reload();
+                                        } catch (e) {
+                                            console.error(e);
+                                            alert('Ошибка сохранения');
+                                        }
+                                    }}
+                                    className="btn btn-primary"
+                                >
+                                    Сохранить бюджет
+                                </button>
                             </div>
                         </motion.div>
                     </div>

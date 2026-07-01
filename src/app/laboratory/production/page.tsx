@@ -4,9 +4,9 @@ import { useState, useEffect, useMemo, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, CheckCircle, TruckIcon, Package, Printer, User, Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban, RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip, CheckSquare, Square, Tag, Trash2, MessageCircle, Send, XCircle, Slash, FileEdit } from 'lucide-react';
+import { Clock, CheckCircle, TruckIcon, Package, Printer, User, Search, X, Calendar, SlidersHorizontal, AlertTriangle, Ban, RotateCcw, Eye, ChevronDown, DollarSign, Zap, Truck, MapPin, Download, FileText, Paperclip, CheckSquare, Square, Tag, Trash2, MessageCircle, Send, XCircle, Slash, FileEdit, Copy } from 'lucide-react';
 import type { Order, OrderStatus, DefectRecord, PaymentStatus, EyeSide } from '@/types/order';
-import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels } from '@/types/order';
+import { OrderStatusLabels, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canStartProduction, editWindowRemainingMs, EyeSideLabels, ColorsByDk } from '@/types/order';
 import { ProductionTimer } from '@/components/production/ProductionTimer';
 import { ReadOnlyEyeCard } from '@/components/order/ReadOnlyEyeCard';
 import { formatDate, formatDateTime, formatShortDate } from '@/lib/dateUtils';
@@ -40,6 +40,7 @@ export default function ProductionHubPage() {
     const [loadingRgpId, setLoadingRgpId] = useState<string | null>(null);
     // Tick every minute to refresh countdown displays
     const [, setTick] = useState(0);
+    const [serverTimeOffset, setServerTimeOffset] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
 
     // Closing documents state for admin view
@@ -81,6 +82,10 @@ export default function ProductionHubPage() {
     const [selectedDefectId, setSelectedDefectId] = useState<{ orderId: string; defectId: string } | null>(null);
     const [commentText, setCommentText] = useState('');
     const [sendingComment, setSendingComment] = useState(false);
+    
+    // Color editing state
+    const [editingColor, setEditingColor] = useState<{ orderId: string, eye: 'od' | 'os' } | null>(null);
+    const [savingColor, setSavingColor] = useState(false);
 
     const selectedOrder = useMemo(() =>
         orders.find(o => o.order_id === selectedOrderId) || null,
@@ -133,10 +138,19 @@ export default function ProductionHubPage() {
     const loadOrders = async () => {
         try {
             const response = await fetch('/api/orders');
-            if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
+            if (!response.ok) throw new Error('Failed to fetch orders');
+            
+            // Calculate offset between local computer time and server time
+            const serverDateHeader = response.headers.get('Date');
+            let offset = 0;
+            if (serverDateHeader) {
+                const serverTime = new Date(serverDateHeader).getTime();
+                offset = serverTime - Date.now();
             }
+            setServerTimeOffset(offset);
+
+            const data = await response.json();
+            setOrders(data);
         } catch (error) {
             console.error('Failed to load orders:', error);
         } finally {
@@ -376,7 +390,9 @@ export default function ProductionHubPage() {
                 </tr>
             </thead>
             <tbody>
-                ${[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => `
+                ${[{ label: 'OD', eye: od }, { label: 'OS', eye: os }].map(({ label, eye }) => {
+                    if (!eye || !eye.characteristic) return '';
+                    return `
                     <tr>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;font-weight:700">${label}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db">${eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : '—'}${eye.isRgp ? ' <span style="background:#fed7aa;color:#c2410c;font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px">RGP</span>' : ''}</td>
@@ -391,7 +407,8 @@ export default function ProductionHubPage() {
 
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center;font-weight:600">${eye.qty ?? 1}</td>
                     </tr>
-                `).join('')}
+                    `;
+                }).join('')}
             </tbody>
         </table>`;
 
@@ -600,7 +617,7 @@ export default function ProductionHubPage() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                         <span className="bg-gray-100 rounded px-1.5 py-0.5">{charLabel}</span>
                         {(od as any).isRgp && (
                             <span className="bg-orange-100 text-orange-700 font-semibold rounded px-1.5 py-0.5">RGP</span>
@@ -1063,6 +1080,7 @@ export default function ProductionHubPage() {
                                 <span className="text-xs font-semibold text-gray-700">Параметры линз</span>
                             </div>
                             <div className="overflow-x-auto">
+<<<<<<< HEAD
                                 <table className="w-full text-xs">
                                     <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200">
@@ -1111,6 +1129,250 @@ export default function ProductionHubPage() {
                                         ))}
                                     </tbody>
                                 </table>
+=======
+                                {(() => {
+                                    const localOd = (order.config as any)?.eyes?.od;
+                                    const localOs = (order.config as any)?.eyes?.os;
+                                    
+                                    const hasKm = localOd?.km != null || localOs?.km != null;
+                                    const hasTp = localOd?.tp != null || localOs?.tp != null;
+                                    const hasDia = localOd?.dia != null || localOs?.dia != null;
+                                    const hasE = localOd?.e1 != null || localOs?.e1 != null || localOd?.e2 != null || localOs?.e2 != null;
+                                    const hasSph = localOd?.sph != null || localOs?.sph != null;
+                                    const hasCyl = localOd?.cyl != null || localOs?.cyl != null;
+                                    const hasAx = localOd?.ax != null || localOs?.ax != null;
+                                    const hasTor = localOd?.tor != null || localOs?.tor != null;
+                                    const hasTrial = localOd?.trial || localOs?.trial;
+                                    const hasColor = localOd?.color != null || localOs?.color != null;
+                                    const hasDk = localOd?.dk != null || localOs?.dk != null;
+                                    const hasApical = localOd?.apical_clearance != null || localOs?.apical_clearance != null;
+                                    const hasComp = localOd?.compression_factor != null || localOs?.compression_factor != null;
+
+                                    return (
+                                        <table className="w-full text-xs">
+                                            <thead>
+                                                <tr className="bg-gray-50 border-b border-gray-200">
+                                                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Глаз</th>
+                                                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Характеристика</th>
+                                                    {hasKm && <th className="text-center px-2 py-2 font-semibold text-gray-600">Km</th>}
+                                                    {hasTp && <th className="text-center px-2 py-2 font-semibold text-gray-600">TP</th>}
+                                                    {hasDia && <th className="text-center px-2 py-2 font-semibold text-gray-600">DIA</th>}
+                                                    {hasE && <th className="text-center px-2 py-2 font-semibold text-gray-600">E</th>}
+                                                    {hasSph && <th className="text-center px-2 py-2 font-semibold text-gray-600">SPH</th>}
+                                                    {hasCyl && <th className="text-center px-2 py-2 font-semibold text-gray-600">CYL</th>}
+                                                    {hasAx && <th className="text-center px-2 py-2 font-semibold text-gray-600">AX</th>}
+                                                    {hasTor && <th className="text-center px-2 py-2 font-semibold text-gray-600">Тор.</th>}
+                                                    {hasTrial && <th className="text-center px-2 py-2 font-semibold text-gray-600">Пробная</th>}
+                                                    {hasColor && <th className="text-center px-2 py-2 font-semibold text-gray-600">Цвет</th>}
+                                                    {hasDk && <th className="text-center px-2 py-2 font-semibold text-gray-600">Dk</th>}
+                                                    {hasApical && <th className="text-center px-2 py-2 font-semibold text-gray-600">Апик. клиренс</th>}
+                                                    {hasComp && <th className="text-center px-2 py-2 font-semibold text-gray-600">Фактор компр.</th>}
+                                                    <th className="text-center px-2 py-2 font-semibold text-gray-600">Кол-во</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {[{ label: 'OD', eye: localOd }, { label: 'OS', eye: localOs }].map(({ label, eye: rawEye }) => {
+                                                    if (!rawEye) return null;
+                                                    const eye = rawEye as any;
+                                                    if (!eye.characteristic || Number(eye.qty) === 0) return null;
+                                                    return (
+                                                    <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
+                                                        <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
+                                                        <td className="px-3 py-2 text-gray-700">
+                                                            {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
+                                                            {eye.isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                            {eye.myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
+                                                        </td>
+                                                        {hasKm && <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>}
+                                                        {hasTp && <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>}
+                                                        {hasDia && <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>}
+                                                        {hasE && <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>}
+                                                        {hasSph && <td className="px-2 py-2 text-center text-gray-700">{eye.sph ?? '—'}</td>}
+                                                        {hasCyl && <td className="px-2 py-2 text-center text-gray-700">{eye.cyl ?? '—'}</td>}
+                                                        {hasAx && <td className="px-2 py-2 text-center text-gray-700">{eye.ax ?? '—'}</td>}
+                                                        {hasTor && <td className="px-2 py-2 text-center text-gray-700">{eye.tor ?? '—'}</td>}
+                                                        {hasTrial && <td className="px-2 py-2 text-center text-gray-700">{eye.trial ? 'Да' : '—'}</td>}
+                                                        {hasColor && (
+                                                            <td className="px-2 py-2 text-center text-gray-700">
+                                                                {editingColor?.orderId === order.order_id && editingColor?.eye === label.toLowerCase() ? (
+                                                                    <div className="flex items-center justify-center gap-1">
+                                                                        <select
+                                                                            autoFocus
+                                                                            disabled={savingColor}
+                                                                            defaultValue={eye.color || ''}
+                                                                            className="text-xs border-gray-300 rounded py-1 px-2"
+                                                                            onChange={async (e) => {
+                                                                                const newColor = e.target.value;
+                                                                                setSavingColor(true);
+                                                                                try {
+                                                                                    // deep copy config
+                                                                                    const newConfig = JSON.parse(JSON.stringify(order.config));
+                                                                                    newConfig.eyes[label.toLowerCase()].color = newColor;
+                                                                                    
+                                                                                    const res = await fetch(`/api/orders/${order.order_id}`, {
+                                                                                        method: 'PATCH',
+                                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                                        body: JSON.stringify({ config: newConfig }),
+                                                                                    });
+                                                                                    if (res.ok) {
+                                                                                        const updated = await res.json();
+                                                                                        setOrders(prev => prev.map(o => o.order_id === order.order_id ? updated : o));
+                                                                                    } else {
+                                                                                        alert('Ошибка сохранения цвета');
+                                                                                    }
+                                                                                } catch (err) {
+                                                                                    console.error('Failed to update color:', err);
+                                                                                    alert('Ошибка сохранения цвета');
+                                                                                } finally {
+                                                                                    setSavingColor(false);
+                                                                                    setEditingColor(null);
+                                                                                }
+                                                                            }}
+                                                                            onBlur={() => setEditingColor(null)}
+                                                                        >
+                                                                            <option value="">Без цвета</option>
+                                                                            {(ColorsByDk[eye.dk || '100'] || []).map(c => (
+                                                                                <option key={c} value={c}>{c}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center justify-center gap-1 group/color">
+                                                                        <span>{eye.color ?? '—'}</span>
+                                                                        <button
+                                                                            onClick={() => setEditingColor({ orderId: order.order_id, eye: label.toLowerCase() as 'od'|'os' })}
+                                                                            className="opacity-0 group-hover/color:opacity-100 text-blue-500 hover:text-blue-700 transition-opacity p-0.5 rounded hover:bg-blue-50"
+                                                                            title="Изменить цвет"
+                                                                        >
+                                                                            <FileEdit className="w-3 h-3" />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        )}
+                                                        {hasDk && <td className="px-2 py-2 text-center text-gray-700">{eye.dk ?? '—'}</td>}
+                                                        {hasApical && <td className="px-2 py-2 text-center text-gray-700">{eye.apical_clearance ?? '—'}</td>}
+                                                        {hasComp && <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>}
+                                                        <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
+                                                    </tr>
+                                                )})}
+                                            </tbody>
+                                        </table>
+                                    );
+                                })()}
+                            </div>
+                            <div className="bg-white border-t border-gray-200 p-3 space-y-3">
+                                {(() => {
+                                    const od = order.config?.eyes?.od;
+                                    const os = order.config?.eyes?.os;
+                                    
+                                    const generateLine = (label: string, eye: any) => {
+                                        if (!eye || !eye.characteristic || Number(eye.qty) === 0) return null;
+                                        const p = [];
+                                        p.push(order.order_id);
+                                        if (order.company) p.push(order.company);
+                                        p.push(order.patient?.name || '');
+                                        
+                                        if (eye.myorthok) p.push('MyOrthoK');
+                                        if (eye.isRgp) p.push('RGP');
+                                        if (eye.characteristic === 'toric') p.push('Toric');
+                                        if (eye.characteristic === 'spherical') p.push('Spherical');
+                                        
+                                        p.push(label);
+                                        if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
+                                        if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
+                                        if (eye.sph != null) p.push(String(eye.sph).replace(/\./g, ','));
+                                        if (eye.cyl != null) p.push(`cyl${String(eye.cyl).replace(/\./g, ',')}`);
+                                        if (eye.ax != null) p.push(`ax${String(eye.ax).replace(/\./g, ',')}`);
+                                        if (eye.dia != null) p.push(`D${String(eye.dia).replace(/\./g, ',')}`);
+                                        if (eye.tor != null) p.push(`t${String(eye.tor).replace(/\./g, ',')}`);
+                                        if (eye.e1 != null || eye.e2 != null) p.push(`${String(eye.e1 ?? '0').replace(/\./g, ',')}/${String(eye.e2 ?? '0').replace(/\./g, ',')}`);
+                                        if (eye.apical_clearance != null) p.push(`C${String(eye.apical_clearance).replace(/\./g, ',')}`);
+                                        if (eye.compression_factor != null) p.push(`F${String(eye.compression_factor).replace(/\./g, ',')}`);
+                                        if (eye.trial) p.push('Пробная');
+                                        if (eye.dk != null) p.push(`Dk${String(eye.dk).replace(/\./g, ',')}`);
+                                        
+                                        const colorMap: Record<string, string> = {
+                                            'Тёмно-синий': 'dark-blue',
+                                            'Тёмно-зелёный': 'dark-green',
+                                            'Синий': 'blue',
+                                            'Зелёный': 'green',
+                                            'Фиолетовый': 'violet',
+                                            'Красный': 'red',
+                                            'Голубой': 'light-blue',
+                                            'Салатовый': 'light-green',
+                                            'Contraperm F2Mid dark blue': 'dark-blue',
+                                            'Contraperm F2Mid green': 'dark-green',
+                                            'Optimum extra blue': 'blue',
+                                            'Optimum extra green': 'green',
+                                            'Optimum extra violet': 'violet',
+                                            'Optimum extreme blue': 'blue',
+                                            'Optimum extreme green': 'green',
+                                            'Optimum extreme violet': 'violet',
+                                            'Optimum extreme grey': 'grey',
+                                            'Optimum infinite blue': 'light-blue',
+                                            'Optimum infinite green': 'light-green',
+                                            'Optimum infinite red': 'red'
+                                        };
+                                        if (eye.color) p.push(colorMap[eye.color] || eye.color.replace(/\s+/g, '-'));
+                                        return p.filter(Boolean).join(' ');
+                                    };
+
+                                    const odLine = generateLine('OD', od);
+                                    const osLine = generateLine('OS', os);
+                                    
+                                    const handleCopy = (e: React.MouseEvent<HTMLButtonElement>, text: string) => {
+                                        navigator.clipboard.writeText(text);
+                                        const btn = e.currentTarget;
+                                        const originalHtml = btn.innerHTML;
+                                        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><polyline points="20 6 9 17 4 12"></polyline></svg> Скопировано';
+                                        btn.classList.add('text-green-600', 'bg-green-50');
+                                        btn.classList.remove('text-blue-600', 'bg-blue-50');
+                                        setTimeout(() => {
+                                            btn.innerHTML = originalHtml;
+                                            btn.classList.remove('text-green-600', 'bg-green-50');
+                                            btn.classList.add('text-blue-600', 'bg-blue-50');
+                                        }, 2000);
+                                    };
+
+                                    return (
+                                        <>
+                                            {odLine && (
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <span className="text-xs font-semibold text-gray-700">Строка для копирования OD</span>
+                                                        <button
+                                                            onClick={(e) => handleCopy(e, odLine)}
+                                                            className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded transition-colors"
+                                                        >
+                                                            <Copy className="w-3 h-3" /> Копировать
+                                                        </button>
+                                                    </div>
+                                                    <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono whitespace-pre-wrap">
+                                                        {odLine}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {osLine && (
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <span className="text-xs font-semibold text-gray-700">Строка для копирования OS</span>
+                                                        <button
+                                                            onClick={(e) => handleCopy(e, osLine)}
+                                                            className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 bg-blue-50 rounded transition-colors"
+                                                        >
+                                                            <Copy className="w-3 h-3" /> Копировать
+                                                        </button>
+                                                    </div>
+                                                    <div className="text-xs text-gray-800 bg-gray-50 p-2 rounded border border-gray-200 break-all select-all font-mono whitespace-pre-wrap">
+                                                        {osLine}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
+>>>>>>> origin/main
                             </div>
                         </div>
 
@@ -1388,6 +1650,7 @@ export default function ProductionHubPage() {
                                                 order_id: order.order_id,
                                                 patient: order.patient,
                                                 meta: order.meta,
+                                                company: order.company,
                                                 config: order.config,
                                                 ready_at: (order as any).ready_at,
                                                 production_started_at: order.production_started_at,
@@ -1400,8 +1663,8 @@ export default function ProductionHubPage() {
                                     Этикетка
                                 </button>
                                 {perms.canChangeStatus && order.status === 'new' && (() => {
-                                    const canStart = canStartProduction(order);
-                                    const remainMs = editWindowRemainingMs(order);
+                                    const canStart = canStartProduction(order, serverTimeOffset);
+                                    const remainMs = editWindowRemainingMs(order, serverTimeOffset);
                                     const h = Math.floor(remainMs / 3600_000);
                                     const m = Math.floor((remainMs % 3600_000) / 60_000);
                                     const countdownStr = h > 0 ? `${h}ч ${m}м` : `${m}м`;
@@ -1655,13 +1918,20 @@ export default function ProductionHubPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
+<<<<<<< HEAD
                                         {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) as any }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) as any }].map(({ label, eye }) => (
+=======
+                                        {[{ label: 'OD', eye: (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 }) }, { label: 'OS', eye: (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 }) }].map(({ label, eye: rawEye }) => {
+                                            const eye = rawEye as any;
+                                            if (!eye.characteristic) return null;
+                                            return (
+>>>>>>> origin/main
                                             <tr key={label} className="border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30">
                                                 <td className="px-3 py-2 font-bold text-gray-900">{label}</td>
                                                 <td className="px-3 py-2 text-gray-700">
                                                     {eye.characteristic ? CharacteristicLabels[eye.characteristic as Characteristic] : '—'}
-                                                    {(eye as any).isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
-                                                    {(eye as any).myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
+                                                    {eye.isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
+                                                    {eye.myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                 </td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
@@ -1678,7 +1948,7 @@ export default function ProductionHubPage() {
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.compression_factor ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center font-medium text-gray-900">{eye.qty ?? 1}</td>
                                             </tr>
-                                        ))}
+                                        )})}
                                     </tbody>
                                 </table>
                             </div>
@@ -1720,6 +1990,25 @@ export default function ProductionHubPage() {
         );
     };
 
+    const lensAnalytics = useMemo(() => {
+        let total = 0;
+        let od = 0;
+        let os = 0;
+        // Статусы, при которых линзы уже физически изготовлены
+        const manufacturedStatuses = ['ready', 'shipped', 'out_for_delivery', 'delivered', 'accountant_review', 'docs_prep', 'docs_ready'];
+
+        filteredOrders.forEach(o => {
+            if (!manufacturedStatuses.includes(o.status)) return;
+            
+            const eyes = (o as any).config?.eyes || {};
+            const qOd = parseInt(eyes.od?.qty) || 1;
+            const qOs = parseInt(eyes.os?.qty) || 1;
+            if (eyes.od && eyes.od.characteristic) { total += qOd; od += qOd; }
+            if (eyes.os && eyes.os.characteristic) { total += qOs; os += qOs; }
+        });
+        return { total, od, os };
+    }, [filteredOrders]);
+
     // ==================== LOADING STATE ====================
     if (isLoading) {
         return (
@@ -1732,6 +2021,8 @@ export default function ProductionHubPage() {
         );
     }
 
+
+
     // ==================== RENDER ====================
     return (
         <div className="min-h-screen bg-surface">
@@ -1743,9 +2034,14 @@ export default function ProductionHubPage() {
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Производственный хаб</h1>
                             <p className="text-sm text-gray-600 mt-0.5">Управление очередью заказов</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-sm text-gray-500">
-                                Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex flex-col items-end">
+                                <div className="text-sm font-medium text-gray-700">
+                                    Всего {filteredOrders.length} {hasActiveFilters ? `из ${orders.length}` : ''} заказов
+                                </div>
+                                <div className="text-xs text-blue-600 font-medium">
+                                    {lensAnalytics.total} линз (OD: {lensAnalytics.od}, OS: {lensAnalytics.os})
+                                </div>
                             </div>
                             <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                                 <span className="relative flex h-2 w-2">

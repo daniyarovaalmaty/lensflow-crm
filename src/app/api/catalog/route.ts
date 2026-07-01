@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
                 description: true,
                 price: true,
                 priceByDk: true,
+                distributorPriceByDk: true,
                 unit: true,
                 isActive: true,
                 sortOrder: true,

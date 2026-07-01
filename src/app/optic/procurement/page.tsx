@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Upload, Paperclip, Trash2 } from 'lucide-react';
+import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Upload, Paperclip, Trash2, Loader2 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -73,6 +73,8 @@ export default function OpticProcurementDashboard() {
     const [requestReason, setRequestReason] = useState('');
     const [orderDocs, setOrderDocs] = useState<Record<string, Array<{ index: number; name: string; mimeType: string; size: number; uploadedAt: string; uploadedBy: string }>>>({});
     const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+    const [expediteOrderId, setExpediteOrderId] = useState<string | null>(null);
+    const [isExpediting, setIsExpediting] = useState(false);
     // tick every 30s to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
@@ -190,9 +192,28 @@ export default function OpticProcurementDashboard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'delivered' }),
             });
-            await loadOrders();
-        } catch (err) {
-            console.error('Failed to confirm delivery:', err);
+            loadOrders();
+        } catch (error) {
+            console.error('Failed to confirm delivery:', error);
+        }
+    };
+
+    const handleExpediteOrder = async () => {
+        if (!expediteOrderId) return;
+        try {
+            setIsExpediting(true);
+            const res = await fetch(`/api/orders/${expediteOrderId}/urgent`, { method: 'POST' });
+            if (res.ok) {
+                setExpediteOrderId(null);
+                loadOrders();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to expedite order');
+            }
+        } catch (error) {
+            console.error('Failed to expedite order:', error);
+        } finally {
+            setIsExpediting(false);
         }
     };
 
@@ -313,43 +334,48 @@ export default function OpticProcurementDashboard() {
                 price_od: (order as any).price_od,
                 price_os: (order as any).price_os,
                 products: (order as any).products,
+                contract: (order as any).contract,
+                optic_inn: (order as any).optic_inn,
+                optic_address: (order as any).optic_address,
+                lab_org: (order as any).lab_org,
+                distributor_org: (order as any).distributor_org,
             });
         });
     };
 
 
-    const ParamRow = ({ label, value }: { label: string; value: any }) => (
+    const renderParamRow = (label: string, value: any) => (
         <div className="flex justify-between text-xs py-1 border-b border-gray-100">
             <span className="text-gray-500">{label}</span>
             <span className="font-medium text-gray-800">{value != null && value !== '' ? String(value) : '—'}</span>
         </div>
     );
 
-    const EyeBlock = ({ label, eye }: { label: string; eye: any }) => (
+    const renderEyeBlock = (label: string, eye: any) => (
         <div>
             <h5 className="text-xs font-semibold text-gray-700 mb-1 mt-2">{label}</h5>
             <div className="bg-gray-50 rounded-lg p-3 space-y-0">
-                <ParamRow label="Характеристика" value={eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null} />
-                <ParamRow label="RGP" value={eye.isRgp ? 'Да' : 'Нет'} />
-                <ParamRow label="MyOrthoK" value={eye.myorthok ? 'Да' : 'Нет'} />
-                <ParamRow label="Km" value={eye.isRgp ? null : eye.km} />
-                <ParamRow label="TP" value={eye.tp} />
-                <ParamRow label="DIA" value={eye.dia} />
-                <ParamRow label="E" value={eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null} />
+                {renderParamRow("Характеристика", eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : null)}
+                {renderParamRow("RGP", eye.isRgp ? 'Да' : 'Нет')}
+                {renderParamRow("MyOrthoK", eye.myorthok ? 'Да' : 'Нет')}
+                {renderParamRow("Km", eye.isRgp ? null : eye.km)}
+                {renderParamRow("TP", eye.tp)}
+                {renderParamRow("DIA", eye.dia)}
+                {renderParamRow("E", eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : null)}
                 {(eye.sph != null || eye.cyl != null || eye.ax != null) && (
                     <>
-                        <ParamRow label="SPH" value={eye.sph} />
-                        <ParamRow label="CYL" value={eye.cyl} />
-                        <ParamRow label="AX" value={eye.ax} />
+                        {renderParamRow("SPH", eye.sph)}
+                        {renderParamRow("CYL", eye.cyl)}
+                        {renderParamRow("AX", eye.ax)}
                     </>
                 )}
-                <ParamRow label="Тор." value={eye.tor} />
-                <ParamRow label="Dk" value={eye.dk} />
-                <ParamRow label="Пробная" value={(eye.dk === '50' || eye.trial) ? 'Да' : 'Нет'} />
-                <ParamRow label="Цвет" value={eye.color || null} />
-                <ParamRow label="Апик. клиренс" value={eye.apical_clearance} />
-                <ParamRow label="Фактор компр." value={eye.compression_factor} />
-                <ParamRow label="Кол-во" value={eye.qty} />
+                {renderParamRow("Тор.", eye.tor)}
+                {renderParamRow("Dk", eye.dk)}
+                {renderParamRow("Пробная", (eye.dk === '50' || eye.trial) ? 'Да' : 'Нет')}
+                {renderParamRow("Цвет", eye.color || null)}
+                {renderParamRow("Апик. клиренс", eye.apical_clearance)}
+                {renderParamRow("Фактор компр.", eye.compression_factor)}
+                {renderParamRow("Кол-во", eye.qty)}
             </div>
         </div>
     );
@@ -714,8 +740,8 @@ export default function OpticProcurementDashboard() {
                             const isExpanded = expandedOrders.has(order.order_id);
                             const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
                             const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-                            const odQty = Number(od.qty) || 0;
-                            const osQty = Number(os.qty) || 0;
+                            const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
+                            const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
                             const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
                             const osPrice = (order as any).price_os ?? PRICE_PER_LENS;
                             const lensTotal = (odQty * odPrice) + (osQty * osPrice);
@@ -816,6 +842,16 @@ export default function OpticProcurementDashboard() {
                                             <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                             {isExpanded ? 'Свернуть' : 'Подробнее'}
                                         </button>
+
+                                        {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                            <button
+                                                onClick={() => setExpediteOrderId(order.order_id)}
+                                                className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors ml-2"
+                                            >
+                                                <Zap className="w-3.5 h-3.5" />
+                                                Ускорить заказ
+                                            </button>
+                                        )}
 
                                         {/* out_for_delivery: prominent confirmation button */}
                                         {order.status === 'out_for_delivery' && (
@@ -1037,9 +1073,9 @@ export default function OpticProcurementDashboard() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <EyeBlock label="OD (Правый глаз)" eye={od} />
-                                                        <EyeBlock label="OS (Левый глаз)" eye={os} />
+                                                    <div className={`grid ${odQty > 0 && osQty > 0 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                                                        {odQty > 0 && renderEyeBlock("OD (Правый глаз)", od)}
+                                                        {osQty > 0 && renderEyeBlock("OS (Левый глаз)", os)}
                                                     </div>
 
                                                     {/* Additional products */}
@@ -1051,10 +1087,10 @@ export default function OpticProcurementDashboard() {
                                                                     <div key={idx} className="flex items-center justify-between px-3 py-2 text-sm">
                                                                         <div>
                                                                             <span className="text-gray-800 font-medium">{prod.name}</span>
-                                                                            <span className="text-gray-400 ml-2">× {prod.qty}</span>
+                                                                            <span className="text-gray-400 ml-2">× {Number(prod.qty)}</span>
                                                                         </div>
                                                                         {canSeePrices && (
-                                                                            <span className="text-gray-600">{((prod.price || 0) * (prod.qty || 1)).toLocaleString('ru-RU')} ₸</span>
+                                                                            <span className="text-gray-600">{((prod.price || 0) * (Number(prod.qty) || 1)).toLocaleString('ru-RU')} ₸</span>
                                                                         )}
                                                                     </div>
                                                                 ))}
@@ -1066,9 +1102,9 @@ export default function OpticProcurementDashboard() {
                                                         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
                                                             <div className="text-sm text-gray-600 space-y-0.5">
                                                                 <div>
-                                                                    <span>OD: {Number(od.qty)} × {((order as any).price_od ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
-                                                                    <span className="mx-2">+</span>
-                                                                    <span>OS: {Number(os.qty)} × {((order as any).price_os ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>
+                                                                    {odQty > 0 && <span>OD: {odQty} × {((order as any).price_od ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>}
+                                                                    {odQty > 0 && osQty > 0 && <span className="mx-2">+</span>}
+                                                                    {osQty > 0 && <span>OS: {osQty} × {((order as any).price_os ?? PRICE_PER_LENS).toLocaleString('ru-RU')} ₸</span>}
                                                                 </div>
                                                                 {(order as any).products?.length > 0 && (
                                                                     <div className="text-xs text-gray-400">
@@ -1245,6 +1281,50 @@ export default function OpticProcurementDashboard() {
                         })}
                     </div>
                 )}
+            {/* Expedite Order Modal */}
+            <AnimatePresence>
+                {expediteOrderId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        onClick={() => setExpediteOrderId(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                                <Zap className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Ускорить заказ {expediteOrderId}?</h3>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Стоимость заказа будет увеличена согласно наценке за срочность (по умолчанию +25%). Время на редактирование будет завершено.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setExpediteOrderId(null)}
+                                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+                                    disabled={isExpediting}
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    onClick={handleExpediteOrder}
+                                    className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center"
+                                    disabled={isExpediting}
+                                >
+                                    {isExpediting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Подтвердить'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             </div>
         </div>
     );

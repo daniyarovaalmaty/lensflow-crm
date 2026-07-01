@@ -73,15 +73,18 @@ export async function GET(req: NextRequest) {
     });
 
     // 4. CRM Leads conversion funnel
-    const totalLeads = await prisma.lead.count();
+    const totalLeads = await prisma.lead.count({
+        where: { clinicId: orgId, ...dateFilter }
+    });
     const convertedLeads = await prisma.lead.count({
-        where: { stage: 'converted' },
+        where: { clinicId: orgId, stage: 'converted', ...dateFilter },
     });
     const leadConversionRate = totalLeads > 0 ? Number(((convertedLeads / totalLeads) * 100).toFixed(1)) : 0;
 
     // Detailed CRM Pipeline stages
     const leadStages = await prisma.lead.groupBy({
         by: ['stage'],
+        where: { clinicId: orgId, ...dateFilter },
         _count: { _all: true },
     });
     const crmFunnel = leadStages.reduce((acc: any, item) => {
@@ -90,12 +93,16 @@ export async function GET(req: NextRequest) {
     }, {});
 
     // 5. Marketing Spend & ROMI
-    const adSpends = await prisma.adSpend.findMany();
+    const adSpends = await prisma.adSpend.findMany({
+        where: { campaign: { clinicId: orgId }, ...(useDateFilter ? { spendDate: { gte: startDate } } : {}) },
+    });
     const totalMarketingSpend = adSpends.reduce((sum, item) => sum + item.amount, 0);
 
     const leadsWithRevenue = await prisma.lead.findMany({
         where: {
+            clinicId: orgId,
             revenue: { not: null },
+            ...dateFilter,
         },
         select: {
             revenue: true,
@@ -108,18 +115,48 @@ export async function GET(req: NextRequest) {
         : 0;
 
     // 6. Category breakdown
-    const categoryTotals: Record<string, number> = {};
+    const categoryTotals: Record<string, { value: number, quantity: number }> = {};
+    const itemTotals: Record<string, { value: number, quantity: number, category: string, salesHistory: any[] }> = {};
+
     sales.forEach(sale => {
         sale.items.forEach(item => {
             const cat = item.category || 'Другое';
-            categoryTotals[cat] = (categoryTotals[cat] || 0) + item.total;
+            if (!categoryTotals[cat]) categoryTotals[cat] = { value: 0, quantity: 0 };
+            categoryTotals[cat].value += item.total;
+            categoryTotals[cat].quantity += item.quantity;
+
+            const name = item.name.replace(/\s*\(Со?\s*скидкой.*\)/i, '').replace(/\s*\(Скидка.*\)/i, '').trim();
+            if (!itemTotals[name]) itemTotals[name] = { value: 0, quantity: 0, category: cat, salesHistory: [] };
+            itemTotals[name].value += item.total;
+            itemTotals[name].quantity += item.quantity;
+            itemTotals[name].salesHistory.push({
+                saleId: sale.id,
+                saleNumber: sale.saleNumber,
+                date: sale.createdAt,
+                customerName: sale.customerName,
+                customerPhone: sale.customerPhone,
+                paymentMethod: sale.paymentMethod,
+                quantity: item.quantity,
+                total: item.total
+            });
         });
     });
 
-    const categoriesBreakdown = Object.entries(categoryTotals).map(([name, value]) => ({
-        name,
-        value,
-    }));
+    const categoriesBreakdown = Object.entries(categoryTotals)
+        .map(([name, data]) => ({
+            name,
+            value: data.value,
+            quantity: data.quantity,
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    const topSellingItems = Object.entries(itemTotals)
+        .map(([name, data]) => ({
+            name,
+            ...data
+        }))
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 15);
 
     // 7. Top 10 Patients by revenue
     const topPatientsGroup = await prisma.sale.groupBy({
@@ -180,6 +217,70 @@ export async function GET(req: NextRequest) {
 
     const dynamics = Object.values(dynamicsMap);
 
+    // 9. Products Summary (Hard lenses, frames, soft lenses, etc.)
+    const productsSummary = {
+        hardLenses: 0,
+        hardLensesRevenue: 0,
+        sunGlasses: 0,
+        sunGlassesRevenue: 0,
+        frames: 0,
+        framesRevenue: 0,
+        consultations: 0,
+        consultationsRevenue: 0,
+        softLenses: 0,
+        softLensesRevenue: 0,
+        solutions: 0,
+        solutionsRevenue: 0,
+    };
+
+    sales.forEach(sale => {
+        sale.items.forEach(item => {
+            const cat = item.category || '';
+            const nameLower = item.name.toLowerCase();
+
+            // Hard lenses
+            if ((nameLower.includes('подбор') && !nameLower.includes('очков') && !nameLower.includes('мягк') && !nameLower.includes('мкл')) || 
+                nameLower.includes('ортокератолог') || 
+                nameLower.includes('ночных линз')) {
+                if (nameLower.includes('одной')) {
+                    productsSummary.hardLenses += 1 * item.quantity;
+                } else if (nameLower.includes('подбор')) {
+                    productsSummary.hardLenses += 2 * item.quantity;
+                } else {
+                    productsSummary.hardLenses += 1 * item.quantity;
+                }
+                productsSummary.hardLensesRevenue += item.total;
+            }
+            
+            // Frames (sun & regular)
+            if (cat === 'sun_glasses' || nameLower.includes('солнцезащит')) {
+                productsSummary.sunGlasses += item.quantity;
+                productsSummary.sunGlassesRevenue += item.total;
+            } else if (cat === 'frame' || nameLower.includes('оправа')) {
+                productsSummary.frames += item.quantity;
+                productsSummary.framesRevenue += item.total;
+            }
+
+            // Consultations
+            if (nameLower.includes('консультация') || nameLower.includes('диагностика')) {
+                productsSummary.consultations += item.quantity;
+                productsSummary.consultationsRevenue += item.total;
+            }
+
+            // Soft lenses
+            if (cat === 'contact_lens' || cat === 'spectacle_lens' || nameLower.includes('мкл') || nameLower.includes('мягк')) {
+                productsSummary.softLenses += item.quantity;
+                productsSummary.softLensesRevenue += item.total;
+            }
+
+            // Solutions
+            if (cat === 'solution' || nameLower.includes('раствор') || nameLower.includes('one step') || nameLower.includes('avisor')) {
+                productsSummary.solutions += item.quantity;
+                productsSummary.solutionsRevenue += item.total;
+            }
+        });
+    });
+
     return NextResponse.json({
         kpi: {
             totalRevenue,
@@ -194,7 +295,9 @@ export async function GET(req: NextRequest) {
         },
         crmFunnel,
         categoriesBreakdown,
+        topSellingItems,
         top10Patients,
         dynamics,
+        productsSummary,
     });
 }

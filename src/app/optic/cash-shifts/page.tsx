@@ -44,6 +44,19 @@ interface Shift {
     transactions?: Tx[];
 }
 
+interface HistoryShift {
+    id: string;
+    cash_register_name: string;
+    opened_by_name: string;
+    closed_by_name: string;
+    starting_cash: number;
+    expected_cash: number;
+    actual_cash: number;
+    discrepancy: number;
+    opened_at: string;
+    closed_at: string;
+}
+
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 export default function CashShiftsPage() {
@@ -58,8 +71,10 @@ export default function CashShiftsPage() {
     const [loading, setLoading] = useState(true);
     const [registers, setRegisters] = useState<Register[]>([]);
     const [activeShift, setActiveShift] = useState<Shift | null>(null);
+    const [historyShifts, setHistoryShifts] = useState<HistoryShift[]>([]);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modals
     const [openShiftOpen, setOpenShiftOpen] = useState(false);
@@ -106,6 +121,13 @@ export default function CashShiftsPage() {
                 const shiftData = await shiftRes.json();
                 setActiveShift(shiftData);
             }
+
+            // Load shift history
+            const histRes = await fetch('/api/optic/cash-shifts/history');
+            if (histRes.ok) {
+                const histData = await histRes.json();
+                setHistoryShifts(histData);
+            }
         } catch (err) {
             setError('Ошибка при загрузке кассовых данных');
         } finally {
@@ -123,6 +145,7 @@ export default function CashShiftsPage() {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             const res = await fetch('/api/optic/cash-shifts', {
                 method: 'POST',
@@ -143,6 +166,8 @@ export default function CashShiftsPage() {
             }
         } catch {
             setError('Сбой при открытии смены');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -152,6 +177,7 @@ export default function CashShiftsPage() {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             const res = await fetch(`/api/optic/cash-shifts/${activeShift.id}`, {
                 method: 'POST',
@@ -173,6 +199,8 @@ export default function CashShiftsPage() {
             }
         } catch {
             setError('Сбой при закрытии смены');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -182,6 +210,7 @@ export default function CashShiftsPage() {
             return;
         }
 
+        setIsSubmitting(true);
         try {
             const res = await fetch(`/api/optic/cash-shifts/${activeShift.id}`, {
                 method: 'POST',
@@ -207,6 +236,8 @@ export default function CashShiftsPage() {
             }
         } catch {
             setError('Ошибка транзакции');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -430,7 +461,7 @@ export default function CashShiftsPage() {
                                             <th className="px-6 py-4">Метод оплаты</th>
                                             <th className="px-6 py-4">Сумма</th>
                                             <th className="px-6 py-4">Kaspi Transaction ID</th>
-                                            <th className="px-6 py-4">Время</th>
+                                            <th className="px-6 py-4">Дата и время</th>
                                             <th className="px-6 py-4">Комментарий</th>
                                         </tr>
                                     </thead>
@@ -477,8 +508,11 @@ export default function CashShiftsPage() {
                                                     <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-gray-400">
                                                         {tx.kaspi_transaction_id || '—'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                                        {new Date(tx.created_at).toLocaleTimeString('ru-RU')}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500 text-xs">
+                                                        {new Date(tx.created_at).toLocaleString('ru-RU', {
+                                                            day: '2-digit', month: '2-digit', year: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit', second: '2-digit'
+                                                        }).replace(',', '')}
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-500 max-w-xs truncate">
                                                         {tx.description || '—'}
@@ -490,6 +524,76 @@ export default function CashShiftsPage() {
                                 </table>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* Shift History Section */}
+                {!loading && (
+                    <div className="mt-12">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Clock className="w-5 h-5 text-gray-400" />
+                            <h2 className="text-lg font-bold text-gray-900">История закрытых смен</h2>
+                        </div>
+                        {historyShifts.length === 0 ? (
+                            <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-sm">
+                                <p className="text-gray-500 text-sm">У вас еще нет ни одной закрытой кассовой смены.</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                                <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Дата</th>
+                                            <th className="px-6 py-4">Касса</th>
+                                            <th className="px-6 py-4">Открыл / Закрыл</th>
+                                            <th className="px-6 py-4 text-right">Старт</th>
+                                            <th className="px-6 py-4 text-right">Ожидалось</th>
+                                            <th className="px-6 py-4 text-right">Факт (Инкасс.)</th>
+                                            <th className="px-6 py-4 text-right">Разница</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {historyShifts.map((hShift) => (
+                                            <tr key={hShift.id} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">
+                                                    <div className="text-sm">{new Date(hShift.opened_at).toLocaleDateString('ru-RU')}</div>
+                                                    <div className="text-[10px] text-gray-400">
+                                                        {new Date(hShift.opened_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} — {hShift.closed_at ? new Date(hShift.closed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '?'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                                                    {hShift.cash_register_name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-xs text-gray-900">{hShift.opened_by_name}</div>
+                                                    <div className="text-[10px] text-gray-400">Закрыл: {hShift.closed_by_name}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-gray-600">
+                                                    {fmt(hShift.starting_cash)} ₸
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-blue-600">
+                                                    {fmt(hShift.expected_cash)} ₸
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900">
+                                                    {fmt(hShift.actual_cash)} ₸
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right font-bold">
+                                                    {hShift.discrepancy < 0 ? (
+                                                        <span className="text-red-500 bg-red-50 px-2 py-1 rounded-md">{fmt(hShift.discrepancy)} ₸</span>
+                                                    ) : hShift.discrepancy > 0 ? (
+                                                        <span className="text-amber-500 bg-amber-50 px-2 py-1 rounded-md">+{fmt(hShift.discrepancy)} ₸</span>
+                                                    ) : (
+                                                        <span className="text-emerald-500">0 ₸</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -529,8 +633,8 @@ export default function CashShiftsPage() {
                                     className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50">
                                     Отмена
                                 </button>
-                                <button onClick={handleOpenShift}
-                                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm">
+                                <button onClick={handleOpenShift} disabled={isSubmitting}
+                                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm">
                                     Открыть смену
                                 </button>
                             </div>
@@ -576,8 +680,8 @@ export default function CashShiftsPage() {
                                     className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50">
                                     Отмена
                                 </button>
-                                <button onClick={handleCloseShift}
-                                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold shadow-sm">
+                                <button onClick={handleCloseShift} disabled={isSubmitting}
+                                    className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm">
                                     Закрыть и инкассировать
                                 </button>
                             </div>
@@ -636,8 +740,8 @@ export default function CashShiftsPage() {
                                     className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50">
                                     Отмена
                                 </button>
-                                <button onClick={handleAddTransaction}
-                                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm">
+                                <button onClick={handleAddTransaction} disabled={isSubmitting}
+                                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm">
                                     Провести транзакцию
                                 </button>
                             </div>

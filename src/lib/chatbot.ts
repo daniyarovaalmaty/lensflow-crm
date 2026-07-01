@@ -62,7 +62,23 @@ export async function processIncomingMessage(
     chatId: string,
     messageText: string,
     senderName?: string,
+    receiverPhone?: string
 ): Promise<boolean> {
+
+    let clinicId: string | null = null;
+    if (receiverPhone) {
+        // Find organization where crmPhone matches the receiver's phone (e.g. +7 700 123 45 67)
+        // Since formatting varies, we fetch all organizations with crmPhone and match digits
+        const orgs = await prisma.organization.findMany({
+            where: { crmPhone: { not: null } },
+            select: { id: true, crmPhone: true }
+        });
+        const receiverDigits = receiverPhone.replace(/\D/g, '');
+        const matchingOrg = orgs.find(o => o.crmPhone?.replace(/\D/g, '') === receiverDigits);
+        if (matchingOrg) {
+            clinicId = matchingOrg.id;
+        }
+    }
 
     // Find or create lead
     let lead = await prisma.lead.findFirst({
@@ -75,7 +91,8 @@ export async function processIncomingMessage(
                 phone: chatId,
                 name: senderName || null,
                 source: 'whatsapp',
-                tags: ['bot:greeting'],
+                clinicId,
+                tags: ['bot:human_takeover'], // TEMPORARILY DISABLED (was 'bot:greeting')
             },
         });
 
@@ -113,29 +130,8 @@ export async function processIncomingMessage(
         return false;
     }
 
-    // Process based on current state
-    await sendTyping(chatId);
-    await delay(1000); // Natural typing delay
-
-    switch (state) {
-        case 'greeting':
-            return await handleGreeting(lead.id, chatId, senderName);
-
-        case 'ask_city':
-            return await handleCity(lead.id, chatId, messageText);
-
-        case 'ask_concern':
-            return await handleConcern(lead.id, chatId, messageText);
-
-        case 'offer_slots':
-            return await handleSlotSelection(lead.id, chatId, messageText);
-
-        case 'confirm_booking':
-            return await handleBookingConfirmation(lead.id, chatId, messageText);
-
-        default:
-            return await handleGreeting(lead.id, chatId, senderName);
-    }
+    // TEMPORARY GLOBAL BOT DISABLE (per user request)
+    return false;
 }
 
 // ── State handlers ──
