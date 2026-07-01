@@ -15,7 +15,6 @@ const navItems = [
     { href: '/sales/analytics',    label: 'Аналитика',  icon: BarChart3 },
     { href: '/sales/billing',      label: 'Тарифы',     icon: CreditCard },
     { href: '/sales/bot-settings', label: 'Бот',        icon: Bot },
-    { href: '/profile/payroll',    label: 'Зарплата',   icon: Banknote },
 ];
 
 export default function SalesNav() {

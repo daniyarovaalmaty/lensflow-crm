@@ -16,7 +16,6 @@ const navItems = [
     { href: '/distributor/pos', label: 'Касса', icon: ShoppingBag, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
     { href: '/distributor/cash-shifts', label: 'Смены', icon: Banknote, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
     { href: '/distributor/analytics', label: 'Аналитика', icon: BarChart3, roles: ['dist_head', 'dist_admin'] },
-    { href: '/profile/payroll', label: 'Зарплата', icon: Banknote, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
     { href: '/distributor/staff', label: 'Сотрудники', icon: User, roles: ['dist_head', 'dist_admin'] },
     { href: '/distributor/settings', label: 'Настройки', icon: Settings, roles: ['dist_head'] },
 ];

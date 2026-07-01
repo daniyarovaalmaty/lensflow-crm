@@ -15,7 +15,6 @@ const baseNavItems = [
     { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500' },
     { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500' },
     { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500' },
-    { href: '/profile/payroll', label: 'Зарплата', icon: Banknote, color: 'text-amber-500' },
 ];
 
 const procurementNavItems = [
@@ -82,7 +81,12 @@ export default function QuickNav() {
         ? 'Все филиалы'
         : branches.find(b => b.id === selectedBranch)?.name || 'Все';
 
-    const allItems = isProcurement ? procurementNavItems : (isManager ? [...baseNavItems, ...managerNavItems] : baseNavItems);
+    const isAigerim = userName.toLowerCase().includes('айгерим') || userName.toLowerCase().includes('шораева');
+    const allItems = isProcurement ? procurementNavItems : (isManager ? [...baseNavItems, ...managerNavItems] : [...baseNavItems]);
+    
+    if (isAigerim && !isProcurement) {
+        allItems.push({ href: '/profile/payroll', label: 'Зарплата', icon: Banknote, color: 'text-amber-500' } as any);
+    }
 
     return (
         <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-30">

@@ -20,7 +20,6 @@ const navItems = [
     { href: '/laboratory/partner-leads', label: 'Заявки', icon: UserPlus, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/staff', label: 'Сотрудники', icon: Users, subRoles: ['lab_head'] },
     { href: '/laboratory/settings', label: 'Настройки', icon: Settings, subRoles: ['lab_head'] },
-    { href: '/profile/payroll', label: 'Зарплата', icon: Banknote, subRoles: ['lab_head', 'lab_admin', 'lab_engineer', 'lab_quality', 'lab_logistics', 'lab_accountant'] },
     { href: '/support', label: 'Поддержка', icon: MessageSquarePlus, subRoles: ['lab_head', 'lab_admin', 'lab_engineer', 'lab_quality', 'lab_logistics', 'lab_accountant'] },
 ];
 

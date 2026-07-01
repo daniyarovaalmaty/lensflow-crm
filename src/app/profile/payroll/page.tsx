@@ -9,8 +9,8 @@ const fmt = (num: number) => new Intl.NumberFormat('ru-RU').format(num);
 export default function PayrollPage() {
     const { data: session } = useSession();
 
-    // Временная заглушка: отчет только за Июнь 2026 для доктора Айгерим Шораевой
-    const isAigerim = session?.user?.name?.toLowerCase().includes('айгерим') || session?.user?.name?.toLowerCase().includes('шораева') || true; // Пока показываем всем для демонстрации
+    // Отчет только за Июнь 2026 для доктора Айгерим Шораевой
+    const isAigerim = session?.user?.name?.toLowerCase().includes('айгерим') || session?.user?.name?.toLowerCase().includes('шораева');
 
     if (!isAigerim) {
         return (
