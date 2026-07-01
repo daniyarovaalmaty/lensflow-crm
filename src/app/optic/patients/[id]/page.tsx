@@ -698,23 +698,30 @@ export default function PatientDetailPage() {
                                     {patient.birthDate && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{calcAge(patient.birthDate)}</span>}
                                 </div>
                                 
-                                <div className="flex gap-2 w-full">
-                                    {isEditing ? (
-                                        <>
-                                            <button onClick={() => setIsEditing(false)} className="btn bg-gray-100 hover:bg-gray-200 flex-1 text-sm"><X className="w-4 h-4 mx-auto" /></button>
-                                            <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-[2] text-sm flex items-center justify-center gap-1">
-                                                <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить'}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button onClick={() => window.print()} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-1 text-sm flex justify-center text-gray-600">
-                                                <Printer className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
-                                                <Edit2 className="w-4 h-4" /> Редактировать
-                                            </button>
-                                        </>
+                                <div className="flex flex-col gap-2 w-full">
+                                    <div className="flex gap-2 w-full">
+                                        {isEditing ? (
+                                            <>
+                                                <button onClick={() => setIsEditing(false)} className="btn bg-gray-100 hover:bg-gray-200 flex-1 text-sm"><X className="w-4 h-4 mx-auto" /></button>
+                                                <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-[2] text-sm flex items-center justify-center gap-1">
+                                                    <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить'}
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button onClick={() => window.print()} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-1 text-sm flex justify-center text-gray-600">
+                                                    <Printer className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
+                                                    <Edit2 className="w-4 h-4" /> Редактировать
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                    {!isEditing && (
+                                        <button onClick={handleOpenInvoice} className="btn bg-orange-100 hover:bg-orange-200 text-orange-800 w-full text-sm flex items-center justify-center gap-2 transition-colors border-none shadow-sm py-2.5">
+                                            <Banknote className="w-4 h-4" /> Выставить счет на кассу
+                                        </button>
                                     )}
                                 </div>
                             </div>
@@ -840,25 +847,7 @@ export default function PatientDetailPage() {
                                 </div>
                             )}
                         </div>
-                        <div className="flex gap-2">
-                            {isEditing ? (
-                                <>
-                                    <button onClick={() => setIsEditing(false)} className="btn btn-secondary btn-sm flex items-center gap-1"><X className="w-4 h-4" /> Отмена</button>
-                                    <button onClick={handleSave} disabled={saving} className="btn btn-primary btn-sm flex items-center gap-1">
-                                        <Save className="w-4 h-4" /> {saving ? 'Сохранение...' : 'Сохранить'}
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button onClick={handleOpenInvoice} className="btn bg-orange-100 hover:bg-orange-200 text-orange-800 btn-sm flex items-center gap-1 transition-colors border-none shadow-sm">
-                                        <Banknote className="w-4 h-4" /> Выставить счет на кассу
-                                    </button>
-                                    <button onClick={() => setIsEditing(true)} className="btn btn-secondary btn-sm flex items-center gap-1">
-                                        <Edit2 className="w-4 h-4" /> Редактировать
-                                    </button>
-                                </>
-                            )}
-                        </div>
+
                     </div>
 
                     {/* MAIN CONTENT AREA */}
