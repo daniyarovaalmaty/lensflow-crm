@@ -135,7 +135,11 @@ export async function POST(request: Request) {
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { name, phone, email, birthDate, gender, notes, doctorId } = body;
+    const { 
+        name, phone, email, birthDate, gender, notes, doctorId,
+        iin, address, profession, complaints, anamnesisDisease, anamnesisLife,
+        allergies, heredity, medications, dispensary, surgeries, lastCorrection
+    } = body;
 
     if (!name || !phone) {
         return NextResponse.json({ error: 'ФИО и телефон обязательны' }, { status: 400 });
@@ -167,6 +171,18 @@ export async function POST(request: Request) {
             notes: notes || null,
             organizationId: session.user.organizationId || null,
             doctorId: doctorId || session.user.id || null,
+            iin: iin || null,
+            address: address || null,
+            profession: profession || null,
+            complaints: complaints || null,
+            anamnesisDisease: anamnesisDisease || null,
+            anamnesisLife: anamnesisLife || null,
+            allergies: allergies || null,
+            heredity: heredity || null,
+            medications: medications || null,
+            dispensary: dispensary || null,
+            surgeries: surgeries || null,
+            lastCorrection: lastCorrection || null,
         },
     });
 

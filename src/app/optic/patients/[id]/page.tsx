@@ -29,6 +29,10 @@ interface Consultation {
     visualAcuityOS: number | null;
     k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null;
     k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null;
+    lensFittingOD: string | null;
+    lensFittingOS: string | null;
+    refractionOD: string | null;
+    refractionOS: string | null;
     notes: string | null;
     doctor: { fullName: string } | null;
 }
@@ -40,6 +44,18 @@ interface PatientDetail {
     email: string | null;
     birthDate: string | null;
     gender: string | null;
+    iin: string | null;
+    address: string | null;
+    profession: string | null;
+    complaints: string | null;
+    anamnesisDisease: string | null;
+    anamnesisLife: string | null;
+    allergies: string | null;
+    heredity: string | null;
+    medications: string | null;
+    dispensary: string | null;
+    surgeries: string | null;
+    lastCorrection: string | null;
     notes: string | null;
     attachments: Array<{
         id: string; name: string; url: string; type: string; size: number; uploadedAt: string;
@@ -663,13 +679,89 @@ export default function PatientDetailPage() {
                                 </div>
                             </div>
 
-                            {(isEditing || patient.notes) && (
-                                <div className="mt-6 pt-6 border-t border-gray-100 relative z-10">
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Заметки / Анамнез</label>
+                            {isEditing && (
+                                <div className="mt-4 space-y-3 relative z-10 bg-gray-50 p-4 rounded-xl border border-gray-100 text-left">
+                                    <h4 className="text-xs font-bold text-gray-700 uppercase mb-2 border-b border-gray-200 pb-1">Дополнительные данные</h4>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">ИИН</label>
+                                            <input type="text" value={editForm.iin || ''} onChange={e => setEditForm((f: any) => ({ ...f, iin: e.target.value }))} className="input text-sm w-full h-8" placeholder="ИИН" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Профессия</label>
+                                            <input type="text" value={editForm.profession || ''} onChange={e => setEditForm((f: any) => ({ ...f, profession: e.target.value }))} className="input text-sm w-full h-8" placeholder="Профессия" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Домашний адрес</label>
+                                        <input type="text" value={editForm.address || ''} onChange={e => setEditForm((f: any) => ({ ...f, address: e.target.value }))} className="input text-sm w-full h-8" placeholder="Адрес проживания" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {(isEditing || patient.complaints || patient.anamnesisDisease || patient.anamnesisLife || patient.allergies || patient.heredity || patient.medications || patient.surgeries || patient.notes) && (
+                                <div className="mt-6 pt-6 border-t border-gray-100 relative z-10 text-left">
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3 block">Медицинская карта / Анамнез</label>
+                                    
                                     {isEditing ? (
-                                        <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={4} placeholder="Аллергии, особенности здоровья..." />
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Жалобы</label>
+                                                <textarea value={editForm.complaints || ''} onChange={e => setEditForm((f: any) => ({ ...f, complaints: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез заболевания (Anamnesis morbi)</label>
+                                                <textarea value={editForm.anamnesisDisease || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisDisease: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез жизни (Anamnesis vitae)</label>
+                                                <textarea value={editForm.anamnesisLife || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisLife: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Аллергоанамнез</label>
+                                                    <input type="text" value={editForm.allergies || ''} onChange={e => setEditForm((f: any) => ({ ...f, allergies: e.target.value }))} className="input w-full text-sm" placeholder="Лекарственная, пищевая аллергия" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Наследственность</label>
+                                                    <input type="text" value={editForm.heredity || ''} onChange={e => setEditForm((f: any) => ({ ...f, heredity: e.target.value }))} className="input w-full text-sm" placeholder="Глаукома, СД..." />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Перенесенные операции</label>
+                                                <textarea value={editForm.surgeries || ''} onChange={e => setEditForm((f: any) => ({ ...f, surgeries: e.target.value }))} className="input w-full resize-y text-sm min-h-[40px]" rows={1} />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Постоянный прием медикаментов</label>
+                                                <input type="text" value={editForm.medications || ''} onChange={e => setEditForm((f: any) => ({ ...f, medications: e.target.value }))} className="input w-full text-sm" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Последняя коррекция</label>
+                                                <input type="text" value={editForm.lastCorrection || ''} onChange={e => setEditForm((f: any) => ({ ...f, lastCorrection: e.target.value }))} className="input w-full text-sm" placeholder="Очки, МКЛ (дата)" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Прочие заметки</label>
+                                                <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                            </div>
+                                        </div>
                                     ) : (
-                                        <p className="text-gray-700 text-sm bg-orange-50/50 rounded-xl p-4 border border-orange-100/50 leading-relaxed">{patient.notes}</p>
+                                        <div className="space-y-4">
+                                            {/* Read-only Anamnesis display */}
+                                            {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-3 rounded-lg border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
+                                            {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-3 rounded-lg border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
+                                            {patient.anamnesisLife && <div><p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Анамнез жизни</p><p className="text-gray-800 text-sm bg-amber-50 p-3 rounded-lg border border-amber-100/50 leading-relaxed">{patient.anamnesisLife}</p></div>}
+                                            
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {patient.allergies && <div className="bg-rose-50 p-2 rounded border border-rose-100"><p className="text-[10px] font-bold text-rose-500 uppercase mb-0.5">Аллергии</p><p className="text-sm font-medium text-gray-800">{patient.allergies}</p></div>}
+                                                {patient.heredity && <div className="bg-indigo-50 p-2 rounded border border-indigo-100"><p className="text-[10px] font-bold text-indigo-500 uppercase mb-0.5">Наследственность</p><p className="text-sm font-medium text-gray-800">{patient.heredity}</p></div>}
+                                                {patient.medications && <div className="bg-sky-50 p-2 rounded border border-sky-100"><p className="text-[10px] font-bold text-sky-500 uppercase mb-0.5">Медикаменты</p><p className="text-sm font-medium text-gray-800">{patient.medications}</p></div>}
+                                                {patient.surgeries && <div className="bg-emerald-50 p-2 rounded border border-emerald-100"><p className="text-[10px] font-bold text-emerald-600 uppercase mb-0.5">Операции</p><p className="text-sm font-medium text-gray-800">{patient.surgeries}</p></div>}
+                                            </div>
+                                            
+                                            {patient.lastCorrection && <div><p className="text-[10px] font-bold text-purple-500 uppercase mb-1">Последняя коррекция</p><p className="text-gray-800 text-sm bg-purple-50 p-3 rounded-lg border border-purple-100/50">{patient.lastCorrection}</p></div>}
+                                            
+                                            {patient.notes && <div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Прочие заметки</p><p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100 leading-relaxed">{patient.notes}</p></div>}
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -986,10 +1078,40 @@ export default function PatientDetailPage() {
                                     </div>
                                 </div>
 
+                                {/* Lens Fitting and Refraction (Free Text) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                        <h4 className="text-xs font-bold text-blue-800 uppercase mb-2">Подбор линз (Параметры)</h4>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OD — Правый</label>
+                                                <input type="text" value={consultForm.lensFittingOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA, Paragon 10.5..." />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OS — Левый</label>
+                                                <input type="text" value={consultForm.lensFittingOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA..." />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                                        <h4 className="text-xs font-bold text-purple-800 uppercase mb-2">Рефрактометрия (ROL)</h4>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
+                                                <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
+                                                <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="space-y-3 mb-4">
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Диагноз / Клинические данные</label>
-                                        <textarea value={consultForm.diagnosis} onChange={e => setConsultForm((f: any) => ({ ...f, diagnosis: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
+                                        <textarea value={consultForm.diagnosis || ''} onChange={e => setConsultForm((f: any) => ({ ...f, diagnosis: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">План лечения / Рекомендации</label>
@@ -1080,6 +1202,24 @@ export default function PatientDetailPage() {
                                                         <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
                                                             <p className="text-xs text-gray-400 mb-0.5">ВГД OS</p>
                                                             <p className="font-mono font-bold text-gray-900">{c.intraocularPressureOS != null ? `${c.intraocularPressureOS} мм` : '—'}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {(c.lensFittingOD || c.lensFittingOS) && (
+                                                    <div className="bg-blue-50/50 rounded-lg p-3 border border-blue-100">
+                                                        <p className="text-xs font-semibold text-blue-700 mb-2">Подбор линз</p>
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div><span className="text-blue-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.lensFittingOD || '—'}</span></div>
+                                                            <div><span className="text-blue-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.lensFittingOS || '—'}</span></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {(c.refractionOD || c.refractionOS) && (
+                                                    <div className="bg-purple-50/50 rounded-lg p-3 border border-purple-100">
+                                                        <p className="text-xs font-semibold text-purple-700 mb-2">Рефрактометрия</p>
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div><span className="text-purple-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.refractionOD || '—'}</span></div>
+                                                            <div><span className="text-purple-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.refractionOS || '—'}</span></div>
                                                         </div>
                                                     </div>
                                                 )}

@@ -246,6 +246,20 @@ model Patient {
   externalId     String?  // e.g. "itigris:12345"
   externalSource String?  // e.g. "itigris"
 
+  // General Medical / Anamnesis
+  iin              String?
+  address          String?
+  profession       String?
+  complaints       String?   @db.Text
+  anamnesisDisease String?   @db.Text
+  anamnesisLife    String?   @db.Text
+  allergies        String?   @db.Text
+  heredity         String?   @db.Text
+  medications      String?   @db.Text
+  dispensary       String?   @db.Text
+  surgeries        String?   @db.Text
+  lastCorrection   String?   @db.Text
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
 
@@ -329,6 +343,12 @@ model Consultation {
   astigmatismOS    Float?
   pachymetryOS     Float?
   eccentricityOS   Float?
+
+  // Lens Fitting & Refraction (Free Text)
+  lensFittingOD    String?   @db.Text
+  lensFittingOS    String?   @db.Text
+  refractionOD     String?   @db.Text
+  refractionOS     String?   @db.Text
 
   notes       String?  @db.Text
   createdAt   DateTime @default(now())

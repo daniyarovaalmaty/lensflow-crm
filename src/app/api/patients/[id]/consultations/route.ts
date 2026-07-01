@@ -27,7 +27,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
         nextVisit, intraocularPressureOD, intraocularPressureOS,
         visualAcuityOD, visualAcuityOS, notes,
         k1OD, k2OD, axisOD, astigmatismOD, pachymetryOD, eccentricityOD,
-        k1OS, k2OS, axisOS, astigmatismOS, pachymetryOS, eccentricityOS
+        k1OS, k2OS, axisOS, astigmatismOS, pachymetryOS, eccentricityOS,
+        lensFittingOD, lensFittingOS, refractionOD, refractionOS
     } = body;
 
     const parseNum = (val: any) => (val === '' || val == null || isNaN(parseFloat(val))) ? null : parseFloat(val);
@@ -47,6 +48,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
             visualAcuityOS: parseNum(visualAcuityOS),
             k1OD: parseNum(k1OD), k2OD: parseNum(k2OD), axisOD: parseNum(axisOD), astigmatismOD: parseNum(astigmatismOD), pachymetryOD: parseNum(pachymetryOD), eccentricityOD: parseNum(eccentricityOD),
             k1OS: parseNum(k1OS), k2OS: parseNum(k2OS), axisOS: parseNum(axisOS), astigmatismOS: parseNum(astigmatismOS), pachymetryOS: parseNum(pachymetryOS), eccentricityOS: parseNum(eccentricityOS),
+            lensFittingOD: lensFittingOD || null,
+            lensFittingOS: lensFittingOS || null,
+            refractionOD: refractionOD || null,
+            refractionOS: refractionOS || null,
             notes: notes || null,
         },
         include: { doctor: { select: { fullName: true } } },

@@ -42,7 +42,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { name, phone, email, birthDate, gender, notes, doctorId, attachments } = body;
+    const { 
+        name, phone, email, birthDate, gender, notes, doctorId, attachments,
+        iin, address, profession, complaints, anamnesisDisease, anamnesisLife,
+        allergies, heredity, medications, dispensary, surgeries, lastCorrection
+    } = body;
 
     const updateData: any = {
         name: name?.trim(),
@@ -52,6 +56,18 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         gender: gender || null,
         notes: notes || null,
         doctorId: doctorId || null,
+        iin: iin || null,
+        address: address || null,
+        profession: profession || null,
+        complaints: complaints || null,
+        anamnesisDisease: anamnesisDisease || null,
+        anamnesisLife: anamnesisLife || null,
+        allergies: allergies || null,
+        heredity: heredity || null,
+        medications: medications || null,
+        dispensary: dispensary || null,
+        surgeries: surgeries || null,
+        lastCorrection: lastCorrection || null,
     };
 
     if (attachments !== undefined) {
