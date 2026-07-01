@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
@@ -163,6 +164,7 @@ export default function PatientDetailPage() {
     const params = useParams();
     const router = useRouter();
     const id = params.id as string;
+    const { data: session } = useSession();
 
     const [patient, setPatient] = useState<PatientDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -727,7 +729,7 @@ export default function PatientDetailPage() {
                             </div>
 
                             <div className="mt-6 space-y-4 relative z-10 text-left">
-                                {profile?.role !== 'doctor' && (
+                                {session?.user?.role !== 'doctor' && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
                                         {isEditing ? (
@@ -745,7 +747,7 @@ export default function PatientDetailPage() {
                                         <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.address ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.address}</> : '—'}</p>
                                     )}
                                 </div>
-                                {profile?.role !== 'doctor' && (
+                                {session?.user?.role !== 'doctor' && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
                                         {isEditing ? (
