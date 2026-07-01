@@ -199,6 +199,20 @@ export default function POSPage() {
         }
     };
 
+    const handleDeleteDraft = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этот счет?')) return;
+        try {
+            const res = await fetch(`/api/optic/sales/draft/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadPendingSales();
+            } else {
+                alert('Ошибка при удалении');
+            }
+        } catch (e) {
+            console.error('Failed to delete draft', e);
+        }
+    };
+
     const loadDoctors = async () => {
         try {
             const res = await fetch('/api/clinic-staff');
@@ -533,7 +547,16 @@ export default function POSPage() {
                                                         <h3 className="font-bold text-gray-900">{ps.customerName || 'Неизвестный пациент'}</h3>
                                                         <p className="text-xs text-gray-500">{new Date(ps.createdAt).toLocaleString('ru-RU')}</p>
                                                     </div>
-                                                    <span className="bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Ожидает оплаты</span>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span className="bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Ожидает оплаты</span>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteDraft(ps.id); }}
+                                                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                                            title="Удалить счет"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div className="text-sm font-semibold text-gray-800 my-3">
                                                     Итого: {fmt(ps.total)} ₸
