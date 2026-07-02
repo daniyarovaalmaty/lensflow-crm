@@ -26,6 +26,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         }
 
         // Delete items and the sale
+        await prisma.saleItem.deleteMany({ where: { saleId: saleId } });
         await prisma.sale.delete({ where: { id: saleId } });
 
         return NextResponse.json({ success: true });

@@ -204,6 +204,8 @@ export default function POSPage() {
         try {
             const res = await fetch(`/api/optic/sales/draft/${id}`, { method: 'DELETE' });
             if (res.ok) {
+                setScanFeedback('✅ Счет успешно удален!');
+                setTimeout(() => setScanFeedback(null), 3000);
                 loadPendingSales();
             } else {
                 alert('Ошибка при удалении');
@@ -383,6 +385,8 @@ export default function POSPage() {
             });
             if (res.ok) {
                 const sale = await res.json();
+                setScanFeedback('✅ Оплата успешно проведена!');
+                setTimeout(() => setScanFeedback(null), 3000);
                 setCart([]);
                 setCustomerName('');
                 setCustomerPhone('');
@@ -548,7 +552,7 @@ export default function POSPage() {
                                                         <p className="text-xs text-gray-500">{new Date(ps.createdAt).toLocaleString('ru-RU')}</p>
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1">
-                                                        <span className="bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Ожидает оплаты</span>
+                                                        <span className="bg-orange-100 text-orange-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase text-center whitespace-nowrap">Ожидает оплаты</span>
                                                         <button 
                                                             onClick={(e) => { e.stopPropagation(); handleDeleteDraft(ps.id); }}
                                                             className="text-gray-400 hover:text-red-500 transition-colors p-1"
