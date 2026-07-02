@@ -1612,16 +1612,18 @@ export default function OpticCatalogPage() {
                                         <p className="text-xs text-gray-400">Будет виден на публичной странице оптики</p>
                                     </div>
                                 </label>
-                                {/* Free Price toggle */}
-                                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer">
-                                    <input type="checkbox" checked={form.isFreePrice}
-                                        onChange={e => setForm({ ...form, isFreePrice: e.target.checked })}
-                                        className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
-                                    <div>
-                                        <span className="text-sm font-medium text-gray-700">Свободная цена</span>
-                                        <p className="text-xs text-gray-400">Кассир вводит цену при продаже</p>
-                                    </div>
-                                </label>
+                                {/* Free Price toggle (only for managers) */}
+                                {session?.user?.subRole === 'optic_manager' && (
+                                    <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer">
+                                        <input type="checkbox" checked={form.isFreePrice}
+                                            onChange={e => setForm({ ...form, isFreePrice: e.target.checked })}
+                                            className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+                                        <div>
+                                            <span className="text-sm font-medium text-gray-700">Свободная цена</span>
+                                            <p className="text-xs text-gray-400">Кассир вводит цену при продаже</p>
+                                        </div>
+                                    </label>
+                                )}
                             </div>
 
                             {/* Footer */}
