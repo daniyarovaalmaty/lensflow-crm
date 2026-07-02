@@ -45,7 +45,7 @@ export async function GET(request: Request) {
                 if (!fullName || fullName === ' ') continue;
 
                 // Normalize phone for dedup comparison
-                const normalizedPhone = (lf.phone || '').replace(/[\s\-\+\(\)]/g, '');
+                const normalizedPhone = (lf.phone || '').replace(/\D/g, '');
 
                 // If phone exists, link medmundusId to that existing record (no duplicate)
                 if (normalizedPhone) {
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
     }
 
     // Deduplication check: if a patient with the exact same normalized phone AND matching name exists, return it
-    const normalizedPhone = phone.replace(/[\s\-\+\(\)]/g, '');
+    const normalizedPhone = phone.replace(/\D/g, '');
     if (normalizedPhone.length >= 9) {
         const existing = await prisma.patient.findFirst({
             where: {

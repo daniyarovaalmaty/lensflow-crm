@@ -40,6 +40,9 @@ export async function GET(request: NextRequest) {
                 doctor: {
                     select: { id: true, fullName: true, avatar: true },
                 },
+                createdBy: {
+                    select: { id: true, fullName: true },
+                }
             },
             orderBy: { date: 'asc' },
         });
@@ -80,10 +83,12 @@ export async function POST(request: NextRequest) {
                 patientPhone: !patientId ? patientPhone : null,
                 doctorId: doctorId,
                 clinicId: session.user.organizationId,
+                createdById: session.user.id,
             },
             include: {
                 patient: true,
                 doctor: { select: { id: true, fullName: true } },
+                createdBy: { select: { id: true, fullName: true } }
             }
         });
 

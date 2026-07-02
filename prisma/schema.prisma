@@ -166,6 +166,7 @@ model User {
   prescriptions  Prescription[] @relation("DoctorPrescriptions")
   consultations  Consultation[] @relation("DoctorConsultations")
   appointments   Appointment[]  @relation("DoctorAppointments")
+  createdAppointments Appointment[] @relation("CreatedAppointments")
 
   openedShifts      CashShift[]       @relation("OpenedShifts")
   closedShifts      CashShift[]       @relation("ClosedShifts")
@@ -390,6 +391,8 @@ model Appointment {
   doctor       User?         @relation("DoctorAppointments", fields: [doctorId], references: [id])
   clinicId     String?
   clinic       Organization? @relation(fields: [clinicId], references: [id])
+  createdById  String?
+  createdBy    User?         @relation("CreatedAppointments", fields: [createdById], references: [id])
   
   date         DateTime
   duration     Int           @default(30) // in minutes

@@ -21,6 +21,7 @@ interface Appointment {
     status: string;
     type: string;
     notes?: string | null;
+    createdBy?: { id: string; fullName: string } | null;
 }
 
 const APPT_TYPES: Record<string, string> = {
@@ -282,6 +283,11 @@ export default function DoctorCalendar() {
                                         </>
                                     )}
                                 </div>
+                                {appt.createdBy && (
+                                    <div className="text-xs text-gray-400 mt-0.5">
+                                        Записал(а): {appt.createdBy.fullName}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 {appt.status === 'scheduled' && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">Запланирован</span>}
@@ -328,6 +334,11 @@ export default function DoctorCalendar() {
                                         <div>
                                             <div className="text-sm text-gray-500 mb-1">Заметки</div>
                                             <div className="bg-gray-50 p-3 rounded-lg text-sm">{selectedAppointment.notes}</div>
+                                        </div>
+                                    )}
+                                    {selectedAppointment.createdBy && (
+                                        <div className="text-xs text-gray-400 text-right">
+                                            Записал(а): {selectedAppointment.createdBy.fullName}
                                         </div>
                                     )}
                                     
