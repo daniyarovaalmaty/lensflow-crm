@@ -42,6 +42,7 @@ function calcAge(birthDate: string | null): string {
 
 export default function PatientsPage() {
     const { data: session } = useSession();
+    const isDoctor = session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor';
     const router = useRouter();
 
     // permissions visibility check
@@ -276,7 +277,7 @@ export default function PatientsPage() {
                                             )}
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-gray-500">
-                                            {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
+                                            {(!isDoctor && p.phone) && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
                                             <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.consultations} прием.</span>
                                             <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.orders} заказ.</span>
                                             <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{p._count.prescriptions} рецепт.</span>
