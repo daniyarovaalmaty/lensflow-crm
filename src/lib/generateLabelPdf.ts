@@ -93,23 +93,10 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.rect(0, 0, W, H, 'F');
 
     // ===== TOP: LOGO + PRODUCT NAME =====
-    try {
-        const logoDataUrl = await fetch('/medilens-logo.png')
-            .then(res => res.blob())
-            .then(blob => new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            }));
-        doc.addImage(logoDataUrl, 'PNG', 2, 2, 16, 4);
-    } catch (e) {
-        console.error('Failed to load logo', e);
-        doc.setFont('Roboto', 'normal');
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text('MediLens', 2, 5);
-    }
+    doc.setFont('Roboto', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text('MediLens', 2, 5.5);
 
     // Quantity — large number
     const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
@@ -285,10 +272,10 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     });
 
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(6.5);
+    doc.setFontSize(5.5);
     doc.text('Dk', 19, 24.5);
     doc.setFont('Roboto', 'bold');
-    doc.setFontSize(14);
+    doc.setFontSize(11);
     doc.text(String(dkVal), 23, 24.5);
 
     // ===== BARCODE =====
