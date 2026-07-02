@@ -117,6 +117,8 @@ export default function POSPage() {
     const [patients, setPatients] = useState<any[]>([]);
     const [patientSearch, setPatientSearch] = useState('');
     const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+    const [patientSales, setPatientSales] = useState<any[]>([]);
+    const [showAllPatientSales, setShowAllPatientSales] = useState(false);
 
     // Custom Item State
     const [showCustomModal, setShowCustomModal] = useState(false);
@@ -145,6 +147,25 @@ export default function POSPage() {
         }, 300);
         return () => clearTimeout(delayDebounceFn);
     }, [patientSearch]);
+
+    // Fetch patient sales when patientId changes
+    useEffect(() => {
+        if (!patientId) {
+            setPatientSales([]);
+            setShowAllPatientSales(false);
+            return;
+        }
+        fetch(`/api/patients/${patientId}/sales`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setPatientSales(data);
+                else setPatientSales([]);
+            })
+            .catch(err => {
+                console.error('Failed to fetch patient sales', err);
+                setPatientSales([]);
+            });
+    }, [patientId]);
 
     // USB Scanner — auto-detects barcode scanner input (keyboard emulation)
     const handleUsbScan = useCallback((code: string) => {
@@ -881,9 +902,39 @@ export default function POSPage() {
                                         )}
                                     </div>
                                     {patientId && (
-                                        <div className="mt-1.5 px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-lg text-xs font-semibold flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                            Связано с пациентом из базы
+                                        <div className="mt-1.5 flex flex-col gap-2">
+                                            <div className="px-3 py-1 bg-green-50 text-green-700 border border-green-100 rounded-lg text-xs font-semibold flex items-center gap-1.5 w-fit">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                Связано с пациентом из базы
+                                            </div>
+                                            
+                                            {/* Patient Purchase History Inline */}
+                                            {patientSales.length > 0 && (
+                                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h4 className="text-xs font-bold text-gray-700 flex items-center gap-1.5"><Receipt className="w-3.5 h-3.5" /> История покупок</h4>
+                                                        {patientSales.length > 3 && (
+                                                            <button 
+                                                                onClick={() => setShowAllPatientSales(!showAllPatientSales)} 
+                                                                className="text-[10px] font-semibold text-primary-600 hover:text-primary-700"
+                                                            >
+                                                                {showAllPatientSales ? 'Скрыть' : `Показать все (${patientSales.length})`}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        {(showAllPatientSales ? patientSales : patientSales.slice(0, 3)).map((sale) => (
+                                                            <div key={sale.id} className="text-[11px] flex items-start gap-2 text-gray-600 bg-white border border-gray-100 p-2 rounded-lg shadow-sm">
+                                                                <span className="text-gray-400 font-medium shrink-0">{new Date(sale.createdAt).toLocaleDateString('ru-RU')}</span>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="truncate font-medium text-gray-800">{sale.items?.map((i: any) => i.name).join(', ')}</div>
+                                                                    <div className="font-bold text-gray-900 mt-0.5">{sale.total.toLocaleString()} ₸</div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

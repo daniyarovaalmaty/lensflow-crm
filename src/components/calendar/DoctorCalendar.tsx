@@ -249,9 +249,17 @@ export default function DoctorCalendar() {
         <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 mb-6 shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                    <label className="p-2 bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors relative overflow-hidden group">
                         <CalendarIcon className="w-5 h-5" />
-                    </div>
+                        <input 
+                            type="date" 
+                            className="absolute opacity-0 inset-0 w-full h-full cursor-pointer"
+                            value={format(currentDate, 'yyyy-MM-dd')}
+                            onChange={(e) => {
+                                if (e.target.value) setCurrentDate(new Date(e.target.value));
+                            }}
+                        />
+                    </label>
                     <div>
                         <h2 className="text-lg font-bold text-gray-900">Расписание на {format(currentDate, 'd MMMM', { locale: ru })}</h2>
                         <p className="text-sm text-gray-500">{todaysAppointments.length} записей</p>
