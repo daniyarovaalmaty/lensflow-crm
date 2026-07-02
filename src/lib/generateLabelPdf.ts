@@ -261,6 +261,12 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setFontSize(5); // Увеличенный шрифт клиники
     doc.setTextColor(100, 100, 100);
     let opticName = order.company || order.meta.optic_name || '';
+    
+    // Shorten long clinic names like "Офтальмологический центр «New Eye»"
+    if (opticName.toLowerCase().includes('new eye')) {
+        opticName = 'New Eye';
+    }
+
     const lines = doc.splitTextToSize(opticName, 16);
     const displayLines = lines.slice(0, 3);
     if (lines.length > 3) {
