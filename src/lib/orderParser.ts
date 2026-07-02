@@ -44,6 +44,10 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
         dk: '100' // Default DK 100 as requested
     };
 
+    if (/tor|тор/i.test(eyeStr)) {
+        eye.characteristic = 'toric';
+    }
+
     if (/dk\s*125/i.test(eyeStr)) eye.dk = '125';
     else if (/dk\s*50/i.test(eyeStr)) eye.dk = '50';
     else if (/dk\s*180/i.test(eyeStr)) eye.dk = '180';
@@ -107,6 +111,10 @@ function parseEyeString(eyeStr: string, isToric: boolean): ParsedTableData['od']
         eye.compression_factor = Math.abs(parseFloat(facMatch[1].replace(',', '.')));
     }
 
+    if (eye.tor !== undefined) {
+        eye.characteristic = 'toric';
+    }
+
     return eye;
 }
 
@@ -143,7 +151,7 @@ export function parseOrderTableRow(row: string): ParsedTableData {
             cols.forEach((col, idx) => {
                 const cleanCol = col.replace(/["\n]/g, '').trim();
                 if (cleanCol === '1' || cleanCol === '2') qtyIdx = idx;
-                if (cleanCol.toLowerCase().includes('toric') || cleanCol.toLowerCase().includes('sph')) charIdx = idx;
+                if (cleanCol.toLowerCase().includes('toric') || cleanCol.toLowerCase().includes('sph') || cleanCol.toLowerCase().includes('tor') || cleanCol.toLowerCase().includes('тор')) charIdx = idx;
                 
                 // Normalize Cyrillic ОВ to OD and О to O
                 const upperCol = cleanCol.toUpperCase().replace(/[Оо][Вв]/g, 'OD').replace(/ОD/g, 'OD').replace(/ОS/g, 'OS');
@@ -162,7 +170,8 @@ export function parseOrderTableRow(row: string): ParsedTableData {
             }
             
             if (charIdx !== -1) {
-                isToric = cols[charIdx].toLowerCase().includes('toric');
+                const charVal = cols[charIdx].toLowerCase();
+                isToric = charVal.includes('toric') || charVal.includes('tor') || charVal.includes('тор');
             }
             
             // Global Dk fallback
