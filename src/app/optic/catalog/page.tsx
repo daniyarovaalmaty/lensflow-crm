@@ -37,6 +37,7 @@ interface OpticProduct {
     unit: string;
     trackSerials: boolean;
     isPublic: boolean;
+    isFreePrice: boolean;
     isActive: boolean;
     createdAt: string;
     _count?: { stockItems: number };
@@ -112,7 +113,7 @@ export default function OpticCatalogPage() {
     const [form, setForm] = useState({
         name: '', category: 'frame', brand: '', model: '', sku: '', barcode: '',
         shortDescription: '', fullDescription: '', purchasePrice: '', retailPrice: '',
-        minStock: '0', unit: 'шт', trackSerials: false, isPublic: false,
+        minStock: '0', unit: 'шт', trackSerials: false, isPublic: false, isFreePrice: false,
         images: [] as string[], specs: {} as Record<string, string>,
     });
     const [saving, setSaving] = useState(false);
@@ -811,6 +812,7 @@ export default function OpticCatalogPage() {
             unit: form.unit,
             trackSerials: form.trackSerials,
             isPublic: form.isPublic,
+            isFreePrice: form.isFreePrice,
             isActive: true,
             createdAt: new Date().toISOString()
         };
@@ -840,7 +842,7 @@ export default function OpticCatalogPage() {
         setForm({
             name: '', category: 'frame', brand: '', model: '', sku: '', barcode: '',
             shortDescription: '', fullDescription: '', purchasePrice: '', retailPrice: '',
-            minStock: '0', unit: 'шт', trackSerials: false, isPublic: false,
+            minStock: '0', unit: 'шт', trackSerials: false, isPublic: false, isFreePrice: false,
             images: [], specs: {},
         });
         setShowForm(true);
@@ -854,7 +856,7 @@ export default function OpticCatalogPage() {
             shortDescription: p.shortDescription || '', fullDescription: p.fullDescription || '',
             purchasePrice: String(p.purchasePrice || ''), retailPrice: String(p.retailPrice || ''),
             minStock: String(p.minStock || '0'), unit: p.unit || 'шт',
-            trackSerials: p.trackSerials, isPublic: p.isPublic,
+            trackSerials: p.trackSerials, isPublic: p.isPublic, isFreePrice: !!p.isFreePrice,
             images: (p.images as string[]) || [], specs: (p.specs as Record<string, string>) || {},
         });
         setShowForm(true);

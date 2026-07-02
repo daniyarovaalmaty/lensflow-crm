@@ -64,6 +64,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             unit: body.unit ?? existing.unit,
             trackSerials: body.trackSerials !== undefined ? Boolean(body.trackSerials) : existing.trackSerials,
             isPublic: body.isPublic !== undefined ? Boolean(body.isPublic) : existing.isPublic,
+            isFreePrice: body.isFreePrice !== undefined ? Boolean(body.isFreePrice) : existing.isFreePrice,
             isActive: body.isActive !== undefined ? Boolean(body.isActive) : existing.isActive,
         },
     });

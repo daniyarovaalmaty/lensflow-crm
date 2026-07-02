@@ -16,12 +16,14 @@ interface Product {
     brand: string | null; sku: string | null; barcode: string | null;
     retailPrice: number; currentStock: number; unit: string;
     images: string[] | null; isActive: boolean;
+    isFreePrice: boolean;
     _count?: { stockItems: number };
 }
 
 interface CartItem {
     productId: string; name: string; category: string; type: string;
     unitPrice: number; quantity: number; maxStock: number;
+    isFreePrice?: boolean;
 }
 
 interface Sale {
@@ -148,26 +150,11 @@ export default function POSPage() {
     const handleUsbScan = useCallback((code: string) => {
         const product = products.find(p => p.barcode === code || p.sku === code);
         if (product) {
-            const stock = product.type === 'service' ? 999 : product.currentStock;
-            const existing = cart.find(c => c.productId === product.id);
-            if (existing) {
-                if (product.type === 'product' && existing.quantity >= stock) {
-                    setScanFeedback(`⚠️ ${product.name} — нет на складе`);
-                } else {
-                    setCart(prev => prev.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c));
-                    setScanFeedback(`✅ ${product.name} (${existing.quantity + 1} шт)`);
-                }
-            } else {
-                setCart(prev => [...prev, {
-                    productId: product.id, name: product.name, category: product.category,
-                    type: product.type, unitPrice: product.retailPrice, quantity: 1, maxStock: stock,
-                }]);
-                setScanFeedback(`✅ ${product.name} добавлен`);
-            }
+            addToCart(product);
         } else {
             setScanFeedback(`❌ Товар "${code}" не найден`);
+            setTimeout(() => setScanFeedback(null), 3000);
         }
-        setTimeout(() => setScanFeedback(null), 3000);
     }, [products, cart]);
     useUsbScanner(handleUsbScan);
 
@@ -288,16 +275,17 @@ export default function POSPage() {
     }, [products, categoryFilter, search]);
 
     // Cart operations
-    const addToCart = (product: Product) => {
-        const existing = cart.find(c => c.productId === product.id);
-        const stock = product.type === 'service' ? 999 : product.currentStock;
+    const addToCart = (p: Product) => {
+        const existing = cart.find(c => c.productId === p.id);
+        const stock = p.type === 'service' ? 999 : p.currentStock;
         if (existing) {
-            if (product.type === 'product' && existing.quantity >= stock) return;
-            setCart(cart.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c));
+            if (p.type === 'product' && existing.quantity >= stock) return;
+            setCart(cart.map(c => c.productId === p.id ? { ...c, quantity: c.quantity + 1 } : c));
         } else {
             setCart([...cart, {
-                productId: product.id, name: product.name, category: product.category,
-                type: product.type, unitPrice: product.retailPrice, quantity: 1, maxStock: stock,
+                productId: p.id, name: p.name, category: p.category,
+                type: p.type, unitPrice: p.retailPrice, quantity: 1, maxStock: stock,
+                isFreePrice: p.isFreePrice,
             }]);
         }
     };
@@ -309,6 +297,15 @@ export default function POSPage() {
             if (newQty <= 0) return c;
             if (c.type === 'product' && newQty > c.maxStock) return c;
             return { ...c, quantity: newQty };
+        }));
+    };
+
+    const updateCartItemPrice = (productId: string, newPrice: number) => {
+        setCart(prev => prev.map(c => {
+            if (c.productId === productId && c.isFreePrice) {
+                return { ...c, unitPrice: newPrice };
+            }
+            return c;
         }));
     };
 
@@ -680,7 +677,14 @@ export default function POSPage() {
                                         <div key={item.productId} className="flex items-center gap-3 py-4">
                                             <div className="flex-1 min-w-0 pr-2">
                                                 <p className="text-xs md:text-sm font-bold text-gray-800 leading-snug break-words line-clamp-2">{item.name}</p>
-                                                <p className="text-[10px] md:text-sm text-gray-500 font-semibold mt-0.5">{fmt(item.unitPrice)} ₸ × {item.quantity}</p>
+                                                {item.isFreePrice ? (
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <input type="number" min="0" value={item.unitPrice || ''} onChange={e => updateCartItemPrice(item.productId, parseInt(e.target.value) || 0)} className="w-24 border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold text-gray-800" placeholder="Цена..." />
+                                                        <span className="text-[10px] md:text-sm text-gray-500 font-semibold">₸ × {item.quantity}</span>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[10px] md:text-sm text-gray-500 font-semibold mt-0.5">{fmt(item.unitPrice)} ₸ × {item.quantity}</p>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-1.5 flex-shrink-0">
                                                 <button onClick={() => updateQty(item.productId, -1)}

@@ -596,6 +596,7 @@ model OpticProduct {
   trackSerials     Boolean  @default(false)
 
   isPublic         Boolean  @default(false)
+  isFreePrice      Boolean  @default(false)
   isActive         Boolean  @default(true)
   sortOrder        Int      @default(0)
 

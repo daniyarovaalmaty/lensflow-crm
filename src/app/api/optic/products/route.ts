@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
             unit: body.unit || 'шт',
             trackSerials: Boolean(body.trackSerials),
             isPublic: Boolean(body.isPublic),
+            isFreePrice: Boolean(body.isFreePrice),
             isActive: true,
         },
     });
