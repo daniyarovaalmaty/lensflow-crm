@@ -9,7 +9,7 @@ import {
 import { SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import Link from 'next/link';
-import { ShoppingCart, Warehouse, Package, Banknote, FileText, Target } from 'lucide-react';
+import { ShoppingCart, Warehouse, Package, Banknote, FileText, Target, Calendar } from 'lucide-react';
 
 interface StaffMember {
     id: string;
@@ -393,6 +393,7 @@ export default function ClinicStaffPage() {
                                             { key: 'canViewPatients', label: 'Мед. карты', desc: 'Пациенты, рецепты, приемы', icon: Users },
                                             { key: 'canViewFinance', label: 'Цены и Финансы', desc: 'Показатели выручки и маржи', icon: Target },
                                             { key: 'canViewOrders', label: 'Заказы линз', desc: 'Отправка бланков линз в лабу', icon: FileText },
+                                            { key: 'canViewCrm', label: 'CRM и Календарь', desc: 'Записи на прием, воронка', icon: Calendar },
                                         ].map(p => {
                                             const Icon = p.icon;
                                             const isChecked = (editPermissions as any)[p.key] || false;

@@ -321,7 +321,7 @@ export default function OpticDashboard() {
                                     Создать заказ
                                 </Link>
                             )}
-                            {clinicPerms.canViewFinance && (
+                            {clinicPerms.canViewCrm && (
                                 <Link
                                     href="/sales/pipeline"
                                     className="flex items-center gap-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
@@ -457,14 +457,16 @@ export default function OpticDashboard() {
                                     ЛК Менеджера
                                 </Link>
                             )}
-                            <Link
-                                href="/sales/pipeline"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                            >
-                                <Target className="w-4 h-4" />
-                                CRM Продажи
-                            </Link>
+                            {clinicPerms.canViewCrm && (
+                                <Link
+                                    href="/sales/pipeline"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                                >
+                                    <Target className="w-4 h-4" />
+                                    CRM Продажи
+                                </Link>
+                            )}
                             {clinicPerms.canViewFinance && (
                                 <Link
                                     href="/optic/finances"

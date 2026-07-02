@@ -353,6 +353,7 @@ export interface ClinicPermissions {
     canViewPatients: boolean;
     canViewFinance: boolean;
     canViewOrders: boolean;
+    canViewCrm: boolean;
 }
 
 export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
@@ -364,6 +365,7 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewPatients: true,
         canViewFinance: true,
         canViewOrders: true,
+        canViewCrm: true,
     },
     optic_doctor: {
         canViewPos: true,
@@ -373,6 +375,7 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewPatients: true,
         canViewFinance: false,
         canViewOrders: true,
+        canViewCrm: false,
     },
     optic_accountant: {
         canViewPos: false,
@@ -382,6 +385,7 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewPatients: false,
         canViewFinance: true,
         canViewOrders: false,
+        canViewCrm: false,
     },
     optic_procurement: {
         canViewPos: false,
@@ -391,14 +395,15 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewPatients: false,
         canViewFinance: true,
         canViewOrders: true,
+        canViewCrm: false,
     },
     // Fallbacks for other roles to be fully typed and safe
-    lab_engineer: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
-    lab_quality: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
-    lab_logistics: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
-    lab_head: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
-    lab_admin: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
-    lab_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
+    lab_engineer: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
+    lab_quality: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
+    lab_logistics: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
+    lab_head: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
+    lab_admin: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
+    lab_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
     doctor: {
         canViewPos: true,
         canViewWarehouse: false,
@@ -407,12 +412,13 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewPatients: true,
         canViewFinance: false,
         canViewOrders: true,
+        canViewCrm: false,
     },
-    sales_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false },
-    dist_head: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true },
-    dist_admin: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true },
-    dist_manager: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: false, canViewOrders: true },
-    dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true },
+    sales_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: true },
+    dist_head: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true, canViewCrm: false },
+    dist_admin: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true, canViewCrm: false },
+    dist_manager: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: false, canViewOrders: true, canViewCrm: false },
+    dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: false },
 };
 
 export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {
@@ -424,6 +430,7 @@ export function getEffectiveClinicPermissions(user: { subRole: string; permissio
         canViewPatients: false,
         canViewFinance: false,
         canViewOrders: false,
+        canViewCrm: false,
     };
 
     if (!user.permissions || typeof user.permissions !== 'object') {
@@ -439,6 +446,7 @@ export function getEffectiveClinicPermissions(user: { subRole: string; permissio
         canViewPatients: typeof p.canViewPatients === 'boolean' ? p.canViewPatients : roleDefault.canViewPatients,
         canViewFinance: typeof p.canViewFinance === 'boolean' ? p.canViewFinance : roleDefault.canViewFinance,
         canViewOrders: typeof p.canViewOrders === 'boolean' ? p.canViewOrders : roleDefault.canViewOrders,
+        canViewCrm: typeof p.canViewCrm === 'boolean' ? p.canViewCrm : roleDefault.canViewCrm,
     };
 }
 
