@@ -47,11 +47,16 @@ export default function DoctorCalendar() {
     // New appointment state
     const [newApptDate, setNewApptDate] = useState('');
     const [newApptTime, setNewApptTime] = useState('');
-    const [newApptName, setNewApptName] = useState('');
-    const [newApptPhone, setNewApptPhone] = useState('');
     const [newApptType, setNewApptType] = useState('primary_consultation');
     const [newApptDuration, setNewApptDuration] = useState(30);
     const [newApptDoctorId, setNewApptDoctorId] = useState('');
+
+    // Patient selection state
+    const [patientSearchQuery, setPatientSearchQuery] = useState('');
+    const [isSearchingPatient, setIsSearchingPatient] = useState(false);
+    const [patientSearchResults, setPatientSearchResults] = useState<any[]>([]);
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [newApptPhone, setNewApptPhone] = useState('');
 
     const fetchAppointments = async () => {
         try {
@@ -87,6 +92,31 @@ export default function DoctorCalendar() {
         }
     }, [session, currentDate]);
 
+    // Search patients debounce
+    useEffect(() => {
+        if (!patientSearchQuery.trim() || selectedPatient) {
+            setPatientSearchResults([]);
+            return;
+        }
+        
+        const timeoutId = setTimeout(async () => {
+            setIsSearchingPatient(true);
+            try {
+                const res = await fetch(`/api/patients?q=${encodeURIComponent(patientSearchQuery)}&noSync=1`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPatientSearchResults(data.patients || []);
+                }
+            } catch (err) {
+                console.error('Failed to search patients', err);
+            } finally {
+                setIsSearchingPatient(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(timeoutId);
+    }, [patientSearchQuery, selectedPatient]);
+
     const handleCreateAppointment = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -97,8 +127,9 @@ export default function DoctorCalendar() {
                 body: JSON.stringify({
                     date: dateTime.toISOString(),
                     duration: newApptDuration,
-                    patientName: newApptName,
-                    patientPhone: newApptPhone,
+                    patientId: selectedPatient?.id || undefined,
+                    patientName: selectedPatient ? undefined : patientSearchQuery,
+                    patientPhone: selectedPatient ? undefined : newApptPhone,
                     type: newApptType,
                     doctorId: newApptDoctorId || undefined
                 })
@@ -138,8 +169,10 @@ export default function DoctorCalendar() {
     };
 
     const resetNewApptForm = () => {
-        setNewApptName('');
+        setPatientSearchQuery('');
         setNewApptPhone('');
+        setSelectedPatient(null);
+        setPatientSearchResults([]);
         setNewApptType('primary_consultation');
         setNewApptDuration(30);
         setNewApptDoctorId('');
@@ -376,14 +409,72 @@ export default function DoctorCalendar() {
                                             <input type="time" required value={newApptTime} onChange={e => setNewApptTime(e.target.value)} className="input w-full" />
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Имя пациента</label>
-                                        <input type="text" required value={newApptName} onChange={e => setNewApptName(e.target.value)} className="input w-full" placeholder="ФИО" />
+                                    <div className="relative">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Поиск или имя пациента</label>
+                                        
+                                        {selectedPatient ? (
+                                            <div className="flex items-center justify-between p-2.5 border border-primary-200 bg-primary-50 rounded-lg">
+                                                <div>
+                                                    <div className="font-medium text-primary-900">{selectedPatient.name}</div>
+                                                    <div className="text-xs text-primary-700">{selectedPatient.phone}</div>
+                                                </div>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => {
+                                                        setSelectedPatient(null);
+                                                        setPatientSearchQuery(selectedPatient.name);
+                                                    }}
+                                                    className="p-1 hover:bg-primary-100 rounded-md text-primary-600"
+                                                >
+                                                    <XCircle className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <input 
+                                                    type="text" 
+                                                    required 
+                                                    value={patientSearchQuery} 
+                                                    onChange={e => setPatientSearchQuery(e.target.value)} 
+                                                    className="input w-full" 
+                                                    placeholder="Начните вводить имя или телефон..." 
+                                                />
+                                                {/* Dropdown for search results */}
+                                                {patientSearchQuery.length > 0 && !selectedPatient && (
+                                                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                        {isSearchingPatient ? (
+                                                            <div className="p-3 text-sm text-center text-gray-500">Поиск...</div>
+                                                        ) : patientSearchResults.length > 0 ? (
+                                                            patientSearchResults.map(p => (
+                                                                <div 
+                                                                    key={p.id} 
+                                                                    onClick={() => {
+                                                                        setSelectedPatient(p);
+                                                                        setPatientSearchQuery('');
+                                                                    }}
+                                                                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                                                                >
+                                                                    <div className="font-medium text-gray-900">{p.name}</div>
+                                                                    <div className="text-sm text-gray-500">{p.phone}</div>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-3 text-sm text-gray-500 bg-gray-50">
+                                                                Пациент не найден. Будет создана новая запись для: <span className="font-medium text-gray-900">{patientSearchQuery}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
-                                        <input type="tel" required value={newApptPhone} onChange={e => setNewApptPhone(e.target.value)} className="input w-full" placeholder="+7..." />
-                                    </div>
+                                    
+                                    {!selectedPatient && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Телефон нового пациента</label>
+                                            <input type="tel" required={!selectedPatient} value={newApptPhone} onChange={e => setNewApptPhone(e.target.value)} className="input w-full" placeholder="+7..." />
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Тип приема</label>
