@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -99,6 +99,7 @@ interface PatientDetail {
         id: string; orderNumber: string; status: string; createdAt: string;
         totalPrice: number | null; isUrgent: boolean; source?: string | null;
     }>;
+    sales?: any[];
 }
 
 const fmt = (v: number | null, plus = true) => {
@@ -225,6 +226,7 @@ export default function PatientDetailPage() {
     const [invoiceProducts, setInvoiceProducts] = useState<any[]>([]);
     const [invoiceCart, setInvoiceCart] = useState<any[]>([]);
     const [invoiceSearch, setInvoiceSearch] = useState('');
+    const [invoiceCategoryFilter, setInvoiceCategoryFilter] = useState('all');
     const [savingInvoice, setSavingInvoice] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
@@ -814,6 +816,7 @@ export default function PatientDetailPage() {
                                 { id: 'consultations', icon: Activity, label: 'Консультации', count: consultations.length },
                                 { id: 'prescriptions', icon: Eye, label: 'Рецепты', count: patient.prescriptions.length },
                                 { id: 'orders', icon: ClipboardList, label: 'Заказы', count: patient.orders.length },
+                                { id: 'sales', icon: ShoppingBag, label: 'Покупки', count: patient.sales?.length || 0 },
                                 { id: 'files', icon: Paperclip, label: 'Снимки', count: patient.attachments?.length || 0 }
                             ].map(tab => (
                                 <button
@@ -1119,6 +1122,59 @@ export default function PatientDetailPage() {
                             </div>
                         )}
                     </div>
+
+                    {activeTab === 'sales' && (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900">История покупок (Касса)</h2>
+                                    <p className="text-sm text-gray-500">Товары и услуги, оплаченные на кассе</p>
+                                </div>
+                            </div>
+
+                            {(!patient.sales || patient.sales.length === 0) ? (
+                                <div className="bg-gray-50 rounded-3xl p-12 text-center border-2 border-dashed border-gray-200">
+                                    <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Нет покупок</h3>
+                                    <p className="text-sm text-gray-500">Пациент еще ничего не покупал на кассе</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {patient.sales.map((sale: any) => (
+                                        <div key={sale.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                                                <div>
+                                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Чек</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <h3 className="text-lg font-black text-gray-900">#{sale.saleNumber}</h3>
+                                                        <span className="text-sm font-medium text-gray-500">{new Date(sale.createdAt).toLocaleDateString('ru-RU')}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-sm font-bold text-gray-900">{fmt(sale.total)} ₸</div>
+                                                    <div className="text-xs text-gray-500">{sale.paymentMethod === 'card' ? 'Карта' : sale.paymentMethod === 'transfer' ? 'Перевод' : sale.paymentMethod === 'mixed' ? 'Смешанная' : 'Наличные'}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                                <div className="space-y-2">
+                                                    {sale.items?.map((item: any, i: number) => (
+                                                        <div key={i} className="flex justify-between items-center text-sm">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-medium text-gray-800">{item.name}</span>
+                                                                <span className="text-gray-400 text-xs">x{item.quantity}</span>
+                                                            </div>
+                                                            <span className="font-bold text-gray-600">{fmt(item.total)} ₸</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Consultations */}
                     <div id="consultations" className="scroll-mt-24">
@@ -1460,15 +1516,24 @@ export default function PatientDetailPage() {
                                 <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                                     <Banknote className="w-5 h-5 text-orange-500" /> Выставить счет на кассу
                                 </h3>
-                                <div className="relative">
+                                <div className="relative mb-3">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input type="text" placeholder="Поиск услуг или товаров..." value={invoiceSearch} onChange={e => setInvoiceSearch(e.target.value)}
                                         className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none" />
                                 </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setInvoiceCategoryFilter('all')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${invoiceCategoryFilter === 'all' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Все</button>
+                                    <button onClick={() => setInvoiceCategoryFilter('service')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${invoiceCategoryFilter === 'service' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Услуги</button>
+                                    <button onClick={() => setInvoiceCategoryFilter('product')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${invoiceCategoryFilter === 'product' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Товары</button>
+                                </div>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                    {invoiceProducts.filter(p => p.isActive !== false && p.name.toLowerCase().includes(invoiceSearch.toLowerCase())).map(p => (
+                                    {invoiceProducts.filter(p => {
+                                        if (p.isActive === false) return false;
+                                        if (invoiceCategoryFilter !== 'all' && p.type !== invoiceCategoryFilter) return false;
+                                        return p.name.toLowerCase().includes(invoiceSearch.toLowerCase());
+                                    }).map(p => (
                                         <div key={p.id} onClick={() => addToInvoiceCart(p)}
                                             className="bg-white p-3 border border-gray-200 rounded-xl hover:border-orange-400 hover:shadow-md cursor-pointer transition-all active:scale-95 group">
                                             <p className="text-sm font-bold text-gray-800 line-clamp-2 group-hover:text-orange-700 transition-colors mb-2">{p.name}</p>

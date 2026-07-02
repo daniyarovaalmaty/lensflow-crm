@@ -28,6 +28,13 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                     source: true,
                 },
             },
+            sales: {
+                orderBy: { createdAt: 'desc' },
+                take: 20,
+                include: {
+                    items: true
+                }
+            },
             doctor: { select: { id: true, fullName: true } },
         },
     });
