@@ -25,8 +25,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: 'Only unpaid draft sales can be deleted' }, { status: 400 });
         }
 
-        // Delete items and the sale
-        await prisma.saleItem.deleteMany({ where: { saleId: saleId } });
+        // Delete the sale (items are cascade deleted)
         await prisma.sale.delete({ where: { id: saleId } });
 
         return NextResponse.json({ success: true });
