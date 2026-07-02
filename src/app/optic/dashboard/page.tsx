@@ -551,7 +551,7 @@ export default function OpticDashboard() {
             )}
 
             {/* === DOCTOR CALENDAR === */}
-            {clinicPerms.canViewCrm && (
+            {clinicPerms.canViewPatients && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
                     <DoctorCalendar />
                 </div>

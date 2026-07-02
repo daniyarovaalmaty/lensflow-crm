@@ -10,6 +10,37 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+// Helper to remove payment-related text (kaspi, ckk, terminals, etc) for doctors
+const filterMedicalText = (text: string | null | undefined, userRole?: string) => {
+    if (!text) return text;
+    if (userRole !== 'doctor') return text; // Only filter for doctors to not hide from managers
+    
+    return text.split(/[.\n;]/).map(sentence => {
+        const lower = sentence.toLowerCase();
+        if (
+            lower.includes('каспий') || lower.includes('kaspi') || lower.includes('каспи') ||
+            lower.includes('терминал') || lower.includes('цкк') || 
+            lower.includes('предоплата') || lower.includes('оплата') || 
+            lower.includes('оплатить') || lower.includes('чек') ||
+            lower.includes('наличными') || lower.includes('нал ')
+        ) {
+            // Check if it's separated by comma inside a single line
+            const commaParts = sentence.split(',');
+            const cleanCommaParts = commaParts.filter(p => {
+                const lp = p.toLowerCase();
+                return !(lp.includes('каспий') || lp.includes('kaspi') || lp.includes('каспи') || lp.includes('терминал') || lp.includes('цкк') || lp.includes('предоплата') || lp.includes('оплата') || lp.includes('оплатить') || lp.includes('чек') || lp.includes('наличными') || lp.includes('нал '));
+            });
+            if (cleanCommaParts.length === 0) return '';
+            return cleanCommaParts.join(',');
+        }
+        return sentence;
+    })
+    .filter(s => s.trim().length > 0)
+    .join('. ')
+    .replace(/\.\s*\./g, '.') // cleanup double dots
+    .trim();
+};
+
 interface Prescription {
     id: string;
     odSph: number | null; odCyl: number | null; odAx: number | null; odAdd: number | null; odPd: number | null;
@@ -1321,16 +1352,16 @@ export default function PatientDetailPage() {
                                                         </div>
                                                     </div>
                                                 )}
-                                                {c.diagnosis && (
+                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role) && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{c.diagnosis}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role)}</p>
                                                     </div>
                                                 )}
-                                                {c.treatment && (
+                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role) && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Рекомендации</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{c.treatment}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role)}</p>
                                                     </div>
                                                 )}
                                                 {c.nextVisit && (
