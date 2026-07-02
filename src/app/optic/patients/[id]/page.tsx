@@ -549,8 +549,12 @@ export default function PatientDetailPage() {
                     <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
                         <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">ФИО</span> <strong className="text-lg text-gray-900">{patient.name}</strong></div>
                         <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Дата рождения</span> <strong className="text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
-                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
-                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
+                        {session?.user?.role !== 'doctor' && session?.user?.subRole !== 'optic_doctor' && (
+                            <>
+                                <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
+                                <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
+                            </>
+                        )}
                         {patient.notes && (
                             <div className="col-span-2 mt-2 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
                                 <span className="text-xs font-bold text-orange-400 uppercase mb-1 block">Анамнез / Заметки</span>
