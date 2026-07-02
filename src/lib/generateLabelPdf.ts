@@ -3,6 +3,7 @@
 import jsPDF from 'jspdf';
 import { RobotoRegular } from './fonts/roboto-regular';
 import { RobotoBold } from './fonts/roboto-bold';
+import { UnboundedLight } from './fonts/unbounded-light';
 
 interface LabelOrder {
     order_id: string;
@@ -85,15 +86,17 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
 
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
     doc.addFileToVFS('Roboto-Bold.ttf', RobotoBold);
+    doc.addFileToVFS('Unbounded-Light.ttf', UnboundedLight);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
     doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+    doc.addFont('Unbounded-Light.ttf', 'Unbounded', 'light');
 
     // ===== BACKGROUND =====
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, W, H, 'F');
 
     // ===== TOP: LOGO + PRODUCT NAME =====
-    doc.setFont('Roboto', 'normal');
+    doc.setFont('Unbounded', 'light');
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
     doc.text('MediLens', 2, 5.5);
