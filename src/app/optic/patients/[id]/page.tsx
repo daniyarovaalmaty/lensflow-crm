@@ -766,7 +766,7 @@ export default function PatientDetailPage() {
                             </div>
 
                             <div className="mt-6 space-y-4 relative z-10 text-left">
-                                {session?.user?.role !== 'doctor' && (
+                                {!(session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor') && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
                                         {isEditing ? (
@@ -784,7 +784,7 @@ export default function PatientDetailPage() {
                                         <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.address ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.address}</> : '—'}</p>
                                     )}
                                 </div>
-                                {session?.user?.role !== 'doctor' && (
+                                {!(session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor') && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
                                         {isEditing ? (
@@ -1412,16 +1412,16 @@ export default function PatientDetailPage() {
                                                         </div>
                                                     </div>
                                                 )}
-                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role) && (
+                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role) && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role)}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>
                                                     </div>
                                                 )}
-                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role) && (
+                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role) && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Рекомендации</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role)}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>
                                                     </div>
                                                 )}
                                                 {c.nextVisit && (
@@ -1430,7 +1430,7 @@ export default function PatientDetailPage() {
                                                         Следующий визит: <strong>{new Date(c.nextVisit).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
                                                     </div>
                                                 )}
-                                                {c.notes && <p className="text-xs text-gray-500 italic">{c.notes}</p>}
+                                                {c.notes && <p className="text-xs text-gray-500 italic">{filterMedicalText(c.notes, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>}
                                                 <div className="flex justify-end">
                                                     <button onClick={() => handleDeleteConsult(c.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors">
                                                         <Trash2 className="w-3.5 h-3.5" /> Удалить запись
