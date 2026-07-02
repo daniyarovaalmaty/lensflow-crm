@@ -13,7 +13,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         const saleId = params.id;
 
         // Verify the sale belongs to the organization and is unpaid
-        const sale = await prisma.sale.findUnique({
+        const sale = await prisma.sale.findFirst({
             where: { id: saleId, organizationId: user.organizationId }
         });
 

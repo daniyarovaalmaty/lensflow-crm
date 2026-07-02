@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     if (draftSaleId) {
         try {
             await prisma.saleItem.deleteMany({ where: { saleId: draftSaleId } });
-            await prisma.sale.delete({ where: { id: draftSaleId, organizationId: orgId } });
+            await prisma.sale.delete({ where: { id: draftSaleId } });
         } catch (e) {
             console.warn('[SalePOS] Could not delete draft sale:', e);
         }
