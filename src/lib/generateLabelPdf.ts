@@ -263,7 +263,8 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     let opticName = order.company || order.meta.optic_name || '';
     
     // Shorten long clinic names like "Офтальмологический центр «New Eye»"
-    if (opticName.toLowerCase().includes('new eye')) {
+    const lowerName = opticName.toLowerCase();
+    if (lowerName.includes('new eye') || lowerName.includes('neweye') || lowerName.includes('нью ай')) {
         opticName = 'New Eye';
     }
 
