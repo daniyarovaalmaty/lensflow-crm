@@ -208,10 +208,12 @@ export default function POSPage() {
                 setTimeout(() => setScanFeedback(null), 3000);
                 loadPendingSales();
             } else {
-                alert('Ошибка при удалении');
+                const data = await res.json().catch(() => ({}));
+                alert(`Ошибка при удалении: ${data.error || res.statusText}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error('Failed to delete draft', e);
+            alert(`Ошибка сети: ${e.message}`);
         }
     };
 

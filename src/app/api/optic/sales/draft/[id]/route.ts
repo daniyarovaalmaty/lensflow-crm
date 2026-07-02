@@ -30,8 +30,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         await prisma.sale.delete({ where: { id: saleId } });
 
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
         console.error('[DraftSaleDelete] Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: error.message || String(error) }, { status: 500 });
     }
 }
