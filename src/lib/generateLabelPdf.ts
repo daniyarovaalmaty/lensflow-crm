@@ -97,7 +97,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
 
     // ===== TOP: LOGO + PRODUCT NAME =====
     doc.setFont('Unbounded', 'light');
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
     doc.text('MediLens', 2, 5.5);
 
@@ -275,10 +275,10 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     });
 
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(5.5);
+    doc.setFontSize(4.5);
     doc.text('Dk', 19, 24.5);
     doc.setFont('Roboto', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(8.5);
     doc.text(String(dkVal), 23, 24.5);
 
     // ===== BARCODE =====
