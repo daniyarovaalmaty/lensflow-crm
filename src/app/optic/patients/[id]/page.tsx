@@ -200,7 +200,7 @@ const RxField = ({ label, field, rxForm, setRxForm }: { label: string; field: st
             type="text" inputMode="decimal"
             value={rxForm[field] ?? ''}
             onChange={e => {
-                const val = e.target.value.replace(',', '.').replace(/[^0-9.\-+]/g, '');
+                const val = e.target.value.replace(',', '.');
                 setRxForm((f: any) => ({ ...f, [field]: val }));
             }}
             className="input text-sm h-9 font-mono w-full"
