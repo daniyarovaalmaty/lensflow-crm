@@ -546,6 +546,21 @@ export default function DistributorDashboard() {
                                             <Link href={`/distributor/orders/${order.order_id}/edit`} onClick={(e) => { e.stopPropagation(); document.body.style.overflow = ''; }} className="text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-lg font-medium transition-colors">
                                                 Изменить
                                             </Link>
+                                            {!hasPendingRequest ? (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setShowRequestModal(order.order_id);
+                                                        setRequestType('request_cancel');
+                                                        setRequestReason('');
+                                                    }}
+                                                    className="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg font-medium transition-colors border border-red-200"
+                                                >
+                                                    Запросить отмену
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-amber-600 font-medium animate-comment-blink ml-2">⏳ Запрос отправлен</span>
+                                            )}
                                         </div>
                                     </div>
                                 );
