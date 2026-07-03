@@ -15,6 +15,7 @@ export async function GET() {
 
     const distributorOrgId = session.user.organizationId!;
 
+    // 1. Fetch counterparties from past orders
     const orders = await prisma.order.findMany({
         where: { distributorOrgId },
         select: {
@@ -86,6 +87,36 @@ export async function GET() {
         }
     }
 
+    // 2. Fetch standalone organizations linked directly to this distributor
+    const linkedOrgs = await prisma.organization.findMany({
+        where: { defaultLabId: distributorOrgId }
+    });
+
+    for (const org of linkedOrgs) {
+        if (!counterpartyMap.has(org.id)) {
+            counterpartyMap.set(org.id, {
+                id: org.id,
+                organizationId: org.id,
+                name: org.name,
+                type: org.type,
+                phone: org.phone,
+                email: org.email,
+                city: org.city,
+                inn: org.inn,
+                address: org.address,
+                contactPerson: org.contactPerson,
+                contactPhone: org.contactPhone,
+                discountPercent: org.discountPercent,
+                status: org.status,
+                memberSince: org.createdAt,
+                totalOrders: 0,
+                totalRevenue: 0,
+                unpaidAmount: 0,
+                lastOrderAt: null,
+            });
+        }
+    }
+
     const counterparties = Array.from(counterpartyMap.values());
     counterparties.sort((a, b) => b.totalOrders - a.totalOrders);
 
@@ -105,6 +136,8 @@ export async function POST(request: NextRequest) {
     if (sub !== 'dist_head' && sub !== 'dist_admin' && sub !== 'dist_manager') {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const distributorOrgId = session.user.organizationId!;
 
     const body = await request.json();
     const {
@@ -129,6 +162,7 @@ export async function POST(request: NextRequest) {
             contactPhone: contactPhone?.trim() || undefined,
             discountPercent: Number(discountPercent) || 0,
             status: 'active',
+            defaultLabId: distributorOrgId // Link new counterparty directly to distributor
         },
     });
 
