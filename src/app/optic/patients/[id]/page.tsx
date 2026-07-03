@@ -192,6 +192,23 @@ function PrescriptionCard({ rx, onDelete }: { rx: Prescription; onDelete: () => 
     );
 }
 
+
+const RxField = ({ label, field, rxForm, setRxForm }: { label: string; field: string; rxForm: any; setRxForm: any }) => (
+    <div>
+        <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
+        <input
+            type="text" inputMode="decimal"
+            value={rxForm[field] ?? ''}
+            onChange={e => {
+                const val = e.target.value.replace(',', '.').replace(/[^0-9.\-+]/g, '');
+                setRxForm((f: any) => ({ ...f, [field]: val }));
+            }}
+            className="input text-sm h-9 font-mono w-full"
+            placeholder="0.00"
+        />
+    </div>
+);
+
 export default function PatientDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -506,21 +523,6 @@ export default function PatientDetailPage() {
 
     if (!patient) return <div className="min-h-screen bg-surface flex items-center justify-center"><p className="text-gray-500">Пациент не найден</p></div>;
 
-    const RxField = ({ label, field }: { label: string; field: string }) => (
-        <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
-            <input
-                type="text" inputMode="decimal"
-                value={rxForm[field] ?? ''}
-                onChange={e => {
-                    const val = e.target.value.replace(',', '.').replace(/[^0-9.\-+]/g, '');
-                    setRxForm((f: any) => ({ ...f, [field]: val }));
-                }}
-                className="input text-sm h-9 font-mono w-full"
-                placeholder="0.00"
-            />
-        </div>
-    );
 
     return (
         <div className="min-h-screen bg-surface">
@@ -1025,25 +1027,25 @@ export default function PatientDetailPage() {
                                         <div>
                                             <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OD — Правый</p>
                                             <div className="space-y-2">
-                                                <RxField label="Sph" field="odSph" />
-                                                <RxField label="Cyl" field="odCyl" />
-                                                <RxField label="Ax" field="odAx" />
-                                                <RxField label="Add" field="odAdd" />
-                                                <RxField label="PD" field="odPd" />
+                                                <RxField label="Sph" field="odSph" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Cyl" field="odCyl" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Ax" field="odAx" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Add" field="odAdd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="PD" field="odPd" rxForm={rxForm} setRxForm={setRxForm} />
                                             </div>
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OS — Левый</p>
                                             <div className="space-y-2">
-                                                <RxField label="Sph" field="osSph" />
-                                                <RxField label="Cyl" field="osCyl" />
-                                                <RxField label="Ax" field="osAx" />
-                                                <RxField label="Add" field="osAdd" />
-                                                <RxField label="PD" field="osPd" />
+                                                <RxField label="Sph" field="osSph" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Cyl" field="osCyl" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Ax" field="osAx" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Add" field="osAdd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="PD" field="osPd" rxForm={rxForm} setRxForm={setRxForm} />
                                             </div>
                                         </div>
                                     </div>
-                                    <RxField label="PD общий (мм)" field="pdTotal" />
+                                    <RxField label="PD общий (мм)" field="pdTotal" rxForm={rxForm} setRxForm={setRxForm} />
                                     <div className="mt-3">
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки к рецепту</label>
                                         <textarea value={rxForm.notes || ''} onChange={e => setRxForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
