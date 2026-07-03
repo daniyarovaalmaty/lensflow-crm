@@ -510,9 +510,12 @@ export default function PatientDetailPage() {
         <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
             <input
-                type="number" step="0.01"
+                type="text" inputMode="decimal"
                 value={rxForm[field] ?? ''}
-                onChange={e => setRxForm((f: any) => ({ ...f, [field]: e.target.value }))}
+                onChange={e => {
+                    const val = e.target.value.replace(',', '.').replace(/[^0-9.\-+]/g, '');
+                    setRxForm((f: any) => ({ ...f, [field]: val }));
+                }}
                 className="input text-sm h-9 font-mono w-full"
                 placeholder="0.00"
             />
