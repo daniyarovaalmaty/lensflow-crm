@@ -49,6 +49,8 @@ interface Prescription {
     osSph: number | null; osCyl: number | null; osAx: number | null; osAdd: number | null; osPd: number | null;
     osPdNear: number | null; osPrism: string | null; osBc: string | null; osDia: string | null;
     visualAcuityODAfter: number | null; visualAcuityOSAfter: number | null;
+    refraction: string | null; cycloplegia: string | null; complaints: string | null;
+    medicalHistory: string | null; diseaseHistory: string | null; biomicroscopy: string | null; pzo: string | null;
     type: string; notes: string | null; prescribedAt: string;
 }
 
@@ -1138,9 +1140,41 @@ export default function PatientDetailPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-3">
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки к рецепту</label>
-                                        <textarea value={rxForm.notes || ''} onChange={e => setRxForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
+                                    <div className="mt-4 space-y-3">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Рефракция</label>
+                                            <input type="text" value={rxForm.refraction || ''} onChange={e => setRxForm((f: any) => ({ ...f, refraction: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Циклоплегия</label>
+                                            <input type="text" value={rxForm.cycloplegia || ''} onChange={e => setRxForm((f: any) => ({ ...f, cycloplegia: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Жалобы</label>
+                                            <textarea value={rxForm.complaints || ''} onChange={e => setRxForm((f: any) => ({ ...f, complaints: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-500 mb-1">Анамнез жизни</label>
+                                                <textarea value={rxForm.medicalHistory || ''} onChange={e => setRxForm((f: any) => ({ ...f, medicalHistory: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-500 mb-1">Анамнез заболевания</label>
+                                                <textarea value={rxForm.diseaseHistory || ''} onChange={e => setRxForm((f: any) => ({ ...f, diseaseHistory: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Биомикроскопия</label>
+                                            <textarea value={rxForm.biomicroscopy || ''} onChange={e => setRxForm((f: any) => ({ ...f, biomicroscopy: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">ПЗО</label>
+                                            <input type="text" value={rxForm.pzo || ''} onChange={e => setRxForm((f: any) => ({ ...f, pzo: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки к рецепту</label>
+                                            <textarea value={rxForm.notes || ''} onChange={e => setRxForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
+                                        </div>
                                     </div>
                                     <div className="flex gap-2 mt-4">
                                         <button type="button" onClick={() => setShowRxForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>

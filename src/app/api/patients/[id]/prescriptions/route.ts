@@ -15,6 +15,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         osSph, osCyl, osAx, osAdd, osPd, osPdNear, osPrism, osBc, osDia,
         visualAcuityODAfter, visualAcuityOSAfter,
         pdTotal, type, notes, prescribedAt,
+        refraction, cycloplegia, complaints, medicalHistory, diseaseHistory, biomicroscopy, pzo
     } = body;
 
     const prescription = await prisma.prescription.create({
@@ -42,6 +43,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
             visualAcuityODAfter: visualAcuityODAfter != null && !isNaN(parseFloat(visualAcuityODAfter)) ? parseFloat(visualAcuityODAfter) : null,
             visualAcuityOSAfter: visualAcuityOSAfter != null && !isNaN(parseFloat(visualAcuityOSAfter)) ? parseFloat(visualAcuityOSAfter) : null,
             pdTotal: pdTotal != null && !isNaN(parseFloat(pdTotal)) ? parseFloat(pdTotal) : null,
+            refraction: refraction || null,
+            cycloplegia: cycloplegia || null,
+            complaints: complaints || null,
+            medicalHistory: medicalHistory || null,
+            diseaseHistory: diseaseHistory || null,
+            biomicroscopy: biomicroscopy || null,
+            pzo: pzo || null,
             type: type || 'glasses',
             notes: notes || null,
             prescribedAt: prescribedAt ? new Date(prescribedAt) : new Date(),

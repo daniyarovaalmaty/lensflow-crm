@@ -312,6 +312,15 @@ model Prescription {
   visualAcuityODAfter Float?
   visualAcuityOSAfter Float?
   pdTotal     Float?   // Total PD if measured together
+  // Clinical fields
+  refraction        String?  @db.Text
+  cycloplegia       String?  @db.Text
+  complaints        String?  @db.Text
+  medicalHistory    String?  @db.Text
+  diseaseHistory    String?  @db.Text
+  biomicroscopy     String?  @db.Text
+  pzo               String?  @db.Text
+
   type        String   @default("glasses") // glasses | contacts | ortho-k
   notes       String?  @db.Text
   prescribedAt DateTime @default(now())
