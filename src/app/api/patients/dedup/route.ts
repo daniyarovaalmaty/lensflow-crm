@@ -89,13 +89,29 @@ export async function POST() {
             await prisma.patient.update({ where: { id: master.id }, data: updates });
         }
 
-        // Re-link orders and prescriptions from duplicates to master
+        // Re-link all related records from duplicates to master
         for (const dup of duplicates) {
             await prisma.order.updateMany({
                 where: { patientId: dup.id },
                 data: { patientId: master.id },
             });
             await prisma.prescription.updateMany({
+                where: { patientId: dup.id },
+                data: { patientId: master.id },
+            });
+            await prisma.consultation.updateMany({
+                where: { patientId: dup.id },
+                data: { patientId: master.id },
+            });
+            await prisma.sale.updateMany({
+                where: { patientId: dup.id },
+                data: { patientId: master.id },
+            });
+            await prisma.lead.updateMany({
+                where: { patientId: dup.id },
+                data: { patientId: master.id },
+            });
+            await prisma.appointment.updateMany({
                 where: { patientId: dup.id },
                 data: { patientId: master.id },
             });
