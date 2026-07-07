@@ -32,7 +32,8 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                 orderBy: { createdAt: 'desc' },
                 take: 20,
                 include: {
-                    items: true
+                    items: true,
+                    doctor: true
                 }
             },
             doctor: { select: { id: true, fullName: true } },

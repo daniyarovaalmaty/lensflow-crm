@@ -13,9 +13,9 @@ export async function GET() {
         const session = await auth();
         if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
-        if (session.user.subRole !== 'optic_manager') {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
+        // Allow any user in the organization to fetch the staff list
+        // so that cashiers (sales_manager) can select doctors.
+        // We only restrict POST to optic_manager.
 
         const orgId = session.user.organizationId;
         if (!orgId) {

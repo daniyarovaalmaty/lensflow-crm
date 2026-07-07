@@ -468,6 +468,11 @@ export default function SalesHistoryPage() {
                                                     <User className="w-3 h-3 text-gray-400" />
                                                     {sale.performedByName || '—'}
                                                 </div>
+                                                {(sale as any).doctor && (
+                                                    <div className="text-xs text-indigo-600 flex items-center gap-1 mt-1" title="Врач/Оптометрист">
+                                                        🩺 {(sale as any).doctor.fullName}
+                                                    </div>
+                                                )}
                                                 {sale.notes && (
                                                     <div className="text-xs text-gray-400 truncate max-w-[120px] mt-0.5" title={sale.notes}>
                                                         💬 {sale.notes}
@@ -615,6 +620,12 @@ export default function SalesHistoryPage() {
                                                                 <span className="text-gray-500">Кассир</span>
                                                                 <span className="font-medium text-gray-700">{sale.performedByName || '—'}</span>
                                                             </div>
+                                                            {(sale as any).doctor && (
+                                                                <div className="flex justify-between items-center text-sm">
+                                                                    <span className="text-gray-500">Врач</span>
+                                                                    <span className="font-medium text-indigo-700">{(sale as any).doctor.fullName}</span>
+                                                                </div>
+                                                            )}
                                                             {sale.notes && (
                                                                 <div className="flex flex-col text-sm border-t pt-2 mt-2">
                                                                     <span className="text-gray-500 mb-1">Комментарий:</span>

@@ -44,8 +44,11 @@ const filterMedicalText = (text: string | null | undefined, userRole?: string) =
 interface Prescription {
     id: string;
     odSph: number | null; odCyl: number | null; odAx: number | null; odAdd: number | null; odPd: number | null;
+    odPdNear: number | null; odPrism: string | null; odBc: string | null; odDia: string | null;
     osSph: number | null; osCyl: number | null; osAx: number | null; osAdd: number | null; osPd: number | null;
-    pdTotal: number | null; type: string; notes: string | null; prescribedAt: string;
+    osPdNear: number | null; osPrism: string | null; osBc: string | null; osDia: string | null;
+    visualAcuityODAfter: number | null; visualAcuityOSAfter: number | null;
+    type: string; notes: string | null; prescribedAt: string;
 }
 
 interface Consultation {
@@ -155,12 +158,15 @@ function PrescriptionCard({ rx, onDelete }: { rx: Prescription; onDelete: () => 
                             <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">OD (Правый)</h4>
                             <table className="w-full text-sm">
                                 <tbody>
-                                    {[['Sph', rx.odSph], ['Cyl', rx.odCyl], ['Ax', rx.odAx, false], ['Add', rx.odAdd], ['PD', rx.odPd, false]].map(([label, val, p = true]) => (
-                                        <tr key={label as string}>
-                                            <td className="text-gray-500 py-0.5 pr-3 w-10">{label}</td>
-                                            <td className="font-mono font-medium text-gray-900">{fmt(val as number | null, p as boolean)}</td>
-                                        </tr>
-                                    ))}
+                                    {[['Sph', rx.odSph], ['Cyl', rx.odCyl], ['Ax', rx.odAx, false], ['Add', rx.odAdd], ['PD Даль', rx.odPd, false], ['PD Близь', rx.odPdNear, false], ['Призма', rx.odPrism, false], ['BC', rx.odBc, false], ['DIA', rx.odDia, false], ['Visus с корр.', rx.visualAcuityODAfter, false]].map(([label, val, p = true]) => {
+                                        if (val == null || val === '') return null;
+                                        return (
+                                            <tr key={label as string}>
+                                                <td className="text-gray-500 py-0.5 pr-3 w-20">{label}</td>
+                                                <td className="font-mono font-medium text-gray-900">{typeof val === 'number' ? fmt(val as number, p as boolean) : val}</td>
+                                            </tr>
+                                        )
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -169,17 +175,19 @@ function PrescriptionCard({ rx, onDelete }: { rx: Prescription; onDelete: () => 
                             <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">OS (Левый)</h4>
                             <table className="w-full text-sm">
                                 <tbody>
-                                    {[['Sph', rx.osSph], ['Cyl', rx.osCyl], ['Ax', rx.osAx, false], ['Add', rx.osAdd], ['PD', rx.osPd, false]].map(([label, val, p = true]) => (
-                                        <tr key={label as string}>
-                                            <td className="text-gray-500 py-0.5 pr-3 w-10">{label}</td>
-                                            <td className="font-mono font-medium text-gray-900">{fmt(val as number | null, p as boolean)}</td>
-                                        </tr>
-                                    ))}
+                                    {[['Sph', rx.osSph], ['Cyl', rx.osCyl], ['Ax', rx.osAx, false], ['Add', rx.osAdd], ['PD Даль', rx.osPd, false], ['PD Близь', rx.osPdNear, false], ['Призма', rx.osPrism, false], ['BC', rx.osBc, false], ['DIA', rx.osDia, false], ['Visus с корр.', rx.visualAcuityOSAfter, false]].map(([label, val, p = true]) => {
+                                        if (val == null || val === '') return null;
+                                        return (
+                                            <tr key={label as string}>
+                                                <td className="text-gray-500 py-0.5 pr-3 w-20">{label}</td>
+                                                <td className="font-mono font-medium text-gray-900">{typeof val === 'number' ? fmt(val as number, p as boolean) : val}</td>
+                                            </tr>
+                                        )
+                                    })}
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    {rx.pdTotal && <p className="text-sm text-gray-600 mb-2">PD общий: <span className="font-mono font-medium">{rx.pdTotal}</span> мм</p>}
                     {rx.notes && <p className="text-sm text-gray-600 italic">{rx.notes}</p>}
                     <div className="flex justify-end mt-3">
                         <button onClick={onDelete} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
@@ -237,6 +245,7 @@ export default function PatientDetailPage() {
     });
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
+    const [editingConsultId, setEditingConsultId] = useState<string | null>(null);
 
     // Invoice Form (Send to Cashier)
     const [showInvoiceForm, setShowInvoiceForm] = useState(false);
@@ -299,15 +308,25 @@ export default function PatientDetailPage() {
     const handleAddConsult = async (e: React.FormEvent) => {
         e.preventDefault();
         setSavingConsult(true);
-        const res = await fetch(`/api/patients/${id}/consultations`, {
-            method: 'POST',
+        const url = editingConsultId 
+            ? `/api/consultations/${editingConsultId}`
+            : `/api/patients/${id}/consultations`;
+        
+        const res = await fetch(url, {
+            method: editingConsultId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(consultForm),
         });
+        
         if (res.ok) {
             const c = await res.json();
-            setConsultations(prev => [c, ...prev]);
+            if (editingConsultId) {
+                setConsultations(prev => prev.map(item => item.id === editingConsultId ? c : item));
+            } else {
+                setConsultations(prev => [c, ...prev]);
+            }
             setShowConsultForm(false);
+            setEditingConsultId(null);
             setConsultForm({ 
                 visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
                 intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
@@ -316,6 +335,28 @@ export default function PatientDetailPage() {
             });
         }
         setSavingConsult(false);
+    };
+
+    const handleEditConsultClick = (c: Consultation) => {
+        setEditingConsultId(c.id);
+        setConsultForm({
+            visitDate: c.visitDate ? new Date(c.visitDate).toISOString().split('T')[0] : '',
+            type: c.type || 'exam',
+            diagnosis: c.diagnosis || '',
+            treatment: c.treatment || '',
+            nextVisit: c.nextVisit ? new Date(c.nextVisit).toISOString().split('T')[0] : '',
+            intraocularPressureOD: c.intraocularPressureOD ?? '',
+            intraocularPressureOS: c.intraocularPressureOS ?? '',
+            visualAcuityOD: c.visualAcuityOD ?? '',
+            visualAcuityOS: c.visualAcuityOS ?? '',
+            notes: c.notes || '',
+            k1OD: c.k1OD ?? '', k2OD: c.k2OD ?? '', axisOD: c.axisOD ?? '', astigmatismOD: c.astigmatismOD ?? '', pachymetryOD: c.pachymetryOD ?? '', eccentricityOD: c.eccentricityOD ?? '',
+            k1OS: c.k1OS ?? '', k2OS: c.k2OS ?? '', axisOS: c.axisOS ?? '', astigmatismOS: c.astigmatismOS ?? '', pachymetryOS: c.pachymetryOS ?? '', eccentricityOS: c.eccentricityOS ?? '',
+            lensFittingOD: c.lensFittingOD || '', lensFittingOS: c.lensFittingOS || '',
+            refractionOD: c.refractionOD || '', refractionOS: c.refractionOS || ''
+        });
+        setShowConsultForm(true);
+        document.getElementById('consultations')?.scrollIntoView({ behavior: 'smooth' });
     };
 
     const handleDeleteConsult = async (cId: string) => {
@@ -681,7 +722,6 @@ export default function PatientDetailPage() {
                                         </table>
                                     </div>
                                     <div className="flex gap-8">
-                                        {rx.pdTotal && <p className="bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">PD общий:</span> <strong className="text-gray-900 ml-2">{rx.pdTotal} мм</strong></p>}
                                         {rx.notes && <p className="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">Заметки:</span> <span className="text-gray-800 ml-2">{rx.notes}</span></p>}
                                     </div>
                                 </div>
@@ -763,7 +803,7 @@ export default function PatientDetailPage() {
                                         )}
                                     </div>
                                     {!isEditing && (
-                                        <button onClick={handleOpenInvoice} className="btn bg-orange-100 hover:bg-orange-200 text-orange-800 w-full text-sm flex items-center justify-center gap-2 transition-colors border-none shadow-sm py-2.5">
+                                        <button onClick={handleOpenInvoice} className="btn bg-white border border-orange-200 hover:border-orange-300 text-orange-600 w-full text-sm flex items-center justify-center gap-2 transition-colors shadow-sm py-2.5">
                                             <Banknote className="w-4 h-4" /> Выставить счет на кассу
                                         </button>
                                     )}
@@ -1031,7 +1071,16 @@ export default function PatientDetailPage() {
                                                 <RxField label="Cyl" field="odCyl" rxForm={rxForm} setRxForm={setRxForm} />
                                                 <RxField label="Ax" field="odAx" rxForm={rxForm} setRxForm={setRxForm} />
                                                 <RxField label="Add" field="odAdd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="PD" field="odPd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <RxField label="PD Даль" field="odPd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    <RxField label="PD Близь" field="odPdNear" rxForm={rxForm} setRxForm={setRxForm} />
+                                                </div>
+                                                <RxField label="Призма" field="odPrism" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <RxField label="BC (Кривизна)" field="odBc" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    <RxField label="DIA (Диаметр)" field="odDia" rxForm={rxForm} setRxForm={setRxForm} />
+                                                </div>
+                                                <RxField label="Острота (с корр.)" field="visualAcuityODAfter" rxForm={rxForm} setRxForm={setRxForm} />
                                             </div>
                                         </div>
                                         <div>
@@ -1041,11 +1090,19 @@ export default function PatientDetailPage() {
                                                 <RxField label="Cyl" field="osCyl" rxForm={rxForm} setRxForm={setRxForm} />
                                                 <RxField label="Ax" field="osAx" rxForm={rxForm} setRxForm={setRxForm} />
                                                 <RxField label="Add" field="osAdd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="PD" field="osPd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <RxField label="PD Даль" field="osPd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    <RxField label="PD Близь" field="osPdNear" rxForm={rxForm} setRxForm={setRxForm} />
+                                                </div>
+                                                <RxField label="Призма" field="osPrism" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <RxField label="BC (Кривизна)" field="osBc" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    <RxField label="DIA (Диаметр)" field="osDia" rxForm={rxForm} setRxForm={setRxForm} />
+                                                </div>
+                                                <RxField label="Острота (с корр.)" field="visualAcuityOSAfter" rxForm={rxForm} setRxForm={setRxForm} />
                                             </div>
                                         </div>
                                     </div>
-                                    <RxField label="PD общий (мм)" field="pdTotal" rxForm={rxForm} setRxForm={setRxForm} />
                                     <div className="mt-3">
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки к рецепту</label>
                                         <textarea value={rxForm.notes || ''} onChange={e => setRxForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
@@ -1128,58 +1185,58 @@ export default function PatientDetailPage() {
                         )}
                     </div>
 
-                    {activeTab === 'sales' && (
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                                <div>
-                                    <h2 className="text-lg font-bold text-gray-900">История покупок (Касса)</h2>
-                                    <p className="text-sm text-gray-500">Товары и услуги, оплаченные на кассе</p>
-                                </div>
+                    <div id="sales" className="scroll-mt-24 mt-8">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <ShoppingBag className="w-5 h-5 text-indigo-500" /> История покупок (Касса)
+                            </h2>
+                        </div>
+
+                        {(!patient.sales || patient.sales.length === 0) ? (
+                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                                <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm">Пациент еще ничего не покупал на кассе</p>
                             </div>
-
-                            {(!patient.sales || patient.sales.length === 0) ? (
-                                <div className="bg-gray-50 rounded-3xl p-12 text-center border-2 border-dashed border-gray-200">
-                                    <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Нет покупок</h3>
-                                    <p className="text-sm text-gray-500">Пациент еще ничего не покупал на кассе</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {patient.sales.map((sale: any) => (
-                                        <div key={sale.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                                                <div>
-                                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Чек</span>
-                                                    <div className="flex items-center gap-3">
-                                                        <h3 className="text-lg font-black text-gray-900">#{sale.saleNumber}</h3>
-                                                        <span className="text-sm font-medium text-gray-500">{new Date(sale.createdAt).toLocaleDateString('ru-RU')}</span>
-                                                    </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {patient.sales.map((sale: any) => (
+                                    <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-all">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-semibold text-gray-900">Чек #{sale.saleNumber}</span>
+                                                    <span className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">ОПЛАЧЕНО</span>
                                                 </div>
-                                                <div className="text-right">
-                                                    <div className="text-sm font-bold text-gray-900">{fmt(sale.total)} ₸</div>
-                                                    <div className="text-xs text-gray-500">{sale.paymentMethod === 'card' ? 'Карта' : sale.paymentMethod === 'transfer' ? 'Перевод' : sale.paymentMethod === 'mixed' ? 'Смешанная' : 'Наличные'}</div>
-                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {new Date(sale.createdAt).toLocaleDateString('ru-RU')}
+                                                    {sale.doctor && <span className="ml-2 font-medium text-indigo-600">· 🩺 {sale.doctor.fullName}</span>}
+                                                </p>
                                             </div>
-
-                                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                                <div className="space-y-2">
-                                                    {sale.items?.map((item: any, i: number) => (
-                                                        <div key={i} className="flex justify-between items-center text-sm">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="font-medium text-gray-800">{item.name}</span>
-                                                                <span className="text-gray-400 text-xs">x{item.quantity}</span>
-                                                            </div>
-                                                            <span className="font-bold text-gray-600">{fmt(item.total)} ₸</span>
-                                                        </div>
-                                                    ))}
+                                            <div className="text-right w-full sm:w-auto">
+                                                <div className="text-sm font-bold text-gray-900">{fmt(sale.total)} ₸</div>
+                                                <div className="text-xs text-gray-500">
+                                                    {sale.paymentMethod === 'card' ? 'Карта' : sale.paymentMethod === 'transfer' ? 'Перевод' : sale.paymentMethod === 'mixed' ? 'Смешанная' : 'Наличные'}
                                                 </div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                        {sale.items && sale.items.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
+                                                {sale.items.map((item: any, i: number) => (
+                                                    <div key={i} className="flex justify-between items-center text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-gray-700">{item.name}</span>
+                                                            <span className="text-gray-400">x{item.quantity}</span>
+                                                        </div>
+                                                        <span className="font-semibold text-gray-600">{fmt(item.total)} ₸</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Consultations */}
                     <div id="consultations" className="scroll-mt-24">
@@ -1190,8 +1247,19 @@ export default function PatientDetailPage() {
                                 <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{consultations.length}</span>
                             )}
                         </h2>
-                        <button onClick={() => setShowConsultForm(!showConsultForm)} className="btn btn-secondary btn-sm flex items-center gap-1">
-                            <Plus className="w-4 h-4" /> Добавить визит
+                        <button onClick={() => {
+                            setShowConsultForm(!showConsultForm);
+                            if (showConsultForm) {
+                                setEditingConsultId(null);
+                                setConsultForm({ 
+                                    visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
+                                    intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
+                                    k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
+                                    k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+                                });
+                            }
+                        }} className="btn btn-secondary btn-sm flex items-center gap-1">
+                            <Plus className="w-4 h-4" /> {showConsultForm && !editingConsultId ? 'Отменить' : (editingConsultId ? 'Отменить ред.' : 'Добавить визит')}
                         </button>
                     </div>
 
@@ -1199,7 +1267,7 @@ export default function PatientDetailPage() {
                     {showConsultForm && (
                         <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-semibold text-gray-900">Новая запись консультации</h3>
+                                <h3 className="font-semibold text-gray-900">{editingConsultId ? 'Редактирование записи' : 'Новая запись консультации'}</h3>
                                 <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
                                     <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
                                     {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
@@ -1436,7 +1504,13 @@ export default function PatientDetailPage() {
                                                     </div>
                                                 )}
                                                 {c.notes && <p className="text-xs text-gray-500 italic">{filterMedicalText(c.notes, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>}
-                                                <div className="flex justify-end">
+                                                <div className="flex justify-end gap-3">
+                                                    <Link target="_blank" href={`/optic/patients/${id}/consultations/${c.id}/print`} className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors">
+                                                        <FileText className="w-3.5 h-3.5" /> Печать
+                                                    </Link>
+                                                    <button onClick={() => handleEditConsultClick(c)} className="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors">
+                                                        <Plus className="w-3.5 h-3.5" /> Редактировать
+                                                    </button>
                                                     <button onClick={() => handleDeleteConsult(c.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors">
                                                         <Trash2 className="w-3.5 h-3.5" /> Удалить запись
                                                     </button>

@@ -292,6 +292,10 @@ model Prescription {
   odAx        Float?
   odAdd       Float?
   odPd        Float?
+  odPdNear    Float?
+  odPrism     String?
+  odBc        String?
+  odDia       String?
 
   // Left eye (OS)
   osSph       Float?
@@ -299,8 +303,14 @@ model Prescription {
   osAx        Float?
   osAdd       Float?
   osPd        Float?
+  osPdNear    Float?
+  osPrism     String?
+  osBc        String?
+  osDia       String?
 
   // General
+  visualAcuityODAfter Float?
+  visualAcuityOSAfter Float?
   pdTotal     Float?   // Total PD if measured together
   type        String   @default("glasses") // glasses | contacts | ortho-k
   notes       String?  @db.Text
@@ -350,6 +360,12 @@ model Consultation {
   lensFittingOS    String?   @db.Text
   refractionOD     String?   @db.Text
   refractionOS     String?   @db.Text
+  cycloplegia      String?   @db.Text
+  complaints       String?   @db.Text
+  anamnesisLife    String?   @db.Text
+  anamnesisDisease String?   @db.Text
+  biomicroscopy    String?   @db.Text
+  pzo              String?   @db.Text
 
   notes       String?  @db.Text
   createdAt   DateTime @default(now())
