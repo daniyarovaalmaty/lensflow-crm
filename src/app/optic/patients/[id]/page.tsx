@@ -43,6 +43,7 @@ const filterMedicalText = (text: string | null | undefined, userRole?: string) =
 
 interface Prescription {
     id: string;
+    patientId: string;
     odSph: number | null; odCyl: number | null; odAx: number | null; odAdd: number | null; odPd: number | null;
     odPdNear: number | null; odPrism: string | null; odBc: string | null; odDia: string | null;
     osSph: number | null; osCyl: number | null; osAx: number | null; osAdd: number | null; osPd: number | null;
@@ -118,7 +119,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
     cancelled: { label: 'Отменён', color: 'bg-red-100 text-red-700' },
 };
 
-function PrescriptionCard({ rx, onDelete }: { rx: Prescription; onDelete: () => void }) {
+function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete: () => void; onEdit: () => void }) {
     const [expanded, setExpanded] = useState(false);
     const typeLabels: Record<string, string> = {
         glasses: '👓 Очки', contacts: '🔵 Контактные линзы', 'ortho-k': '🌙 Орто-К'
@@ -189,9 +190,15 @@ function PrescriptionCard({ rx, onDelete }: { rx: Prescription; onDelete: () => 
                         </div>
                     </div>
                     {rx.notes && <p className="text-sm text-gray-600 italic">{rx.notes}</p>}
-                    <div className="flex justify-end mt-3">
-                        <button onClick={onDelete} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
-                            <Trash2 className="w-3.5 h-3.5" /> Удалить рецепт
+                    <div className="flex justify-end mt-4 gap-2">
+                        <Link href={`/optic/patients/${rx.patientId}/prescriptions/${rx.id}/print`} target="_blank" className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm flex items-center gap-1 text-gray-600 px-3 py-1.5 rounded-lg transition-colors">
+                            <Printer className="w-4 h-4" /> Печать
+                        </Link>
+                        <button onClick={onEdit} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm flex items-center gap-1 text-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+                            <Edit2 className="w-4 h-4" /> Редактировать
+                        </button>
+                        <button onClick={onDelete} className="btn bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 shadow-sm text-sm text-red-600 flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors">
+                            <Trash2 className="w-4 h-4" /> Удалить
                         </button>
                     </div>
                 </div>
@@ -229,6 +236,7 @@ export default function PatientDetailPage() {
     const [editForm, setEditForm] = useState<any>({});
     const [saving, setSaving] = useState(false);
     const [showRxForm, setShowRxForm] = useState(false);
+    const [editingRxId, setEditingRxId] = useState<string | null>(null);
     const [rxForm, setRxForm] = useState<any>({ type: 'glasses', prescribedAt: new Date().toISOString().split('T')[0] });
     const [savingRx, setSavingRx] = useState(false);
 
@@ -285,15 +293,29 @@ export default function PatientDetailPage() {
     const handleAddRx = async (e: React.FormEvent) => {
         e.preventDefault();
         setSavingRx(true);
-        const res = await fetch(`/api/patients/${id}/prescriptions`, {
-            method: 'POST',
+        
+        const url = editingRxId 
+            ? `/api/prescriptions/${editingRxId}` 
+            : `/api/patients/${id}/prescriptions`;
+            
+        const res = await fetch(url, {
+            method: editingRxId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(rxForm),
         });
+        
         if (res.ok) {
             const rx = await res.json();
-            setPatient(p => p ? { ...p, prescriptions: [rx, ...p.prescriptions] } : p);
+            setPatient(p => {
+                if (!p) return p;
+                if (editingRxId) {
+                    return { ...p, prescriptions: p.prescriptions.map(r => r.id === editingRxId ? rx : r) };
+                } else {
+                    return { ...p, prescriptions: [rx, ...p.prescriptions] };
+                }
+            });
             setShowRxForm(false);
+            setEditingRxId(null);
             setRxForm({ type: 'glasses', prescribedAt: new Date().toISOString().split('T')[0] });
         }
         setSavingRx(false);
@@ -303,6 +325,19 @@ export default function PatientDetailPage() {
         if (!confirm('Удалить рецепт?')) return;
         await fetch(`/api/prescriptions/${rxId}`, { method: 'DELETE' });
         setPatient(p => p ? { ...p, prescriptions: p.prescriptions.filter(r => r.id !== rxId) } : p);
+    };
+
+    const handleEditRxClick = (rx: Prescription) => {
+        setEditingRxId(rx.id);
+        setRxForm({
+            ...rx,
+            prescribedAt: new Date(rx.prescribedAt).toISOString().split('T')[0]
+        });
+        setShowRxForm(true);
+        // Scroll to the top of the form smoothly
+        setTimeout(() => {
+            document.getElementById('rx-form')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     };
 
     const handleAddConsult = async (e: React.FormEvent) => {
@@ -1047,7 +1082,7 @@ export default function PatientDetailPage() {
                                         <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'prescription')} disabled={parsingAi} />
                                     </label>
                                 </div>
-                                <form onSubmit={handleAddRx}>
+                                <form id="rx-form" onSubmit={handleAddRx}>
                                     <div className="grid grid-cols-2 gap-3 mb-4">
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1">Тип</label>
@@ -1125,7 +1160,12 @@ export default function PatientDetailPage() {
                         ) : (
                             <div className="space-y-3">
                                 {patient.prescriptions.map(rx => (
-                                    <PrescriptionCard key={rx.id} rx={rx} onDelete={() => handleDeleteRx(rx.id)} />
+                                    <PrescriptionCard 
+                                        key={rx.id} 
+                                        rx={rx} 
+                                        onDelete={() => handleDeleteRx(rx.id)} 
+                                        onEdit={() => handleEditRxClick(rx)}
+                                    />
                                 ))}
                             </div>
                         )}
