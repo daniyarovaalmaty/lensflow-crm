@@ -599,7 +599,8 @@ export default function POSPage() {
                                                             type: p ? p.type : 'product',
                                                             unitPrice: i.unitPrice,
                                                             quantity: i.quantity,
-                                                            maxStock: p && p.type === 'product' ? p.currentStock : 999
+                                                            maxStock: p && p.type === 'product' ? p.currentStock : 999,
+                                                            isFreePrice: p ? p.isFreePrice : false
                                                         };
                                                     }));
                                                     setCustomerName(ps.customerName || '');
