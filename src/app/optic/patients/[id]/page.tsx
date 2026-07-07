@@ -1295,11 +1295,11 @@ export default function PatientDetailPage() {
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OD</label>
-                                        <input type="number" step="0.1" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOD} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOD} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OS</label>
-                                        <input type="number" step="0.1" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOS} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOS} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OD (мм рт.)</label>
