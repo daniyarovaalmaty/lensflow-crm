@@ -27,12 +27,15 @@ export async function POST() {
         orderBy: { createdAt: 'asc' },
     });
 
-    // Group by normalized phone
+    // Group by normalized phone AND normalized name (case-insensitive) to avoid merging family members
     const groups = new Map<string, typeof all>();
     for (const p of all) {
-        if (!p.phone) continue;
-        const key = normalize(p.phone);
-        if (!key) continue;
+        if (!p.phone || !p.name) continue;
+        const normalizedPhone = normalize(p.phone);
+        const normalizedName = p.name.trim().toLowerCase().replace(/\s+/g, ' '); // remove extra spaces
+        if (!normalizedPhone || !normalizedName) continue;
+        
+        const key = `${normalizedPhone}_${normalizedName}`;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key)!.push(p);
     }
