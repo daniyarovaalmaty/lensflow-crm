@@ -607,6 +607,7 @@ export default function POSPage() {
                                                     setCustomerPhone(ps.customerPhone || '');
                                                     setPatientId(ps.patientId);
                                                     setDraftSaleId(ps.id);
+                                                    setCategoryFilter('all');
                                                 }} className="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 py-2 rounded-xl text-xs font-bold transition-colors">
                                                     Перенести в корзину
                                                 </button>
