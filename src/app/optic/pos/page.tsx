@@ -230,7 +230,8 @@ export default function POSPage() {
             const res = await fetch('/api/clinic-staff');
             if (res.ok) {
                 const data = await res.json();
-                setDoctors(data);
+                // Filter to only show doctors in the POS dropdown
+                setDoctors(data.filter((u: any) => u.subRole === 'optic_doctor'));
             }
         } catch(e) {}
     };
