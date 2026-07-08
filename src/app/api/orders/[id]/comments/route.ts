@@ -23,15 +23,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const order = await prisma.order.findUnique({ where: { id } });
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
-    const isLabUser = session.user.role === 'laboratory';
-    const isDoctorUser = session.user.role === 'optic' || session.user.role === 'doctor';
+    const isLabUser = session.user.role === 'laboratory' || session.user.role === 'distributor';
+    const isDoctorUser = session.user.role === 'optic' || session.user.role === 'doctor' || session.user.role === 'distributor';
 
-    // Validate: only doctors can request, only lab can approve/reject
+    // Validate: only doctors/distributors can request, only lab/distributors can approve/reject
     if (['request_edit', 'request_cancel'].includes(type) && !isDoctorUser) {
-        return NextResponse.json({ error: 'Only doctors can create requests' }, { status: 403 });
+        return NextResponse.json({ error: 'Only doctors or distributors can create requests' }, { status: 403 });
     }
     if (['approve_edit', 'approve_cancel', 'reject_request'].includes(type) && !isLabUser) {
-        return NextResponse.json({ error: 'Only lab can approve/reject' }, { status: 403 });
+        return NextResponse.json({ error: 'Only lab or distributors can approve/reject' }, { status: 403 });
     }
 
     // Build comment object
