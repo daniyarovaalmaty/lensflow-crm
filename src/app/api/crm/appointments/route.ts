@@ -71,7 +71,8 @@ export async function GET(req: Request) {
             where: apptWhere,
             include: {
                 doctor: { select: { id: true, fullName: true, email: true } },
-                patient: true
+                patient: true,
+                createdBy: { select: { id: true, fullName: true } }
             }
         });
 
@@ -84,11 +85,17 @@ export async function GET(req: Request) {
             appointmentNotes: app.notes || app.type,
             doctor: app.doctor ? { id: app.doctor.id, fullName: app.doctor.fullName || app.doctor.email || '' } : null,
             duration: app.duration,
-            clinic: null // we don't have clinic name easily accessible here without another join, but it's fine
+            clinic: null, // we don't have clinic name easily accessible here without another join, but it's fine
+            createdBy: app.createdBy ? { id: app.createdBy.id, fullName: app.createdBy.fullName } : null
+        }));
+
+        const mappedLeads = leads.map(lead => ({
+            ...lead,
+            createdBy: lead.assignee ? { id: lead.assignee.id, fullName: lead.assignee.fullName } : null
         }));
 
         // Combine and sort
-        const combinedLeads = [...leads, ...mappedAppointments].sort((a: any, b: any) => {
+        const combinedLeads = [...mappedLeads, ...mappedAppointments].sort((a: any, b: any) => {
             return new Date(a.appointmentAt).getTime() - new Date(b.appointmentAt).getTime();
         });
 

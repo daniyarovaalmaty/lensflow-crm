@@ -14,6 +14,7 @@ interface LeadAppointment {
     doctor: { id: string; fullName: string } | null;
     clinic: { id: string; name: string } | null;
     duration?: number;
+    createdBy?: { id: string; fullName: string } | null;
 }
 
 const APPT_TYPES: Record<string, string> = {
@@ -172,6 +173,11 @@ export default function CalendarPage() {
                         <div className="flex items-center gap-1.5 text-xs text-gray-600 truncate">
                             <User className="w-3 h-3 text-gray-400" />
                             {app.doctor.fullName}
+                        </div>
+                    )}
+                    {app.createdBy && (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+                            <span className="truncate">Записал(а): {app.createdBy.fullName}</span>
                         </div>
                     )}
                 </div>
