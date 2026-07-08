@@ -13,6 +13,7 @@ interface LeadAppointment {
     appointmentNotes: string | null;
     doctor: { id: string; fullName: string } | null;
     clinic: { id: string; name: string } | null;
+    duration?: number;
 }
 
 const APPT_TYPES: Record<string, string> = {
@@ -104,7 +105,7 @@ export default function CalendarPage() {
         if (compact) {
             return (
                 <div key={app.id} className="text-xs p-1 mb-1 bg-blue-50 text-blue-700 rounded border border-blue-100 truncate cursor-pointer hover:bg-blue-100" onClick={(e) => e.stopPropagation()}>
-                    <span className="font-semibold">{format(parseISO(app.appointmentAt), 'HH:mm')}</span> {app.name || 'Без имени'}
+                    <span className="font-semibold">{format(parseISO(app.appointmentAt), 'HH:mm')}{app.duration ? ` (${app.duration} мин)` : ''}</span> {app.name || 'Без имени'}
                 </div>
             );
         }
@@ -117,6 +118,7 @@ export default function CalendarPage() {
                     <div className="flex items-center gap-1.5 text-blue-700 bg-blue-50 px-2 py-1 rounded-md text-sm font-semibold">
                         <Clock className="w-3 h-3" />
                         {format(parseISO(app.appointmentAt), 'HH:mm')}
+                        {app.duration ? ` (${app.duration} мин)` : ''}
                     </div>
                     <div className="flex items-center gap-2">
                         <button

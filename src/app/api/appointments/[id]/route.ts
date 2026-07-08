@@ -29,6 +29,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
                 duration: body.duration !== undefined ? parseInt(body.duration) : undefined,
                 type: body.type !== undefined ? body.type : undefined,
                 patientId: body.patientId !== undefined ? body.patientId : undefined,
+                patientName: body.patientName !== undefined ? body.patientName : undefined,
+                patientPhone: body.patientPhone !== undefined ? body.patientPhone : undefined,
+                doctorId: body.doctorId !== undefined ? body.doctorId : undefined,
             },
             include: {
                 patient: true,

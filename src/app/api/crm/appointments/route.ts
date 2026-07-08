@@ -83,6 +83,7 @@ export async function GET(req: Request) {
             appointmentAt: app.date,
             appointmentNotes: app.notes || app.type,
             doctor: app.doctor ? { id: app.doctor.id, fullName: app.doctor.fullName || app.doctor.email || '' } : null,
+            duration: app.duration,
             clinic: null // we don't have clinic name easily accessible here without another join, but it's fine
         }));
 

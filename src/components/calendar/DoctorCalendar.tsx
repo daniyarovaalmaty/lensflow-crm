@@ -43,6 +43,7 @@ export default function DoctorCalendar() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [isEditingAppt, setIsEditingAppt] = useState(false);
 
     // New appointment state
     const [newApptDate, setNewApptDate] = useState('');
@@ -117,6 +118,40 @@ export default function DoctorCalendar() {
         return () => clearTimeout(timeoutId);
     }, [patientSearchQuery, selectedPatient]);
 
+
+    const handleUpdateAppointment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedAppointment) return;
+        try {
+            const dateTime = new Date(`${newApptDate}T${newApptTime}`);
+            const res = await fetch(`/api/appointments/${selectedAppointment.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: dateTime.toISOString(),
+                    duration: newApptDuration,
+                    patientId: selectedPatient?.id || undefined,
+                    patientName: selectedPatient ? undefined : patientSearchQuery,
+                    patientPhone: selectedPatient ? undefined : newApptPhone,
+                    type: newApptType,
+                    doctorId: newApptDoctorId || undefined
+                })
+            });
+            if (res.ok) {
+                toast.success('Запись обновлена');
+                setIsModalOpen(false);
+                setIsEditingAppt(false);
+                fetchAppointments();
+                resetNewApptForm();
+            } else {
+                toast.error('Не удалось обновить запись');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Произошла ошибка');
+        }
+    };
+
     const handleCreateAppointment = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -178,16 +213,37 @@ export default function DoctorCalendar() {
         setNewApptDoctorId('');
     };
 
+
+    const openEditMode = (appt: Appointment) => {
+        const d = new Date(appt.date);
+        setNewApptDate(format(d, 'yyyy-MM-dd'));
+        setNewApptTime(format(d, 'HH:mm'));
+        setNewApptDuration(appt.duration || 30);
+        setNewApptType(appt.type);
+        setNewApptDoctorId(appt.doctorId || '');
+        if (appt.patient) {
+            setSelectedPatient(appt.patient);
+            setPatientSearchQuery(appt.patient.name);
+        } else {
+            setSelectedPatient(null);
+            setPatientSearchQuery(appt.patientName || '');
+            setNewApptPhone(appt.patientPhone || '');
+        }
+        setIsEditingAppt(true);
+    };
+
     const openNewModal = (date?: Date) => {
         const d = date || new Date();
         setNewApptDate(format(d, 'yyyy-MM-dd'));
         setNewApptTime(format(d, 'HH:mm'));
         setSelectedAppointment(null);
+        setIsEditingAppt(false);
         setIsModalOpen(true);
     };
 
     const openDetailsModal = (appt: Appointment) => {
         setSelectedAppointment(appt);
+        setIsEditingAppt(false);
         setIsModalOpen(true);
     };
 
@@ -346,7 +402,7 @@ export default function DoctorCalendar() {
                     <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden">
                         <div className="p-4 sm:p-6 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="text-lg font-bold text-gray-900">
-                                {selectedAppointment ? 'Карточка записи' : 'Новая запись'}
+                                {isEditingAppt ? 'Редактирование записи' : selectedAppointment ? 'Карточка записи' : 'Новая запись'}
                             </h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                                 <XCircle className="w-6 h-6" />
@@ -354,7 +410,7 @@ export default function DoctorCalendar() {
                         </div>
                         
                         <div className="p-4 sm:p-6">
-                            {selectedAppointment ? (
+                            {selectedAppointment && !isEditingAppt ? (
                                 <div className="space-y-6">
                                     <div>
                                         <div className="text-sm text-gray-500 mb-1">Пациент</div>
@@ -394,6 +450,11 @@ export default function DoctorCalendar() {
                                         </button>
                                     </div>
                                     
+                                    <div className="flex gap-2 pt-2">
+                                            <button onClick={() => openEditMode(selectedAppointment)} className="flex-1 bg-blue-50 text-blue-700 py-2 rounded-lg text-sm font-medium hover:bg-blue-100">
+                                                Изменить запись
+                                            </button>
+                                    </div>
                                     {selectedAppointment.status === 'scheduled' && (
                                         <div className="flex gap-2 pt-2">
                                             <button onClick={() => updateStatus(selectedAppointment.id, 'completed')} className="flex-1 bg-emerald-50 text-emerald-700 py-2 rounded-lg text-sm font-medium hover:bg-emerald-100">
@@ -406,7 +467,7 @@ export default function DoctorCalendar() {
                                     )}
                                 </div>
                             ) : (
-                                <form onSubmit={handleCreateAppointment} className="space-y-4">
+                                <form onSubmit={isEditingAppt ? handleUpdateAppointment : handleCreateAppointment} className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Дата</label>
