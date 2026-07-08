@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
                 organization: { select: { name: true, inn: true, deliveryAddress: true } },
                 labOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
                 distributorOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
+                engineer: { select: { fullName: true } },
                 contract: {
                     select: {
                         number: true,
@@ -159,6 +160,7 @@ export async function GET(request: NextRequest) {
                     updated_at: order.updatedAt.toISOString(),
                     lab_org_id: order.labOrgId || null,
                     distributor_org_id: order.distributorOrgId || null,
+                    engineer_name: order.engineer?.fullName || undefined,
                 },
                 patient: order.patient ? {
                     id: order.patient.id,

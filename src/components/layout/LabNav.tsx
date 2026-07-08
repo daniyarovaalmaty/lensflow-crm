@@ -13,6 +13,7 @@ const navItems = [
     { href: '/laboratory/dashboard', label: 'Дашборд', icon: BarChart3, subRoles: ['lab_head'] },
     { href: '/laboratory/production', label: 'Производство', icon: Columns3, subRoles: ['lab_head', 'lab_admin', 'lab_engineer', 'lab_quality', 'lab_logistics'] },
     { href: '/laboratory/catalog', label: 'Каталог', icon: Package, subRoles: ['lab_head'] },
+    { href: '/laboratory/warehouse', label: 'Склад', icon: Package, subRoles: ['lab_head', 'lab_admin', 'lab_accountant'] },
     { href: '/laboratory/accountant', label: 'Финансы', icon: FileText, subRoles: ['lab_head', 'lab_admin', 'lab_accountant'] },
     { href: '/laboratory/analytics', label: 'Старые заказы', icon: Archive, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/counterparties', label: 'Контрагенты', icon: Building2, subRoles: ['lab_head', 'lab_admin'] },

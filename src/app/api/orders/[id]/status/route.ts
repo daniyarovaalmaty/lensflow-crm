@@ -63,6 +63,7 @@ export async function PATCH(
         // Set timestamps based on status
         if (validatedData.status === 'in_production' && !order.productionStartedAt) {
             updateData.productionStartedAt = now;
+            updateData.engineerId = session.user.id;
         }
         if (validatedData.status === 'ready' && !order.productionCompletedAt) {
             updateData.productionCompletedAt = now;
@@ -82,6 +83,17 @@ export async function PATCH(
             data: updateData,
             include: { patient: true, organization: { select: { name: true } } },
         });
+
+        // Trigger write-off when order is moved to docs_ready
+        if (newStatus === 'docs_ready') {
+            try {
+                // Ignore error if module doesn't exist yet, we will create it next
+                const { writeOffOrderMaterials } = require('@/lib/labInventory');
+                await writeOffOrderMaterials(order.id, session.user.organizationId || '');
+            } catch (err) {
+                console.error('Failed to write-off order materials:', err);
+            }
+        }
 
         // Transform to frontend format
         const reverseStatusMap: Record<string, string> = {

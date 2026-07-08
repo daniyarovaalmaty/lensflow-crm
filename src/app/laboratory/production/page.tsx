@@ -369,6 +369,35 @@ export default function ProductionHubPage() {
         }
     };
 
+    const downloadM11 = async () => {
+        if (bulkSelectedIds.size === 0) return;
+        try {
+            const ids = Array.from(bulkSelectedIds);
+            const res = await fetch('/api/laboratory/m11', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderIds: ids })
+            });
+
+            if (!res.ok) throw new Error('Failed to generate M-11');
+            
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `M11_Requirement_${new Date().toISOString().slice(0, 10)}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            // Turn off bulk mode
+            setBulkMode(false);
+            setBulkSelectedIds(new Set());
+        } catch (err: any) {
+            console.error('M11 generate error:', err);
+            alert('Ошибка при генерации М-11: ' + (err.message || err));
+        }
+    };
+
     // ==================== PRINT ====================
     // Shared helper: horizontal OD/OS table for print
     const renderEyeTable = (od: any, os: any) => `
@@ -676,21 +705,28 @@ export default function ProductionHubPage() {
                         );
                     })()}
 
-                    <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-gray-100">
-                        {order.meta.doctor ? (
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
-                                <User className="w-3 h-3" />
-                                {order.meta.doctor}
+                    <div className="flex flex-col gap-1.5 pt-1.5 mt-1 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                            {order.meta.doctor ? (
+                                <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <User className="w-3 h-3" />
+                                    {order.meta.doctor}
+                                </div>
+                            ) : <div />}
+                            <div className="flex items-center gap-1.5 text-[11px]">
+                                <span className={`w-2 h-2 rounded-full ${payStatus === 'paid' ? 'bg-emerald-500' : payStatus === 'partial' ? 'bg-amber-500' : 'bg-gray-300'
+                                    }`} />
+                                <span className={`font-medium ${payStatus === 'paid' ? 'text-emerald-600' : payStatus === 'partial' ? 'text-amber-600' : 'text-gray-400'
+                                    }`}>
+                                    {PaymentStatusLabels[payStatus as PaymentStatus]}
+                                </span>
                             </div>
-                        ) : <div />}
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                            <span className={`w-2 h-2 rounded-full ${payStatus === 'paid' ? 'bg-emerald-500' : payStatus === 'partial' ? 'bg-amber-500' : 'bg-gray-300'
-                                }`} />
-                            <span className={`font-medium ${payStatus === 'paid' ? 'text-emerald-600' : payStatus === 'partial' ? 'text-amber-600' : 'text-gray-400'
-                                }`}>
-                                {PaymentStatusLabels[payStatus as PaymentStatus]}
-                            </span>
                         </div>
+                        {order.meta.engineer_name && (
+                            <div className="flex items-center justify-between text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md w-fit">
+                                Инженер: {order.meta.engineer_name}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -2041,15 +2077,24 @@ export default function ProductionHubPage() {
                         {(subRole === 'lab_admin' || subRole === 'lab_head') && (
                             <button
                                 onClick={exportMaterials}
-                                className="btn btn-secondary gap-2 whitespace-nowrap ml-auto"
+                                className={`btn btn-secondary gap-2 whitespace-nowrap ${!bulkMode ? 'ml-auto' : ''}`}
                             >
                                 <Download className="w-4 h-4" />
                                 Расходные мат.
                             </button>
                         )}
+                        {bulkMode && bulkSelectedIds.size > 0 && (
+                            <button
+                                onClick={downloadM11}
+                                className="btn gap-2 whitespace-nowrap bg-emerald-600 text-white hover:bg-emerald-700 ml-auto shadow-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Накладная-требование М-11 ({bulkSelectedIds.size})
+                            </button>
+                        )}
                         <button
                             onClick={() => { setBulkMode(!bulkMode); setBulkSelectedIds(new Set<string>()); }}
-                            className={`btn gap-2 whitespace-nowrap ${bulkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-secondary'}`}
+                            className={`btn gap-2 whitespace-nowrap ${bulkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-secondary ml-auto'}`}
                         >
                             <CheckSquare className="w-4 h-4" />
                             {bulkMode ? 'Отмена' : 'Выбрать'}

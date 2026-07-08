@@ -128,6 +128,11 @@ model LabSettings {
   id                      String @id @default("default")
   urgentSurchargePercent   Int    @default(25)
   urgentDiscountPercent    Int    @default(0)
+  normContrapolPerLens    Float  @default(0.05)
+  normWaxPerLens          Float  @default(0.05)
+  normBoxPerOrder         Int    @default(0)
+  normPackagePerOrder     Int    @default(0)
+  normStickerPerLens      Int    @default(1)
   updatedAt               DateTime @updatedAt
 
   @@map("lab_settings")
@@ -158,6 +163,7 @@ model User {
   updatedAt      DateTime  @updatedAt
 
   orders Order[] @relation("CreatedBy")
+  engineeredOrders Order[] @relation("OrderEngineer")
   supportTickets SupportTicket[]
   assignedLeads  Lead[]  @relation("AssignedLeads")
   doctorLeads    Lead[]  @relation("DoctorLeads")
@@ -445,6 +451,8 @@ model Order {
   organization    Organization? @relation(fields: [organizationId], references: [id])
   createdById     String?
   createdBy       User?        @relation("CreatedBy", fields: [createdById], references: [id])
+  engineerId      String?
+  engineer        User?        @relation("OrderEngineer", fields: [engineerId], references: [id])
   patientId       String?
   patient         Patient?     @relation(fields: [patientId], references: [id])
 
