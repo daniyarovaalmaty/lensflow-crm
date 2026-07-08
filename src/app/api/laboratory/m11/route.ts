@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
-import puppeteer from 'puppeteer';
+
 
 export async function POST(req: NextRequest) {
     try {
@@ -144,17 +144,12 @@ export async function POST(req: NextRequest) {
         </html>
         `;
 
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'domcontentloaded' });
-        const pdfBuffer = await page.pdf({ format: 'A4', margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' } });
-        await browser.close();
+        
 
-        return new NextResponse(pdfBuffer as any, {
+        return new NextResponse(html, {
             status: 200,
             headers: {
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="M11_Requirement_${new Date().toISOString().slice(0, 10)}.pdf"`
+                'Content-Type': 'text/html; charset=utf-8'
             }
         });
     } catch (error: any) {
