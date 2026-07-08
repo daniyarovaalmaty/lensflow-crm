@@ -382,7 +382,7 @@ export default function DoctorCalendar() {
                                 </div>
                                 {appt.createdBy && (
                                     <div className="text-xs text-gray-400 mt-0.5">
-                                        Записал(а): {appt.createdBy.fullName}
+                                        Записал(а): {appt.createdBy.fullName || appt.createdBy.email || appt.createdBy.phone || 'Сотрудник'}
                                     </div>
                                 )}
                             </div>
@@ -435,7 +435,7 @@ export default function DoctorCalendar() {
                                     )}
                                     {selectedAppointment.createdBy && (
                                         <div className="text-xs text-gray-400 text-right">
-                                            Записал(а): {selectedAppointment.createdBy.fullName}
+                                            Записал(а): {selectedAppointment.createdBy.fullName || selectedAppointment.createdBy.email || selectedAppointment.createdBy.phone || 'Сотрудник'}
                                         </div>
                                     )}
                                     

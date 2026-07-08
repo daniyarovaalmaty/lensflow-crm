@@ -86,12 +86,12 @@ export async function GET(req: Request) {
             doctor: app.doctor ? { id: app.doctor.id, fullName: app.doctor.fullName || app.doctor.email || '' } : null,
             duration: app.duration,
             clinic: null, // we don't have clinic name easily accessible here without another join, but it's fine
-            createdBy: app.createdBy ? { id: app.createdBy.id, fullName: app.createdBy.fullName } : null
+            createdBy: app.createdBy ? { id: app.createdBy.id, fullName: app.createdBy.fullName || app.createdBy.email || app.createdBy.phone || 'Сотрудник' } : null
         }));
 
         const mappedLeads = leads.map(lead => ({
             ...lead,
-            createdBy: lead.assignee ? { id: lead.assignee.id, fullName: lead.assignee.fullName } : null
+            createdBy: lead.assignee ? { id: lead.assignee.id, fullName: lead.assignee.fullName || lead.assignee.email || lead.assignee.phone || 'Сотрудник' } : null
         }));
 
         // Combine and sort

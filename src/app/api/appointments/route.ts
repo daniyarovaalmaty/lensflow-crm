@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
             include: {
                 patient: true,
                 doctor: { select: { id: true, fullName: true } },
-                createdBy: { select: { id: true, fullName: true } }
+                createdBy: { select: { id: true, fullName: true, email: true, phone: true } }
             }
         });
 
