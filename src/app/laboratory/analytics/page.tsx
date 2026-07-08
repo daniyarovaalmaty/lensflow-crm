@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
                     <Calendar className="w-5 h-5 text-gray-400" />
                     <DatePicker
                         selected={startDate}
-                        onChange={(date) => setStartDate(date as Date)}
+                        onChange={(date: Date | null) => setStartDate(date as Date)}
                         selectsStart
                         startDate={startDate}
                         endDate={endDate}
@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
                     <span className="text-gray-400">-</span>
                     <DatePicker
                         selected={endDate}
-                        onChange={(date) => setEndDate(date as Date)}
+                        onChange={(date: Date | null) => setEndDate(date as Date)}
                         selectsEnd
                         startDate={startDate}
                         endDate={endDate}

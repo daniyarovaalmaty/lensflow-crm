@@ -35,7 +35,7 @@ export async function writeOffOrderMaterials(orderId: string, labId: string) {
         const normPackage = settings?.normPackagePerOrder || 0;
 
         // Collect what needs to be written off
-        const toWriteOff = [];
+        const toWriteOff: Array<{ productId: string, qty: number }> = [];
 
         // 1. Blanks (Заготовки)
         // For simplicity, we just look for any product with category 'blank' or name 'Заготовка'

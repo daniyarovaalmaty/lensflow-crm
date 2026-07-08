@@ -722,9 +722,9 @@ export default function ProductionHubPage() {
                                 </span>
                             </div>
                         </div>
-                        {order.meta.engineer_name && (
+                        {(order.meta as any).engineer_name && (
                             <div className="flex items-center justify-between text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md w-fit">
-                                Инженер: {order.meta.engineer_name}
+                                Инженер: {(order.meta as any).engineer_name}
                             </div>
                         )}
                     </div>
