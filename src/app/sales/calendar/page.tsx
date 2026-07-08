@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Phone, Filter, Trash2, Plus, X, ChevronLeft, ChevronRight, FileText, FileEdit } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Phone, Filter, Trash2, Plus, X, ChevronLeft, ChevronRight, FileText, FileEdit, XCircle } from 'lucide-react';
 import { format, isSameDay, isToday, isTomorrow, addDays, subDays, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, subMonths, addMonths, subWeeks, addWeeks } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -39,6 +39,10 @@ export default function CalendarPage() {
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newName, setNewName] = useState('');
+    const [patientSearchQuery, setPatientSearchQuery] = useState('');
+    const [isSearchingPatient, setIsSearchingPatient] = useState(false);
+    const [patientSearchResults, setPatientSearchResults] = useState<any[]>([]);
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [newPhone, setNewPhone] = useState('');
     const [newDate, setNewDate] = useState('');
     const [newTime, setNewTime] = useState('');
@@ -55,6 +59,32 @@ export default function CalendarPage() {
     useEffect(() => {
         loadData();
     }, [filterDoctor, filterClinic]);
+
+    
+    // Search patients debounce
+    useEffect(() => {
+        if (!patientSearchQuery.trim() || selectedPatient) {
+            setPatientSearchResults([]);
+            return;
+        }
+        
+        const timeoutId = setTimeout(async () => {
+            setIsSearchingPatient(true);
+            try {
+                const res = await fetch(`/api/patients?q=${encodeURIComponent(patientSearchQuery)}&noSync=1`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPatientSearchResults(data.patients || []);
+                }
+            } catch (err) {
+                console.error('Failed to search patients', err);
+            } finally {
+                setIsSearchingPatient(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(timeoutId);
+    }, [patientSearchQuery, selectedPatient]);
 
     const loadData = async () => {
         setLoading(true);
@@ -93,6 +123,8 @@ export default function CalendarPage() {
     const openEditModal = (app: LeadAppointment) => {
         setNewName(app.name || '');
         setNewPhone(app.phone ? app.phone.replace('@c.us', '') : '');
+        setPatientSearchQuery(app.name || '');
+        setSelectedPatient(null);
         if (app.appointmentAt) {
             const d = parseISO(app.appointmentAt);
             setNewDate(format(d, 'yyyy-MM-dd'));
@@ -431,26 +463,75 @@ export default function CalendarPage() {
                             </button>
                         </div>
                         <div className="p-5 space-y-4">
-                            <div>
-                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Имя пациента</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Иван Иванов"
-                                    value={newName}
-                                    onChange={e => setNewName(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                />
+                            <div className="relative">
+                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Поиск или имя пациента</label>
+                                {selectedPatient ? (
+                                    <div className="flex items-center justify-between p-2.5 border border-blue-200 bg-blue-50 rounded-xl">
+                                        <div>
+                                            <div className="font-medium text-blue-900 text-sm">{selectedPatient.name}</div>
+                                            <div className="text-xs text-blue-700">{selectedPatient.phone}</div>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => {
+                                                setSelectedPatient(null);
+                                                setPatientSearchQuery(selectedPatient.name);
+                                            }}
+                                            className="p-1 hover:bg-blue-100 rounded-md text-blue-600"
+                                        >
+                                            <XCircle className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Иван Иванов"
+                                            value={patientSearchQuery}
+                                            onChange={e => setPatientSearchQuery(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        />
+                                        {patientSearchQuery.length > 0 && !selectedPatient && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                                {isSearchingPatient ? (
+                                                    <div className="p-3 text-sm text-center text-gray-500">Поиск...</div>
+                                                ) : patientSearchResults.length > 0 ? (
+                                                    patientSearchResults.map(p => (
+                                                        <div 
+                                                            key={p.id} 
+                                                            onClick={() => {
+                                                                setSelectedPatient(p);
+                                                                setPatientSearchQuery('');
+                                                            }}
+                                                            className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                                                        >
+                                                            <div className="font-medium text-gray-900 text-sm">{p.name}</div>
+                                                            <div className="text-xs text-gray-500">{p.phone}</div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-3 text-sm text-gray-500 bg-gray-50">
+                                                        Пациент не найден. Будет создана новая запись для: <span className="font-medium text-gray-900">{patientSearchQuery}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Телефон</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="77001234567"
-                                    value={newPhone}
-                                    onChange={e => setNewPhone(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                />
-                            </div>
+                            
+                            {!selectedPatient && (
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Телефон нового пациента</label>
+                                    <input 
+                                        type="tel" 
+                                        placeholder="77001234567"
+                                        value={newPhone}
+                                        onChange={e => setNewPhone(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    />
+                                </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Дата</label>
@@ -514,7 +595,7 @@ export default function CalendarPage() {
                                 Отмена
                             </button>
                             <button 
-                                disabled={saving || !newPhone || !newDate || !newTime || !newDoctorId}
+                                disabled={saving || (!selectedPatient && !newPhone) || !newDate || !newTime || !newDoctorId}
                                 onClick={async () => {
                                     setSaving(true);
                                     try {
@@ -529,8 +610,9 @@ export default function CalendarPage() {
                                                     body: JSON.stringify({
                                                         date: dateTime.toISOString(),
                                                         duration: newDuration,
-                                                        patientName: newName,
-                                                        patientPhone: newPhone,
+                                                        patientId: selectedPatient?.id || undefined,
+                                                        patientName: selectedPatient ? undefined : patientSearchQuery,
+                                                        patientPhone: selectedPatient ? undefined : newPhone,
                                                         type: newType,
                                                         doctorId: newDoctorId || undefined
                                                     })
@@ -543,8 +625,8 @@ export default function CalendarPage() {
                                                         appointmentAt: dateTime.toISOString(),
                                                         appointmentNotes: newType,
                                                         doctorId: newDoctorId || null,
-                                                        name: newName,
-                                                        phone: newPhone
+                                                        name: selectedPatient ? selectedPatient.name : patientSearchQuery,
+                                                        phone: selectedPatient ? selectedPatient.phone : newPhone
                                                     })
                                                 });
                                             }
@@ -555,8 +637,9 @@ export default function CalendarPage() {
                                                 body: JSON.stringify({
                                                     date: dateTime.toISOString(),
                                                     duration: newDuration,
-                                                    patientName: newName,
-                                                    patientPhone: newPhone,
+                                                    patientId: selectedPatient?.id || undefined,
+                                                        patientName: selectedPatient ? undefined : patientSearchQuery,
+                                                        patientPhone: selectedPatient ? undefined : newPhone,
                                                     type: newType,
                                                     doctorId: newDoctorId || undefined
                                                 })
@@ -568,7 +651,9 @@ export default function CalendarPage() {
 
                                         if (true) {
                                             setNewName('');
-                                            setNewPhone('');
+        setNewPhone('');
+        setPatientSearchQuery('');
+        setSelectedPatient(null);
                                             setNewDate('');
                                             setNewTime('');
                                             setNewDoctorId('');
