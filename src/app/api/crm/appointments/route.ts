@@ -51,7 +51,7 @@ export async function GET(req: Request) {
             include: {
                 doctor: { select: { id: true, fullName: true, email: true } },
                 clinic: { select: { id: true, name: true } },
-                assignee: { select: { id: true, fullName: true } }
+                assignee: { select: { id: true, fullName: true, email: true, phone: true } }
             },
             orderBy: {
                 appointmentAt: 'asc'
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
             include: {
                 doctor: { select: { id: true, fullName: true, email: true } },
                 patient: true,
-                createdBy: { select: { id: true, fullName: true } }
+                createdBy: { select: { id: true, fullName: true, email: true, phone: true } }
             }
         });
 

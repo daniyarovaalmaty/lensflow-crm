@@ -21,7 +21,7 @@ interface Appointment {
     status: string;
     type: string;
     notes?: string | null;
-    createdBy?: { id: string; fullName: string } | null;
+    createdBy?: { id: string; fullName: string; email?: string; phone?: string; } | null;
 }
 
 const APPT_TYPES: Record<string, string> = {
