@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         }
 
         const orders = await prisma.order.findMany({
-            where: { id: { in: orderIds }, labOrgId: user.organizationId }
+            where: { orderNumber: { in: orderIds }, labOrgId: user.organizationId }
         });
 
         // Calculate materials

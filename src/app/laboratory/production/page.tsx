@@ -2074,31 +2074,33 @@ export default function ProductionHubPage() {
                             <Download className="w-4 h-4" />
                             Экспорт XLS
                         </button>
-                        {(subRole === 'lab_admin' || subRole === 'lab_head') && (
+                        <div className="flex items-center gap-2 ml-auto">
+                            {(subRole === 'lab_admin' || subRole === 'lab_head') && (
+                                <button
+                                    onClick={exportMaterials}
+                                    className="btn btn-secondary gap-2 whitespace-nowrap"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Расходные мат.
+                                </button>
+                            )}
+                            {bulkMode && bulkSelectedIds.size > 0 && (
+                                <button
+                                    onClick={downloadM11}
+                                    className="btn gap-2 whitespace-nowrap bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Накладная-требование М-11 ({bulkSelectedIds.size})
+                                </button>
+                            )}
                             <button
-                                onClick={exportMaterials}
-                                className={`btn btn-secondary gap-2 whitespace-nowrap ${!bulkMode ? 'ml-auto' : ''}`}
+                                onClick={() => { setBulkMode(!bulkMode); setBulkSelectedIds(new Set<string>()); }}
+                                className={`btn gap-2 whitespace-nowrap ${bulkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-secondary'}`}
                             >
-                                <Download className="w-4 h-4" />
-                                Расходные мат.
+                                <CheckSquare className="w-4 h-4" />
+                                {bulkMode ? 'Отмена' : 'Выбрать'}
                             </button>
-                        )}
-                        {bulkMode && bulkSelectedIds.size > 0 && (
-                            <button
-                                onClick={downloadM11}
-                                className="btn gap-2 whitespace-nowrap bg-emerald-600 text-white hover:bg-emerald-700 ml-auto shadow-sm"
-                            >
-                                <Download className="w-4 h-4" />
-                                Накладная-требование М-11 ({bulkSelectedIds.size})
-                            </button>
-                        )}
-                        <button
-                            onClick={() => { setBulkMode(!bulkMode); setBulkSelectedIds(new Set<string>()); }}
-                            className={`btn gap-2 whitespace-nowrap ${bulkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-secondary ml-auto'}`}
-                        >
-                            <CheckSquare className="w-4 h-4" />
-                            {bulkMode ? 'Отмена' : 'Выбрать'}
-                        </button>
+                        </div>
                     </div>
 
                     <AnimatePresence>
