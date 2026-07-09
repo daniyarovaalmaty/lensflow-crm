@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
                 currentStock: true,
                 unit: true,
                 purchasePrice: true,
+                retailPrice: true,
                 brand: true,
                 model: true,
                 barcode: true,

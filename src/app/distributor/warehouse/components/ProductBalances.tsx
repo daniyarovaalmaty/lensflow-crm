@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
+import UnitsModal from './UnitsModal';
 
 export default function ProductBalances() {
     const [products, setProducts] = useState<any[]>([]);
@@ -14,6 +15,7 @@ export default function ProductBalances() {
     const [isSaving, setIsSaving] = useState(false);
     const [selectedDocument, setSelectedDocument] = useState<any>(null);
     const [docLoading, setDocLoading] = useState(false);
+    const [viewingSerialsForProduct, setViewingSerialsForProduct] = useState<any>(null);
 
     useEffect(() => {
         fetchBalances();
@@ -173,8 +175,7 @@ export default function ProductBalances() {
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Произведено</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Док-т прихода</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Код реф.</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Серийный номер</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Единицы</th>
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
                                 <th className="relative py-2 pl-3 pr-4 sm:pr-6"></th>
@@ -208,8 +209,16 @@ export default function ProductBalances() {
                                         ) : '-'}
                                     </td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.referenceCode || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.lot || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.barcode || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">
+                                        {product.trackSerials ? (
+                                            <button 
+                                                onClick={() => setViewingSerialsForProduct(product)}
+                                                className="text-indigo-600 hover:text-indigo-900 underline text-xs font-medium"
+                                            >
+                                                Показать единицы
+                                            </button>
+                                        ) : '-'}
+                                    </td>
                                     <td className="px-2 py-3 text-center">
                                         <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                             {product.currentStock} {product.unit || 'шт'}
@@ -377,16 +386,6 @@ export default function ProductBalances() {
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
                                     </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Штрихкод</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.barcode || ''}
-                                            onChange={(e) => setEditingProduct({...editingProduct, barcode: e.target.value})}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
                                 </div>
                             </div>
                             <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
@@ -416,6 +415,13 @@ export default function ProductBalances() {
                 <DocumentViewerModal
                     document={selectedDocument}
                     onClose={() => setSelectedDocument(null)}
+                />
+            )}
+
+            {viewingSerialsForProduct && (
+                <UnitsModal
+                    product={viewingSerialsForProduct}
+                    onClose={() => setViewingSerialsForProduct(null)}
                 />
             )}
         </div>

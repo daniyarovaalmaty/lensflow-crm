@@ -46,7 +46,7 @@ export default function CreateWholesaleOrderPage() {
         const fetchData = async () => {
             try {
                 // Fetch products
-                const prodRes = await fetch('/api/inventory?limit=5000');
+                const prodRes = await fetch('/api/distributor/warehouse/balances');
                 if (prodRes.ok) {
                     const data = await prodRes.json();
                     setProducts(data.products || []);

@@ -36,10 +36,12 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [newProductExpiration, setNewProductExpiration] = useState('');
     const [newProductImportDate, setNewProductImportDate] = useState('');
     const [newProductProductionDate, setNewProductProductionDate] = useState('');
-    const [newProductReceiptDoc, setNewProductReceiptDoc] = useState('');
+
     const [newProductRefCode, setNewProductRefCode] = useState('');
     const [newProductLot, setNewProductLot] = useState('');
     const [newProductTrackSerials, setNewProductTrackSerials] = useState(false);
+    const [newProductBatchSerialNumber, setNewProductBatchSerialNumber] = useState('');
+    const [batchSerialNumber, setBatchSerialNumber] = useState('');
 
     useEffect(() => {
         if (!searchQuery.trim()) {
@@ -88,10 +90,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     expirationDate: newProductExpiration,
                     importDate: newProductImportDate,
                     productionDate: newProductProductionDate,
-                    receiptDoc: newProductReceiptDoc,
+
                     refCode: newProductRefCode,
                     lot: newProductLot,
-                    trackSerials: newProductTrackSerials
+                    trackSerials: newProductTrackSerials,
+                    batchSerialNumber: newProductTrackSerials ? newProductBatchSerialNumber : ''
                 })
             });
 
@@ -111,10 +114,12 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             setNewProductExpiration('');
             setNewProductImportDate('');
             setNewProductProductionDate('');
-            setNewProductReceiptDoc('');
+
             setNewProductRefCode('');
             setNewProductLot('');
             setNewProductTrackSerials(false);
+            setNewProductBatchSerialNumber('');
+            setIsCreatingProduct(false);
         } catch (error) {
             toast.error('Ошибка создания товара');
         }
@@ -149,6 +154,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             price: price,
             trackSerials: selectedProduct.trackSerials,
             serialNumbers: selectedProduct.trackSerials ? finalSerials : [],
+            batchSerialNumber: selectedProduct.trackSerials ? batchSerialNumber : '',
         };
         
         if (newItem.qty <= 0) {
@@ -165,6 +171,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         setPrice(0);
         setSerials([]);
         setCurrentSerial('');
+        setBatchSerialNumber('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -424,15 +431,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Документ на приход</label>
-                                <input
-                                    type="text"
-                                    value={newProductReceiptDoc}
-                                    onChange={(e) => setNewProductReceiptDoc(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
+
                             <div className="sm:col-span-2 flex items-center">
                                 <input
                                     id="trackSerials"
@@ -445,6 +444,19 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     Вести серийный учет для этого товара (каждая единица имеет уникальный штрихкод)
                                 </label>
                             </div>
+                            
+                            {newProductTrackSerials && (
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер партии</label>
+                                    <input
+                                        type="text"
+                                        value={newProductBatchSerialNumber}
+                                        onChange={(e) => setNewProductBatchSerialNumber(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        placeholder="Например, L-10294"
+                                    />
+                                </div>
+                            )}
                         </div>
                         <button
                             type="button"
@@ -467,9 +479,22 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         </div>
                         
                         <div className="flex gap-4 items-end flex-wrap">
+                            {selectedProduct.trackSerials && (
+                                <div className="w-48">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер партии</label>
+                                    <input
+                                        type="text"
+                                        value={batchSerialNumber}
+                                        onChange={(e) => setBatchSerialNumber(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        placeholder="Например, L-10294"
+                                    />
+                                </div>
+                            )}
+
                             {selectedProduct.trackSerials ? (
                                 <div className="flex-1 min-w-[200px]">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Добавить серийный номер / штрихкод ед.</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Уникальные штрихкоды (сканируйте)</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"

@@ -73,7 +73,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     const stockItemsData = item.serialNumbers.map((sn: string) => ({
                         productId: product!.id,
                         organizationId,
-                        serialNumber: sn,
+                        barcode: sn,
+                        serialNumber: item.batchSerialNumber || null,
                         status: 'in_stock',
                         purchasePrice: item.price,
                         receiptDocId: doc.id,
