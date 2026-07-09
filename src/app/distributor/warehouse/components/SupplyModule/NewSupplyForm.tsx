@@ -128,17 +128,24 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
     const handleAddItem = () => {
         if (!selectedProduct) return;
         
+        let finalSerials = [...serials];
+        if (selectedProduct.trackSerials && currentSerial.trim()) {
+            if (!finalSerials.includes(currentSerial.trim())) {
+                finalSerials.push(currentSerial.trim());
+            }
+        }
+        
         const newItem = {
             productId: selectedProduct.id,
             name: selectedProduct.name,
-            qty: selectedProduct.trackSerials ? serials.length : qty,
+            qty: selectedProduct.trackSerials ? finalSerials.length : qty,
             price: price,
             trackSerials: selectedProduct.trackSerials,
-            serialNumbers: selectedProduct.trackSerials ? serials : [],
+            serialNumbers: selectedProduct.trackSerials ? finalSerials : [],
         };
         
         if (newItem.qty <= 0) {
-            toast.error('Количество должно быть больше нуля');
+            toast.error('Количество должно быть больше нуля (добавьте хотя бы один штрихкод)');
             return;
         }
 
@@ -150,6 +157,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
         setQty(1);
         setPrice(0);
         setSerials([]);
+        setCurrentSerial('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -440,7 +448,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                     {selectedProduct.trackSerials ? 'Серийный учет' : 'Количественный учет'}
                                 </span>
                             </div>
-                            <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Изменить товар</button>
+                            <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Выбрать другой</button>
                         </div>
                         
                         <div className="flex gap-4 items-end flex-wrap">
