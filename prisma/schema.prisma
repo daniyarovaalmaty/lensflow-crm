@@ -61,8 +61,11 @@ model Organization {
   stockDocsCreated StockDocument[]
   stockDocsTarget  StockDocument[] @relation("TransferTarget")
   stockMovements  StockMovement[]
-  sales           Sale[]
   inventories     Inventory[]
+  sales           Sale[]
+  stockRequests   StockRequest[]
+  targetedRequests StockRequest[] @relation("RequestTarget")
+
 
   // CRM Sales
   clinicLeads         Lead[]               @relation("ClinicLeads")
@@ -1221,4 +1224,28 @@ model PayrollPayout {
   transactions    FinancialTransaction[]
 
   @@map("payroll_payouts")
+}
+
+// ==================== Stock Request (from Optic to Distributor or Distributor to Supplier) ====================
+model StockRequest {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  
+  requestNumber   String
+  status          String @default("pending") // pending | approved | rejected | fulfilled
+
+  targetOrganizationId String?
+  targetOrganization   Organization? @relation("RequestTarget", fields: [targetOrganizationId], references: [id])
+
+  items           Json     // [{ productId, name, sku, qty, note }]
+  notes           String?
+
+  performedById   String?
+  performedByName String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("stock_requests")
 }

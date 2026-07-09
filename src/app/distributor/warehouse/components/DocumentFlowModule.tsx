@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
+import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWriteOffOnly?: boolean }) {
+    const [documents, setDocuments] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [documentNumber, setDocumentNumber] = useState('');
     const [reason, setReason] = useState('');
     const [items, setItems] = useState<any[]>([]);
@@ -18,6 +21,29 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
     const [qty, setQty] = useState(1);
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
+
+    useEffect(() => {
+        if (!isWriteOffOnly) {
+            fetchDocuments();
+        } else {
+            setIsLoading(false);
+        }
+    }, [isWriteOffOnly]);
+
+    const fetchDocuments = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/distributor/warehouse/documents?type=all');
+            if (res.ok) {
+                const data = await res.json();
+                setDocuments(data.documents || []);
+            }
+        } catch (error) {
+            toast.error('Ошибка загрузки документов');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!searchQuery.trim()) {
@@ -43,11 +69,11 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
 
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
-        if (serials.includes(currentSerial)) {
+        if (serials.includes(currentSerial.trim())) {
             toast.error('Этот серийный номер уже добавлен');
             return;
         }
-        setSerials([...serials, currentSerial]);
+        setSerials([...serials, currentSerial.trim()]);
         setQty(serials.length + 1);
         setCurrentSerial('');
     };
@@ -55,25 +81,36 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
     const handleAddItem = () => {
         if (!selectedProduct) return;
         
+        let finalSerials = [...serials];
+        // UX Fix: Automatically grab the serial from the input if user forgot to press Enter or the Add button
+        if (selectedProduct.trackSerials && currentSerial.trim()) {
+            if (!finalSerials.includes(currentSerial.trim())) {
+                finalSerials.push(currentSerial.trim());
+            }
+        }
+        
+        const finalQty = selectedProduct.trackSerials ? finalSerials.length : qty;
+
+        if (finalQty <= 0) {
+            toast.error('Введите количество или отсканируйте штрихкод');
+            return;
+        }
+
         const newItem = {
             productId: selectedProduct.id,
             name: selectedProduct.name,
-            qty: selectedProduct.trackSerials ? serials.length : qty,
+            qty: finalQty,
             price: selectedProduct.purchasePrice || 0,
             trackSerials: selectedProduct.trackSerials,
-            serialNumbers: selectedProduct.trackSerials ? serials : [],
+            serialNumbers: selectedProduct.trackSerials ? finalSerials : [],
         };
-        
-        if (newItem.qty <= 0) {
-            toast.error('Количество должно быть больше нуля');
-            return;
-        }
 
         setItems([...items, newItem]);
         setSelectedProduct(null);
         setSearchQuery('');
         setQty(1);
         setSerials([]);
+        setCurrentSerial('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -105,7 +142,7 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
             if (!res.ok) throw new Error('Failed to save document');
             
             toast.success(status === 'draft' ? 'Черновик сохранен' : 'Акт списания проведен!');
-            // Reset state or refetch
+            // Reset state
             setItems([]);
             setDocumentNumber('');
             setReason('');
@@ -114,10 +151,83 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
         }
     };
 
+    const getDocumentTypeLabel = (type: string) => {
+        switch (type) {
+            case 'receipt': return 'Приходная накладная';
+            case 'write_off': return 'Акт списания';
+            case 'transfer_out': return 'Перемещение (Расход)';
+            case 'transfer_in': return 'Перемещение (Приход)';
+            case 'adjustment': return 'Корректировка';
+            default: return type;
+        }
+    };
+
+    // JOURNAL VIEW (Документооборот)
+    if (!isWriteOffOnly) {
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h2 className="text-lg font-medium text-gray-900">Журнал складских документов</h2>
+                        <p className="text-sm text-gray-500">История всех операций по складу</p>
+                    </div>
+                </div>
+
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-300">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Документ</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Тип</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Статус</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Контрагент</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сумма</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                            {documents.map((doc) => (
+                                <tr key={doc.id} className="hover:bg-gray-50">
+                                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                        <div className="flex items-center gap-2">
+                                            <FileText className="h-4 w-4 text-gray-400" />
+                                            {doc.documentNumber}
+                                        </div>
+                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                        {getDocumentTypeLabel(doc.type)}
+                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                        {doc.status === 'confirmed' ? (
+                                            <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Проведен</span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Черновик</span>
+                                        )}
+                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{doc.counterpartyName || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{doc.totalAmount.toLocaleString()} ₸</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{new Date(doc.createdAt).toLocaleDateString('ru-RU')}</td>
+                                </tr>
+                            ))}
+                            {documents.length === 0 && !isLoading && (
+                                <tr>
+                                    <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
+                                        Документы не найдены
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    }
+
+    // CREATE WRITE-OFF VIEW (Списания)
     return (
         <div className="bg-white">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-medium text-gray-900">{isWriteOffOnly ? 'Акт списания товаров' : 'Внутренние документы'}</h2>
+                <h2 className="text-lg font-medium text-gray-900">Акт списания товаров</h2>
                 <div className="space-x-3">
                     <button 
                         onClick={() => handleSave('draft')}

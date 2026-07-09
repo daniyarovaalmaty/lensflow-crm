@@ -12,11 +12,16 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const type = searchParams.get('type') || 'receipt';
 
+        const whereClause: any = {
+            organizationId: session.user.organizationId,
+        };
+        
+        if (type !== 'all') {
+            whereClause.type = type;
+        }
+
         const documents = await prisma.stockDocument.findMany({
-            where: {
-                organizationId: session.user.organizationId,
-                type,
-            },
+            where: whereClause,
             orderBy: { createdAt: 'desc' }
         });
 

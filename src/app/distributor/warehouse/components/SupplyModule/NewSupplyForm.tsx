@@ -50,7 +50,9 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
         return () => clearTimeout(delayDebounceFn);
     }, [searchQuery]);
 
-    const handleCreateProduct = async () => {
+    const handleCreateProduct = async (e?: React.MouseEvent) => {
+        if (e) e.preventDefault();
+        
         if (!newProductName.trim()) {
             toast.error('Введите название товара');
             return;
@@ -312,6 +314,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                             </div>
                         </div>
                         <button
+                            type="button"
                             onClick={handleCreateProduct}
                             className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 w-full sm:w-auto"
                         >
