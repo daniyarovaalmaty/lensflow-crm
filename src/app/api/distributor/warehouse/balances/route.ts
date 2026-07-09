@@ -27,6 +27,10 @@ export async function GET(req: NextRequest) {
                 model: true,
                 barcode: true,
                 specs: true,
+                stockItems: {
+                    where: { status: 'in_stock' },
+                    select: { serialNumber: true, barcode: true }
+                }
             },
             orderBy: { name: 'asc' }
         });

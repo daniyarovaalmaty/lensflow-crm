@@ -68,7 +68,11 @@ export default function CreateWholesaleOrderPage() {
 
     // USB Scanner Hook (Seamless scanning)
     const handleScan = useCallback((code: string) => {
-        const product = products.find(p => p.barcode === code || p.sku === code);
+        const product = products.find(p => 
+            p.barcode === code || 
+            p.sku === code ||
+            (p.stockItems && p.stockItems.some((si: any) => si.serialNumber === code || si.barcode === code))
+        );
         
         if (product) {
             const stock = product.currentStock;

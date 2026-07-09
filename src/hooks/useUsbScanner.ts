@@ -11,13 +11,10 @@ export function useUsbScanner(onScan: (code: string) => void, enabled = true) {
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (!enabled) return;
-        // Don't capture if user is typing in an input/textarea
-        const tag = (e.target as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
         if (e.key === 'Enter') {
-            e.preventDefault();
             if (buffer.current.length >= 4) {
+                e.preventDefault();
                 onScan(buffer.current.trim());
             }
             buffer.current = '';
@@ -25,16 +22,22 @@ export function useUsbScanner(onScan: (code: string) => void, enabled = true) {
             return;
         }
 
-        if (e.key.length === 1) {
-            buffer.current += e.key;
-            if (timer.current) clearTimeout(timer.current);
-            // Scanner types fast — if no key for 100ms, it's manual typing
-            timer.current = setTimeout(() => { buffer.current = ''; }, 100);
+        // Ignore meta keys
+        if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) {
+            return;
         }
+
+        // Add to buffer
+        buffer.current += e.key;
+        if (timer.current) clearTimeout(timer.current);
+        
+        // Timeout 250ms for slow scanners
+        timer.current = setTimeout(() => { buffer.current = ''; }, 250);
     }, [onScan, enabled]);
 
     useEffect(() => {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        // Use capturing phase to intercept before inputs
+        window.addEventListener('keydown', handleKeyDown, true);
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
     }, [handleKeyDown]);
 }
