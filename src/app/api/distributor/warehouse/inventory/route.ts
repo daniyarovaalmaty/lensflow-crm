@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
                 productId: p.id,
                 name: p.name,
                 sku: p.sku || '',
+                barcode: p.barcode || '',
                 trackSerials: p.trackSerials,
                 systemQty: p.currentStock,
                 actualQty: p.currentStock, // default to system qty

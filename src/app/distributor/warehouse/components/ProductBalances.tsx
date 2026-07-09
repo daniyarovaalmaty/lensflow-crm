@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Download, Box, Barcode } from 'lucide-react';
+import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ProductBalances() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         fetchBalances();
@@ -27,9 +30,78 @@ export default function ProductBalances() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этот товар? Удаление возможно только если по товару не было складских движений.')) return;
+        
+        try {
+            const res = await fetch(`/api/distributor/warehouse/products/${id}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            
+            if (!res.ok) {
+                toast.error(data.error || 'Ошибка удаления товара');
+                return;
+            }
+            
+            toast.success('Товар успешно удален');
+            setProducts(products.filter(p => p.id !== id));
+        } catch (error) {
+            toast.error('Произошла ошибка при удалении');
+        }
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingProduct.name.trim()) {
+            toast.error('Название обязательно');
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const payload = {
+                name: editingProduct.name,
+                brand: editingProduct.brand,
+                model: editingProduct.model,
+                barcode: editingProduct.barcode,
+                sku: editingProduct.sku,
+                specs: editingProduct.specs || {}
+            };
+
+            const res = await fetch(`/api/distributor/warehouse/products/${editingProduct.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Ошибка сохранения');
+            
+            toast.success('Товар обновлен');
+            setProducts(products.map(p => p.id === data.product.id ? { ...p, ...data.product } : p));
+            setEditingProduct(null);
+        } catch (error: any) {
+            toast.error(error.message || 'Ошибка при сохранении');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSpecChange = (key: string, value: string) => {
+        setEditingProduct({
+            ...editingProduct,
+            specs: {
+                ...(editingProduct.specs || {}),
+                [key]: value
+            }
+        });
+    };
+
     const filteredProducts = products.filter(p => 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        p.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+        p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.barcode?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -51,7 +123,7 @@ export default function ProductBalances() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    placeholder="Поиск по названию или артикулу..."
+                    placeholder="Поиск по названию, артикулу или штрихкоду..."
                 />
             </div>
 
@@ -62,48 +134,242 @@ export default function ProductBalances() {
                     <div className="h-10 bg-gray-200 rounded w-full"></div>
                 </div>
             ) : (
-                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Наименование</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Артикул</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Тип учета</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Бренд</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Модель</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Диоптр.</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Процент.</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Срок годн.</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата имп.</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата пр-ва</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Док. приход</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Код реф.</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">LOT</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Штрихкод</th>
                                 <th className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Остаток</th>
                                 <th className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Сумма (закуп)</th>
+                                <th className="relative py-3.5 pl-3 pr-4 sm:pr-6"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {filteredProducts.map((product) => (
-                                <tr key={product.id}>
+                                <tr key={product.id} className="hover:bg-gray-50">
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        {product.name}
+                                        <div className="flex items-center gap-2" title={product.trackSerials ? "Серийный учет" : "Количественный учет"}>
+                                            {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" /> : <Box className="h-4 w-4 text-gray-400" />}
+                                            {product.name}
+                                        </div>
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.sku || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                        {product.trackSerials ? (
-                                            <span className="inline-flex items-center gap-1 text-indigo-600"><Barcode className="h-4 w-4"/> Серийный</span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1 text-gray-500"><Box className="h-4 w-4"/> Количественный</span>
-                                        )}
-                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.brand || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.model || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.percentage || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.expirationDate ? new Date(product.specs.expirationDate).toLocaleDateString('ru-RU') : '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.importDate ? new Date(product.specs.importDate).toLocaleDateString('ru-RU') : '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.productionDate ? new Date(product.specs.productionDate).toLocaleDateString('ru-RU') : '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.receiptDocument || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.referenceCode || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.lot || '-'}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.barcode || '-'}</td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-semibold text-right">
                                         {product.currentStock} {product.unit}
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-right">
                                         {(product.currentStock * product.purchasePrice).toLocaleString()} ₸
                                     </td>
+                                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                        <div className="flex justify-end gap-2">
+                                            <button 
+                                                onClick={() => setEditingProduct({ ...product })}
+                                                className="text-indigo-600 hover:text-indigo-900"
+                                            >
+                                                <Edit2 className="h-4 w-4" />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(product.id)}
+                                                className="text-red-600 hover:text-red-900"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                             {filteredProducts.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="py-8 text-center text-sm text-gray-500">
+                                    <td colSpan={15} className="py-8 text-center text-sm text-gray-500">
                                         Товары не найдены
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editingProduct && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setEditingProduct(null)}></div>
+                        
+                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                <div className="flex justify-between items-center mb-5">
+                                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                                        Редактирование товара
+                                    </h3>
+                                    <button onClick={() => setEditingProduct(null)} className="text-gray-400 hover:text-gray-500">
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="sm:col-span-2">
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Наименование *</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.name}
+                                            onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Бренд</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.brand || ''}
+                                            onChange={(e) => setEditingProduct({...editingProduct, brand: e.target.value})}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Модель</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.model || ''}
+                                            onChange={(e) => setEditingProduct({...editingProduct, model: e.target.value})}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Диоптрийность</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.specs?.diopters || ''}
+                                            onChange={(e) => handleSpecChange('diopters', e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Процентажность</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.specs?.percentage || ''}
+                                            onChange={(e) => handleSpecChange('percentage', e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Срок годности</label>
+                                        <input
+                                            type="date"
+                                            value={editingProduct.specs?.expirationDate ? new Date(editingProduct.specs.expirationDate).toISOString().split('T')[0] : ''}
+                                            onChange={(e) => handleSpecChange('expirationDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Дата импорта</label>
+                                        <input
+                                            type="date"
+                                            value={editingProduct.specs?.importDate ? new Date(editingProduct.specs.importDate).toISOString().split('T')[0] : ''}
+                                            onChange={(e) => handleSpecChange('importDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Дата производства</label>
+                                        <input
+                                            type="date"
+                                            value={editingProduct.specs?.productionDate ? new Date(editingProduct.specs.productionDate).toISOString().split('T')[0] : ''}
+                                            onChange={(e) => handleSpecChange('productionDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Документ на приход</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.specs?.receiptDocument || ''}
+                                            onChange={(e) => handleSpecChange('receiptDocument', e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Код референса</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.specs?.referenceCode || ''}
+                                            onChange={(e) => handleSpecChange('referenceCode', e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">LOT (серийник)</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.specs?.lot || ''}
+                                            onChange={(e) => handleSpecChange('lot', e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Штрихкод</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.barcode || ''}
+                                            onChange={(e) => setEditingProduct({...editingProduct, barcode: e.target.value})}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveEdit}
+                                    disabled={isSaving}
+                                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto disabled:opacity-50"
+                                >
+                                    <Save className="h-4 w-4 mr-2" />
+                                    {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingProduct(null)}
+                                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                >
+                                    Отмена
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
