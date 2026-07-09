@@ -6,6 +6,7 @@ import SupplyLog from './SupplyLog';
 
 export default function SupplyModule() {
     const [subTab, setSubTab] = useState<'new' | 'log'>('log');
+    const [draftDoc, setDraftDoc] = useState<any>(null);
 
     return (
         <div className="space-y-6">
@@ -24,7 +25,7 @@ export default function SupplyModule() {
                         Журнал поставок
                     </button>
                     <button
-                        onClick={() => setSubTab('new')}
+                        onClick={() => { setSubTab('new'); setDraftDoc(null); }}
                         className={`
                             whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
                             ${subTab === 'new'
@@ -38,7 +39,15 @@ export default function SupplyModule() {
                 </nav>
             </div>
 
-            {subTab === 'log' ? <SupplyLog /> : <NewSupplyForm onSuccess={() => setSubTab('log')} />}
+            {subTab === 'log' ? (
+                <SupplyLog onEdit={(doc) => { setDraftDoc(doc); setSubTab('new'); }} />
+            ) : (
+                <NewSupplyForm 
+                    key={draftDoc ? draftDoc.id : 'new'}
+                    initialDraft={draftDoc} 
+                    onSuccess={() => { setSubTab('log'); setDraftDoc(null); }} 
+                />
+            )}
         </div>
     );
 }

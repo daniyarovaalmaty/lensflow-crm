@@ -5,7 +5,7 @@ import { Eye, Edit, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewerModal from './DocumentViewerModal';
 
-export default function SupplyLog() {
+export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
     const [documents, setDocuments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDocument, setSelectedDocument] = useState<any>(null);
@@ -82,10 +82,10 @@ export default function SupplyLog() {
                                     <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                         <button 
                                             type="button"
-                                            className="relative z-10 p-2 text-indigo-600 hover:text-indigo-900 mr-2"
-                                            onClick={() => setSelectedDocument(doc)}
+                                            className="relative z-10 p-2 cursor-pointer text-indigo-600 hover:text-indigo-900 mr-2"
+                                            onClick={() => doc.status === 'confirmed' ? setSelectedDocument(doc) : (onEdit && onEdit(doc))}
                                         >
-                                            {doc.status === 'confirmed' ? <Eye className="h-5 w-5" /> : <Edit className="h-5 w-5" />}
+                                            {doc.status === 'confirmed' ? <Eye className="h-5 w-5 pointer-events-none" /> : <Edit className="h-5 w-5 pointer-events-none" />}
                                         </button>
                                     </td>
                                 </tr>

@@ -5,10 +5,15 @@ import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-re
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
-export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) {
-    const [counterpartyName, setCounterpartyName] = useState('');
-    const [documentNumber, setDocumentNumber] = useState('');
-    const [items, setItems] = useState<any[]>([]);
+interface NewSupplyFormProps {
+    onSuccess: () => void;
+    initialDraft?: any;
+}
+
+export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyFormProps) {
+    const [counterpartyName, setCounterpartyName] = useState(initialDraft?.counterpartyName || '');
+    const [documentNumber, setDocumentNumber] = useState(initialDraft?.documentNumber || '');
+    const [items, setItems] = useState<any[]>(initialDraft?.items || []);
     
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
@@ -175,8 +180,14 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
         const totalAmount = items.reduce((acc, item) => acc + (item.qty * item.price), 0);
 
         try {
-            const res = await fetch('/api/distributor/warehouse/documents', {
-                method: 'POST',
+            const url = initialDraft?.id 
+                ? `/api/distributor/warehouse/documents/${initialDraft.id}`
+                : '/api/distributor/warehouse/documents';
+                
+            const method = initialDraft?.id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'receipt',
