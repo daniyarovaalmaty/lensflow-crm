@@ -54,21 +54,14 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
 
-        // Check if there are any stock movements or stock items for this product
-        const movementsCount = await prisma.stockMovement.count({
+        // Force delete associated stock movements and items
+        await prisma.stockMovement.deleteMany({
             where: { productId: params.id }
         });
 
-        const stockItemsCount = await prisma.stockItem.count({
+        await prisma.stockItem.deleteMany({
             where: { productId: params.id }
         });
-
-        if (movementsCount > 0 || stockItemsCount > 0) {
-            return NextResponse.json(
-                { error: 'Cannot delete product because it has associated stock movements or inventory items. Edit it instead.' },
-                { status: 400 }
-            );
-        }
 
         await prisma.opticProduct.delete({
             where: { id: params.id }

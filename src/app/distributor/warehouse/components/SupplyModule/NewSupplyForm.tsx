@@ -25,6 +25,16 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
     const [newProductName, setNewProductName] = useState('');
     const [newProductSku, setNewProductSku] = useState('');
     const [newProductBarcode, setNewProductBarcode] = useState('');
+    const [newProductBrand, setNewProductBrand] = useState('');
+    const [newProductModel, setNewProductModel] = useState('');
+    const [newProductDiopters, setNewProductDiopters] = useState('');
+    const [newProductPercentage, setNewProductPercentage] = useState('');
+    const [newProductExpiration, setNewProductExpiration] = useState('');
+    const [newProductImportDate, setNewProductImportDate] = useState('');
+    const [newProductProductionDate, setNewProductProductionDate] = useState('');
+    const [newProductReceiptDoc, setNewProductReceiptDoc] = useState('');
+    const [newProductRefCode, setNewProductRefCode] = useState('');
+    const [newProductLot, setNewProductLot] = useState('');
     const [newProductTrackSerials, setNewProductTrackSerials] = useState(false);
 
     useEffect(() => {
@@ -67,6 +77,16 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                     name: newProductName,
                     sku: newProductSku,
                     barcode: newProductBarcode,
+                    brand: newProductBrand,
+                    model: newProductModel,
+                    diopters: newProductDiopters,
+                    percentage: newProductPercentage,
+                    expirationDate: newProductExpiration,
+                    importDate: newProductImportDate,
+                    productionDate: newProductProductionDate,
+                    receiptDoc: newProductReceiptDoc,
+                    refCode: newProductRefCode,
+                    lot: newProductLot,
                     trackSerials: newProductTrackSerials
                 })
             });
@@ -82,6 +102,16 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
             setNewProductName('');
             setNewProductSku('');
             setNewProductBarcode('');
+            setNewProductBrand('');
+            setNewProductModel('');
+            setNewProductDiopters('');
+            setNewProductPercentage('');
+            setNewProductExpiration('');
+            setNewProductImportDate('');
+            setNewProductProductionDate('');
+            setNewProductReceiptDoc('');
+            setNewProductRefCode('');
+            setNewProductLot('');
             setNewProductTrackSerials(false);
         } catch (error) {
             toast.error('Ошибка создания товара');
@@ -303,7 +333,25 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
-                            <div className="sm:col-span-2">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Бренд</label>
+                                <input
+                                    type="text"
+                                    value={newProductBrand}
+                                    onChange={(e) => setNewProductBrand(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Модель</label>
+                                <input
+                                    type="text"
+                                    value={newProductModel}
+                                    onChange={(e) => setNewProductModel(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Штрихкод (опционально)</label>
                                 <input
                                     type="text"
@@ -311,6 +359,78 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                     onChange={(e) => setNewProductBarcode(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                     placeholder="Отсканируйте штрихкод..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Код референса</label>
+                                <input
+                                    type="text"
+                                    value={newProductRefCode}
+                                    onChange={(e) => setNewProductRefCode(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">LOT (серийник)</label>
+                                <input
+                                    type="text"
+                                    value={newProductLot}
+                                    onChange={(e) => setNewProductLot(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
+                                <input
+                                    type="text"
+                                    value={newProductDiopters}
+                                    onChange={(e) => setNewProductDiopters(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Процентажность</label>
+                                <input
+                                    type="text"
+                                    value={newProductPercentage}
+                                    onChange={(e) => setNewProductPercentage(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Срок годности</label>
+                                <input
+                                    type="date"
+                                    value={newProductExpiration}
+                                    onChange={(e) => setNewProductExpiration(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Дата производства</label>
+                                <input
+                                    type="date"
+                                    value={newProductProductionDate}
+                                    onChange={(e) => setNewProductProductionDate(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Дата импорта</label>
+                                <input
+                                    type="date"
+                                    value={newProductImportDate}
+                                    onChange={(e) => setNewProductImportDate(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Документ на приход</label>
+                                <input
+                                    type="text"
+                                    value={newProductReceiptDoc}
+                                    onChange={(e) => setNewProductReceiptDoc(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div className="sm:col-span-2 flex items-center">

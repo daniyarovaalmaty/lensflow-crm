@@ -10,11 +10,39 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { name, sku, barcode, trackSerials, purchasePrice, category } = body;
+        const { 
+            name, 
+            sku, 
+            barcode, 
+            brand,
+            model,
+            diopters,
+            percentage,
+            expirationDate,
+            importDate,
+            productionDate,
+            receiptDoc,
+            refCode,
+            lot,
+            trackSerials, 
+            purchasePrice, 
+            category 
+        } = body;
 
         if (!name) {
             return NextResponse.json({ error: 'Имя продукта обязательно' }, { status: 400 });
         }
+
+        const specs = {
+            diopters: diopters || '',
+            percentage: percentage || '',
+            expirationDate: expirationDate || '',
+            importDate: importDate || '',
+            productionDate: productionDate || '',
+            receiptDoc: receiptDoc || '',
+            refCode: refCode || '',
+            lot: lot || '',
+        };
 
         const product = await prisma.opticProduct.create({
             data: {
@@ -22,6 +50,9 @@ export async function POST(req: NextRequest) {
                 name,
                 sku: sku || `SKU-${Date.now()}`, // auto-generate if empty
                 barcode: barcode || null,
+                brand: brand || null,
+                model: model || null,
+                specs,
                 trackSerials: Boolean(trackSerials),
                 purchasePrice: purchasePrice ? Number(purchasePrice) : 0,
                 category: category || 'product',

@@ -138,50 +138,53 @@ export default function ProductBalances() {
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Наименование</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Бренд</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Модель</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Диоптр.</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Процент.</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Срок годн.</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата имп.</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата пр-ва</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Док. приход</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Код реф.</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">LOT</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Штрихкод</th>
-                                <th className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Остаток</th>
-                                <th className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Сумма (закуп)</th>
-                                <th className="relative py-3.5 pl-3 pr-4 sm:pr-6"></th>
+                                <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Наименование</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Бренд</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Диоптр.</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Процент.</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Срок годн.</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Дата импорта</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Произведено</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Док-т прихода</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Код реф.</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">LOT</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
+                                <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
+                                <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
+                                <th className="relative py-2 pl-3 pr-4 sm:pr-6"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {filteredProducts.map((product) => (
                                 <tr key={product.id} className="hover:bg-gray-50">
-                                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        <div className="flex items-center gap-2" title={product.trackSerials ? "Серийный учет" : "Количественный учет"}>
-                                            {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" /> : <Box className="h-4 w-4 text-gray-400" />}
-                                            {product.name}
+                                    <td className="py-3 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                        <div className="flex items-center gap-2">
+                                            {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                                            <span className="min-w-0 break-words">{product.name}</span>
                                         </div>
+                                        <div className="mt-1 text-xs text-gray-500">Артикул: {product.sku || '-'}</div>
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.brand || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.model || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.percentage || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.expirationDate ? new Date(product.specs.expirationDate).toLocaleDateString('ru-RU') : '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.importDate ? new Date(product.specs.importDate).toLocaleDateString('ru-RU') : '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.productionDate ? new Date(product.specs.productionDate).toLocaleDateString('ru-RU') : '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.receiptDocument || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.referenceCode || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.specs?.lot || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{product.barcode || '-'}</td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-semibold text-right">
-                                        {product.currentStock} {product.unit}
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.percentage || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.expirationDate ? new Date(product.specs.expirationDate).toLocaleDateString('ru-RU') : '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.importDate ? new Date(product.specs.importDate).toLocaleDateString('ru-RU') : '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.productionDate ? new Date(product.specs.productionDate).toLocaleDateString('ru-RU') : '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.receiptDocument || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.referenceCode || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.lot || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.barcode || '-'}</td>
+                                    <td className="px-2 py-3 text-center">
+                                        <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                            {product.currentStock} {product.unit || 'шт'}
+                                        </span>
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-right">
+                                    <td className="px-2 py-3 text-right text-sm text-gray-500">
                                         {(product.currentStock * product.purchasePrice).toLocaleString()} ₸
                                     </td>
-                                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                    <td className="relative py-3 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 whitespace-nowrap">
                                         <div className="flex justify-end gap-2">
                                             <button 
                                                 onClick={() => setEditingProduct({ ...product })}
