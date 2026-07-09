@@ -23,8 +23,6 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
     // Create New Product state
     const [isCreatingProduct, setIsCreatingProduct] = useState(false);
     const [newProductName, setNewProductName] = useState('');
-    const [newProductSku, setNewProductSku] = useState('');
-    const [newProductBarcode, setNewProductBarcode] = useState('');
     const [newProductBrand, setNewProductBrand] = useState('');
     const [newProductModel, setNewProductModel] = useState('');
     const [newProductDiopters, setNewProductDiopters] = useState('');
@@ -75,8 +73,8 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: newProductName,
-                    sku: newProductSku,
-                    barcode: newProductBarcode,
+                    sku: '',
+                    barcode: '',
                     brand: newProductBrand,
                     model: newProductModel,
                     diopters: newProductDiopters,
@@ -100,8 +98,6 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
             setSearchQuery('');
             setSearchResults([]);
             setNewProductName('');
-            setNewProductSku('');
-            setNewProductBarcode('');
             setNewProductBrand('');
             setNewProductModel('');
             setNewProductDiopters('');
@@ -325,15 +321,6 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Артикул (опционально)</label>
-                                <input
-                                    type="text"
-                                    value={newProductSku}
-                                    onChange={(e) => setNewProductSku(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Бренд</label>
                                 <input
                                     type="text"
@@ -349,16 +336,6 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                     value={newProductModel}
                                     onChange={(e) => setNewProductModel(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Штрихкод (опционально)</label>
-                                <input
-                                    type="text"
-                                    value={newProductBarcode}
-                                    onChange={(e) => setNewProductBarcode(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    placeholder="Отсканируйте штрихкод..."
                                 />
                             </div>
                             <div>

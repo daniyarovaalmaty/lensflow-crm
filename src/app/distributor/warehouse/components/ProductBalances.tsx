@@ -139,6 +139,7 @@ export default function ProductBalances() {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Наименование</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Действия</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Бренд</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Диоптр.</th>
@@ -152,7 +153,6 @@ export default function ProductBalances() {
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
-                                <th className="relative py-2 pl-3 pr-4 sm:pr-6"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
@@ -162,6 +162,24 @@ export default function ProductBalances() {
                                         <div className="flex items-center gap-2">
                                             {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                                             <span className="min-w-0 break-words">{product.name}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-2 py-3 text-sm font-medium whitespace-nowrap">
+                                        <div className="flex gap-3">
+                                            <button 
+                                                onClick={() => setEditingProduct({ ...product })}
+                                                className="text-indigo-600 hover:text-indigo-900"
+                                                title="Редактировать"
+                                            >
+                                                <Edit2 className="h-4 w-4" />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(product.id)}
+                                                className="text-red-600 hover:text-red-900"
+                                                title="Удалить"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
                                         </div>
                                     </td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
@@ -182,22 +200,6 @@ export default function ProductBalances() {
                                     </td>
                                     <td className="px-2 py-3 text-right text-sm text-gray-500">
                                         {(product.currentStock * product.purchasePrice).toLocaleString()} ₸
-                                    </td>
-                                    <td className="relative py-3 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 whitespace-nowrap">
-                                        <div className="flex justify-end gap-2">
-                                            <button 
-                                                onClick={() => setEditingProduct({ ...product })}
-                                                className="text-indigo-600 hover:text-indigo-900"
-                                            >
-                                                <Edit2 className="h-4 w-4" />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDelete(product.id)}
-                                                className="text-red-600 hover:text-red-900"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
                                     </td>
                                 </tr>
                             ))}
