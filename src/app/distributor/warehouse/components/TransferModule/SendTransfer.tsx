@@ -224,7 +224,7 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
                                                 <div className="flex justify-between items-center">
                                                     <div>
                                                         <span className="block truncate font-medium">{product.name}</span>
-                                                        <span className="block truncate text-gray-500 text-xs">Артикул: {product.sku || 'Нет'} | В наличии: {product.currentStock}</span>
+                                                        <span className="block truncate text-gray-500 text-xs">В наличии: {product.currentStock}</span>
                                                     </div>
                                                     <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
                                                         {product.trackSerials ? 'Серийный' : 'Количественный'}

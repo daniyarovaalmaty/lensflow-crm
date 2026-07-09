@@ -233,7 +233,6 @@ export default function InventoryModule() {
                                 <tr key={realIdx}>
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                         {item.name}
-                                        <div className="text-xs text-gray-500">Артикул: {item.sku}</div>
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">{item.systemQty}</td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">

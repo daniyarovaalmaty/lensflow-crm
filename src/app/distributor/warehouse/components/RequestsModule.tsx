@@ -222,7 +222,6 @@ export default function RequestsModule() {
                                                     <div className="flex justify-between items-center">
                                                         <div>
                                                             <span className="block truncate font-medium">{product.name}</span>
-                                                            <span className="block truncate text-gray-500 text-xs">Артикул: {product.sku || 'Нет'}</span>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -284,7 +283,6 @@ export default function RequestsModule() {
                                 <tr key={idx}>
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                         {item.name}
-                                        <div className="text-xs text-gray-500">Артикул: {item.sku}</div>
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.qty} шт.</td>
                                     <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
