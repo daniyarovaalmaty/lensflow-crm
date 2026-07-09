@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Eye, Edit, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import DocumentViewerModal from './DocumentViewerModal';
 
 export default function SupplyLog() {
     const [documents, setDocuments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
     useEffect(() => {
         fetchDocuments();
@@ -78,7 +80,10 @@ export default function SupplyLog() {
                                         )}
                                     </td>
                                     <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                        <button className="text-indigo-600 hover:text-indigo-900 mr-4">
+                                        <button 
+                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                                            onClick={() => setSelectedDocument(doc)}
+                                        >
                                             {doc.status === 'confirmed' ? <Eye className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
                                         </button>
                                     </td>
@@ -94,6 +99,13 @@ export default function SupplyLog() {
                         </tbody>
                     </table>
                 </div>
+            )}
+
+            {selectedDocument && (
+                <DocumentViewerModal 
+                    document={selectedDocument} 
+                    onClose={() => setSelectedDocument(null)} 
+                />
             )}
         </div>
     );

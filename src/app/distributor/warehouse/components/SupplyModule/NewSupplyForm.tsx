@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
 export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) {
     const [counterpartyName, setCounterpartyName] = useState('');
@@ -116,11 +117,12 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
 
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
-        if (serials.includes(currentSerial)) {
+        const translatedSerial = translateCyrillicToEnglishLayout(currentSerial.trim());
+        if (serials.includes(translatedSerial)) {
             toast.error('Этот серийный номер уже добавлен');
             return;
         }
-        setSerials([...serials, currentSerial]);
+        setSerials([...serials, translatedSerial]);
         setQty(serials.length + 1);
         setCurrentSerial('');
     };
@@ -130,8 +132,9 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
         
         let finalSerials = [...serials];
         if (selectedProduct.trackSerials && currentSerial.trim()) {
-            if (!finalSerials.includes(currentSerial.trim())) {
-                finalSerials.push(currentSerial.trim());
+            const translatedSerial = translateCyrillicToEnglishLayout(currentSerial.trim());
+            if (!finalSerials.includes(translatedSerial)) {
+                finalSerials.push(translatedSerial);
             }
         }
         
