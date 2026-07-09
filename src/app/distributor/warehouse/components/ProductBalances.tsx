@@ -148,7 +148,7 @@ export default function ProductBalances() {
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Произведено</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Док-т прихода</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Код реф.</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Серийник</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Серийный номер</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
@@ -332,7 +332,7 @@ export default function ProductBalances() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Серийник</label>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Серийный номер</label>
                                         <input
                                             type="text"
                                             value={editingProduct.specs?.lot || ''}

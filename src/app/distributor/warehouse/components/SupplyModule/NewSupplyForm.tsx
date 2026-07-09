@@ -371,7 +371,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Серийник</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер</label>
                                 <input
                                     type="text"
                                     value={newProductLot}
