@@ -15,6 +15,7 @@ interface Product {
     wholesalePrice: number;
     retailPrice: number;
     currentStock: number;
+    stockItems?: any[];
 }
 
 interface Counterparty {
