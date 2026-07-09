@@ -241,7 +241,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             type="text"
                             value={counterpartyName}
                             onChange={(e) => setCounterpartyName(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             placeholder="Название поставщика"
                         />
                     </div>
@@ -253,7 +253,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             type="text"
                             value={documentNumber}
                             onChange={(e) => setDocumentNumber(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             placeholder="№ док-та"
                         />
                     </div>
@@ -340,7 +340,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductName}
                                     onChange={(e) => setNewProductName(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -349,7 +349,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductBrand}
                                     onChange={(e) => setNewProductBrand(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -358,7 +358,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductModel}
                                     onChange={(e) => setNewProductModel(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -367,7 +367,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductRefCode}
                                     onChange={(e) => setNewProductRefCode(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -376,7 +376,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductLot}
                                     onChange={(e) => setNewProductLot(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -385,7 +385,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductDiopters}
                                     onChange={(e) => setNewProductDiopters(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -394,7 +394,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductPercentage}
                                     onChange={(e) => setNewProductPercentage(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -403,7 +403,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="date"
                                     value={newProductExpiration}
                                     onChange={(e) => setNewProductExpiration(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -412,7 +412,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="date"
                                     value={newProductProductionDate}
                                     onChange={(e) => setNewProductProductionDate(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -421,7 +421,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="date"
                                     value={newProductImportDate}
                                     onChange={(e) => setNewProductImportDate(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div>
@@ -430,7 +430,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductReceiptDoc}
                                     onChange={(e) => setNewProductReceiptDoc(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
                             <div className="sm:col-span-2 flex items-center">
@@ -476,7 +476,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                             value={currentSerial}
                                             onChange={(e) => setCurrentSerial(translateCyrillicToEnglishLayout(e.target.value))}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
-                                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                             placeholder="Сканируйте штрихкод..."
                                         />
                                         <button onClick={handleAddSerial} className="px-3 py-1.5 bg-gray-100 border rounded hover:bg-gray-200">
@@ -501,7 +501,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         min="1"
                                         value={qty}
                                         onChange={(e) => setQty(Number(e.target.value))}
-                                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                     />
                                 </div>
                             )}
@@ -513,7 +513,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     min="0"
                                     value={price}
                                     onChange={(e) => setPrice(Number(e.target.value))}
-                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
 

@@ -188,7 +188,7 @@ export default function InventoryModule() {
                                 value={barcodeInput}
                                 onChange={(e) => setBarcodeInput(translateCyrillicToEnglishLayout(e.target.value))}
                                 onKeyDown={(e) => e.key === 'Enter' && handleBarcodeScan()}
-                                className="block w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                className="block w-64 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="Пропикайте штрихкод товара..."
                                 autoFocus
                             />
@@ -242,7 +242,7 @@ export default function InventoryModule() {
                                                 min="0"
                                                 value={item.actualQty}
                                                 onChange={(e) => updateActualQty(realIdx, e.target.value)}
-                                                className="block w-24 mx-auto rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                                className="block w-24 mx-auto rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                             />
                                         ) : (
                                             <span className="font-medium text-gray-900">{item.actualQty}</span>
