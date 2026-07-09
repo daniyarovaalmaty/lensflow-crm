@@ -150,7 +150,10 @@ export async function POST(req: NextRequest) {
         });
 
         return NextResponse.json({ success: true, document });
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.code === 'P2002') {
+            return NextResponse.json({ error: 'Один или несколько из введенных серийных номеров (штрихкодов) уже числятся на складе.' }, { status: 400 });
+        }
         return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal server error', details: error }, { status: 500 });
     }
 }

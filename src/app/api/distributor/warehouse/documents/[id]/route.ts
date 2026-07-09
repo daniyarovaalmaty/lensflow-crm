@@ -94,6 +94,9 @@ export async function PUT(
 
         return NextResponse.json({ success: true, document });
     } catch (error: any) {
+        if (error?.code === 'P2002') {
+            return NextResponse.json({ error: 'Один или несколько из введенных серийных номеров (штрихкодов) уже числятся на складе.' }, { status: 400 });
+        }
         return NextResponse.json({ error: error.message || 'Internal server error', details: error }, { status: 500 });
     }
 }
