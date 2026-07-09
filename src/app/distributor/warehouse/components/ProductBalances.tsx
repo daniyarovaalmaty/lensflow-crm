@@ -148,7 +148,7 @@ export default function ProductBalances() {
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Произведено</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Док-т прихода</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Код реф.</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">LOT</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Серийник</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
@@ -163,7 +163,6 @@ export default function ProductBalances() {
                                             {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                                             <span className="min-w-0 break-words">{product.name}</span>
                                         </div>
-                                        <div className="mt-1 text-xs text-gray-500">Артикул: {product.sku || '-'}</div>
                                     </td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
@@ -333,7 +332,7 @@ export default function ProductBalances() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">LOT (серийник)</label>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Серийник</label>
                                         <input
                                             type="text"
                                             value={editingProduct.specs?.lot || ''}
