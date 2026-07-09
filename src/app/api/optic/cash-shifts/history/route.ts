@@ -21,6 +21,12 @@ export async function GET(req: NextRequest) {
             cashRegister: true,
             openedBy: { select: { fullName: true, email: true } },
             closedBy: { select: { fullName: true, email: true } },
+            transactions: {
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    createdBy: { select: { fullName: true, email: true } },
+                },
+            },
         },
         orderBy: { closedAt: 'desc' },
         take: 30, // Limit to recent 30 shifts
@@ -40,6 +46,18 @@ export async function GET(req: NextRequest) {
             discrepancy: actual - expected,
             opened_at: shift.openedAt.toISOString(),
             closed_at: shift.closedAt?.toISOString() || null,
+            transactions: shift.transactions.map(t => ({
+                id: t.id,
+                trans_type: t.transType,
+                payment_method: t.paymentMethod,
+                category: t.category,
+                amount: t.amount,
+                created_by_name: t.createdBy.fullName || t.createdBy.email,
+                created_at: t.createdAt.toISOString(),
+                description: t.description,
+                kaspi_transaction_id: t.kaspiTransactionId,
+                kaspi_status: t.kaspiStatus,
+            })),
         };
     });
 

@@ -55,6 +55,7 @@ interface HistoryShift {
     discrepancy: number;
     opened_at: string;
     closed_at: string;
+    transactions?: Tx[];
 }
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
@@ -81,6 +82,7 @@ export default function CashShiftsPage() {
     const [closeShiftOpen, setCloseShiftOpen] = useState(false);
     const [txDialogOpen, setTxDialogOpen] = useState(false);
     const [kaspiDialogOpen, setKaspiDialogOpen] = useState(false);
+    const [selectedHistoryShift, setSelectedHistoryShift] = useState<HistoryShift | null>(null);
 
     // Form inputs
     const [selectedRegister, setSelectedRegister] = useState('');
@@ -555,7 +557,11 @@ export default function CashShiftsPage() {
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {historyShifts.map((hShift) => (
-                                            <tr key={hShift.id} className="hover:bg-gray-50/50 transition-colors">
+                                            <tr 
+                                                key={hShift.id} 
+                                                className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                                onClick={() => setSelectedHistoryShift(hShift)}
+                                            >
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">
                                                     <div className="text-sm">{new Date(hShift.opened_at).toLocaleDateString('ru-RU')}</div>
                                                     <div className="text-[10px] text-gray-400">
@@ -744,6 +750,105 @@ export default function CashShiftsPage() {
                                     className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-sm">
                                     Провести транзакцию
                                 </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ==================== MODAL: HISTORY SHIFT TRANSACTIONS ==================== */}
+            <AnimatePresence>
+                {selectedHistoryShift && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedHistoryShift(null)} />
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                            
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Смена: {new Date(selectedHistoryShift.opened_at).toLocaleDateString('ru-RU')}</h3>
+                                    <p className="text-sm text-gray-500 mt-1">Открыл: {selectedHistoryShift.opened_by_name} | Закрыл: {selectedHistoryShift.closed_by_name}</p>
+                                </div>
+                                <button onClick={() => setSelectedHistoryShift(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <X className="w-5 h-5 text-gray-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
+                                <div className="grid grid-cols-4 gap-4 mb-6">
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                        <p className="text-xs text-gray-500 font-medium mb-1">Старт</p>
+                                        <p className="text-lg font-bold text-gray-600">{fmt(selectedHistoryShift.starting_cash)} ₸</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                        <p className="text-xs text-gray-500 font-medium mb-1">Ожидалось</p>
+                                        <p className="text-lg font-bold text-blue-600">{fmt(selectedHistoryShift.expected_cash)} ₸</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                        <p className="text-xs text-gray-500 font-medium mb-1">Факт (Инкассация)</p>
+                                        <p className="text-lg font-bold text-gray-900">{fmt(selectedHistoryShift.actual_cash)} ₸</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                        <p className="text-xs text-gray-500 font-medium mb-1">Разница</p>
+                                        <p className={`text-lg font-bold ${selectedHistoryShift.discrepancy < 0 ? 'text-red-500' : selectedHistoryShift.discrepancy > 0 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                                            {selectedHistoryShift.discrepancy > 0 ? '+' : ''}{fmt(selectedHistoryShift.discrepancy)} ₸
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Транзакции за смену</h4>
+                                
+                                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                                                <tr>
+                                                    <th className="px-4 py-3">Тип</th>
+                                                    <th className="px-4 py-3">Метод</th>
+                                                    <th className="px-4 py-3">Сумма</th>
+                                                    <th className="px-4 py-3">Время</th>
+                                                    <th className="px-4 py-3">Сотрудник</th>
+                                                    <th className="px-4 py-3">Описание</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {!selectedHistoryShift.transactions || selectedHistoryShift.transactions.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={6} className="px-4 py-8 text-center text-gray-500">Транзакции отсутствуют</td>
+                                                    </tr>
+                                                ) : (
+                                                    selectedHistoryShift.transactions.map((tx: Tx) => (
+                                                        <tr key={tx.id} className="hover:bg-gray-50/50">
+                                                            <td className="px-4 py-3 whitespace-nowrap font-medium">
+                                                                {tx.trans_type === 'income' ? <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md text-xs">Продажа</span> :
+                                                                 tx.trans_type === 'expense' ? <span className="text-red-600 bg-red-50 px-2 py-1 rounded-md text-xs">Расход</span> :
+                                                                 tx.trans_type === 'cash_in' ? <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs">Внесение</span> :
+                                                                 <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-md text-xs">Изъятие</span>}
+                                                            </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-gray-600 text-xs">
+                                                                {tx.payment_method === 'kaspi' ? 'Kaspi' :
+                                                                 tx.payment_method === 'cash' ? 'Наличные' :
+                                                                 tx.payment_method === 'card' ? 'Карта' : 'Перевод'}
+                                                            </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap font-bold text-gray-900">
+                                                                {fmt(tx.amount)} ₸
+                                                            </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-gray-500 text-xs">
+                                                                {new Date(tx.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                                                            </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-gray-600 text-xs">
+                                                                {tx.created_by_name}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-gray-500 text-xs truncate max-w-[200px]" title={tx.description || ''}>
+                                                                {tx.description || '—'}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     </div>
