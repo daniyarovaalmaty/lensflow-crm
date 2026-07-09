@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Save, ArrowLeft } from 'lucide-react';
+import { Trash2, Save, ArrowLeft, Search } from 'lucide-react';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
