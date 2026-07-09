@@ -2,11 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Box, CheckCircle2, FileText, Printer } from 'lucide-react';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function WholesaleOrderDetailPage() {
@@ -80,41 +77,41 @@ export default function WholesaleOrderDetailPage() {
     return (
         <div className="p-6 max-w-5xl mx-auto space-y-6">
             <div className="flex items-center gap-4">
-                <Link href="/distributor/wholesale">
-                    <Button variant="outline" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
+                <Link href="/distributor/wholesale" className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white hover:bg-gray-100 p-2">
+                    <ArrowLeft className="w-4 h-4" />
                 </Link>
                 <h1 className="text-2xl font-bold">Заказ {order.orderNumber}</h1>
                 
-                {order.status === 'draft' && <Badge variant="outline" className="text-lg py-1 px-3">Черновик</Badge>}
-                {order.status === 'reserved' && <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300 text-lg py-1 px-3">В резерве</Badge>}
-                {order.status === 'completed' && <Badge className="bg-green-100 text-green-800 border-green-300 text-lg py-1 px-3">Отгружен</Badge>}
+                {order.status === 'draft' && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 border border-gray-200">Черновик</span>}
+                {order.status === 'reserved' && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">В резерве</span>}
+                {order.status === 'completed' && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-300">Отгружен</span>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 space-y-6">
-                    <div className="bg-white border rounded-lg p-6 shadow-sm">
+                    <div className="bg-white border rounded-lg p-6 shadow-sm overflow-hidden">
                         <h2 className="text-lg font-semibold mb-4">Состав заказа</h2>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Наименование</TableHead>
-                                    <TableHead>Кол-во</TableHead>
-                                    <TableHead>Цена</TableHead>
-                                    <TableHead>Сумма</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-50 border-b">
+                                <tr>
+                                    <th className="px-4 py-3 font-medium text-gray-500">Наименование</th>
+                                    <th className="px-4 py-3 font-medium text-gray-500">Кол-во</th>
+                                    <th className="px-4 py-3 font-medium text-gray-500">Цена</th>
+                                    <th className="px-4 py-3 font-medium text-gray-500">Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
                                 {order.items.map((item: any) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell className="font-medium">{item.product?.name || 'Неизвестный товар'}</TableCell>
-                                        <TableCell>{item.quantity} шт</TableCell>
-                                        <TableCell>{item.price.toLocaleString('ru-RU')} ₸</TableCell>
-                                        <TableCell className="font-semibold">{item.total.toLocaleString('ru-RU')} ₸</TableCell>
-                                    </TableRow>
+                                    <tr key={item.id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3 font-medium">{item.product?.name || 'Неизвестный товар'}</td>
+                                        <td className="px-4 py-3">{item.quantity} шт</td>
+                                        <td className="px-4 py-3">{item.price.toLocaleString('ru-RU')} ₸</td>
+                                        <td className="px-4 py-3 font-semibold">{item.total.toLocaleString('ru-RU')} ₸</td>
+                                    </tr>
                                 ))}
-                            </TableBody>
-                        </Table>
-                        <div className="flex justify-end mt-4 text-xl font-bold">
+                            </tbody>
+                        </table>
+                        <div className="flex justify-end mt-4 text-xl font-bold border-t pt-4">
                             Итого: {order.totalAmount.toLocaleString('ru-RU')} ₸
                         </div>
                     </div>
@@ -124,15 +121,15 @@ export default function WholesaleOrderDetailPage() {
                     <div className="bg-white border rounded-lg p-6 shadow-sm space-y-4">
                         <h2 className="text-lg font-semibold">Информация</h2>
                         <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Контрагент</p>
+                            <p className="text-sm text-gray-500">Контрагент</p>
                             <p className="font-medium">{order.counterparty?.name || 'Не указан'}</p>
                         </div>
                         <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Комментарий</p>
+                            <p className="text-sm text-gray-500">Комментарий</p>
                             <p>{order.notes || '—'}</p>
                         </div>
                         <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">Дата создания</p>
+                            <p className="text-sm text-gray-500">Дата создания</p>
                             <p>{new Date(order.createdAt).toLocaleString('ru-RU')}</p>
                         </div>
                     </div>
@@ -141,40 +138,38 @@ export default function WholesaleOrderDetailPage() {
                         <h2 className="text-lg font-semibold">Действия</h2>
                         
                         {order.status === 'draft' && (
-                            <Button 
-                                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white" 
-                                size="lg"
+                            <button 
+                                className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-md font-medium disabled:opacity-50" 
                                 onClick={handleReserve}
                                 disabled={actionLoading}
                             >
-                                <Box className="w-4 h-4 mr-2" />
+                                <Box className="w-5 h-5" />
                                 Зарезервировать на складе
-                            </Button>
+                            </button>
                         )}
 
                         {order.status === 'reserved' && (
-                            <Button 
-                                className="w-full bg-green-600 hover:bg-green-700 text-white" 
-                                size="lg"
+                            <button 
+                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-md font-medium disabled:opacity-50" 
                                 onClick={handleComplete}
                                 disabled={actionLoading}
                             >
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                <CheckCircle2 className="w-5 h-5" />
                                 Отгрузить (Продать)
-                            </Button>
+                            </button>
                         )}
 
                         {order.status === 'completed' && (
-                            <Button className="w-full" variant="outline" size="lg">
-                                <Printer className="w-4 h-4 mr-2" />
+                            <button className="w-full flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-md font-medium">
+                                <Printer className="w-5 h-5" />
                                 Печать накладной
-                            </Button>
+                            </button>
                         )}
                         
-                        <Button className="w-full" variant="ghost" size="lg">
-                            <FileText className="w-4 h-4 mr-2" />
+                        <button className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-md font-medium">
+                            <FileText className="w-5 h-5" />
                             Скачать счет на оплату
-                        </Button>
+                        </button>
                     </div>
                 </div>
             </div>

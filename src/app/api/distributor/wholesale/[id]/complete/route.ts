@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         organizationId,
                         type: 'sale_out',
                         quantity,
-                        notes: `Отгрузка по оптовому заказу ${order.orderNumber}`,
+                        reason: `Отгрузка по оптовому заказу ${order.orderNumber}`,
                         performedById: userId,
                         performedByName: session.user.name || 'Сотрудник дистрибьютора'
                     }

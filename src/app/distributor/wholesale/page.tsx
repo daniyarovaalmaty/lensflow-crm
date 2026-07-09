@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -41,11 +38,11 @@ export default function WholesaleOrdersPage() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'draft': return <Badge variant="outline">Черновик</Badge>;
-            case 'reserved': return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-100">Резерв</Badge>;
-            case 'completed': return <Badge className="bg-green-100 text-green-800 border-green-300 hover:bg-green-100">Отгружен</Badge>;
-            case 'cancelled': return <Badge variant="destructive">Отменен</Badge>;
-            default: return <Badge>{status}</Badge>;
+            case 'draft': return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">Черновик</span>;
+            case 'reserved': return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">Резерв</span>;
+            case 'completed': return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">Отгружен</span>;
+            case 'cancelled': return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-300">Отменен</span>;
+            default: return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{status}</span>;
         }
     };
 
@@ -53,53 +50,51 @@ export default function WholesaleOrdersPage() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Оптовые заказы (B2B)</h1>
-                <Link href="/distributor/wholesale/create">
-                    <Button>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Создать заказ
-                    </Button>
+                <Link href="/distributor/wholesale/create" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 px-4 py-2">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Создать заказ
                 </Link>
             </div>
 
-            <div className="bg-white rounded-lg border shadow-sm">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Номер</TableHead>
-                            <TableHead>Дата</TableHead>
-                            <TableHead>Контрагент (Оптика)</TableHead>
-                            <TableHead>Статус</TableHead>
-                            <TableHead className="text-right">Сумма</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
+            <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-gray-50 border-b">
+                        <tr>
+                            <th className="px-4 py-3 font-medium text-gray-500">Номер</th>
+                            <th className="px-4 py-3 font-medium text-gray-500">Дата</th>
+                            <th className="px-4 py-3 font-medium text-gray-500">Контрагент (Оптика)</th>
+                            <th className="px-4 py-3 font-medium text-gray-500">Статус</th>
+                            <th className="px-4 py-3 font-medium text-gray-500 text-right">Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
                         {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Загрузка...</TableCell>
-                            </TableRow>
+                            <tr>
+                                <td colSpan={5} className="text-center py-8 text-gray-500">Загрузка...</td>
+                            </tr>
                         ) : orders.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Нет заказов</TableCell>
-                            </TableRow>
+                            <tr>
+                                <td colSpan={5} className="text-center py-8 text-gray-500">Нет заказов</td>
+                            </tr>
                         ) : (
                             orders.map((order) => (
-                                <TableRow key={order.id}>
-                                    <TableCell>
+                                <tr key={order.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3">
                                         <Link href={`/distributor/wholesale/${order.id}`} className="text-blue-600 hover:underline font-medium">
                                             {order.orderNumber}
                                         </Link>
-                                    </TableCell>
-                                    <TableCell>{format(new Date(order.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}</TableCell>
-                                    <TableCell>{order.counterparty?.name || '—'}</TableCell>
-                                    <TableCell>{getStatusBadge(order.status)}</TableCell>
-                                    <TableCell className="text-right font-medium">
+                                    </td>
+                                    <td className="px-4 py-3">{format(new Date(order.createdAt), 'dd.MM.yyyy HH:mm', { locale: ru })}</td>
+                                    <td className="px-4 py-3">{order.counterparty?.name || '—'}</td>
+                                    <td className="px-4 py-3">{getStatusBadge(order.status)}</td>
+                                    <td className="px-4 py-3 text-right font-medium">
                                         {order.totalAmount.toLocaleString('ru-RU')} ₸
-                                    </TableCell>
-                                </TableRow>
+                                    </td>
+                                </tr>
                             ))
                         )}
-                    </TableBody>
-                </Table>
+                    </tbody>
+                </table>
             </div>
         </div>
     );

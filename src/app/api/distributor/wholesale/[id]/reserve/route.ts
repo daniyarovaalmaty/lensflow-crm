@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         status: 'in_stock'
                     },
                     take: item.quantity,
-                    orderBy: { createdAt: 'asc' } // FIFO
+                    orderBy: { receivedAt: 'asc' } // FIFO
                 });
 
                 if (availableStockItems.length < item.quantity) {

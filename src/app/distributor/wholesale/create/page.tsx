@@ -2,14 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Save, ArrowLeft } from 'lucide-react';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 interface Product {
@@ -50,14 +45,14 @@ export default function CreateWholesaleOrderPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch products (for distributor, any product)
+                // Fetch products
                 const prodRes = await fetch('/api/inventory?limit=5000');
                 if (prodRes.ok) {
                     const data = await prodRes.json();
                     setProducts(data.products || []);
                 }
 
-                // Fetch counterparties (other optics/organizations)
+                // Fetch counterparties
                 const countRes = await fetch('/api/distributor/counterparties');
                 if (countRes.ok) {
                     const countData = await countRes.json();
@@ -99,7 +94,7 @@ export default function CreateWholesaleOrderPage() {
                     return [...prev, {
                         productId: product.id,
                         name: product.name,
-                        price: product.wholesalePrice || product.retailPrice || 0, // Fallback to retail
+                        price: product.wholesalePrice || product.retailPrice || 0,
                         quantity: 1,
                         maxStock: stock,
                     }];
@@ -183,8 +178,8 @@ export default function CreateWholesaleOrderPage() {
     return (
         <div className="p-6 max-w-6xl mx-auto">
             <div className="flex items-center gap-4 mb-6">
-                <Link href="/distributor/wholesale">
-                    <Button variant="outline" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
+                <Link href="/distributor/wholesale" className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white hover:bg-gray-100 p-2">
+                    <ArrowLeft className="w-4 h-4" />
                 </Link>
                 <h1 className="text-2xl font-bold">Оформление оптового заказа</h1>
             </div>
@@ -195,69 +190,69 @@ export default function CreateWholesaleOrderPage() {
                     <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg font-semibold">Товары в заказе</h2>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            <div className="text-sm text-gray-500 flex items-center gap-2">
                                 <span className="animate-pulse w-2 h-2 rounded-full bg-green-500 block"></span>
                                 Сканер активен
                             </div>
                         </div>
 
                         {scanFeedback && (
-                            <div className="mb-4 p-3 bg-blue-50 text-blue-800 rounded-md text-center text-lg font-medium animate-in fade-in zoom-in">
+                            <div className="mb-4 p-3 bg-blue-50 text-blue-800 rounded-md text-center text-lg font-medium animate-pulse">
                                 {scanFeedback}
                             </div>
                         )}
 
                         {cart.length === 0 ? (
-                            <div className="text-center p-8 border-2 border-dashed rounded-lg text-muted-foreground">
+                            <div className="text-center p-8 border-2 border-dashed rounded-lg text-gray-500">
                                 Пропикайте сканером штрихкод товара, чтобы добавить его в заказ.
                                 <br />Сканер работает в фоновом режиме.
                             </div>
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Наименование</TableHead>
-                                        <TableHead>Кол-во</TableHead>
-                                        <TableHead>Цена (₸)</TableHead>
-                                        <TableHead>Сумма</TableHead>
-                                        <TableHead></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="px-4 py-3 font-medium text-gray-500">Наименование</th>
+                                        <th className="px-4 py-3 font-medium text-gray-500">Кол-во</th>
+                                        <th className="px-4 py-3 font-medium text-gray-500">Цена (₸)</th>
+                                        <th className="px-4 py-3 font-medium text-gray-500">Сумма</th>
+                                        <th className="px-4 py-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
                                     {cart.map((item) => (
-                                        <TableRow key={item.productId}>
-                                            <TableCell className="font-medium">{item.name}</TableCell>
-                                            <TableCell>
-                                                <Input 
+                                        <tr key={item.productId} className="hover:bg-gray-50">
+                                            <td className="px-4 py-3 font-medium">{item.name}</td>
+                                            <td className="px-4 py-3">
+                                                <input 
                                                     type="number" 
-                                                    className="w-20" 
+                                                    className="w-20 px-3 py-1 border rounded" 
                                                     value={item.quantity} 
                                                     onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1)}
                                                     min={1}
                                                     max={item.maxStock}
                                                 />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input 
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <input 
                                                     type="number" 
-                                                    className="w-24" 
+                                                    className="w-24 px-3 py-1 border rounded" 
                                                     value={item.price} 
                                                     onChange={(e) => updatePrice(item.productId, parseInt(e.target.value) || 0)}
                                                     min={0}
                                                 />
-                                            </TableCell>
-                                            <TableCell className="font-semibold">
+                                            </td>
+                                            <td className="px-4 py-3 font-semibold">
                                                 {(item.price * item.quantity).toLocaleString('ru-RU')}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button variant="ghost" size="icon" onClick={() => removeItem(item.productId)}>
-                                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <button onClick={() => removeItem(item.productId)} className="text-red-500 hover:bg-red-50 p-2 rounded">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
                                     ))}
-                                </TableBody>
-                            </Table>
+                                </tbody>
+                            </table>
                         )}
                     </div>
                 </div>
@@ -268,22 +263,24 @@ export default function CreateWholesaleOrderPage() {
                         <h2 className="text-lg font-semibold">Детали заказа</h2>
                         
                         <div className="space-y-2">
-                            <Label>Контрагент (Покупатель)</Label>
-                            <Select value={selectedCounterpartyId} onValueChange={setSelectedCounterpartyId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Выберите контрагента" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {counterparties.map(c => (
-                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <label className="text-sm font-medium">Контрагент (Покупатель)</label>
+                            <select 
+                                className="w-full px-3 py-2 border rounded-md bg-white"
+                                value={selectedCounterpartyId} 
+                                onChange={(e) => setSelectedCounterpartyId(e.target.value)}
+                            >
+                                <option value="">Выберите контрагента</option>
+                                {counterparties.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Комментарий к заказу</Label>
-                            <Input 
+                            <label className="text-sm font-medium">Комментарий к заказу</label>
+                            <input 
+                                type="text"
+                                className="w-full px-3 py-2 border rounded-md"
                                 placeholder="Дополнительная информация..." 
                                 value={notes} 
                                 onChange={(e) => setNotes(e.target.value)} 
@@ -297,20 +294,19 @@ export default function CreateWholesaleOrderPage() {
                             </div>
                         </div>
 
-                        <Button 
-                            className="w-full mt-4" 
-                            size="lg" 
+                        <button 
+                            className="w-full mt-4 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-medium disabled:opacity-50" 
                             onClick={handleSaveDraft}
                             disabled={cart.length === 0 || isSaving}
                         >
                             {isSaving ? 'Сохранение...' : (
                                 <>
-                                    <Save className="w-5 h-5 mr-2" />
+                                    <Save className="w-5 h-5" />
                                     Сохранить черновик
                                 </>
                             )}
-                        </Button>
-                        <p className="text-xs text-center text-muted-foreground mt-2">
+                        </button>
+                        <p className="text-xs text-center text-gray-500 mt-2">
                             После сохранения черновика вы сможете зарезервировать товар.
                         </p>
                     </div>
