@@ -56,19 +56,33 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
         // Force delete associated stock movements, items, and sales items
         await prisma.stockMovement.deleteMany({
-            where: { productId: params.id }
+            where: { 
+                productId: params.id,
+                organizationId: session.user.organizationId 
+            }
         });
 
         await prisma.stockItem.deleteMany({
-            where: { productId: params.id }
+            where: { 
+                productId: params.id,
+                organizationId: session.user.organizationId 
+            }
         });
 
         await prisma.saleItem.deleteMany({
-            where: { productId: params.id }
+            where: { 
+                productId: params.id,
+                sale: {
+                    organizationId: session.user.organizationId
+                }
+            }
         });
 
         await prisma.opticProduct.delete({
-            where: { id: params.id }
+            where: { 
+                id: params.id,
+                organizationId: session.user.organizationId 
+            }
         });
 
         return NextResponse.json({ success: true });
