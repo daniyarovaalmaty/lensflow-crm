@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, Box, Barcode, CheckCircle } from 'lucide-react';
+import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
@@ -12,6 +12,9 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
     
     // For adding a new item
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [qty, setQty] = useState(1);
     const [serials, setSerials] = useState<string[]>([]);
@@ -20,6 +23,31 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
     useEffect(() => {
         fetchOrganizations();
     }, []);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                // Since this is a transfer, we only want products in balance.
+                // We'll reuse the balances API but filter locally, or we could add a ?q parameter to it.
+                // Let's assume the user can search everything, but they can only transfer if balance > 0.
+                const res = await fetch(`/api/distributor/warehouse/products/search?q=${encodeURIComponent(searchQuery)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setSearchResults(data.products || []);
+                }
+            } catch (error) {
+                console.error('Failed to search', error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
 
     const fetchOrganizations = async () => {
         try {
@@ -161,28 +189,57 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
                 </div>
             </div>
 
-            {/* Simulated Product Search & Add */}
+            {/* Product Search & Add */}
             <div className="mb-8 p-4 bg-gray-50 rounded-lg ring-1 ring-gray-200">
                 <h3 className="text-sm font-medium text-gray-900 mb-4">Выбор товара со склада</h3>
                 
                 {!selectedProduct ? (
-                    <div className="flex gap-4">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                            placeholder="Поиск по остаткам..."
-                        />
-                        <button 
-                            onClick={() => {
-                                // Mock selection. Real one should query /api/distributor/warehouse/balances
-                                setSelectedProduct({ id: 'prod_1', name: 'Линза Hoya 1.50', trackSerials: true, purchasePrice: 5000 });
-                            }}
-                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                        >
-                            Найти
-                        </button>
+                    <div className="relative">
+                        <div className="flex gap-4">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                placeholder="Поиск по остаткам..."
+                            />
+                        </div>
+                        
+                        {/* Search Results Dropdown */}
+                        {searchQuery.trim() && (
+                            <div className="absolute z-10 mt-1 w-full flex-1 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                                {isSearching ? (
+                                    <div className="p-4 text-sm text-gray-500 text-center">Загрузка...</div>
+                                ) : searchResults.length > 0 ? (
+                                    <ul className="max-h-60 overflow-auto py-1 text-base sm:text-sm">
+                                        {searchResults.map((product) => (
+                                            <li
+                                                key={product.id}
+                                                onClick={() => {
+                                                    setSelectedProduct(product);
+                                                    setSearchQuery('');
+                                                }}
+                                                className="relative cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
+                                            >
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <span className="block truncate font-medium">{product.name}</span>
+                                                        <span className="block truncate text-gray-500 text-xs">Артикул: {product.sku || 'Нет'} | В наличии: {product.currentStock}</span>
+                                                    </div>
+                                                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                                                        {product.trackSerials ? 'Серийный' : 'Количественный'}
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="p-4 text-sm text-gray-500 text-center">
+                                        Товар не найден.
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-4">

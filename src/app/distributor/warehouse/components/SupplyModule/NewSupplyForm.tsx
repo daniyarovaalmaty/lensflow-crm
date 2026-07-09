@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Save, Trash2, Box, Barcode, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) {
@@ -9,13 +9,79 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
     const [documentNumber, setDocumentNumber] = useState('');
     const [items, setItems] = useState<any[]>([]);
     
-    // For adding a new item
+    // Search state
     const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [qty, setQty] = useState(1);
     const [price, setPrice] = useState(0);
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
+
+    // Create New Product state
+    const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+    const [newProductName, setNewProductName] = useState('');
+    const [newProductSku, setNewProductSku] = useState('');
+    const [newProductTrackSerials, setNewProductTrackSerials] = useState(false);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const res = await fetch(`/api/distributor/warehouse/products/search?q=${encodeURIComponent(searchQuery)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setSearchResults(data.products || []);
+                }
+            } catch (error) {
+                console.error('Failed to search', error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery]);
+
+    const handleCreateProduct = async () => {
+        if (!newProductName.trim()) {
+            toast.error('Введите название товара');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/distributor/warehouse/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: newProductName,
+                    sku: newProductSku,
+                    trackSerials: newProductTrackSerials
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to create product');
+            const data = await res.json();
+            
+            toast.success('Товар успешно создан!');
+            setSelectedProduct(data.product);
+            setIsCreatingProduct(false);
+            setSearchQuery('');
+            setSearchResults([]);
+            setNewProductName('');
+            setNewProductSku('');
+            setNewProductTrackSerials(false);
+        } catch (error) {
+            toast.error('Ошибка создания товара');
+        }
+    };
 
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
@@ -139,27 +205,117 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                 </div>
             </div>
 
-            {/* Simulated Product Search & Add */}
+            {/* Product Search & Add */}
             <div className="mb-8 p-4 bg-gray-50 rounded-lg ring-1 ring-gray-200">
                 <h3 className="text-sm font-medium text-gray-900 mb-4">Добавление товара в накладную</h3>
                 
-                {!selectedProduct ? (
-                    <div className="flex gap-4">
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                            placeholder="Поиск по артикулу, штрихкоду или названию..."
-                        />
-                        <button 
-                            onClick={() => {
-                                // Mock selection for now. Real implementation should fetch from /api/products
-                                setSelectedProduct({ id: 'prod_1', name: 'Линза Hoya 1.50', trackSerials: true });
-                            }}
-                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                {!selectedProduct && !isCreatingProduct ? (
+                    <div className="relative">
+                        <div className="flex gap-4">
+                            <div className="relative flex-1">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <Search className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                    placeholder="Поиск по артикулу, штрихкоду или названию..."
+                                />
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setNewProductName(searchQuery);
+                                    setIsCreatingProduct(true);
+                                }}
+                                className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-300 hover:bg-indigo-50"
+                            >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Создать новый
+                            </button>
+                        </div>
+                        
+                        {/* Search Results Dropdown */}
+                        {searchQuery.trim() && (
+                            <div className="absolute z-10 mt-1 w-full flex-1 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                                {isSearching ? (
+                                    <div className="p-4 text-sm text-gray-500 text-center">Загрузка...</div>
+                                ) : searchResults.length > 0 ? (
+                                    <ul className="max-h-60 overflow-auto py-1 text-base sm:text-sm">
+                                        {searchResults.map((product) => (
+                                            <li
+                                                key={product.id}
+                                                onClick={() => {
+                                                    setSelectedProduct(product);
+                                                    setSearchQuery('');
+                                                }}
+                                                className="relative cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
+                                            >
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <span className="block truncate font-medium">{product.name}</span>
+                                                        <span className="block truncate text-gray-500 text-xs">Артикул: {product.sku || 'Нет'}</span>
+                                                    </div>
+                                                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                                                        {product.trackSerials ? 'Серийный' : 'Количественный'}
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="p-4 text-sm text-gray-500 text-center">
+                                        Товар не найден. Вы можете <button onClick={() => {setNewProductName(searchQuery); setIsCreatingProduct(true);}} className="text-indigo-600 underline">создать его</button>.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : isCreatingProduct ? (
+                    <div className="space-y-4 bg-white p-4 rounded-md ring-1 ring-gray-200">
+                        <div className="flex justify-between items-center">
+                            <h4 className="text-sm font-medium text-gray-900">Создание нового товара</h4>
+                            <button onClick={() => setIsCreatingProduct(false)} className="text-sm text-gray-500 hover:text-gray-700">Отмена</button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Название товара *</label>
+                                <input
+                                    type="text"
+                                    value={newProductName}
+                                    onChange={(e) => setNewProductName(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Артикул (опционально)</label>
+                                <input
+                                    type="text"
+                                    value={newProductSku}
+                                    onChange={(e) => setNewProductSku(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div className="sm:col-span-2 flex items-center">
+                                <input
+                                    id="trackSerials"
+                                    type="checkbox"
+                                    checked={newProductTrackSerials}
+                                    onChange={(e) => setNewProductTrackSerials(e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                />
+                                <label htmlFor="trackSerials" className="ml-2 block text-sm text-gray-900">
+                                    Вести серийный учет для этого товара (каждая единица имеет уникальный штрихкод)
+                                </label>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleCreateProduct}
+                            className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 w-full sm:w-auto"
                         >
-                            Найти
+                            Сохранить и выбрать
                         </button>
                     </div>
                 ) : (
@@ -171,12 +327,12 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                     {selectedProduct.trackSerials ? 'Серийный учет' : 'Количественный учет'}
                                 </span>
                             </div>
-                            <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Отмена</button>
+                            <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Изменить товар</button>
                         </div>
                         
-                        <div className="flex gap-4 items-end">
+                        <div className="flex gap-4 items-end flex-wrap">
                             {selectedProduct.trackSerials ? (
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-[200px]">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Добавить серийный номер / штрихкод ед.</label>
                                     <div className="flex gap-2">
                                         <input
