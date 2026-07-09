@@ -40,6 +40,7 @@ export default function CreateWholesaleOrderPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [scanFeedback, setScanFeedback] = useState<string | null>(null);
+    const [manualCode, setManualCode] = useState('');
 
     // Fetch initial data
     useEffect(() => {
@@ -66,8 +67,19 @@ export default function CreateWholesaleOrderPage() {
         fetchData();
     }, []);
 
-    // USB Scanner Hook (Seamless scanning)
-    const handleScan = useCallback((code: string) => {
+    const handleScan = useCallback((rawCode: string) => {
+        // Очистка от спецсимволов сканера (например DataMatrix ]C1)
+        let code = rawCode.trim().replace(/^\]C1/, '');
+
+        // Если сканер в русской раскладке напечатал кириллицу вместо латиницы
+        const cyrillicToLatin: Record<string, string> = {
+            'Ф':'A', 'И':'B', 'С':'C', 'В':'D', 'У':'E', 'А':'F', 'П':'G', 'Р':'H', 'Ш':'I', 'О':'J', 'Л':'K', 'Д':'L', 'Ь':'M',
+            'Т':'N', 'Щ':'O', 'З':'P', 'Й':'Q', 'К':'R', 'Е':'S', 'Н':'T', 'Г':'U', 'М':'V', 'Ц':'W', 'Ч':'X', 'Н':'Y', 'Я':'Z',
+            'ф':'a', 'и':'b', 'с':'c', 'в':'d', 'у':'e', 'а':'f', 'п':'g', 'р':'h', 'ш':'i', 'о':'j', 'л':'k', 'д':'l', 'ь':'m',
+            'т':'n', 'щ':'o', 'з':'p', 'й':'q', 'к':'r', 'е':'s', 'н':'t', 'г':'u', 'м':'v', 'ц':'w', 'ч':'x', 'н':'y', 'я':'z'
+        };
+        code = code.split('').map(char => cyrillicToLatin[char] || char).join('');
+
         const product = products.find(p => 
             p.barcode === code || 
             p.sku === code ||
@@ -181,11 +193,40 @@ export default function CreateWholesaleOrderPage() {
 
     return (
         <div className="p-6 max-w-6xl mx-auto">
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-4 flex-wrap mb-6">
                 <Link href="/distributor/wholesale" className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white hover:bg-gray-100 p-2">
                     <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <h1 className="text-2xl font-bold">Оформление оптового заказа</h1>
+                <h1 className="text-2xl font-bold flex-1">Оформление заказа</h1>
+                
+                <div className="flex items-center gap-2 max-w-xs w-full bg-white px-3 py-1.5 border rounded-md shadow-sm focus-within:ring-2 focus-within:ring-blue-500">
+                    <Search className="w-4 h-4 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Ручной ввод штрихкода..."
+                        className="w-full bg-transparent border-none focus:outline-none text-sm"
+                        value={manualCode}
+                        onChange={e => setManualCode(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (manualCode.trim()) {
+                                    handleScan(manualCode.trim());
+                                    setManualCode('');
+                                }
+                            }
+                        }}
+                    />
+                </div>
+
+                <button 
+                    onClick={handleSaveDraft} 
+                    disabled={isSaving || cart.length === 0}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 flex items-center gap-2"
+                >
+                    <Save className="w-4 h-4" />
+                    Сохранить черновик
+                </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
