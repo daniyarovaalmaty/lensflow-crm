@@ -58,10 +58,14 @@ model Organization {
   // Inventory & POS
   opticProducts   OpticProduct[]
   stockItems      StockItem[]
-  stockDocuments  StockDocument[]
+  stockDocsCreated StockDocument[]
+  stockDocsTarget  StockDocument[] @relation("TransferTarget")
   stockMovements  StockMovement[]
-  sales           Sale[]
   inventories     Inventory[]
+  sales           Sale[]
+  stockRequests   StockRequest[]
+  targetedRequests StockRequest[] @relation("RequestTarget")
+
 
   // CRM Sales
   clinicLeads         Lead[]               @relation("ClinicLeads")
@@ -128,6 +132,11 @@ model LabSettings {
   id                      String @id @default("default")
   urgentSurchargePercent   Int    @default(25)
   urgentDiscountPercent    Int    @default(0)
+  normContrapolPerLens    Float  @default(0.05)
+  normWaxPerLens          Float  @default(0.05)
+  normBoxPerOrder         Int    @default(0)
+  normPackagePerOrder     Int    @default(0)
+  normStickerPerLens      Int    @default(1)
   updatedAt               DateTime @updatedAt
 
   @@map("lab_settings")
@@ -158,6 +167,7 @@ model User {
   updatedAt      DateTime  @updatedAt
 
   orders Order[] @relation("CreatedBy")
+  engineeredOrders Order[] @relation("OrderEngineer")
   supportTickets SupportTicket[]
   assignedLeads  Lead[]  @relation("AssignedLeads")
   doctorLeads    Lead[]  @relation("DoctorLeads")
@@ -445,6 +455,8 @@ model Order {
   organization    Organization? @relation(fields: [organizationId], references: [id])
   createdById     String?
   createdBy       User?        @relation("CreatedBy", fields: [createdById], references: [id])
+  engineerId      String?
+  engineer        User?        @relation("OrderEngineer", fields: [engineerId], references: [id])
   patientId       String?
   patient         Patient?     @relation(fields: [patientId], references: [id])
 
@@ -709,6 +721,9 @@ model StockDocument {
 
   counterpartyName String?
   counterpartyInn  String?
+
+  targetOrganizationId String?
+  targetOrganization   Organization? @relation("TransferTarget", fields: [targetOrganizationId], references: [id])
 
   totalAmount      Int      @default(0)
   items            Json     // [{ productId, name, qty, price, serialNumbers }]
@@ -1209,4 +1224,28 @@ model PayrollPayout {
   transactions    FinancialTransaction[]
 
   @@map("payroll_payouts")
+}
+
+// ==================== Stock Request (from Optic to Distributor or Distributor to Supplier) ====================
+model StockRequest {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  
+  requestNumber   String
+  status          String @default("pending") // pending | approved | rejected | fulfilled
+
+  targetOrganizationId String?
+  targetOrganization   Organization? @relation("RequestTarget", fields: [targetOrganizationId], references: [id])
+
+  items           Json     // [{ productId, name, sku, qty, note }]
+  notes           String?
+
+  performedById   String?
+  performedByName String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("stock_requests")
 }

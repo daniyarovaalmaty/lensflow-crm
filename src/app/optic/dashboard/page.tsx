@@ -261,6 +261,31 @@ export default function OpticDashboard() {
         });
     };
 
+    const handlePrintWaybill = (order: Order) => {
+        import('@/lib/generateWaybillPdf').then(({ generateWaybillPdf }) => {
+            generateWaybillPdf({
+                order_id: order.order_id,
+                patient: order.patient,
+                meta: order.meta,
+                company: order.company,
+                config: order.config,
+                is_urgent: order.is_urgent,
+                total_price: order.total_price,
+                discount_percent: (order as any).discount_percent,
+                document_name_od: (order as any).document_name_od,
+                document_name_os: (order as any).document_name_os,
+                price_od: (order as any).price_od,
+                price_os: (order as any).price_os,
+                products: (order as any).products,
+                contract: (order as any).contract,
+                optic_inn: (order as any).optic_inn,
+                optic_address: (order as any).optic_address,
+                lab_org: (order as any).lab_org,
+                distributor_org: (order as any).distributor_org,
+            });
+        });
+    };
+
 
     const renderParamRow = (label: string, value: any) => (
         <div className="flex justify-between text-xs py-1 border-b border-gray-100">
@@ -986,13 +1011,22 @@ export default function OpticDashboard() {
                                         )}
 
                                         {perms.canViewPayments && (
-                                            <button
-                                                onClick={() => handlePrintInvoice(order)}
-                                                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors ml-auto"
-                                            >
-                                                <Download className="w-3.5 h-3.5" />
-                                                Скачать счёт PDF
-                                            </button>
+                                            <div className="flex items-center gap-4 ml-auto">
+                                                <button
+                                                    onClick={() => handlePrintInvoice(order)}
+                                                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                                                >
+                                                    <Download className="w-3.5 h-3.5" />
+                                                    Счёт на оплату
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePrintWaybill(order)}
+                                                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                                                >
+                                                    <Download className="w-3.5 h-3.5" />
+                                                    Товарная накладная
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
 

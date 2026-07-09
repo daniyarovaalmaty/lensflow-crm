@@ -401,9 +401,9 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
     lab_engineer: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
     lab_quality: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
     lab_logistics: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
-    lab_head: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
-    lab_admin: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
-    lab_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false },
+    lab_head: { canViewPos: false, canViewWarehouse: true, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: true },
+    lab_admin: { canViewPos: false, canViewWarehouse: true, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: true },
+    lab_accountant: { canViewPos: false, canViewWarehouse: true, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: false, canViewCrm: false },
     doctor: {
         canViewPos: true,
         canViewWarehouse: false,
