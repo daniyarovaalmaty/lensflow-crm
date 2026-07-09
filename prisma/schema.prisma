@@ -604,6 +604,22 @@ enum TicketStatus {
 }
 
 // ==================== Optic Product Catalog ====================
+model MedicalTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  authorId       String?  // the user who created it
+  
+  category       String   // e.g. complaints, anamnesis_life, anamnesis_disease, biomicroscopy
+  title          String
+  text           String   @db.Text
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, authorId, category])
+  @@map("medical_templates")
+}
+
 model OpticProduct {
   id              String   @id @default(cuid())
   organizationId  String

@@ -9,6 +9,7 @@ import {
     Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag
 } from 'lucide-react';
 import Link from 'next/link';
+import MedicalTextarea from '@/components/ui/MedicalTextarea';
 
 // Helper to remove payment-related text (kaspi, ckk, terminals, etc) for doctors
 const filterMedicalText = (text: string | null | undefined, userRole?: string) => {
@@ -1000,42 +1001,18 @@ export default function PatientDetailPage() {
                                                 </div>
 
                                                 <div className="pt-4 border-t border-gray-100 space-y-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Жалобы</label>
-                                                        <textarea value={editForm.complaints || ''} onChange={e => setEditForm((f: any) => ({ ...f, complaints: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Анамнез заболевания (Anamnesis morbi)</label>
-                                                        <textarea value={editForm.anamnesisDisease || ''} onChange={e => setEditForm((f: any) => ({ ...f, anamnesisDisease: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
+                                                        <MedicalTextarea category="complaints" label="Жалобы" value={editForm.complaints || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm min-h-[60px]" rows={2} />
+                                                        <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания (Anamnesis morbi)" value={editForm.anamnesisDisease || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, anamnesisDisease: val }))} className="input text-sm min-h-[60px]" rows={2} />
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            <MedicalTextarea category="allergies" label="Аллергоанамнез" value={editForm.allergies || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, allergies: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Лекарственная, пищевая аллергия" />
+                                                            <MedicalTextarea category="heredity" label="Наследственность" value={editForm.heredity || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, heredity: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Глаукома, СД..." />
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Аллергоанамнез</label>
-                                                            <input type="text" value={editForm.allergies || ''} onChange={e => setEditForm((f: any) => ({ ...f, allergies: e.target.value }))} className="input w-full text-sm h-10" placeholder="Лекарственная, пищевая аллергия" />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Наследственность</label>
-                                                            <input type="text" value={editForm.heredity || ''} onChange={e => setEditForm((f: any) => ({ ...f, heredity: e.target.value }))} className="input w-full text-sm h-10" placeholder="Глаукома, СД..." />
-                                                        </div>
+                                                            <MedicalTextarea category="surgeries" label="Перенесенные операции" value={editForm.surgeries || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, surgeries: val }))} className="input text-sm min-h-[40px]" rows={1} />
+                                                            <MedicalTextarea category="medications" label="Постоянный прием медикаментов" value={editForm.medications || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, medications: val }))} className="input text-sm min-h-[40px]" rows={1} />
                                                     </div>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Перенесенные операции</label>
-                                                            <input type="text" value={editForm.surgeries || ''} onChange={e => setEditForm((f: any) => ({ ...f, surgeries: e.target.value }))} className="input w-full text-sm h-10" />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Постоянный прием медикаментов</label>
-                                                            <input type="text" value={editForm.medications || ''} onChange={e => setEditForm((f: any) => ({ ...f, medications: e.target.value }))} className="input w-full text-sm h-10" />
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Последняя коррекция</label>
-                                                        <input type="text" value={editForm.lastCorrection || ''} onChange={e => setEditForm((f: any) => ({ ...f, lastCorrection: e.target.value }))} className="input w-full text-sm h-10" placeholder="Очки, МКЛ (дата)" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Прочие заметки</label>
-                                                        <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-y text-sm min-h-[60px]" rows={2} />
-                                                    </div>
+                                                        <MedicalTextarea category="last_correction" label="Последняя коррекция" value={editForm.lastCorrection || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, lastCorrection: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Очки, МКЛ (дата)" />
+                                                        <MedicalTextarea category="notes" label="Прочие заметки" value={editForm.notes || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[60px]" rows={2} />
                                                 </div>
                                             </div>
                                         ) : (
@@ -1177,32 +1154,17 @@ export default function PatientDetailPage() {
                                             <label className="block text-xs font-semibold text-gray-500 mb-1">Циклоплегия</label>
                                             <input type="text" value={rxForm.cycloplegia || ''} onChange={e => setRxForm((f: any) => ({ ...f, cycloplegia: e.target.value }))} className="input w-full text-sm h-9" />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Жалобы</label>
-                                            <textarea value={rxForm.complaints || ''} onChange={e => setRxForm((f: any) => ({ ...f, complaints: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
-                                        </div>
+                                        <MedicalTextarea category="complaints" label="Жалобы" value={rxForm.complaints || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm" rows={2} />
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-500 mb-1">Анамнез жизни</label>
-                                                <textarea value={rxForm.medicalHistory || ''} onChange={e => setRxForm((f: any) => ({ ...f, medicalHistory: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-gray-500 mb-1">Анамнез заболевания</label>
-                                                <textarea value={rxForm.diseaseHistory || ''} onChange={e => setRxForm((f: any) => ({ ...f, diseaseHistory: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
-                                            </div>
+                                            <MedicalTextarea category="anamnesis_life" label="Анамнез жизни" value={rxForm.medicalHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, medicalHistory: val }))} className="input text-sm" rows={2} />
+                                            <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания" value={rxForm.diseaseHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, diseaseHistory: val }))} className="input text-sm" rows={2} />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Биомикроскопия</label>
-                                            <textarea value={rxForm.biomicroscopy || ''} onChange={e => setRxForm((f: any) => ({ ...f, biomicroscopy: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
-                                        </div>
+                                        <MedicalTextarea category="biomicroscopy" label="Биомикроскопия" value={rxForm.biomicroscopy || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, biomicroscopy: val }))} className="input text-sm" rows={2} />
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1">ПЗО</label>
                                             <input type="text" value={rxForm.pzo || ''} onChange={e => setRxForm((f: any) => ({ ...f, pzo: e.target.value }))} className="input w-full text-sm h-9" />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки к рецепту</label>
-                                            <textarea value={rxForm.notes || ''} onChange={e => setRxForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
-                                        </div>
+                                        <MedicalTextarea category="notes" label="Заметки к рецепту" value={rxForm.notes || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, notes: val }))} className="input text-sm" rows={2} />
                                     </div>
                                     <div className="flex gap-2 mt-4">
                                         <button type="button" onClick={() => setShowRxForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>
@@ -1473,23 +1435,14 @@ export default function PatientDetailPage() {
                                 </div>
 
                                 <div className="space-y-3 mb-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Диагноз / Клинические данные</label>
-                                        <textarea value={consultForm.diagnosis || ''} onChange={e => setConsultForm((f: any) => ({ ...f, diagnosis: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">План лечения / Рекомендации</label>
-                                        <textarea value={consultForm.treatment} onChange={e => setConsultForm((f: any) => ({ ...f, treatment: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
-                                    </div>
+                                    <MedicalTextarea category="diagnosis" label="Диагноз / Клинические данные" value={consultForm.diagnosis || ''} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, diagnosis: val }))} className="input text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
+                                    <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит</label>
                                             <input type="date" value={consultForm.nextVisit} onChange={e => setConsultForm((f: any) => ({ ...f, nextVisit: e.target.value }))} className="input w-full text-sm h-9" />
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки</label>
-                                            <input type="text" value={consultForm.notes} onChange={e => setConsultForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full text-sm h-9" placeholder="Дополнительно..." />
-                                        </div>
+                                            <MedicalTextarea category="notes" label="Заметки" value={consultForm.notes} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Дополнительно..." />
                                     </div>
                                 </div>
 
