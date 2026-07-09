@@ -69,14 +69,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             }
         });
 
-        await prisma.saleItem.deleteMany({
+        const saleItemsToDelete = await prisma.saleItem.findMany({
             where: { 
                 productId: params.id,
                 sale: {
                     organizationId: session.user.organizationId
                 }
-            }
+            },
+            select: { id: true }
         });
+
+        if (saleItemsToDelete.length > 0) {
+            await prisma.saleItem.deleteMany({
+                where: { 
+                    id: { in: saleItemsToDelete.map(si => si.id) }
+                }
+            });
+        }
 
         await prisma.opticProduct.delete({
             where: { 
