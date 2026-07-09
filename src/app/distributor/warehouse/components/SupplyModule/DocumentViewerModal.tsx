@@ -83,7 +83,7 @@ export default function DocumentViewerModal({ document, onClose }: DocumentViewe
                                                         )}
                                                     </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                        {item.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" title="Серийный" /> : <Box className="h-4 w-4 text-gray-400" title="Количественный" />}
+                                                        {item.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" /> : <Box className="h-4 w-4 text-gray-400" />}
                                                     </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.qty}</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.price?.toLocaleString()} ₸</td>
