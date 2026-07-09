@@ -54,12 +54,16 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
 
-        // Force delete associated stock movements and items
+        // Force delete associated stock movements, items, and sales items
         await prisma.stockMovement.deleteMany({
             where: { productId: params.id }
         });
 
         await prisma.stockItem.deleteMany({
+            where: { productId: params.id }
+        });
+
+        await prisma.saleItem.deleteMany({
             where: { productId: params.id }
         });
 

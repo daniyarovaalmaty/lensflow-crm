@@ -31,7 +31,7 @@ export default function ProductBalances() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить этот товар? Удаление возможно только если по товару не было складских движений.')) return;
+        if (!confirm('Вы уверены, что хотите принудительно удалить этот товар? Вся история его движений и остатков будет безвозвратно удалена.')) return;
         
         try {
             const res = await fetch(`/api/distributor/warehouse/products/${id}`, {
