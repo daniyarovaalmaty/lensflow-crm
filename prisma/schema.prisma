@@ -58,6 +58,8 @@ model Organization {
   // Inventory & POS
   opticProducts   OpticProduct[]
   stockItems      StockItem[]
+  wholesaleOrders WholesaleOrder[] @relation("WholesaleOrderOrganization")
+  wholesaleCounterpartyOrders WholesaleOrder[] @relation("WholesaleOrderCounterparty")
   stockDocsCreated StockDocument[]
   stockDocsTarget  StockDocument[] @relation("TransferTarget")
   stockMovements  StockMovement[]
@@ -659,6 +661,7 @@ model OpticProduct {
   stockItems       StockItem[]
   movements        StockMovement[]
   saleItems        SaleItem[]
+  wholesaleOrderItems WholesaleOrderItem[]
 
   @@unique([organizationId, sku])
   @@map("optic_products")
@@ -677,6 +680,9 @@ model StockItem {
 
   status          String   @default("in_stock")
   // in_stock | reserved | sold | returned | defective | written_off
+  
+  wholesaleOrderId String?
+  wholesaleOrder   WholesaleOrder? @relation(fields: [wholesaleOrderId], references: [id])
 
   color           String?
   size            String?
@@ -1264,4 +1270,44 @@ model StockRequest {
   updatedAt       DateTime @updatedAt
 
   @@map("stock_requests")
+}
+
+// ==================== Wholesale Orders (Distributor B2B Sales) ====================
+model WholesaleOrder {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
+  organizationId  String
+  organization    Organization @relation("WholesaleOrderOrganization", fields: [organizationId], references: [id])
+  
+  counterpartyId  String?
+  counterparty    Organization? @relation("WholesaleOrderCounterparty", fields: [counterpartyId], references: [id])
+  
+  status          String   @default("draft") 
+  // draft | reserved | completed | cancelled
+  
+  totalAmount     Int      @default(0)
+  notes           String?
+  
+  items           WholesaleOrderItem[]
+  stockItems      StockItem[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("wholesale_orders")
+}
+
+model WholesaleOrderItem {
+  id               String   @id @default(cuid())
+  wholesaleOrderId String
+  order            WholesaleOrder @relation(fields: [wholesaleOrderId], references: [id])
+  
+  productId        String
+  product          OpticProduct @relation(fields: [productId], references: [id])
+  
+  quantity         Int
+  price            Int
+  total            Int
+
+  @@map("wholesale_order_items")
 }
