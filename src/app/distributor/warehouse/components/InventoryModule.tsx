@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RefreshCcw, Plus, Save, FileText, CheckCircle } from 'lucide-react';
+import { RefreshCcw, Plus, Save, FileText, CheckCircle, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function InventoryModule() {
@@ -81,6 +81,25 @@ export default function InventoryModule() {
         }
     };
 
+    const handleDeleteInventory = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить эту ревизию? Это действие нельзя отменить.')) return;
+        
+        try {
+            const res = await fetch(`/api/distributor/warehouse/inventory/${id}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                toast.success('Ревизия успешно удалена');
+                setView('list');
+                setCurrentInventory(null);
+            } else {
+                throw new Error('Failed to delete');
+            }
+        } catch (error) {
+            toast.error('Ошибка при удалении ревизии');
+        }
+    };
+
     const updateActualQty = (index: number, val: string) => {
         const qty = parseInt(val, 10);
         if (isNaN(qty) || qty < 0) return;
@@ -123,7 +142,15 @@ export default function InventoryModule() {
                         <h2 className="text-lg font-medium text-gray-900">Ревизия {currentInventory.inventoryNumber}</h2>
                         <p className="text-sm text-gray-500">Заполните фактическое количество товаров на складе</p>
                     </div>
-                    <div className="space-x-3">
+                    <div className="space-x-3 flex items-center">
+                        <button 
+                            onClick={() => handleDeleteInventory(currentInventory.id)}
+                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50"
+                            title="Удалить ревизию"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Удалить
+                        </button>
                         <button 
                             onClick={() => setView('list')}
                             className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
