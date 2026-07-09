@@ -58,7 +58,8 @@ model Organization {
   // Inventory & POS
   opticProducts   OpticProduct[]
   stockItems      StockItem[]
-  stockDocuments  StockDocument[]
+  stockDocsCreated StockDocument[]
+  stockDocsTarget  StockDocument[] @relation("TransferTarget")
   stockMovements  StockMovement[]
   sales           Sale[]
   inventories     Inventory[]
@@ -717,6 +718,9 @@ model StockDocument {
 
   counterpartyName String?
   counterpartyInn  String?
+
+  targetOrganizationId String?
+  targetOrganization   Organization? @relation("TransferTarget", fields: [targetOrganizationId], references: [id])
 
   totalAmount      Int      @default(0)
   items            Json     // [{ productId, name, qty, price, serialNumbers }]
