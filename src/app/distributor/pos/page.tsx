@@ -9,6 +9,7 @@ import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
 import { formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 import AccessDenied from '@/components/ui/AccessDenied';
 
 interface Product {
@@ -389,7 +390,7 @@ export default function POSPage() {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                 <input type="text" placeholder="Поиск товара или услуги..."
                                     value={search} onChange={e => {
-                                        const val = e.target.value;
+                                        const val = translateCyrillicToEnglishLayout(e.target.value);
                                         setSearch(val);
                                         // Auto-add if exact barcode/sku match is typed/scanned
                                         const product = products.find(p => (p.barcode && p.barcode === val) || (p.sku && p.sku === val));

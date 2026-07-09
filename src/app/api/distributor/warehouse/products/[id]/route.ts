@@ -54,22 +54,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
 
-        // Force delete associated stock movements, items, and sales items
-        await prisma.stockMovement.deleteMany({
-            where: { 
-                productId: params.id,
-                organizationId: session.user.organizationId 
-            }
+        const hasStockMovements = await prisma.stockMovement.findFirst({
+            where: { productId: params.id, organizationId: session.user.organizationId },
+            select: { id: true }
         });
 
-        await prisma.stockItem.deleteMany({
-            where: { 
-                productId: params.id,
-                organizationId: session.user.organizationId 
-            }
+        const hasStockItems = await prisma.stockItem.findFirst({
+            where: { productId: params.id, organizationId: session.user.organizationId },
+            select: { id: true }
         });
 
-        const saleItemsToDelete = await prisma.saleItem.findMany({
+        const hasSaleItems = await prisma.saleItem.findFirst({
             where: { 
                 productId: params.id,
                 sale: {
@@ -79,12 +74,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             select: { id: true }
         });
 
-        if (saleItemsToDelete.length > 0) {
-            await prisma.saleItem.deleteMany({
-                where: { 
-                    id: { in: saleItemsToDelete.map(si => si.id) }
-                }
-            });
+        if (hasStockMovements || hasStockItems || hasSaleItems) {
+            return NextResponse.json({ error: 'Невозможно удалить товар, так как по нему есть движения на складе или он используется в заказах.' }, { status: 400 });
         }
 
         await prisma.opticProduct.delete({

@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
 import QuickNav from '@/components/ui/QuickNav';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
 // ==================== Types ====================
 interface OpticProduct {
@@ -1535,7 +1536,7 @@ export default function OpticCatalogPage() {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Штрих-код</label>
-                                            <input type="text" value={form.barcode} onChange={e => setForm({ ...form, barcode: e.target.value })}
+                                            <input type="text" value={form.barcode} onChange={e => setForm({ ...form, barcode: translateCyrillicToEnglishLayout(e.target.value) })}
                                                 placeholder="4607022980001" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
                                         </div>
                                     </div>
