@@ -24,6 +24,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
     const [isCreatingProduct, setIsCreatingProduct] = useState(false);
     const [newProductName, setNewProductName] = useState('');
     const [newProductSku, setNewProductSku] = useState('');
+    const [newProductBarcode, setNewProductBarcode] = useState('');
     const [newProductTrackSerials, setNewProductTrackSerials] = useState(false);
 
     useEffect(() => {
@@ -65,6 +66,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                 body: JSON.stringify({
                     name: newProductName,
                     sku: newProductSku,
+                    barcode: newProductBarcode,
                     trackSerials: newProductTrackSerials
                 })
             });
@@ -79,6 +81,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
             setSearchResults([]);
             setNewProductName('');
             setNewProductSku('');
+            setNewProductBarcode('');
             setNewProductTrackSerials(false);
         } catch (error) {
             toast.error('Ошибка создания товара');
@@ -298,6 +301,16 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                     value={newProductSku}
                                     onChange={(e) => setNewProductSku(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Штрихкод (опционально)</label>
+                                <input
+                                    type="text"
+                                    value={newProductBarcode}
+                                    onChange={(e) => setNewProductBarcode(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    placeholder="Отсканируйте штрихкод..."
                                 />
                             </div>
                             <div className="sm:col-span-2 flex items-center">

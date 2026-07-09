@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { name, sku, trackSerials, purchasePrice, category } = body;
+        const { name, sku, barcode, trackSerials, purchasePrice, category } = body;
 
         if (!name) {
             return NextResponse.json({ error: 'Имя продукта обязательно' }, { status: 400 });
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
                 organizationId: session.user.organizationId,
                 name,
                 sku: sku || `SKU-${Date.now()}`, // auto-generate if empty
+                barcode: barcode || null,
                 trackSerials: Boolean(trackSerials),
                 purchasePrice: purchasePrice ? Number(purchasePrice) : 0,
                 category: category || 'product',
