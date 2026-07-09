@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
+import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 
 export default function ProductBalances() {
     const [products, setProducts] = useState<any[]>([]);
@@ -11,6 +12,8 @@ export default function ProductBalances() {
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [selectedDocument, setSelectedDocument] = useState<any>(null);
+    const [docLoading, setDocLoading] = useState(false);
 
     useEffect(() => {
         fetchBalances();
@@ -47,7 +50,29 @@ export default function ProductBalances() {
             toast.success('Товар успешно удален');
             setProducts(products.filter(p => p.id !== id));
         } catch (error) {
-            toast.error('Произошла ошибка при удалении');
+            console.error(error);
+            toast.error('Ошибка при удалении товара');
+        }
+    };
+
+    const openDocument = async (docNumber: string) => {
+        try {
+            setDocLoading(true);
+            const res = await fetch(`/api/distributor/warehouse/documents?type=all&documentNumber=${encodeURIComponent(docNumber)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.documents && data.documents.length > 0) {
+                    setSelectedDocument(data.documents[0]);
+                } else {
+                    toast.error('Документ не найден');
+                }
+            } else {
+                toast.error('Ошибка загрузки документа');
+            }
+        } catch (error) {
+            toast.error('Ошибка загрузки документа');
+        } finally {
+            setDocLoading(false);
         }
     };
 
@@ -171,7 +196,17 @@ export default function ProductBalances() {
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.expirationDate ? new Date(product.specs.expirationDate).toLocaleDateString('ru-RU') : '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.importDate ? new Date(product.specs.importDate).toLocaleDateString('ru-RU') : '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.productionDate ? new Date(product.specs.productionDate).toLocaleDateString('ru-RU') : '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.receiptDocument || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">
+                                        {product.specs?.receiptDocument ? (
+                                            <button
+                                                onClick={() => openDocument(product.specs.receiptDocument)}
+                                                className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                                disabled={docLoading}
+                                            >
+                                                {product.specs.receiptDocument}
+                                            </button>
+                                        ) : '-'}
+                                    </td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.referenceCode || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.lot || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.barcode || '-'}</td>
@@ -375,6 +410,13 @@ export default function ProductBalances() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {selectedDocument && (
+                <DocumentViewerModal
+                    document={selectedDocument}
+                    onClose={() => setSelectedDocument(null)}
+                />
             )}
         </div>
     );

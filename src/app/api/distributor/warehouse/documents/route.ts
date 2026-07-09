@@ -20,6 +20,11 @@ export async function GET(req: NextRequest) {
             whereClause.type = type;
         }
 
+        const documentNumber = searchParams.get('documentNumber');
+        if (documentNumber) {
+            whereClause.documentNumber = documentNumber;
+        }
+
         const documents = await prisma.stockDocument.findMany({
             where: whereClause,
             orderBy: { createdAt: 'desc' }
