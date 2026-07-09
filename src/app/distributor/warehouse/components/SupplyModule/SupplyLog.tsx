@@ -81,10 +81,11 @@ export default function SupplyLog() {
                                     </td>
                                     <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                         <button 
-                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                                            type="button"
+                                            className="relative z-10 p-2 text-indigo-600 hover:text-indigo-900 mr-2"
                                             onClick={() => setSelectedDocument(doc)}
                                         >
-                                            {doc.status === 'confirmed' ? <Eye className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
+                                            {doc.status === 'confirmed' ? <Eye className="h-5 w-5" /> : <Edit className="h-5 w-5" />}
                                         </button>
                                     </td>
                                 </tr>

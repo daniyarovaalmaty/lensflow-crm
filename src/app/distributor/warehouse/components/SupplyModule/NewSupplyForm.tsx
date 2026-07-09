@@ -117,12 +117,12 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
 
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
-        const translatedSerial = translateCyrillicToEnglishLayout(currentSerial.trim());
-        if (serials.includes(translatedSerial)) {
+        
+        if (serials.includes(currentSerial.trim())) {
             toast.error('Этот серийный номер уже добавлен');
             return;
         }
-        setSerials([...serials, translatedSerial]);
+        setSerials([...serials, currentSerial.trim()]);
         setQty(serials.length + 1);
         setCurrentSerial('');
     };
@@ -132,9 +132,8 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
         
         let finalSerials = [...serials];
         if (selectedProduct.trackSerials && currentSerial.trim()) {
-            const translatedSerial = translateCyrillicToEnglishLayout(currentSerial.trim());
-            if (!finalSerials.includes(translatedSerial)) {
-                finalSerials.push(translatedSerial);
+            if (!finalSerials.includes(currentSerial.trim())) {
+                finalSerials.push(currentSerial.trim());
             }
         }
         
@@ -189,12 +188,15 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                 })
             });
 
-            if (!res.ok) throw new Error('Failed to save document');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => null);
+                throw new Error(errorData?.error || 'Failed to save document');
+            }
             
             toast.success(status === 'draft' ? 'Черновик сохранен' : 'Поставка проведена успешно!');
             onSuccess();
-        } catch (error) {
-            toast.error('Ошибка сохранения');
+        } catch (error: any) {
+            toast.error(error.message || 'Ошибка сохранения');
         }
     };
 
@@ -462,7 +464,7 @@ export default function NewSupplyForm({ onSuccess }: { onSuccess: () => void }) 
                                         <input
                                             type="text"
                                             value={currentSerial}
-                                            onChange={(e) => setCurrentSerial(e.target.value)}
+                                            onChange={(e) => setCurrentSerial(translateCyrillicToEnglishLayout(e.target.value))}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
                                             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                             placeholder="Сканируйте штрихкод..."
