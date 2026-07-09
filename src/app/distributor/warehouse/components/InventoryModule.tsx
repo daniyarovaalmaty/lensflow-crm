@@ -12,6 +12,7 @@ export default function InventoryModule() {
     const [view, setView] = useState<'list' | 'edit' | 'view'>('list');
     const [currentInventory, setCurrentInventory] = useState<any>(null);
     const [barcodeInput, setBarcodeInput] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         if (view === 'list') {
@@ -174,6 +175,16 @@ export default function InventoryModule() {
                     </div>
                 )}
 
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="block w-full rounded-md border-0 py-2 pl-3 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        placeholder="Поиск по названию или артикулу в ревизии..."
+                    />
+                </div>
+
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
@@ -185,8 +196,13 @@ export default function InventoryModule() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
-                            {currentInventory.items.map((item: any, idx: number) => (
-                                <tr key={idx}>
+                            {currentInventory.items.filter((item: any) => 
+                                item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                item.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+                            ).map((item: any, idx: number) => {
+                                const realIdx = currentInventory.items.findIndex((i: any) => i.productId === item.productId);
+                                return (
+                                <tr key={realIdx}>
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                         {item.name}
                                         <div className="text-xs text-gray-500">Артикул: {item.sku}</div>
@@ -198,7 +214,7 @@ export default function InventoryModule() {
                                                 type="number"
                                                 min="0"
                                                 value={item.actualQty}
-                                                onChange={(e) => updateActualQty(idx, e.target.value)}
+                                                onChange={(e) => updateActualQty(realIdx, e.target.value)}
                                                 className="block w-24 mx-auto rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                             />
                                         ) : (
@@ -215,8 +231,11 @@ export default function InventoryModule() {
                                         )}
                                     </td>
                                 </tr>
-                            ))}
-                            {currentInventory.items.length === 0 && (
+                            )})}
+                            {currentInventory.items.filter((item: any) => 
+                                item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                item.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+                            ).length === 0 && (
                                 <tr>
                                     <td colSpan={4} className="py-8 text-center text-sm text-gray-500">
                                         На складе нет товаров для ревизии
