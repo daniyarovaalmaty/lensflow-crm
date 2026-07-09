@@ -125,11 +125,16 @@ export default function ProductBalances() {
         });
     };
 
-    const filteredProducts = products.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.barcode?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredProducts = products.filter(p => {
+        const query = searchQuery.toLowerCase();
+        return p.name.toLowerCase().includes(query) || 
+               p.sku?.toLowerCase().includes(query) ||
+               p.barcode?.toLowerCase().includes(query) ||
+               (p.stockItems && p.stockItems.some((si: any) => 
+                   si.serialNumber?.toLowerCase().includes(query) || 
+                   si.barcode?.toLowerCase().includes(query)
+               ));
+    });
 
     return (
         <div>
