@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
         const orders = await prisma.order.findMany({
             where: {
                 labOrgId: user.organizationId,
-                updatedAt: {
+                createdAt: {
                     gte: startDate,
                     lte: endDate
                 }

@@ -381,13 +381,27 @@ export default function ProductionHubPage() {
 
             if (!res.ok) throw new Error('Failed to generate M-11');
             
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `M11_Requirement_${new Date().toISOString().slice(0, 10)}.pdf`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+            const data = await res.json();
+            const rows = data.materials.map((m: any, i: number) => ({
+                '№': i + 1,
+                'Материальные ценности': m.name,
+                'Ед. изм.': m.unit,
+                'Затребовано (отпущено)': Number(m.qty.toFixed(2))
+            }));
+            const ws = XLSX.utils.json_to_sheet(rows);
+            
+            // Auto-size columns roughly
+            const wscols = [
+                {wch: 5},
+                {wch: 50},
+                {wch: 10},
+                {wch: 25}
+            ];
+            ws['!cols'] = wscols;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'М-11');
+            XLSX.writeFile(wb, `M-11_Requirement_${new Date().toISOString().slice(0, 10)}.xlsx`);
             
             // Turn off bulk mode
             setBulkMode(false);
