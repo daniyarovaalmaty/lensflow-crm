@@ -51,9 +51,13 @@ export async function PUT(
                     if (!product) continue;
 
                     // Update total stock
+                    const newSpecs = { ...(product.specs as any || {}), receiptDocument: documentNumber };
                     await tx.opticProduct.update({
                         where: { id: product.id },
-                        data: { currentStock: product.currentStock + item.qty }
+                        data: { 
+                            currentStock: product.currentStock + item.qty,
+                            specs: newSpecs
+                        }
                     });
 
                     // Handle serial tracking if applicable
