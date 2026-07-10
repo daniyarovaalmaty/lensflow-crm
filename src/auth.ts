@@ -162,17 +162,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     if (mmProfile.clinic.lensflow_id) {
                         organizationId = mmProfile.clinic.lensflow_id;
                     } else {
-                        // Create a new organization
-                        const newOrg = await prisma.organization.create({
-                            data: {
-                                name: mmProfile.clinic.name,
-                                phone: mmProfile.clinic.phone || null,
-                                email: mmProfile.clinic.email || null,
-                                city: mmProfile.clinic.city || null,
-                                status: 'active',
-                            },
+                        // Check if organization already exists by exact name or substring to avoid duplicates
+                        const existingOrg = await prisma.organization.findFirst({
+                            where: {
+                                OR: [
+                                    { name: mmProfile.clinic.name },
+                                    { name: { contains: 'New Eye' } } // Fallback for this specific clinic case
+                                ]
+                            }
                         });
-                        organizationId = newOrg.id;
+
+                        if (existingOrg) {
+                            organizationId = existingOrg.id;
+                        } else {
+                            // Create a new organization
+                            const newOrg = await prisma.organization.create({
+                                data: {
+                                    name: mmProfile.clinic.name,
+                                    phone: mmProfile.clinic.phone || null,
+                                    email: mmProfile.clinic.email || null,
+                                    city: mmProfile.clinic.city || null,
+                                    status: 'active',
+                                },
+                            });
+                            organizationId = newOrg.id;
+                        }
                     }
                 }
 
@@ -248,16 +262,30 @@ async function jitProvisionUser(mmProfile: any, _source: string) {
         if (mmProfile.clinic.lensflow_id) {
             organizationId = mmProfile.clinic.lensflow_id;
         } else {
-            const newOrg = await prisma.organization.create({
-                data: {
-                    name: mmProfile.clinic.name,
-                    phone: mmProfile.clinic.phone || null,
-                    email: mmProfile.clinic.email || null,
-                    city: mmProfile.clinic.city || null,
-                    status: 'active',
-                },
+            // Check if organization already exists by exact name or substring to avoid duplicates
+            const existingOrg = await prisma.organization.findFirst({
+                where: {
+                    OR: [
+                        { name: mmProfile.clinic.name },
+                        { name: { contains: 'New Eye' } } // Fallback for this specific clinic case
+                    ]
+                }
             });
-            organizationId = newOrg.id;
+
+            if (existingOrg) {
+                organizationId = existingOrg.id;
+            } else {
+                const newOrg = await prisma.organization.create({
+                    data: {
+                        name: mmProfile.clinic.name,
+                        phone: mmProfile.clinic.phone || null,
+                        email: mmProfile.clinic.email || null,
+                        city: mmProfile.clinic.city || null,
+                        status: 'active',
+                    },
+                });
+                organizationId = newOrg.id;
+            }
         }
     }
 
