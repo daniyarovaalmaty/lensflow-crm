@@ -216,6 +216,8 @@ export default function ProductBalances() {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Наименование</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
+                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">С/Н (Партия)</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Бренд</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Диоптр.</th>
@@ -240,6 +242,8 @@ export default function ProductBalances() {
                                             <span className="min-w-0 break-words">{product.name}</span>
                                         </div>
                                     </td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.barcode || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.lot || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
@@ -299,7 +303,7 @@ export default function ProductBalances() {
                             ))}
                             {filteredProducts.length === 0 && (
                                 <tr>
-                                    <td colSpan={15} className="py-8 text-center text-sm text-gray-500">
+                                    <td colSpan={17} className="py-8 text-center text-sm text-gray-500">
                                         Товары не найдены
                                     </td>
                                 </tr>
@@ -464,6 +468,7 @@ export default function ProductBalances() {
             {selectedDocument && (
                 <DocumentViewerModal
                     document={selectedDocument}
+                    allProducts={products}
                     onClose={() => setSelectedDocument(null)}
                 />
             )}

@@ -2,10 +2,11 @@ import { X, Box, Barcode } from 'lucide-react';
 
 interface DocumentViewerModalProps {
     document: any;
+    allProducts?: any[];
     onClose: () => void;
 }
 
-export default function DocumentViewerModal({ document, onClose }: DocumentViewerModalProps) {
+export default function DocumentViewerModal({ document, allProducts, onClose }: DocumentViewerModalProps) {
     if (!document) return null;
 
     return (
@@ -70,10 +71,21 @@ export default function DocumentViewerModal({ document, onClose }: DocumentViewe
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200 bg-white">
-                                            {(document.items || []).map((item: any, idx: number) => (
+                                            {(document.items || []).map((item: any, idx: number) => {
+                                                const product = allProducts?.find(p => p.id === item.productId);
+                                                return (
                                                 <tr key={idx}>
                                                     <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                        {item.name || item.productName || 'Неизвестный товар'}
+                                                        <div className="font-medium">{item.name || item.productName || 'Неизвестный товар'}</div>
+                                                        {product && (
+                                                            <div className="mt-1 text-xs text-gray-500">
+                                                                {product.brand && <span className="mr-3">Бренд: {product.brand}</span>}
+                                                                {product.model && <span className="mr-3">Модель: {product.model}</span>}
+                                                                {product.specs?.diopters && <span className="mr-3">Диоптр: {product.specs.diopters}</span>}
+                                                                {product.specs?.percentage && <span className="mr-3">Процент: {product.specs.percentage}</span>}
+                                                                {product.barcode && <span className="mr-3">Штрихкод: {product.barcode}</span>}
+                                                            </div>
+                                                        )}
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (
                                                             <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap">
                                                                 {item.serialNumbers.map((sn: string) => (
@@ -83,13 +95,14 @@ export default function DocumentViewerModal({ document, onClose }: DocumentViewe
                                                         )}
                                                     </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                        {item.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" /> : <Box className="h-4 w-4 text-gray-400" />}
+                                                        {item.trackSerials ? <span title="Серийный учет"><Barcode className="h-4 w-4 text-indigo-500" /></span> : <span title="Партионный учет"><Box className="h-4 w-4 text-gray-400" /></span>}
                                                     </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.qty}</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.price?.toLocaleString()} ₸</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">{((item.qty || 0) * (item.price || 0)).toLocaleString()} ₸</td>
                                                 </tr>
-                                            ))}
+                                                );
+                                            })}
                                             {(!document.items || document.items.length === 0) && (
                                                 <tr>
                                                     <td colSpan={5} className="py-4 text-center text-sm text-gray-500">

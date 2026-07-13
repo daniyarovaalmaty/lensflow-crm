@@ -57,8 +57,8 @@ export default function UnitsModal({ product, onClose }: UnitsModalProps) {
                                 <table className="min-w-full divide-y divide-gray-300">
                                     <thead className="bg-gray-50 sticky top-0 z-10">
                                         <tr>
-                                            <th className="py-3 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Серийный номер (партия)</th>
-                                            <th className="px-3 py-3 text-left text-xs font-semibold text-gray-900">Уникальный штрихкод</th>
+                                            <th className="py-3 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Штрихкод (DataMatrix)</th>
+                                            <th className="px-3 py-3 text-left text-xs font-semibold text-gray-900">Партия (Серийный номер)</th>
                                             <th className="px-3 py-3 text-left text-xs font-semibold text-gray-900">Статус</th>
                                         </tr>
                                     </thead>
@@ -66,10 +66,10 @@ export default function UnitsModal({ product, onClose }: UnitsModalProps) {
                                         {units.map((unit) => (
                                             <tr key={unit.id} className="hover:bg-gray-50">
                                                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                    {unit.serialNumber || '-'}
+                                                    {unit.barcode || unit.serialNumber || '-'}
                                                 </td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                    {unit.barcode || '-'}
+                                                    {unit.barcode && unit.serialNumber ? unit.serialNumber : '-'}
                                                 </td>
                                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                                     {unit.status === 'in_stock' ? (
