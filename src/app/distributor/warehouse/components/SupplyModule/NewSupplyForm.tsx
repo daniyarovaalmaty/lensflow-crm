@@ -548,8 +548,20 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     {serials.length > 0 && (
                                         <div className="mt-2 flex flex-wrap gap-2">
                                             {serials.map(sn => (
-                                                <span key={sn} className="inline-flex items-center rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                                                <span key={sn} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-gray-100 rounded text-gray-600 text-xs font-medium">
                                                     {sn}
+                                                    <button 
+                                                        onClick={() => {
+                                                            setSerials(prev => {
+                                                                const updated = prev.filter(s => s !== sn);
+                                                                setQty(updated.length);
+                                                                return updated;
+                                                            });
+                                                        }}
+                                                        className="text-gray-400 hover:text-red-500 p-0.5"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
                                                 </span>
                                             ))}
                                         </div>

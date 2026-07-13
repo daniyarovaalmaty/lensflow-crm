@@ -75,12 +75,13 @@ export async function POST(req: NextRequest) {
                     const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
                     if (!product) continue;
 
-                    // Update total stock
+                    // Update total stock and purchase price
                     const newSpecs = { ...(product.specs as any || {}), receiptDocument: documentNumber };
                     await tx.opticProduct.update({
                         where: { id: product.id },
                         data: { 
                             currentStock: product.currentStock + item.qty,
+                            purchasePrice: item.price,
                             specs: newSpecs
                         }
                     });

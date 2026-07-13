@@ -10,9 +10,24 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
     const [loading, setLoading] = useState(true);
     const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
+    const [allProducts, setAllProducts] = useState<any[]>([]);
+
     useEffect(() => {
         fetchDocuments();
+        fetchProducts();
     }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const res = await fetch('/api/distributor/warehouse/balances');
+            if (res.ok) {
+                const data = await res.json();
+                setAllProducts(data.products || []);
+            }
+        } catch (e) {
+            console.error('Failed to fetch products for supply log');
+        }
+    };
 
     const fetchDocuments = async () => {
         try {
@@ -104,7 +119,8 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
 
             {selectedDocument && (
                 <DocumentViewerModal 
-                    document={selectedDocument} 
+                    document={selectedDocument}
+                    allProducts={allProducts}
                     onClose={() => setSelectedDocument(null)} 
                 />
             )}

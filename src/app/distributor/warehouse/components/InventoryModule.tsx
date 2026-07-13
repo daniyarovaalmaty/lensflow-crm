@@ -19,25 +19,31 @@ export default function InventoryModule() {
 
     // USB barcode scanner for inventory — active only in edit mode
     const handleUsbScanInventory = useCallback((rawCode: string) => {
-        if (view !== 'edit' || !currentInventory) return;
+        if (view !== 'edit') return;
         const code = translateCyrillicToEnglishLayout(rawCode.trim());
         
-        const idx = currentInventory.items.findIndex((item: any) =>
-            item.sku === code ||
-            item.barcode === code ||
-            item.stockItemBarcodes?.includes(code)
-        );
+        setCurrentInventory((prevInventory: any) => {
+            if (!prevInventory) return prevInventory;
+            const idx = prevInventory.items.findIndex((item: any) =>
+                item.sku === code ||
+                item.barcode === code ||
+                item.stockItemBarcodes?.includes(code)
+            );
 
-        if (idx !== -1) {
-            const newItems = [...currentInventory.items];
-            newItems[idx].actualQty += 1;
-            newItems[idx].diff = newItems[idx].actualQty - newItems[idx].systemQty;
-            setCurrentInventory({ ...currentInventory, items: newItems });
-            toast.success(`Добавлено: ${newItems[idx].name}`);
-        } else {
-            toast.error('Товар с таким штрихкодом не найден в ревизии');
-        }
-    }, [view, currentInventory]);
+            if (idx !== -1) {
+                const newItems = [...prevInventory.items];
+                const item = { ...newItems[idx] };
+                item.actualQty += 1;
+                item.diff = item.actualQty - item.systemQty;
+                newItems[idx] = item;
+                setTimeout(() => toast.success(`Добавлено: ${item.name}`), 0);
+                return { ...prevInventory, items: newItems };
+            } else {
+                setTimeout(() => toast.error('Товар с таким штрихкодом не найден в ревизии'), 0);
+                return prevInventory;
+            }
+        });
+    }, [view]);
 
     useUsbScanner(handleUsbScanInventory, view === 'edit');
 
@@ -142,22 +148,29 @@ export default function InventoryModule() {
         
         const input = translateCyrillicToEnglishLayout(barcodeInput.trim());
         
-        const idx = currentInventory.items.findIndex((item: any) => 
-            item.sku === input || 
-            item.barcode === input || 
-            item.name.includes(input) ||
-            item.stockItemBarcodes?.includes(input)
-        );
+        setCurrentInventory((prevInventory: any) => {
+            if (!prevInventory) return prevInventory;
+            const idx = prevInventory.items.findIndex((item: any) => 
+                item.sku === input || 
+                item.barcode === input || 
+                item.name.includes(input) ||
+                item.stockItemBarcodes?.includes(input)
+            );
 
-        if (idx !== -1) {
-            const newItems = [...currentInventory.items];
-            newItems[idx].actualQty += 1;
-            newItems[idx].diff = newItems[idx].actualQty - newItems[idx].systemQty;
-            setCurrentInventory({ ...currentInventory, items: newItems });
-            toast.success(`Добавлено: ${newItems[idx].name}`);
-        } else {
-            toast.error('Товар с таким штрихкодом не найден в ревизии');
-        }
+            if (idx !== -1) {
+                const newItems = [...prevInventory.items];
+                const item = { ...newItems[idx] };
+                item.actualQty += 1;
+                item.diff = item.actualQty - item.systemQty;
+                newItems[idx] = item;
+                setTimeout(() => toast.success(`Добавлено: ${item.name}`), 0);
+                return { ...prevInventory, items: newItems };
+            } else {
+                setTimeout(() => toast.error('Товар с таким штрихкодом не найден в ревизии'), 0);
+                return prevInventory;
+            }
+        });
+        
         setBarcodeInput('');
         setTimeout(() => barcodeRef.current?.focus(), 0);
     };
