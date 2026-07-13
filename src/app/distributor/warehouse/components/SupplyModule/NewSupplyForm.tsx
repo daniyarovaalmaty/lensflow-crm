@@ -141,6 +141,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
             setNewProductRefCode('');
             setNewProductLot('');
+            setBatchSerialNumber(newProductTrackSerials ? newProductBatchSerialNumber : '');
             setNewProductTrackSerials(false);
             setNewProductBatchSerialNumber('');
             setIsCreatingProduct(false);
@@ -153,12 +154,15 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         if (!currentSerial.trim()) return;
         
         const code = translateCyrillicToEnglishLayout(currentSerial.trim());
-        if (serials.includes(code)) {
-            toast.error('Этот серийный номер уже добавлен');
-            return;
-        }
-        setSerials([...serials, code]);
-        setQty(serials.length + 1);
+        setSerials(prev => {
+            if (prev.includes(code)) {
+                toast.error('Этот серийный номер уже добавлен');
+                return prev;
+            }
+            const updated = [...prev, code];
+            setQty(updated.length);
+            return updated;
+        });
         setCurrentSerial('');
         // Auto-refocus for continuous scanning
         setTimeout(() => serialInputRef.current?.focus(), 0);
@@ -608,7 +612,25 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     {item.trackSerials && (
                                         <div className="mt-1 text-xs text-gray-500 flex gap-1 flex-wrap">
                                             {item.serialNumbers.map((sn: string) => (
-                                                <span key={sn} className="px-1 bg-gray-100 rounded">{sn}</span>
+                                                <span key={sn} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-gray-100 rounded text-gray-600">
+                                                    {sn}
+                                                    <button 
+                                                        onClick={() => {
+                                                            const updatedItems = [...items];
+                                                            const updatedSerials = updatedItems[idx].serialNumbers.filter((s: string) => s !== sn);
+                                                            if (updatedSerials.length === 0) {
+                                                                updatedItems.splice(idx, 1);
+                                                            } else {
+                                                                updatedItems[idx].serialNumbers = updatedSerials;
+                                                                updatedItems[idx].qty = updatedSerials.length;
+                                                            }
+                                                            setItems(updatedItems);
+                                                        }}
+                                                        className="text-gray-400 hover:text-red-500 p-0.5"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
+                                                </span>
                                             ))}
                                         </div>
                                     )}

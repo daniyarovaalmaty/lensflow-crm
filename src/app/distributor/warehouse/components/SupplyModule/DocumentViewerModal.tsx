@@ -84,6 +84,10 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                                 {product.specs?.diopters && <span className="mr-3">Диоптр: {product.specs.diopters}</span>}
                                                                 {product.specs?.percentage && <span className="mr-3">Процент: {product.specs.percentage}</span>}
                                                                 {product.barcode && <span className="mr-3">Штрихкод: {product.barcode}</span>}
+                                                                {product.specs?.expirationDate && <span className="mr-3">Годен до: {new Date(product.specs.expirationDate).toLocaleDateString('ru-RU')}</span>}
+                                                                {product.specs?.importDate && <span className="mr-3">Импорт: {new Date(product.specs.importDate).toLocaleDateString('ru-RU')}</span>}
+                                                                {product.specs?.productionDate && <span className="mr-3">Произведен: {new Date(product.specs.productionDate).toLocaleDateString('ru-RU')}</span>}
+                                                                {product.specs?.refCode && <span className="mr-3">Реф. код: {product.specs.refCode}</span>}
                                                             </div>
                                                         )}
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (
