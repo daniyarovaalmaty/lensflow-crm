@@ -107,9 +107,34 @@ export async function POST(req: NextRequest) {
                 updateData.status = 'completed';
                 updateData.completedAt = new Date();
                 
-                // When completing an inventory, we might generate adjustments. 
-                // For simplicity in this iteration, we just mark it complete. 
-                // A full implementation would adjust stock via StockMovement.
+                // Adjust stock based on inventory results
+                if (items && Array.isArray(items)) {
+                    const adjustments = items.filter((item: any) => item.diff !== 0);
+                    
+                    for (const item of adjustments) {
+                        // Update product stock to match actual count
+                        await prisma.opticProduct.update({
+                            where: { id: item.productId },
+                            data: { currentStock: item.actualQty }
+                        });
+                        
+                        // Create stock movement record for the adjustment
+                        await prisma.stockMovement.create({
+                            data: {
+                                productId: item.productId,
+                                organizationId: session.user.organizationId,
+                                type: 'adjustment',
+                                quantity: Math.abs(item.diff),
+                                reason: item.diff > 0 
+                                    ? `Ревизия: излишек +${item.diff}` 
+                                    : `Ревизия: недостача ${item.diff}`,
+                                documentNumber: inventoryId,
+                                performedById: session.user.id,
+                                performedByName: session.user.name || 'Система',
+                            }
+                        });
+                    }
+                }
             }
 
             const inventory = await prisma.inventory.update({

@@ -90,7 +90,44 @@ export async function PUT(
                     });
                 }
             } else if (status === 'confirmed' && (doc.type === 'transfer_out' || doc.type === 'write_off')) {
-                // Implement other types if necessary
+                for (const item of items) {
+                    const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
+                    if (!product) continue;
+
+                    // Deduct stock
+                    await tx.opticProduct.update({
+                        where: { id: product.id },
+                        data: { currentStock: Math.max(0, product.currentStock - item.qty) }
+                    });
+
+                    // Update serial items status
+                    if (item.trackSerials && item.serialNumbers?.length > 0) {
+                        await tx.stockItem.updateMany({
+                            where: {
+                                organizationId,
+                                barcode: { in: item.serialNumbers },
+                                status: 'in_stock'
+                            },
+                            data: { status: doc.type === 'write_off' ? 'written_off' : 'sold' }
+                        });
+                    }
+
+                    // Create Movement Log
+                    await tx.stockMovement.create({
+                        data: {
+                            organizationId,
+                            productId: product.id,
+                            type: doc.type,
+                            quantity: -item.qty,
+                            serialNumbers: item.serialNumbers || [],
+                            documentNumber,
+                            documentId: doc.id,
+                            reason: notes,
+                            performedById,
+                            performedByName,
+                        }
+                    });
+                }
             }
 
             return doc;

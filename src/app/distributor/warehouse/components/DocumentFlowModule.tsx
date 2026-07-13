@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { useUsbScanner } from '@/hooks/useUsbScanner';
 
 export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWriteOffOnly?: boolean }) {
     const [documents, setDocuments] = useState<any[]>([]);
@@ -22,6 +23,27 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
     const [qty, setQty] = useState(1);
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
+    const serialInputRef = useRef<HTMLInputElement>(null);
+
+    // USB scanner for auto-scanning serial barcodes during write-offs
+    const handleUsbScan = useCallback((rawCode: string) => {
+        if (!selectedProduct?.trackSerials) return;
+        const code = translateCyrillicToEnglishLayout(rawCode.trim());
+        if (!code) return;
+        setSerials(prev => {
+            if (prev.includes(code)) {
+                toast.error(`Штрихкод ${code} уже добавлен`);
+                return prev;
+            }
+            const updated = [...prev, code];
+            setQty(updated.length);
+            toast.success(`✅ ${code}`);
+            return updated;
+        });
+        setCurrentSerial('');
+    }, [selectedProduct]);
+
+    useUsbScanner(handleUsbScan, !!selectedProduct?.trackSerials);
 
     useEffect(() => {
         if (!isWriteOffOnly) {
@@ -70,13 +92,15 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
 
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
-        if (serials.includes(currentSerial.trim())) {
+        const code = translateCyrillicToEnglishLayout(currentSerial.trim());
+        if (serials.includes(code)) {
             toast.error('Этот серийный номер уже добавлен');
             return;
         }
-        setSerials([...serials, currentSerial.trim()]);
+        setSerials([...serials, code]);
         setQty(serials.length + 1);
         setCurrentSerial('');
+        setTimeout(() => serialInputRef.current?.focus(), 0);
     };
 
     const handleAddItem = () => {
@@ -85,8 +109,9 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
         let finalSerials = [...serials];
         // UX Fix: Automatically grab the serial from the input if user forgot to press Enter or the Add button
         if (selectedProduct.trackSerials && currentSerial.trim()) {
-            if (!finalSerials.includes(currentSerial.trim())) {
-                finalSerials.push(currentSerial.trim());
+            const translatedSerial = translateCyrillicToEnglishLayout(currentSerial.trim());
+            if (!finalSerials.includes(translatedSerial)) {
+                finalSerials.push(translatedSerial);
             }
         }
         
@@ -288,7 +313,11 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                             <input
                                 type="text"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                                    setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                                }}
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 sm:text-sm sm:leading-6"
                                 placeholder="Поиск по остаткам..."
                             />
@@ -346,10 +375,13 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
+                                            ref={serialInputRef}
+                                            autoFocus
                                             value={currentSerial}
                                             onChange={(e) => setCurrentSerial(translateCyrillicToEnglishLayout(e.target.value))}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
                                             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-600 sm:text-sm"
+                                            placeholder="Сканируйте штрихкод..."
                                         />
                                         <button onClick={handleAddSerial} className="px-3 py-1.5 bg-gray-100 border rounded hover:bg-gray-200">
                                             <Barcode className="h-4 w-4" />

@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
                         await tx.stockItem.updateMany({
                             where: {
                                 organizationId,
-                                serialNumber: { in: item.serialNumbers },
+                                barcode: { in: item.serialNumbers },
                                 status: 'in_stock'
                             },
                             data: { status: type === 'write_off' ? 'written_off' : 'sold' }

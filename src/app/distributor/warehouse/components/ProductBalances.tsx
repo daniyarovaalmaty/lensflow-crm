@@ -11,6 +11,8 @@ export default function ProductBalances() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [brandFilter, setBrandFilter] = useState('');
+    const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -126,15 +128,28 @@ export default function ProductBalances() {
         });
     };
 
+    // Extract unique brands for filter
+    const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
+
     const filteredProducts = products.filter(p => {
         const query = searchQuery.toLowerCase();
-        return p.name.toLowerCase().includes(query) || 
+        const matchesSearch = !query || 
+               p.name.toLowerCase().includes(query) || 
                p.sku?.toLowerCase().includes(query) ||
                p.barcode?.toLowerCase().includes(query) ||
                (p.stockItems && p.stockItems.some((si: any) => 
                    si.serialNumber?.toLowerCase().includes(query) || 
                    si.barcode?.toLowerCase().includes(query)
                ));
+        
+        const matchesBrand = !brandFilter || p.brand === brandFilter;
+        
+        const matchesStock = stockFilter === 'all' ||
+            (stockFilter === 'in_stock' && p.currentStock > 0) ||
+            (stockFilter === 'low_stock' && p.currentStock > 0 && p.currentStock <= (p.minStock || 3)) ||
+            (stockFilter === 'out_of_stock' && p.currentStock === 0);
+        
+        return matchesSearch && matchesBrand && matchesStock;
     });
 
     return (
@@ -162,6 +177,31 @@ export default function ProductBalances() {
                     className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     placeholder="Поиск по названию, артикулу или штрихкоду..."
                 />
+            </div>
+
+            {/* Filters Row */}
+            <div className="mb-6 flex gap-4 flex-wrap">
+                <select
+                    value={brandFilter}
+                    onChange={(e) => setBrandFilter(e.target.value)}
+                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
+                >
+                    <option value="">Все бренды</option>
+                    {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+                <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value as any)}
+                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
+                >
+                    <option value="all">Все остатки</option>
+                    <option value="in_stock">В наличии</option>
+                    <option value="low_stock">Мало на складе</option>
+                    <option value="out_of_stock">Нет в наличии</option>
+                </select>
+                <span className="text-sm text-gray-500 self-center">
+                    Найдено: {filteredProducts.length} из {products.length}
+                </span>
             </div>
 
             {loading ? (
