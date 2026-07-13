@@ -5,6 +5,7 @@ import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save } from 'lucide-r
 import toast from 'react-hot-toast';
 import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 import UnitsModal from './UnitsModal';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
 export default function ProductBalances() {
     const [products, setProducts] = useState<any[]>([]);
@@ -153,7 +154,11 @@ export default function ProductBalances() {
                 <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                        setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                    }}
                     className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     placeholder="Поиск по названию, артикулу или штрихкоду..."
                 />

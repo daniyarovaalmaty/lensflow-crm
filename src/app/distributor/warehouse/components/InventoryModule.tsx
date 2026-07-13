@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { RefreshCcw, Plus, Save, FileText, CheckCircle, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { useUsbScanner } from '@/hooks/useUsbScanner';
 
 export default function InventoryModule() {
     const [inventories, setInventories] = useState<any[]>([]);
@@ -14,6 +15,31 @@ export default function InventoryModule() {
     const [currentInventory, setCurrentInventory] = useState<any>(null);
     const [barcodeInput, setBarcodeInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const barcodeRef = useRef<HTMLInputElement>(null);
+
+    // USB barcode scanner for inventory — active only in edit mode
+    const handleUsbScanInventory = useCallback((rawCode: string) => {
+        if (view !== 'edit' || !currentInventory) return;
+        const code = translateCyrillicToEnglishLayout(rawCode.trim());
+        
+        const idx = currentInventory.items.findIndex((item: any) =>
+            item.sku === code ||
+            item.barcode === code ||
+            item.stockItemBarcodes?.includes(code)
+        );
+
+        if (idx !== -1) {
+            const newItems = [...currentInventory.items];
+            newItems[idx].actualQty += 1;
+            newItems[idx].diff = newItems[idx].actualQty - newItems[idx].systemQty;
+            setCurrentInventory({ ...currentInventory, items: newItems });
+            toast.success(`Добавлено: ${newItems[idx].name}`);
+        } else {
+            toast.error('Товар с таким штрихкодом не найден в ревизии');
+        }
+    }, [view, currentInventory]);
+
+    useUsbScanner(handleUsbScanInventory, view === 'edit');
 
     useEffect(() => {
         if (view === 'list') {
@@ -114,13 +140,13 @@ export default function InventoryModule() {
     const handleBarcodeScan = () => {
         if (!barcodeInput.trim()) return;
         
-        // Try to find by barcode or sku or lot
-        // Note: the backend currently might not populate barcode into inventory items, 
-        // but let's check sku or name or barcode if it's there.
+        const input = translateCyrillicToEnglishLayout(barcodeInput.trim());
+        
         const idx = currentInventory.items.findIndex((item: any) => 
-            item.sku === barcodeInput || 
-            item.barcode === barcodeInput || 
-            item.name.includes(barcodeInput)
+            item.sku === input || 
+            item.barcode === input || 
+            item.name.includes(input) ||
+            item.stockItemBarcodes?.includes(input)
         );
 
         if (idx !== -1) {
@@ -133,6 +159,7 @@ export default function InventoryModule() {
             toast.error('Товар с таким штрихкодом не найден в ревизии');
         }
         setBarcodeInput('');
+        setTimeout(() => barcodeRef.current?.focus(), 0);
     };
 
     if ((view === 'edit' || view === 'view') && currentInventory) {
@@ -185,12 +212,13 @@ export default function InventoryModule() {
                         <div className="mt-2 flex gap-2">
                             <input
                                 type="text"
+                                ref={barcodeRef}
+                                autoFocus
                                 value={barcodeInput}
                                 onChange={(e) => setBarcodeInput(translateCyrillicToEnglishLayout(e.target.value))}
                                 onKeyDown={(e) => e.key === 'Enter' && handleBarcodeScan()}
                                 className="block w-64 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="Пропикайте штрихкод товара..."
-                                autoFocus
                             />
                             <button
                                 onClick={handleBarcodeScan}

@@ -37,6 +37,12 @@ export async function POST(req: NextRequest) {
             // Fetch all products in stock to start an inventory
             const products = await prisma.opticProduct.findMany({
                 where: { organizationId: session.user.organizationId },
+                include: {
+                    stockItems: {
+                        where: { status: 'in_stock' },
+                        select: { barcode: true }
+                    }
+                }
             });
 
             const initialItems = products.map(p => ({
@@ -48,7 +54,10 @@ export async function POST(req: NextRequest) {
                 systemQty: p.currentStock,
                 actualQty: p.currentStock, // default to system qty
                 diff: 0,
-                note: ''
+                note: '',
+                stockItemBarcodes: p.stockItems
+                    ?.map((si: any) => si.barcode)
+                    .filter(Boolean) || [],
             }));
 
             const inventoryNumber = `ИНВ-${Date.now().toString().slice(-6)}`;

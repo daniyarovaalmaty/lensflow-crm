@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { useUsbScanner } from '@/hooks/useUsbScanner';
 
 interface NewSupplyFormProps {
     onSuccess: () => void;
@@ -25,6 +26,29 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [price, setPrice] = useState(0);
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
+    const serialInputRef = useRef<HTMLInputElement>(null);
+
+    // USB barcode scanner integration — active only when serial product is selected
+    const handleUsbScan = useCallback((rawCode: string) => {
+        if (!selectedProduct?.trackSerials) return;
+        
+        const code = translateCyrillicToEnglishLayout(rawCode.trim());
+        if (!code) return;
+        
+        setSerials(prev => {
+            if (prev.includes(code)) {
+                toast.error(`Штрихкод ${code} уже добавлен`);
+                return prev;
+            }
+            const updated = [...prev, code];
+            setQty(updated.length);
+            toast.success(`✅ ${code}`);
+            return updated;
+        });
+        setCurrentSerial('');
+    }, [selectedProduct]);
+
+    useUsbScanner(handleUsbScan, !!selectedProduct?.trackSerials);
 
     // Create New Product state
     const [isCreatingProduct, setIsCreatingProduct] = useState(false);
@@ -128,13 +152,16 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
         
-        if (serials.includes(currentSerial.trim())) {
+        const code = translateCyrillicToEnglishLayout(currentSerial.trim());
+        if (serials.includes(code)) {
             toast.error('Этот серийный номер уже добавлен');
             return;
         }
-        setSerials([...serials, currentSerial.trim()]);
+        setSerials([...serials, code]);
         setQty(serials.length + 1);
         setCurrentSerial('');
+        // Auto-refocus for continuous scanning
+        setTimeout(() => serialInputRef.current?.focus(), 0);
     };
 
     const handleAddItem = () => {
@@ -281,7 +308,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 <input
                                     type="text"
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                                        setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                                    }}
                                     className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                     placeholder="Поиск по артикулу, штрихкоду или названию..."
                                 />
@@ -498,6 +529,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
+                                            ref={serialInputRef}
+                                            autoFocus
                                             value={currentSerial}
                                             onChange={(e) => setCurrentSerial(translateCyrillicToEnglishLayout(e.target.value))}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}

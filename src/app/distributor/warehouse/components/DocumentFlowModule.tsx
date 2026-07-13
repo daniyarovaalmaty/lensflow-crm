@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
 export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWriteOffOnly?: boolean }) {
     const [documents, setDocuments] = useState<any[]>([]);
@@ -346,7 +347,7 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                         <input
                                             type="text"
                                             value={currentSerial}
-                                            onChange={(e) => setCurrentSerial(e.target.value)}
+                                            onChange={(e) => setCurrentSerial(translateCyrillicToEnglishLayout(e.target.value))}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
                                             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-600 sm:text-sm"
                                         />

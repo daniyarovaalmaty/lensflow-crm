@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
 export async function GET(req: NextRequest) {
     try {
@@ -11,16 +12,21 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const query = searchParams.get('q') || '';
+        const translated = translateCyrillicToEnglishLayout(query);
+        const queries = [query];
+        if (translated !== query) queries.push(translated);
 
         const products = await prisma.opticProduct.findMany({
             where: {
                 organizationId: session.user.organizationId,
-                OR: [
-                    { name: { contains: query, mode: 'insensitive' } },
-                    { sku: { contains: query, mode: 'insensitive' } },
-                ]
+                OR: queries.flatMap(q => [
+                    { name: { contains: q, mode: 'insensitive' as const } },
+                    { sku: { contains: q, mode: 'insensitive' as const } },
+                    { barcode: { contains: q, mode: 'insensitive' as const } },
+                    { stockItems: { some: { barcode: { contains: q, mode: 'insensitive' as const } } } },
+                ])
             },
-            take: 10, // Limit results
+            take: 10,
             orderBy: { name: 'asc' }
         });
 
