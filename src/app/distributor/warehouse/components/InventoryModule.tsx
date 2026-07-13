@@ -366,6 +366,112 @@ export default function InventoryModule() {
                         </tbody>
                     </table>
                 </div>
+                {/* Unknown Barcode Modal */}
+                {unknownBarcode && (
+                    <div className="fixed inset-0 z-50 overflow-y-auto">
+                        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setUnknownBarcode(null)}></div>
+                            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                    <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-2">
+                                        Неизвестный штрихкод
+                                    </h3>
+                                    <div className="mt-2">
+                                        <p className="text-sm text-gray-500 mb-4">
+                                            Штрихкод <span className="font-bold">{unknownBarcode}</span> не найден в ожидаемых остатках. Выберите товар, чтобы добавить его как излишек:
+                                        </p>
+                                        <select
+                                            value={selectedProductForUnknown}
+                                            onChange={(e) => setSelectedProductForUnknown(e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        >
+                                            <option value="">-- Выберите товар --</option>
+                                            {currentInventory?.items.filter((i: any) => i.trackSerials).map((item: any) => (
+                                                <option key={item.productId} value={item.productId}>
+                                                    {item.name} {item.specs?.lot ? `(Партия: ${item.specs.lot})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                    <button
+                                        type="button"
+                                        onClick={assignUnknownBarcode}
+                                        disabled={!selectedProductForUnknown}
+                                        className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto disabled:opacity-50"
+                                    >
+                                        Добавить
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setUnknownBarcode(null)}
+                                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                    >
+                                        Отмена
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Viewing Serials Modal */}
+                {viewingSerialsItem && (
+                    <div className="fixed inset-0 z-50 overflow-y-auto">
+                        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setViewingSerialsItem(null)}></div>
+                            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                    <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-2">
+                                        Штрихкоды единиц: {viewingSerialsItem.name}
+                                    </h3>
+                                    <div className="mt-4 space-y-4 max-h-96 overflow-y-auto pr-2">
+                                        <div>
+                                            <h4 className="text-sm font-medium text-gray-900 mb-2">Ожидаемые по базе (пока не найдены):</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {viewingSerialsItem.stockItemBarcodes?.filter((b: string) => !viewingSerialsItem.scannedSerials?.includes(b)).map((barcode: string) => (
+                                                    <span key={barcode} className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+                                                        {barcode}
+                                                    </span>
+                                                ))}
+                                                {viewingSerialsItem.stockItemBarcodes?.filter((b: string) => !viewingSerialsItem.scannedSerials?.includes(b)).length === 0 && (
+                                                    <span className="text-sm text-gray-500">Все найдены</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <div>
+                                            <h4 className="text-sm font-medium text-gray-900 mb-2">Отсканированные:</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {viewingSerialsItem.scannedSerials?.map((barcode: string) => {
+                                                    const isSurplus = !viewingSerialsItem.stockItemBarcodes?.includes(barcode);
+                                                    return (
+                                                        <span key={barcode} className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${isSurplus ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' : 'bg-green-50 text-green-700 ring-green-600/20'}`}>
+                                                            {barcode} {isSurplus ? '(Излишек)' : ''}
+                                                        </span>
+                                                    );
+                                                })}
+                                                {(!viewingSerialsItem.scannedSerials || viewingSerialsItem.scannedSerials.length === 0) && (
+                                                    <span className="text-sm text-gray-500">Ничего не отсканировано</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewingSerialsItem(null)}
+                                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                    >
+                                        Закрыть
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -435,112 +541,6 @@ export default function InventoryModule() {
                 </table>
             </div>
 
-            {/* Unknown Barcode Modal */}
-            {unknownBarcode && (
-                <div className="fixed inset-0 z-50 overflow-y-auto">
-                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setUnknownBarcode(null)}></div>
-                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                                <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-2">
-                                    Неизвестный штрихкод
-                                </h3>
-                                <div className="mt-2">
-                                    <p className="text-sm text-gray-500 mb-4">
-                                        Штрихкод <span className="font-bold">{unknownBarcode}</span> не найден в ожидаемых остатках. Выберите товар, чтобы добавить его как излишек:
-                                    </p>
-                                    <select
-                                        value={selectedProductForUnknown}
-                                        onChange={(e) => setSelectedProductForUnknown(e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                    >
-                                        <option value="">-- Выберите товар --</option>
-                                        {currentInventory?.items.filter((i: any) => i.trackSerials).map((item: any) => (
-                                            <option key={item.productId} value={item.productId}>
-                                                {item.name} {item.specs?.lot ? `(Партия: ${item.specs.lot})` : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                                <button
-                                    type="button"
-                                    onClick={assignUnknownBarcode}
-                                    disabled={!selectedProductForUnknown}
-                                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto disabled:opacity-50"
-                                >
-                                    Добавить
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setUnknownBarcode(null)}
-                                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                                >
-                                    Отмена
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Viewing Serials Modal */}
-            {viewingSerialsItem && (
-                <div className="fixed inset-0 z-50 overflow-y-auto">
-                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setViewingSerialsItem(null)}></div>
-                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                                <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-2">
-                                    Штрихкоды единиц: {viewingSerialsItem.name}
-                                </h3>
-                                <div className="mt-4 space-y-4 max-h-96 overflow-y-auto pr-2">
-                                    <div>
-                                        <h4 className="text-sm font-medium text-gray-900 mb-2">Ожидаемые по базе (пока не найдены):</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {viewingSerialsItem.stockItemBarcodes?.filter((b: string) => !viewingSerialsItem.scannedSerials?.includes(b)).map((barcode: string) => (
-                                                <span key={barcode} className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
-                                                    {barcode}
-                                                </span>
-                                            ))}
-                                            {viewingSerialsItem.stockItemBarcodes?.filter((b: string) => !viewingSerialsItem.scannedSerials?.includes(b)).length === 0 && (
-                                                <span className="text-sm text-gray-500">Все найдены</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <hr />
-                                    <div>
-                                        <h4 className="text-sm font-medium text-gray-900 mb-2">Отсканированные:</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {viewingSerialsItem.scannedSerials?.map((barcode: string) => {
-                                                const isSurplus = !viewingSerialsItem.stockItemBarcodes?.includes(barcode);
-                                                return (
-                                                    <span key={barcode} className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${isSurplus ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' : 'bg-green-50 text-green-700 ring-green-600/20'}`}>
-                                                        {barcode} {isSurplus ? '(Излишек)' : ''}
-                                                    </span>
-                                                );
-                                            })}
-                                            {(!viewingSerialsItem.scannedSerials || viewingSerialsItem.scannedSerials.length === 0) && (
-                                                <span className="text-sm text-gray-500">Ничего не отсканировано</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                                <button
-                                    type="button"
-                                    onClick={() => setViewingSerialsItem(null)}
-                                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                                >
-                                    Закрыть
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

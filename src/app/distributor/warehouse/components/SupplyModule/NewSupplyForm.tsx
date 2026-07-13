@@ -583,11 +583,14 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             <div className="w-40">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Цена закупки (₸)</label>
                                 <input
-                                    type="number"
-                                    min="0"
+                                    type="text"
+                                    inputMode="decimal"
                                     value={price}
-                                    onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                                        setPrice(val === '' ? '' : val);
+                                    }}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
 
