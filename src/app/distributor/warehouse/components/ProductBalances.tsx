@@ -97,6 +97,7 @@ export default function ProductBalances() {
                 barcode: editingProduct.barcode,
                 sku: editingProduct.sku,
                 purchasePrice: editingProduct.purchasePrice,
+                retailPrice: editingProduct.retailPrice,
                 specs: editingProduct.specs || {}
             };
 
@@ -391,6 +392,27 @@ export default function ProductBalances() {
                                             onChange={(e) => setEditingProduct({...editingProduct, model: e.target.value})}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
+                                    </div>
+
+                                    <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium leading-6 text-gray-900">Закупочная цена (₸)</label>
+                                            <input
+                                                type="number"
+                                                value={editingProduct.purchasePrice || ''}
+                                                onChange={(e) => setEditingProduct({...editingProduct, purchasePrice: Number(e.target.value)})}
+                                                className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium leading-6 text-gray-900">Розничная цена (₸)</label>
+                                            <input
+                                                type="number"
+                                                value={editingProduct.retailPrice || ''}
+                                                onChange={(e) => setEditingProduct({...editingProduct, retailPrice: Number(e.target.value)})}
+                                                className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div>

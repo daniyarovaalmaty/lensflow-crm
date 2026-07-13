@@ -57,6 +57,7 @@ export async function PUT(
                         data: { 
                             currentStock: product.currentStock + item.qty,
                             purchasePrice: item.price,
+                            ...(product.retailPrice === 0 ? { retailPrice: item.price } : {}),
                             specs: newSpecs
                         }
                     });

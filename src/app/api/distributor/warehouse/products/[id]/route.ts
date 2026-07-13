@@ -10,7 +10,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         }
 
         const body = await req.json();
-        const { name, brand, model, barcode, sku, purchasePrice, specs } = body;
+        const { name, brand, model, barcode, sku, purchasePrice, retailPrice, specs } = body;
 
         const product = await prisma.opticProduct.findUnique({
             where: { id: params.id, organizationId: session.user.organizationId }
@@ -29,6 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
                 barcode,
                 sku,
                 purchasePrice: purchasePrice !== undefined ? Number(purchasePrice) : undefined,
+                retailPrice: retailPrice !== undefined ? Number(retailPrice) : undefined,
                 specs: specs || {}
             }
         });

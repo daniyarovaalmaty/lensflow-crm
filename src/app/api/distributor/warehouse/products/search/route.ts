@@ -11,20 +11,34 @@ export async function GET(req: NextRequest) {
         }
 
         const { searchParams } = new URL(req.url);
-        const query = searchParams.get('q') || '';
-        const translated = translateCyrillicToEnglishLayout(query);
-        const queries = [query];
-        if (translated !== query) queries.push(translated);
+        const nameQuery = searchParams.get('name') || '';
+        const skuQuery = searchParams.get('sku') || '';
+        const barcodeQuery = searchParams.get('barcode') || '';
+        
+        const translatedBarcode = barcodeQuery ? translateCyrillicToEnglishLayout(barcodeQuery) : '';
+        const barcodeQueries = barcodeQuery ? [barcodeQuery] : [];
+        if (translatedBarcode && translatedBarcode !== barcodeQuery) barcodeQueries.push(translatedBarcode);
+
+        const conditions: any[] = [{ organizationId: session.user.organizationId }];
+
+        if (nameQuery) {
+            conditions.push({ name: { contains: nameQuery, mode: 'insensitive' as const } });
+        }
+        if (skuQuery) {
+            conditions.push({ sku: { contains: skuQuery, mode: 'insensitive' as const } });
+        }
+        if (barcodeQueries.length > 0) {
+            conditions.push({
+                OR: barcodeQueries.flatMap(bq => [
+                    { barcode: { contains: bq, mode: 'insensitive' as const } },
+                    { stockItems: { some: { barcode: { contains: bq, mode: 'insensitive' as const } } } }
+                ])
+            });
+        }
 
         const products = await prisma.opticProduct.findMany({
             where: {
-                organizationId: session.user.organizationId,
-                OR: queries.flatMap(q => [
-                    { name: { contains: q, mode: 'insensitive' as const } },
-                    { sku: { contains: q, mode: 'insensitive' as const } },
-                    { barcode: { contains: q, mode: 'insensitive' as const } },
-                    { stockItems: { some: { barcode: { contains: q, mode: 'insensitive' as const } } } },
-                ])
+                AND: conditions
             },
             take: 10,
             orderBy: { name: 'asc' }

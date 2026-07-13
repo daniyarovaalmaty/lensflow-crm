@@ -24,6 +24,7 @@ export default function InventoryModule() {
     const processScannedBarcode = useCallback((rawCode: string) => {
         if (view !== 'edit') return;
         const code = translateCyrillicToEnglishLayout(rawCode.trim());
+        if (!code) return;
         
         setCurrentInventory((prevInventory: any) => {
             if (!prevInventory) return prevInventory;
@@ -41,6 +42,10 @@ export default function InventoryModule() {
             if (idx !== -1) {
                 const item = { ...newItems[idx] };
                 if (item.trackSerials) {
+                    if (item.barcode === code || item.sku === code) {
+                        setTimeout(() => toast.error(`Для серийного товара нужно сканировать серийные номера, а не штрихкод товара (${code})`), 0);
+                        return prevInventory;
+                    }
                     if (!item.scannedSerials) item.scannedSerials = [];
                     if (item.scannedSerials.includes(code)) {
                         setTimeout(() => toast.error(`Штрихкод ${code} уже отсканирован`), 0);
@@ -49,14 +54,17 @@ export default function InventoryModule() {
                     item.scannedSerials = [...item.scannedSerials, code];
                     item.actualQty = item.scannedSerials.length;
                 } else {
-                    item.actualQty += 1;
+                    item.actualQty = (item.actualQty || 0) + 1;
                 }
                 item.diff = item.actualQty - item.systemQty;
                 newItems[idx] = item;
                 setTimeout(() => toast.success(`Добавлено: ${item.name}`), 0);
                 return { ...prevInventory, items: newItems };
             } else {
-                setTimeout(() => setUnknownBarcode(code), 0);
+                setTimeout(() => {
+                    toast.error(`Штрихкод ${code} не найден. Укажите товар вручную.`);
+                    setUnknownBarcode(code);
+                }, 0);
                 return prevInventory;
             }
         });

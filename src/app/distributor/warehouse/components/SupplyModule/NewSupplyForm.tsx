@@ -17,7 +17,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [items, setItems] = useState<any[]>(initialDraft?.items || []);
     
     // Search state
-    const [searchQuery, setSearchQuery] = useState('');
+    const [nameSearch, setNameSearch] = useState('');
+    const [skuSearch, setSkuSearch] = useState('');
+    const [barcodeSearch, setBarcodeSearch] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     
@@ -68,7 +70,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [batchSerialNumber, setBatchSerialNumber] = useState('');
 
     useEffect(() => {
-        if (!searchQuery.trim()) {
+        if (!nameSearch.trim() && !skuSearch.trim() && !barcodeSearch.trim()) {
             setSearchResults([]);
             return;
         }
@@ -76,7 +78,12 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         const delayDebounceFn = setTimeout(async () => {
             setIsSearching(true);
             try {
-                const res = await fetch(`/api/distributor/warehouse/products/search?q=${encodeURIComponent(searchQuery)}`);
+                const params = new URLSearchParams();
+                if (nameSearch) params.append('name', nameSearch);
+                if (skuSearch) params.append('sku', skuSearch);
+                if (barcodeSearch) params.append('barcode', barcodeSearch);
+                
+                const res = await fetch(`/api/distributor/warehouse/products/search?${params.toString()}`);
                 if (res.ok) {
                     const data = await res.json();
                     setSearchResults(data.products || []);
@@ -89,7 +96,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         }, 300);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery]);
+    }, [nameSearch, skuSearch, barcodeSearch]);
 
     const handleCreateProduct = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
@@ -128,7 +135,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             toast.success('Товар успешно создан!');
             setSelectedProduct(data.product);
             setIsCreatingProduct(false);
-            setSearchQuery('');
             setSearchResults([]);
             setNewProductName('');
             setNewProductBrand('');
@@ -197,7 +203,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         
         // Reset form
         setSelectedProduct(null);
-        setSearchQuery('');
+        setNameSearch('');
+        setSkuSearch('');
+        setBarcodeSearch('');
         setQty(1);
         setPrice('');
         setSerials([]);
@@ -304,37 +312,63 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 
                 {!selectedProduct && !isCreatingProduct ? (
                     <div className="relative">
-                        <div className="flex gap-4">
-                            <div className="relative flex-1">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <Search className="h-5 w-5 text-gray-400" />
+                        <div className="flex flex-col gap-4">
+                            <div className="flex gap-4">
+                                <div className="relative flex-1">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <Search className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={nameSearch}
+                                        onChange={(e) => setNameSearch(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        placeholder="Поиск по названию..."
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        const hasCyrillic = /[\u0400-\u04FF]/.test(val);
-                                        setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                                <div className="relative flex-1">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <Search className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={skuSearch}
+                                        onChange={(e) => setSkuSearch(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        placeholder="Поиск по артикулу..."
+                                    />
+                                </div>
+                                <div className="relative flex-1">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <Barcode className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={barcodeSearch}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                                            setBarcodeSearch(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                                        }}
+                                        className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        placeholder="Поиск по штрихкоду..."
+                                    />
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        setNewProductName(nameSearch || '');
+                                        setIsCreatingProduct(true);
                                     }}
-                                    className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                    placeholder="Поиск по артикулу, штрихкоду или названию..."
-                                />
+                                    className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-300 hover:bg-indigo-50 whitespace-nowrap"
+                                >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Создать новый
+                                </button>
                             </div>
-                            <button 
-                                onClick={() => {
-                                    setNewProductName(searchQuery);
-                                    setIsCreatingProduct(true);
-                                }}
-                                className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-300 hover:bg-indigo-50"
-                            >
-                                <Plus className="h-4 w-4 mr-1" />
-                                Создать новый
-                            </button>
                         </div>
                         
                         {/* Search Results Dropdown */}
-                        {searchQuery.trim() && (
+                        {(nameSearch.trim() || skuSearch.trim() || barcodeSearch.trim()) && (
                             <div className="absolute z-10 mt-1 w-full flex-1 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                                 {isSearching ? (
                                     <div className="p-4 text-sm text-gray-500 text-center">Загрузка...</div>
@@ -345,7 +379,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                                 key={product.id}
                                                 onClick={() => {
                                                     setSelectedProduct(product);
-                                                    setSearchQuery('');
+                                                    setNameSearch('');
+                                                    setSkuSearch('');
+                                                    setBarcodeSearch('');
                                                 }}
                                                 className="relative cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
                                             >
@@ -362,7 +398,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     </ul>
                                 ) : (
                                     <div className="p-4 text-sm text-gray-500 text-center">
-                                        Товар не найден. Вы можете <button onClick={() => {setNewProductName(searchQuery); setIsCreatingProduct(true);}} className="text-indigo-600 underline">создать его</button>.
+                                        Товар не найден. Вы можете <button onClick={() => {setNewProductName(nameSearch || ''); setIsCreatingProduct(true);}} className="text-indigo-600 underline">создать его</button>.
                                     </div>
                                 )}
                             </div>

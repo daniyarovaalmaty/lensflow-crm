@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
                         data: { 
                             currentStock: product.currentStock + item.qty,
                             purchasePrice: item.price,
+                            ...(product.retailPrice === 0 ? { retailPrice: item.price } : {}),
                             specs: newSpecs
                         }
                     });
