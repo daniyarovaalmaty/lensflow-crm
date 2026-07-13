@@ -118,6 +118,41 @@ export async function POST(req: NextRequest) {
                             data: { currentStock: item.actualQty }
                         });
                         
+                        if (item.trackSerials) {
+                            const expected = item.stockItemBarcodes || [];
+                            const scanned = item.scannedSerials || [];
+                            const shortages = expected.filter((b: string) => !scanned.includes(b));
+                            const surpluses = scanned.filter((b: string) => !expected.includes(b));
+                            
+                            if (shortages.length > 0) {
+                                await prisma.stockItem.updateMany({
+                                    where: { 
+                                        productId: item.productId,
+                                        barcode: { in: shortages },
+                                        status: 'in_stock'
+                                    },
+                                    data: { status: 'written_off' }
+                                });
+                            }
+                            
+                            if (surpluses.length > 0) {
+                                const productData = await prisma.opticProduct.findUnique({ where: { id: item.productId }, select: { purchasePrice: true } });
+                                const price = productData?.purchasePrice || 0;
+                                
+                                for (const barcode of surpluses) {
+                                    await prisma.stockItem.create({
+                                        data: {
+                                            organizationId: session.user.organizationId,
+                                            productId: item.productId,
+                                            barcode: barcode,
+                                            status: 'in_stock',
+                                            purchasePrice: price
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        
                         // Create stock movement record for the adjustment
                         await prisma.stockMovement.create({
                             data: {
