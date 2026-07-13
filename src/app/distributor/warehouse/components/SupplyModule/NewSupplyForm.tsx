@@ -57,6 +57,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [newProductName, setNewProductName] = useState('');
     const [newProductBrand, setNewProductBrand] = useState('');
     const [newProductModel, setNewProductModel] = useState('');
+    const [newProductBarcode, setNewProductBarcode] = useState('');
+    const [newProductSku, setNewProductSku] = useState('');
     const [newProductDiopters, setNewProductDiopters] = useState('');
     const [newProductPercentage, setNewProductPercentage] = useState('');
     const [newProductExpiration, setNewProductExpiration] = useState('');
@@ -112,8 +114,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: newProductName,
-                    sku: '',
-                    barcode: '',
+                    sku: newProductSku,
+                    barcode: newProductBarcode,
                     brand: newProductBrand,
                     model: newProductModel,
                     diopters: newProductDiopters,
@@ -137,6 +139,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             setIsCreatingProduct(false);
             setSearchResults([]);
             setNewProductName('');
+            setNewProductBarcode('');
+            setNewProductSku('');
             setNewProductBrand('');
             setNewProductModel('');
             setNewProductDiopters('');
@@ -418,6 +422,29 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductName}
                                     onChange={(e) => setNewProductName(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Штрихкод товара</label>
+                                <input
+                                    type="text"
+                                    value={newProductBarcode}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                                        setNewProductBarcode(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                                    }}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    placeholder="Сканируйте общий штрихкод..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Артикул</label>
+                                <input
+                                    type="text"
+                                    value={newProductSku}
+                                    onChange={(e) => setNewProductSku(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
