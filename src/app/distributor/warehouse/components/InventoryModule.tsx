@@ -166,9 +166,11 @@ export default function InventoryModule() {
     };
 
     const handleBarcodeScan = () => {
-        if (!barcodeInput.trim()) return;
-        processScannedBarcode(barcodeInput);
+        const val = barcodeRef.current?.value || barcodeInput;
+        if (!val.trim()) return;
+        processScannedBarcode(val);
         setBarcodeInput('');
+        if (barcodeRef.current) barcodeRef.current.value = '';
         setTimeout(() => barcodeRef.current?.focus(), 0);
     };
 
@@ -252,8 +254,13 @@ export default function InventoryModule() {
                                 ref={barcodeRef}
                                 autoFocus
                                 value={barcodeInput}
-                                onChange={(e) => setBarcodeInput(translateCyrillicToEnglishLayout(e.target.value))}
-                                onKeyDown={(e) => e.key === 'Enter' && handleBarcodeScan()}
+                                onChange={(e) => setBarcodeInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleBarcodeScan();
+                                    }
+                                }}
                                 className="block w-64 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="Пропикайте штрихкод товара..."
                             />

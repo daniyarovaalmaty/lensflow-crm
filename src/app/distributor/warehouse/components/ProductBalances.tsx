@@ -11,6 +11,7 @@ export default function ProductBalances() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [barcodeSearch, setBarcodeSearch] = useState('');
     const [brandFilter, setBrandFilter] = useState('');
     const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
 
@@ -134,13 +135,18 @@ export default function ProductBalances() {
 
     const filteredProducts = products.filter(p => {
         const query = searchQuery.toLowerCase();
-        const matchesSearch = !query || 
+        const bSearch = barcodeSearch.toLowerCase();
+        
+        const matchesName = !query || 
                p.name.toLowerCase().includes(query) || 
                p.sku?.toLowerCase().includes(query) ||
-               p.barcode?.toLowerCase().includes(query) ||
+               p.specs?.lot?.toLowerCase().includes(query); // also include lot/SN here just in case
+               
+        const matchesBarcode = !bSearch ||
+               p.barcode?.toLowerCase().includes(bSearch) ||
                (p.stockItems && p.stockItems.some((si: any) => 
-                   si.serialNumber?.toLowerCase().includes(query) || 
-                   si.barcode?.toLowerCase().includes(query)
+                   si.barcode?.toLowerCase().includes(bSearch) ||
+                   si.serialNumber?.toLowerCase().includes(bSearch)
                ));
         
         const matchesBrand = !brandFilter || p.brand === brandFilter;
@@ -150,7 +156,7 @@ export default function ProductBalances() {
             (stockFilter === 'low_stock' && p.currentStock > 0 && p.currentStock <= (p.minStock || 3)) ||
             (stockFilter === 'out_of_stock' && p.currentStock === 0);
         
-        return matchesSearch && matchesBrand && matchesStock;
+        return matchesName && matchesBarcode && matchesBrand && matchesStock;
     });
 
     return (
@@ -163,21 +169,35 @@ export default function ProductBalances() {
                 </button>
             </div>
 
-            <div className="mb-6 relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <Search className="h-5 w-5 text-gray-400" />
+            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        placeholder="Поиск по названию или артикулу..."
+                    />
                 </div>
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                        const val = e.target.value;
-                        const hasCyrillic = /[\u0400-\u04FF]/.test(val);
-                        setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
-                    }}
-                    className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    placeholder="Поиск по названию, артикулу или штрихкоду..."
-                />
+                <div className="relative flex-1">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <Barcode className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        value={barcodeSearch}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                            setBarcodeSearch(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                        }}
+                        className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        placeholder="Поиск по штрихкоду..."
+                    />
+                </div>
             </div>
 
             {/* Filters Row */}

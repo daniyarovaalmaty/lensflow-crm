@@ -23,7 +23,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [qty, setQty] = useState(1);
-    const [price, setPrice] = useState(0);
+    const [price, setPrice] = useState<number | string>('');
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
     const serialInputRef = useRef<HTMLInputElement>(null);
@@ -182,7 +182,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             productId: selectedProduct.id,
             name: selectedProduct.name,
             qty: selectedProduct.trackSerials ? finalSerials.length : qty,
-            price: price,
+            price: Number(price) || 0,
             trackSerials: selectedProduct.trackSerials,
             serialNumbers: selectedProduct.trackSerials ? finalSerials : [],
             batchSerialNumber: selectedProduct.trackSerials ? batchSerialNumber : '',
@@ -199,7 +199,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         setSelectedProduct(null);
         setSearchQuery('');
         setQty(1);
-        setPrice(0);
+        setPrice('');
         setSerials([]);
         setCurrentSerial('');
         setBatchSerialNumber('');
@@ -586,8 +586,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="number"
                                     min="0"
                                     value={price}
-                                    onChange={(e) => setPrice(Number(e.target.value))}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>
 

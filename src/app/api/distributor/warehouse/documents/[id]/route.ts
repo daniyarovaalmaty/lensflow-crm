@@ -56,6 +56,7 @@ export async function PUT(
                         where: { id: product.id },
                         data: { 
                             currentStock: product.currentStock + item.qty,
+                            purchasePrice: item.price,
                             specs: newSpecs
                         }
                     });
