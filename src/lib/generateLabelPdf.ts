@@ -131,19 +131,43 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setTextColor(80, 80, 80);
     doc.text(productName, 44 - qtyW - 1, 3.5, { align: 'right' });
     
-    let colorOd = odQty > 0 ? od.color || '' : '';
-    let colorOs = osQty > 0 ? os.color || '' : '';
-    
-    // Взять только последнее слово из цвета (например "Optimum extra blue" -> "Blue")
-    const getLastWord = (str: string) => {
-        const words = str.trim().split(' ');
+    const colorMap: Record<string, string> = {
+        'Тёмно-синий': 'dark-blue',
+        'Тёмно-зелёный': 'dark-green',
+        'Синий': 'blue',
+        'Зелёный': 'green',
+        'Фиолетовый': 'violet',
+        'Красный': 'red',
+        'Голубой': 'light-blue',
+        'Салатовый': 'light-green',
+        'Contraperm F2Mid dark blue': 'dark-blue',
+        'Contraperm F2Mid green': 'dark-green',
+        'Optimum extra blue': 'blue',
+        'Optimum extra green': 'green',
+        'Optimum extra violet': 'violet',
+        'Optimum extreme blue': 'blue',
+        'Optimum extreme green': 'green',
+        'Optimum extreme violet': 'violet',
+        'Optimum extreme grey': 'grey',
+        'Optimum infinite blue': 'light-blue',
+        'Optimum infinite green': 'light-green',
+        'Optimum infinite red': 'red'
+    };
+
+    const resolveColor = (c: string) => {
+        if (!c) return '';
+        const mapped = colorMap[c] || colorMap[c.trim()];
+        if (mapped) {
+            return mapped.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('-');
+        }
+        const words = c.trim().split(' ');
         if (words.length === 0 || !words[0]) return '';
         const lastWord = words[words.length - 1];
         return lastWord.charAt(0).toUpperCase() + lastWord.slice(1).toLowerCase();
     };
 
-    if (colorOd) colorOd = getLastWord(colorOd);
-    if (colorOs) colorOs = getLastWord(colorOs);
+    let colorOd = odQty > 0 ? resolveColor(od.color || '') : '';
+    let colorOs = osQty > 0 ? resolveColor(os.color || '') : '';
 
     const colorStr = colorOd && colorOs && colorOd !== colorOs
         ? `${colorOd}/${colorOs}`
