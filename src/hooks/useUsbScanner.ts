@@ -12,9 +12,17 @@ export function useUsbScanner(onScan: (code: string) => void, enabled = true) {
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (!enabled) return;
 
+        // If user is focused on an input, let the input handle the scanner
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+            buffer.current = '';
+            if (timer.current) clearTimeout(timer.current);
+            return;
+        }
+
         if (e.key === 'Enter') {
             if (buffer.current.length >= 4) {
                 e.preventDefault();
+                e.stopPropagation();
                 onScan(buffer.current.trim());
             }
             buffer.current = '';
