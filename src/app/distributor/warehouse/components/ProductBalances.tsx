@@ -346,10 +346,7 @@ export default function ProductBalances() {
                                                         <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата производства</span>
                                                         <span className="leading-tight text-gray-700">{batch.productionDate ? new Date(batch.productionDate).toLocaleDateString() : '-'}</span>
                                                     </div>
-                                                    <div>
-                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата импорта</span>
-                                                        <span className="leading-tight text-gray-700">{batch.importDate ? new Date(batch.importDate).toLocaleDateString() : '-'}</span>
-                                                    </div>
+
                                                     <div>
                                                         <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Срок годности</span>
                                                         <div className="leading-tight">

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { type, status, documentNumber, counterpartyName, declarationNumber, declarationDate, items, totalAmount, targetOrganizationId, notes } = body;
+        const { type, status, documentNumber, documentDate, counterpartyName, declarationNumber, declarationDate, items, totalAmount, targetOrganizationId, notes } = body;
 
         const organizationId = session.user.organizationId;
         const performedById = session.user.id;
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
                     type,
                     status,
                     counterpartyName,
-                    notes: JSON.stringify({ declarationNumber: declarationNumber || '', declarationDate: declarationDate || '', userNotes: notes || '' }),
+                    notes: JSON.stringify({ declarationNumber: declarationNumber || '', declarationDate: declarationDate || '', documentDate: documentDate || '', userNotes: notes || '' }),
                     totalAmount,
                     items,
                     performedById,
@@ -106,7 +106,6 @@ export async function POST(req: NextRequest) {
                                 purchasePrice: item.price,
                                 expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : existingBatch.expiryDate,
                                 productionDate: item.batchProduction ? new Date(item.batchProduction) : existingBatch.productionDate,
-                                importDate: item.batchImport ? new Date(item.batchImport) : existingBatch.importDate,
                                 diopters: item.batchDiopters || existingBatch.diopters
                             }
                         });
@@ -121,7 +120,6 @@ export async function POST(req: NextRequest) {
                                 purchasePrice: item.price,
                                 expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : null,
                                 productionDate: item.batchProduction ? new Date(item.batchProduction) : null,
-                                importDate: item.batchImport ? new Date(item.batchImport) : null,
                                 diopters: item.batchDiopters || null,
                                 receiptDocId: doc.id
                             }

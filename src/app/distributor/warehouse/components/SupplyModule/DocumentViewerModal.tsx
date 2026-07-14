@@ -60,6 +60,19 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                     try { decl = JSON.parse(document.notes || '{}'); } catch {}
                                     return (
                                         <>
+                                            {decl.documentDate && (
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-500">Дата накладной</p>
+                                                    <p className="mt-1 text-sm text-gray-900">
+                                                    {(() => {
+                                                        const parts = decl.documentDate.split('-');
+                                                        if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                                        if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
+                                                        return decl.documentDate;
+                                                    })()}
+                                                    </p>
+                                                </div>
+                                            )}
                                             {decl.declarationNumber && (
                                                 <div>
                                                     <p className="text-sm font-medium text-gray-500">Номер декларации</p>
@@ -122,7 +135,6 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
                                                                     {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
                                                                     {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
-                                                                    {item.batchImport && <span>Импорт: {new Date(item.batchImport).toLocaleDateString('ru-RU')}</span>}
                                                                     {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
                                                                 </div>
                                                             </div>

@@ -83,7 +83,8 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Номер документа</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата накладной</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата создания</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Поставщик</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сумма</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Статус</th>
@@ -96,6 +97,20 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                             {documents.map((doc) => (
                                 <tr key={doc.id}>
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{doc.documentNumber}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
+                                        {(() => {
+                                            try {
+                                                const notes = JSON.parse(doc.notes);
+                                                if (notes.documentDate) {
+                                                    const parts = notes.documentDate.split('-');
+                                                    if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                                    if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
+                                                    return notes.documentDate;
+                                                }
+                                            } catch (e) {}
+                                            return '—';
+                                        })()}
+                                    </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                         {new Date(doc.createdAt).toLocaleDateString('ru-RU')}
                                     </td>

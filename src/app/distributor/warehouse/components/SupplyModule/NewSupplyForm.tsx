@@ -49,6 +49,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
     const [counterpartyName, setCounterpartyName] = useState(draft?.counterpartyName || '');
     const [documentNumber, setDocumentNumber] = useState(draft?.documentNumber || '');
+    const [documentDate, setDocumentDate] = useState(draft?.documentDate || '');
     const [declarationNumber, setDeclarationNumber] = useState(draft?.declarationNumber || '');
     const [declarationDate, setDeclarationDate] = useState(draft?.declarationDate || '');
     const [items, setItems] = useState<any[]>(draft?.items || []);
@@ -83,7 +84,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [batchDiopters, setBatchDiopters] = useState('');
     const [batchExpiration, setBatchExpiration] = useState('');
     const [batchProduction, setBatchProduction] = useState('');
-    const [batchImport, setBatchImport] = useState('');
 
     useEffect(() => {
         if (!nameSearch.trim() && !barcodeSearch.trim()) {
@@ -115,9 +115,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
     // Auto-save draft to localStorage (debounced)
     useEffect(() => {
-        const draftData = { counterpartyName, documentNumber, declarationNumber, declarationDate, items };
+        const draftData = { counterpartyName, documentNumber, documentDate, declarationNumber, declarationDate, items };
         // Only save if there's meaningful data
-        const hasData = counterpartyName || documentNumber || declarationNumber || declarationDate || items.length > 0;
+        const hasData = counterpartyName || documentNumber || documentDate || declarationNumber || declarationDate || items.length > 0;
         if (!hasData) return;
 
         const timeout = setTimeout(() => {
@@ -204,7 +204,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             batchDiopters,
             batchExpiration,
             batchProduction,
-            batchImport,
         };
         
         if (newItem.qty <= 0) {
@@ -228,7 +227,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         setBatchDiopters('');
         setBatchExpiration('');
         setBatchProduction('');
-        setBatchImport('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -257,6 +255,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     type: 'receipt',
                     status,
                     documentNumber,
+                    documentDate,
                     counterpartyName,
                     declarationNumber,
                     declarationDate,
@@ -337,7 +336,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             )}
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 mb-8 border-b pb-8">
-                <div className="sm:col-span-3">
+                <div className="sm:col-span-6">
                     <label className="block text-sm font-medium leading-6 text-gray-900">Поставщик / Контрагент</label>
                     <div className="mt-2">
                         <input
@@ -360,6 +359,13 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             placeholder="№ док-та"
                         />
                     </div>
+                </div>
+                <div className="sm:col-span-3">
+                    <FlexibleDateInput 
+                        label="Дата накладной" 
+                        value={documentDate} 
+                        onChange={setDocumentDate} 
+                    />
                 </div>
                 <div className="sm:col-span-3">
                     <label className="block text-sm font-medium leading-6 text-gray-900">Номер декларации</label>
@@ -567,9 +573,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 </div>
                                 <div>
                                     <FlexibleDateInput label="Дата производства" value={batchProduction} onChange={setBatchProduction} />
-                                </div>
-                                <div>
-                                    <FlexibleDateInput label="Дата импорта" value={batchImport} onChange={setBatchImport} />
                                 </div>
                             </div>
 
