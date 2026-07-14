@@ -55,6 +55,26 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                     <p className="text-sm font-medium text-gray-500">Общая сумма</p>
                                     <p className="mt-1 text-lg font-semibold text-gray-900">{document.totalAmount.toLocaleString()} ₸</p>
                                 </div>
+                                {(() => {
+                                    let decl: any = {};
+                                    try { decl = JSON.parse(document.notes || '{}'); } catch {}
+                                    return (
+                                        <>
+                                            {decl.declarationNumber && (
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-500">Номер декларации</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationNumber}</p>
+                                                </div>
+                                            )}
+                                            {decl.declarationDate && (
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-500">Дата декларации</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationDate}</p>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             <div className="mt-4">

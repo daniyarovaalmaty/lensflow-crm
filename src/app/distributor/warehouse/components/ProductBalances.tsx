@@ -243,12 +243,7 @@ export default function ProductBalances() {
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Бренд</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Диоптр.</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Процент.</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Срок годн.</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Дата импорта</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Произведено</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Док-т прихода</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Код реф.</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Единицы</th>
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
@@ -269,22 +264,7 @@ export default function ProductBalances() {
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.percentage || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.expirationDate ? new Date(product.specs.expirationDate).toLocaleDateString('ru-RU') : '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.importDate ? new Date(product.specs.importDate).toLocaleDateString('ru-RU') : '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.productionDate ? new Date(product.specs.productionDate).toLocaleDateString('ru-RU') : '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">
-                                        {product.specs?.receiptDocument ? (
-                                            <button
-                                                onClick={() => openDocument(product.specs.receiptDocument)}
-                                                className="text-indigo-600 hover:text-indigo-900 hover:underline"
-                                                disabled={docLoading}
-                                            >
-                                                {product.specs.receiptDocument}
-                                            </button>
-                                        ) : '-'}
-                                    </td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.referenceCode || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.expirationDate || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">
                                         {product.trackSerials ? (
                                             <button 
@@ -325,7 +305,7 @@ export default function ProductBalances() {
                             ))}
                             {filteredProducts.length === 0 && (
                                 <tr>
-                                    <td colSpan={17} className="py-8 text-center text-sm text-gray-500">
+                                    <td colSpan={10} className="py-8 text-center text-sm text-gray-500">
                                         Товары не найдены
                                     </td>
                                 </tr>
@@ -359,16 +339,6 @@ export default function ProductBalances() {
                                             type="text"
                                             value={editingProduct.name}
                                             onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Артикул</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.sku || ''}
-                                            onChange={(e) => setEditingProduct({...editingProduct, sku: e.target.value})}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
                                     </div>
@@ -454,57 +424,6 @@ export default function ProductBalances() {
                                             onChange={(e) => handleSpecChange('productionDate', e.target.value)}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                             placeholder="Напр. 2025-01 или 2025-01-20"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Номер декларации</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.specs?.declarationNumber || ''}
-                                            onChange={(e) => handleSpecChange('declarationNumber', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Дата декларации</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.specs?.declarationDate || ''}
-                                            onChange={(e) => handleSpecChange('declarationDate', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                            placeholder="Напр. 2026-07 или 2026-07-10"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Документ на приход</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.specs?.receiptDocument || ''}
-                                            onChange={(e) => handleSpecChange('receiptDocument', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Код референса</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.specs?.referenceCode || ''}
-                                            onChange={(e) => handleSpecChange('referenceCode', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Серийный номер</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.specs?.lot || ''}
-                                            onChange={(e) => handleSpecChange('lot', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
                                     </div>
                                 </div>

@@ -13,11 +13,12 @@ interface NewSupplyFormProps {
 export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyFormProps) {
     const [counterpartyName, setCounterpartyName] = useState(initialDraft?.counterpartyName || '');
     const [documentNumber, setDocumentNumber] = useState(initialDraft?.documentNumber || '');
+    const [declarationNumber, setDeclarationNumber] = useState(initialDraft?.declarationNumber || '');
+    const [declarationDate, setDeclarationDate] = useState(initialDraft?.declarationDate || '');
     const [items, setItems] = useState<any[]>(initialDraft?.items || []);
     
     // Search state
     const [nameSearch, setNameSearch] = useState('');
-    const [skuSearch, setSkuSearch] = useState('');
     const [barcodeSearch, setBarcodeSearch] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -42,15 +43,13 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [newProductExpiration, setNewProductExpiration] = useState('');
     const [newProductImportDate, setNewProductImportDate] = useState('');
     const [newProductProductionDate, setNewProductProductionDate] = useState('');
-    const [newProductDeclarationNumber, setNewProductDeclarationNumber] = useState('');
-    const [newProductDeclarationDate, setNewProductDeclarationDate] = useState('');
 
     const [newProductLot, setNewProductLot] = useState('');
     const [newProductTrackSerials, setNewProductTrackSerials] = useState(false);
     const [batchSerialNumber, setBatchSerialNumber] = useState('');
 
     useEffect(() => {
-        if (!nameSearch.trim() && !skuSearch.trim() && !barcodeSearch.trim()) {
+        if (!nameSearch.trim() && !barcodeSearch.trim()) {
             setSearchResults([]);
             return;
         }
@@ -60,7 +59,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             try {
                 const params = new URLSearchParams();
                 if (nameSearch) params.append('name', nameSearch);
-                if (skuSearch) params.append('sku', skuSearch);
                 if (barcodeSearch) params.append('barcode', barcodeSearch);
                 
                 const res = await fetch(`/api/distributor/warehouse/products/search?${params.toString()}`);
@@ -76,7 +74,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         }, 300);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [nameSearch, skuSearch, barcodeSearch]);
+    }, [nameSearch, barcodeSearch]);
 
     const handleCreateProduct = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
@@ -99,8 +97,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     expirationDate: newProductExpiration,
                     importDate: newProductImportDate,
                     productionDate: newProductProductionDate,
-                    declarationNumber: newProductDeclarationNumber,
-                    declarationDate: newProductDeclarationDate,
                     lot: newProductLot,
                     trackSerials: newProductTrackSerials,
                 })
@@ -121,8 +117,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             setNewProductExpiration('');
             setNewProductImportDate('');
             setNewProductProductionDate('');
-            setNewProductDeclarationNumber('');
-            setNewProductDeclarationDate('');
             setNewProductLot('');
             setBatchSerialNumber(newProductTrackSerials ? newProductLot : '');
             setNewProductTrackSerials(false);
@@ -179,7 +173,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         // Reset form
         setSelectedProduct(null);
         setNameSearch('');
-        setSkuSearch('');
         setBarcodeSearch('');
         setQty(1);
         setPrice('');
@@ -215,6 +208,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     status,
                     documentNumber,
                     counterpartyName,
+                    declarationNumber,
+                    declarationDate,
                     items,
                     totalAmount
                 })
@@ -279,6 +274,30 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         />
                     </div>
                 </div>
+                <div className="sm:col-span-3">
+                    <label className="block text-sm font-medium leading-6 text-gray-900">Номер декларации</label>
+                    <div className="mt-2">
+                        <input
+                            type="text"
+                            value={declarationNumber}
+                            onChange={(e) => setDeclarationNumber(e.target.value)}
+                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            placeholder="Номер декларации"
+                        />
+                    </div>
+                </div>
+                <div className="sm:col-span-3">
+                    <label className="block text-sm font-medium leading-6 text-gray-900">Дата декларации</label>
+                    <div className="mt-2">
+                        <input
+                            type="text"
+                            value={declarationDate}
+                            onChange={(e) => setDeclarationDate(e.target.value)}
+                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            placeholder="Напр. 2026-07 или 2026-07-10"
+                        />
+                    </div>
+                </div>
             </div>
 
             {/* Product Search & Add */}
@@ -299,18 +318,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         onChange={(e) => setNameSearch(e.target.value)}
                                         className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         placeholder="Поиск по названию..."
-                                    />
-                                </div>
-                                <div className="relative flex-1">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                        <Search className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={skuSearch}
-                                        onChange={(e) => setSkuSearch(e.target.value)}
-                                        className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        placeholder="Поиск по артикулу..."
                                     />
                                 </div>
                                 <div className="relative flex-1">
@@ -343,7 +350,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         </div>
                         
                         {/* Search Results Dropdown */}
-                        {(nameSearch.trim() || skuSearch.trim() || barcodeSearch.trim()) && (
+                        {(nameSearch.trim() || barcodeSearch.trim()) && (
                             <div className="absolute z-10 mt-1 w-full flex-1 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                                 {isSearching ? (
                                     <div className="p-4 text-sm text-gray-500 text-center">Загрузка...</div>
@@ -355,7 +362,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                                 onClick={() => {
                                                     setSelectedProduct(product);
                                                     setNameSearch('');
-                                                    setSkuSearch('');
                                                     setBarcodeSearch('');
                                                 }}
                                                 className="relative cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
@@ -472,25 +478,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductImportDate}
                                     onChange={(e) => setNewProductImportDate(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    placeholder="Напр. 2026-07 или 2026-07-10"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Номер декларации</label>
-                                <input
-                                    type="text"
-                                    value={newProductDeclarationNumber}
-                                    onChange={(e) => setNewProductDeclarationNumber(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Дата декларации</label>
-                                <input
-                                    type="text"
-                                    value={newProductDeclarationDate}
-                                    onChange={(e) => setNewProductDeclarationDate(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                     placeholder="Напр. 2026-07 или 2026-07-10"
                                 />
