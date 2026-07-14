@@ -40,7 +40,6 @@ export default function ProductBalances() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [barcodeSearch, setBarcodeSearch] = useState('');
-    const [brandFilter, setBrandFilter] = useState('');
     const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -171,8 +170,6 @@ export default function ProductBalances() {
         });
     };
 
-    // Extract unique brands for filter
-    const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
 
     const filteredProducts = products.filter(p => {
         const query = searchQuery.toLowerCase();
@@ -190,14 +187,12 @@ export default function ProductBalances() {
                    si.serialNumber?.toLowerCase().includes(bSearch)
                ));
         
-        const matchesBrand = !brandFilter || p.brand === brandFilter;
-        
         const matchesStock = stockFilter === 'all' ||
             (stockFilter === 'in_stock' && p.currentStock > 0) ||
             (stockFilter === 'low_stock' && p.currentStock > 0 && p.currentStock <= (p.minStock || 3)) ||
             (stockFilter === 'out_of_stock' && p.currentStock === 0);
         
-        return matchesName && matchesBarcode && matchesBrand && matchesStock;
+        return matchesName && matchesBarcode && matchesStock;
     });
 
     return (
@@ -243,14 +238,6 @@ export default function ProductBalances() {
 
             {/* Filters Row */}
             <div className="mb-6 flex gap-4 flex-wrap">
-                <select
-                    value={brandFilter}
-                    onChange={(e) => setBrandFilter(e.target.value)}
-                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
-                >
-                    <option value="">Все бренды</option>
-                    {brands.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
                 <select
                     value={stockFilter}
                     onChange={(e) => setStockFilter(e.target.value as any)}
@@ -338,68 +325,70 @@ export default function ProductBalances() {
                                 </tr>
                                 {expandedRows.has(product.id) && product.stockItems?.map((batch: any) => (
                                     <tr key={batch.id} className="bg-indigo-50/30">
-                                        <td className="py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-12 flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>
-                                            Партия
-                                        </td>
-                                        <td colSpan={6} className="px-2 py-2 text-sm align-middle">
-                                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-600">
-                                                <div>
-                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Штрихкод партии</span>
-                                                    <span className="font-medium text-indigo-600 leading-tight">{batch.serialNumber}</span>
+                                        <td colSpan={6} className="py-3 pl-4 pr-3 text-sm text-gray-500 sm:pl-12 align-middle">
+                                            <div className="flex items-center gap-6">
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>
+                                                    <span>Партия</span>
                                                 </div>
-                                                {batch.diopters && (
+                                                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-600">
                                                     <div>
-                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Диоптрии</span>
-                                                        <span className="leading-tight text-gray-700">{batch.diopters}</span>
+                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Штрихкод партии</span>
+                                                        <span className="font-medium text-indigo-600 leading-tight">{batch.serialNumber}</span>
                                                     </div>
-                                                )}
-                                                <div>
-                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата производства</span>
-                                                    <span className="leading-tight text-gray-700">{batch.productionDate ? new Date(batch.productionDate).toLocaleDateString() : '-'}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата импорта</span>
-                                                    <span className="leading-tight text-gray-700">{batch.importDate ? new Date(batch.importDate).toLocaleDateString() : '-'}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Срок годности</span>
-                                                    <div className="leading-tight">
-                                                        {(() => {
-                                                            const expDate = batch.expiryDate ? new Date(batch.expiryDate) : null;
-                                                            if (!expDate || isNaN(expDate.getTime())) return <span className="text-gray-500">-</span>;
-                                                            
-                                                            const now = new Date();
-                                                            const diffMs = expDate.getTime() - now.getTime();
-                                                            const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
-                                                            
-                                                            let badgeClass = 'bg-green-50 text-green-700 ring-green-600/20';
-                                                            if (diffMonths <= 0) badgeClass = 'bg-red-100 text-red-800 ring-red-600/30';
-                                                            else if (diffMonths <= 3) badgeClass = 'bg-red-50 text-red-700 ring-red-600/20';
-                                                            else if (diffMonths <= 6) badgeClass = 'bg-yellow-50 text-yellow-700 ring-yellow-600/20';
-                                                            
-                                                            return (
-                                                                <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${badgeClass}`}>
-                                                                    {expDate.toLocaleDateString()}
-                                                                    {diffMonths <= 0 && ' ✕'}
-                                                                </span>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Цена закупки ед.</span>
-                                                    <span className="leading-tight text-gray-700">{(batch.purchasePrice || product.purchasePrice || 0).toLocaleString()} ₸</span>
-                                                </div>
-                                                {batch.receiptDocNumber && (
+                                                    {batch.diopters && (
+                                                        <div>
+                                                            <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Диоптрии</span>
+                                                            <span className="leading-tight text-gray-700">{batch.diopters}</span>
+                                                        </div>
+                                                    )}
                                                     <div>
-                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Документ прихода</span>
-                                                        <a href={`/distributor/warehouse/documents/${batch.receiptDocId}`} className="text-indigo-600 hover:text-indigo-900 leading-tight flex items-center gap-1 group font-medium" title="Открыть документ">
-                                                            <svg className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                                            № {batch.receiptDocNumber}
-                                                        </a>
+                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата производства</span>
+                                                        <span className="leading-tight text-gray-700">{batch.productionDate ? new Date(batch.productionDate).toLocaleDateString() : '-'}</span>
                                                     </div>
-                                                )}
+                                                    <div>
+                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата импорта</span>
+                                                        <span className="leading-tight text-gray-700">{batch.importDate ? new Date(batch.importDate).toLocaleDateString() : '-'}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Срок годности</span>
+                                                        <div className="leading-tight">
+                                                            {(() => {
+                                                                const expDate = batch.expiryDate ? new Date(batch.expiryDate) : null;
+                                                                if (!expDate || isNaN(expDate.getTime())) return <span className="text-gray-500">-</span>;
+                                                                
+                                                                const now = new Date();
+                                                                const diffMs = expDate.getTime() - now.getTime();
+                                                                const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
+                                                                
+                                                                let badgeClass = 'bg-green-50 text-green-700 ring-green-600/20';
+                                                                if (diffMonths <= 0) badgeClass = 'bg-red-100 text-red-800 ring-red-600/30';
+                                                                else if (diffMonths <= 3) badgeClass = 'bg-red-50 text-red-700 ring-red-600/20';
+                                                                else if (diffMonths <= 6) badgeClass = 'bg-yellow-50 text-yellow-700 ring-yellow-600/20';
+                                                                
+                                                                return (
+                                                                    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${badgeClass}`}>
+                                                                        {expDate.toLocaleDateString()}
+                                                                        {diffMonths <= 0 && ' ✕'}
+                                                                    </span>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Цена закупки ед.</span>
+                                                        <span className="leading-tight text-gray-700">{(batch.purchasePrice || product.purchasePrice || 0).toLocaleString()} ₸</span>
+                                                    </div>
+                                                    {batch.receiptDocNumber && (
+                                                        <div>
+                                                            <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Документ прихода</span>
+                                                            <a href={`/distributor/warehouse/documents/${batch.receiptDocId}`} className="text-indigo-600 hover:text-indigo-900 leading-tight flex items-center gap-1 group font-medium" title="Открыть документ">
+                                                                <svg className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                                                № {batch.receiptDocNumber}
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-2 py-2 text-center">
