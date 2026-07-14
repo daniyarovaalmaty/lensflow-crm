@@ -626,8 +626,30 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     {item.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" /> : <Box className="h-4 w-4 text-gray-400" />}
                                 </td>
-                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.qty}</td>
-                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.price.toLocaleString()} ₸</td>
+                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={item.qty}
+                                        onChange={(e) => {
+                                            const newQty = Math.max(1, parseInt(e.target.value) || 1);
+                                            setItems(items.map((it, i) => i === idx ? { ...it, qty: newQty } : it));
+                                        }}
+                                        className="w-20 rounded-md border-0 py-1 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={item.price}
+                                        onChange={(e) => {
+                                            const newPrice = Math.max(0, parseInt(e.target.value) || 0);
+                                            setItems(items.map((it, i) => i === idx ? { ...it, price: newPrice } : it));
+                                        }}
+                                        className="w-28 rounded-md border-0 py-1 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
+                                </td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">{(item.qty * item.price).toLocaleString()} ₸</td>
                                 <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                     <button 
