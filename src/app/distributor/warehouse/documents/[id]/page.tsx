@@ -89,6 +89,14 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                             <p className="text-sm font-medium text-gray-500 mb-2">Дополнительная информация</p>
                             {isJsonNotes ? (
                                 <div className="space-y-1 text-sm text-gray-900">
+                                    {parsedNotes.documentDate && (
+                                        <p><span className="text-gray-500">Дата накладной:</span> {(() => {
+                                            const parts = parsedNotes.documentDate.split('-');
+                                            if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                            if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
+                                            return parsedNotes.documentDate;
+                                        })()}</p>
+                                    )}
                                     {parsedNotes.declarationNumber && (
                                         <p><span className="text-gray-500">Номер декларации:</span> {parsedNotes.declarationNumber}</p>
                                     )}
@@ -145,7 +153,6 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                                             <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
                                                                 {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
                                                                 {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
-                                                                {item.batchImport && <span>Импорт: {new Date(item.batchImport).toLocaleDateString('ru-RU')}</span>}
                                                                 {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
                                                             </div>
                                                         </div>
