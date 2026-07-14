@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, Tag } from 'lucide-react';
+import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, Tag, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
@@ -652,12 +652,30 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 </td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">{(item.qty * item.price).toLocaleString()} ₸</td>
                                 <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                    <button 
-                                        onClick={() => setItems(items.filter((_, i) => i !== idx))}
-                                        className="text-red-600 hover:text-red-900"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
+                                    <div className="flex justify-end gap-2">
+                                        <button 
+                                            onClick={() => {
+                                                // Load item back into form for editing
+                                                setSelectedProduct({ id: item.productId, name: item.name, trackSerials: item.trackSerials });
+                                                setQty(item.qty);
+                                                setPrice(item.price);
+                                                setSerials(item.serialNumbers || []);
+                                                // Remove from items list
+                                                setItems(items.filter((_, i) => i !== idx));
+                                            }}
+                                            className="text-indigo-600 hover:text-indigo-900"
+                                            title="Редактировать"
+                                        >
+                                            <Edit2 className="h-4 w-4" />
+                                        </button>
+                                        <button 
+                                            onClick={() => setItems(items.filter((_, i) => i !== idx))}
+                                            className="text-red-600 hover:text-red-900"
+                                            title="Удалить"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

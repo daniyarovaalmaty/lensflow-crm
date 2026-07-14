@@ -244,7 +244,6 @@ export default function ProductBalances() {
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Диоптр.</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Срок годн.</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Единицы</th>
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
                                 <th className="relative py-2 pl-3 pr-4 sm:pr-6"></th>
@@ -265,16 +264,6 @@ export default function ProductBalances() {
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.expirationDate || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">
-                                        {product.trackSerials ? (
-                                            <button 
-                                                onClick={() => setViewingSerialsForProduct(product)}
-                                                className="text-indigo-600 hover:text-indigo-900 underline text-xs font-medium"
-                                            >
-                                                Показать единицы
-                                            </button>
-                                        ) : '-'}
-                                    </td>
                                     <td className="px-2 py-3 text-center">
                                         <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                             {product.currentStock} {product.unit || 'шт'}
@@ -305,7 +294,7 @@ export default function ProductBalances() {
                             ))}
                             {filteredProducts.length === 0 && (
                                 <tr>
-                                    <td colSpan={10} className="py-8 text-center text-sm text-gray-500">
+                                    <td colSpan={9} className="py-8 text-center text-sm text-gray-500">
                                         Товары не найдены
                                     </td>
                                 </tr>
