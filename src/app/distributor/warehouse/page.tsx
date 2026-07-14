@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { 
     Package, RefreshCcw, FileText, ArrowRightLeft, Target, 
-    ClipboardList, TrendingDown 
+    ClipboardList, TrendingDown, Search 
 } from 'lucide-react';
 import SupplyModule from './components/SupplyModule';
 import TransferModule from './components/TransferModule';
