@@ -161,8 +161,14 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         }
 
         try {
-            const res = await fetch('/api/distributor/warehouse/products', {
-                method: 'POST',
+            const isEditing = !!selectedProduct;
+            const url = isEditing 
+                ? `/api/distributor/warehouse/products/${selectedProduct.id}`
+                : '/api/distributor/warehouse/products';
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: newProductName,
@@ -173,16 +179,28 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     expirationDate: newProductExpiration,
                     importDate: newProductImportDate,
                     productionDate: newProductProductionDate,
+                    declarationNumber,
+                    declarationDate,
                     lot: newProductLot,
                     trackSerials: newProductTrackSerials,
+                    specs: {
+                        diopters: newProductDiopters || '',
+                        expirationDate: newProductExpiration || '',
+                        importDate: newProductImportDate || '',
+                        productionDate: newProductProductionDate || '',
+                        declarationNumber: declarationNumber || '',
+                        declarationDate: declarationDate || '',
+                        lot: newProductLot || ''
+                    }
                 })
             });
 
-            if (!res.ok) throw new Error('Failed to create product');
+            if (!res.ok) throw new Error('Failed to save product');
             const data = await res.json();
             
-            toast.success('Товар успешно создан!');
-            setSelectedProduct(data.product);
+            toast.success(isEditing ? 'Товар успешно обновлен!' : 'Товар успешно создан!');
+            // update items if editing an existing item in the array might be needed? No, items are added later.
+            setSelectedProduct(data.product || data);
             setIsCreatingProduct(false);
             setSearchResults([]);
             setNewProductName('');
@@ -496,7 +514,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 ) : isCreatingProduct ? (
                     <div className="space-y-4 bg-white p-4 rounded-md ring-1 ring-gray-200">
                         <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium text-gray-900">Создание нового товара</h4>
+                            <h4 className="text-sm font-medium text-gray-900">{selectedProduct ? 'Редактирование товара' : 'Создание нового товара'}</h4>
                             <button onClick={() => setIsCreatingProduct(false)} className="text-sm text-gray-500 hover:text-gray-700">Отмена</button>
                         </div>
                         
@@ -612,7 +630,25 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     {selectedProduct.trackSerials ? 'Серийный учет' : 'Количественный учет'}
                                 </span>
                             </div>
-                            <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Выбрать другой</button>
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => {
+                                    setNewProductName(selectedProduct.name || '');
+                                    setNewProductBarcode(selectedProduct.barcode || '');
+                                    setNewProductBrand(selectedProduct.brand || '');
+                                    setNewProductModel(selectedProduct.model || '');
+                                    setNewProductDiopters(selectedProduct.specs?.diopters || '');
+                                    setNewProductExpiration(selectedProduct.specs?.expirationDate || '');
+                                    setNewProductImportDate(selectedProduct.specs?.importDate || '');
+                                    setNewProductProductionDate(selectedProduct.specs?.productionDate || '');
+                                    setNewProductLot(selectedProduct.specs?.lot || '');
+                                    setNewProductTrackSerials(selectedProduct.trackSerials || false);
+                                    setIsCreatingProduct(true);
+                                }} className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
+                                    <Edit2 className="h-4 w-4" />
+                                    Редактировать
+                                </button>
+                                <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Выбрать другой</button>
+                            </div>
                         </div>
                         
                         <div className="flex gap-4 items-end flex-wrap">
