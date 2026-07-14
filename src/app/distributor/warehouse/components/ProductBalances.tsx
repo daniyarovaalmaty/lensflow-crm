@@ -7,6 +7,34 @@ import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 import UnitsModal from './UnitsModal';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
+function FlexibleDateInput({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
+    const [mode, setMode] = useState<'month' | 'date'>((value && value.length > 7) ? 'date' : 'month');
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium leading-6 text-gray-900">{label}</label>
+                <button 
+                    type="button" 
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setMode(m => m === 'month' ? 'date' : 'month');
+                        onChange('');
+                    }}
+                    className="text-xs text-indigo-600 hover:text-indigo-800"
+                >
+                    {mode === 'month' ? 'Указать день' : 'Только месяц'}
+                </button>
+            </div>
+            <input
+                type={mode}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            />
+        </div>
+    );
+}
+
 export default function ProductBalances() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -437,35 +465,26 @@ export default function ProductBalances() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Срок годности</label>
-                                        <input
-                                            type="text"
+                                        <FlexibleDateInput
+                                            label="Срок годности"
                                             value={editingProduct.specs?.expirationDate || ''}
-                                            onChange={(e) => handleSpecChange('expirationDate', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                            placeholder="Напр. 2027-03 или 2027-03-15"
+                                            onChange={(val) => handleSpecChange('expirationDate', val)}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Дата импорта</label>
-                                        <input
-                                            type="text"
+                                        <FlexibleDateInput
+                                            label="Дата импорта"
                                             value={editingProduct.specs?.importDate || ''}
-                                            onChange={(e) => handleSpecChange('importDate', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                            placeholder="Напр. 2026-07 или 2026-07-10"
+                                            onChange={(val) => handleSpecChange('importDate', val)}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Дата производства</label>
-                                        <input
-                                            type="text"
+                                        <FlexibleDateInput
+                                            label="Дата производства"
                                             value={editingProduct.specs?.productionDate || ''}
-                                            onChange={(e) => handleSpecChange('productionDate', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                            placeholder="Напр. 2025-01 или 2025-01-20"
+                                            onChange={(val) => handleSpecChange('productionDate', val)}
                                         />
                                     </div>
                                 </div>
