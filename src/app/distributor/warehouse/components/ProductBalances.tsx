@@ -391,12 +391,12 @@ export default function ProductBalances() {
                                                     <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Цена закупки ед.</span>
                                                     <span className="leading-tight text-gray-700">{(batch.purchasePrice || product.purchasePrice || 0).toLocaleString()} ₸</span>
                                                 </div>
-                                                {batch.receiptDocId && (
+                                                {batch.receiptDocNumber && (
                                                     <div>
                                                         <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Документ прихода</span>
-                                                        <a href={`/distributor/warehouse/documents/${batch.receiptDocId}`} className="text-indigo-600 hover:text-indigo-900 leading-tight flex items-center gap-1 group">
+                                                        <a href={`/distributor/warehouse/documents/${batch.receiptDocId}`} className="text-indigo-600 hover:text-indigo-900 leading-tight flex items-center gap-1 group font-medium" title="Открыть документ">
                                                             <svg className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                                            Перейти
+                                                            № {batch.receiptDocNumber}
                                                         </a>
                                                     </div>
                                                 )}
