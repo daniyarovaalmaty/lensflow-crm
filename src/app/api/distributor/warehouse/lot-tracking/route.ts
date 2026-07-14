@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
                     select: { 
                         orderNumber: true, 
                         createdAt: true, 
-                        client: { select: { name: true, bin: true } }
+                        counterparty: { select: { name: true } }
                     }
                 }
             },

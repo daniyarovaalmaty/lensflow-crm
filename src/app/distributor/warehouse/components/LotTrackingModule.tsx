@@ -150,7 +150,7 @@ export default function LotTrackingModule() {
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <Building className="w-3.5 h-3.5 text-gray-400" />
-                                                    {item.wholesaleOrder.client?.name || '—'}
+                                                    {item.wholesaleOrder.counterparty?.name || '—'}
                                                 </div>
                                             </div>
                                         ) : (
