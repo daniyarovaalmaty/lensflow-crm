@@ -38,17 +38,15 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [newProductBrand, setNewProductBrand] = useState('');
     const [newProductModel, setNewProductModel] = useState('');
     const [newProductBarcode, setNewProductBarcode] = useState('');
-    const [newProductSku, setNewProductSku] = useState('');
     const [newProductDiopters, setNewProductDiopters] = useState('');
-    const [newProductPercentage, setNewProductPercentage] = useState('');
     const [newProductExpiration, setNewProductExpiration] = useState('');
     const [newProductImportDate, setNewProductImportDate] = useState('');
     const [newProductProductionDate, setNewProductProductionDate] = useState('');
+    const [newProductDeclarationNumber, setNewProductDeclarationNumber] = useState('');
+    const [newProductDeclarationDate, setNewProductDeclarationDate] = useState('');
 
-    const [newProductRefCode, setNewProductRefCode] = useState('');
     const [newProductLot, setNewProductLot] = useState('');
     const [newProductTrackSerials, setNewProductTrackSerials] = useState(false);
-    const [newProductBatchSerialNumber, setNewProductBatchSerialNumber] = useState('');
     const [batchSerialNumber, setBatchSerialNumber] = useState('');
 
     useEffect(() => {
@@ -94,20 +92,17 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: newProductName,
-                    sku: newProductSku,
                     barcode: newProductBarcode,
                     brand: newProductBrand,
                     model: newProductModel,
                     diopters: newProductDiopters,
-                    percentage: newProductPercentage,
                     expirationDate: newProductExpiration,
                     importDate: newProductImportDate,
                     productionDate: newProductProductionDate,
-
-                    refCode: newProductRefCode,
+                    declarationNumber: newProductDeclarationNumber,
+                    declarationDate: newProductDeclarationDate,
                     lot: newProductLot,
                     trackSerials: newProductTrackSerials,
-                    batchSerialNumber: newProductTrackSerials ? newProductBatchSerialNumber : ''
                 })
             });
 
@@ -120,20 +115,17 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             setSearchResults([]);
             setNewProductName('');
             setNewProductBarcode('');
-            setNewProductSku('');
             setNewProductBrand('');
             setNewProductModel('');
             setNewProductDiopters('');
-            setNewProductPercentage('');
             setNewProductExpiration('');
             setNewProductImportDate('');
             setNewProductProductionDate('');
-
-            setNewProductRefCode('');
+            setNewProductDeclarationNumber('');
+            setNewProductDeclarationDate('');
             setNewProductLot('');
-            setBatchSerialNumber(newProductTrackSerials ? newProductBatchSerialNumber : '');
+            setBatchSerialNumber(newProductTrackSerials ? newProductLot : '');
             setNewProductTrackSerials(false);
-            setNewProductBatchSerialNumber('');
             setIsCreatingProduct(false);
         } catch (error) {
             toast.error('Ошибка создания товара');
@@ -419,15 +411,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Артикул</label>
-                                <input
-                                    type="text"
-                                    value={newProductSku}
-                                    onChange={(e) => setNewProductSku(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Бренд</label>
                                 <input
                                     type="text"
@@ -442,15 +425,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     type="text"
                                     value={newProductModel}
                                     onChange={(e) => setNewProductModel(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Код референса</label>
-                                <input
-                                    type="text"
-                                    value={newProductRefCode}
-                                    onChange={(e) => setNewProductRefCode(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
@@ -473,39 +447,52 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Процентажность</label>
-                                <input
-                                    type="text"
-                                    value={newProductPercentage}
-                                    onChange={(e) => setNewProductPercentage(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Срок годности</label>
                                 <input
-                                    type="month"
+                                    type="text"
                                     value={newProductExpiration}
                                     onChange={(e) => setNewProductExpiration(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    placeholder="Напр. 2027-03 или 2027-03-15"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Дата производства</label>
                                 <input
-                                    type="month"
+                                    type="text"
                                     value={newProductProductionDate}
                                     onChange={(e) => setNewProductProductionDate(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    placeholder="Напр. 2025-01 или 2025-01-20"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Дата импорта</label>
                                 <input
-                                    type="month"
+                                    type="text"
                                     value={newProductImportDate}
                                     onChange={(e) => setNewProductImportDate(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    placeholder="Напр. 2026-07 или 2026-07-10"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Номер декларации</label>
+                                <input
+                                    type="text"
+                                    value={newProductDeclarationNumber}
+                                    onChange={(e) => setNewProductDeclarationNumber(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Дата декларации</label>
+                                <input
+                                    type="text"
+                                    value={newProductDeclarationDate}
+                                    onChange={(e) => setNewProductDeclarationDate(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    placeholder="Напр. 2026-07 или 2026-07-10"
                                 />
                             </div>
 
@@ -518,22 +505,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                                 />
                                 <label htmlFor="trackSerials" className="ml-2 block text-sm text-gray-900">
-                                    Вести серийный учет для этого товара (каждая единица имеет уникальный штрихкод)
+                                    Вести серийный учет для этого товара
                                 </label>
                             </div>
-                            
-                            {newProductTrackSerials && (
-                                <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер партии</label>
-                                    <input
-                                        type="text"
-                                        value={newProductBatchSerialNumber}
-                                        onChange={(e) => setNewProductBatchSerialNumber(e.target.value)}
-                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                        placeholder="Например, L-10294"
-                                    />
-                                </div>
-                            )}
                         </div>
                         <button
                             type="button"

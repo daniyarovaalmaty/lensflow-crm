@@ -425,42 +425,56 @@ export default function ProductBalances() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Процентажность</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.specs?.percentage || ''}
-                                            onChange={(e) => handleSpecChange('percentage', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
-
-                                    <div>
                                         <label className="block text-sm font-medium leading-6 text-gray-900">Срок годности</label>
                                         <input
-                                            type="month"
-                                            value={editingProduct.specs?.expirationDate ? new Date(editingProduct.specs.expirationDate).toISOString().slice(0, 7) : ''}
-                                            onChange={(e) => handleSpecChange('expirationDate', e.target.value ? new Date(e.target.value + '-01').toISOString() : '')}
+                                            type="text"
+                                            value={editingProduct.specs?.expirationDate || ''}
+                                            onChange={(e) => handleSpecChange('expirationDate', e.target.value)}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                            placeholder="Напр. 2027-03 или 2027-03-15"
                                         />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium leading-6 text-gray-900">Дата импорта</label>
                                         <input
-                                            type="month"
-                                            value={editingProduct.specs?.importDate ? new Date(editingProduct.specs.importDate).toISOString().slice(0, 7) : ''}
-                                            onChange={(e) => handleSpecChange('importDate', e.target.value ? new Date(e.target.value + '-01').toISOString() : '')}
+                                            type="text"
+                                            value={editingProduct.specs?.importDate || ''}
+                                            onChange={(e) => handleSpecChange('importDate', e.target.value)}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                            placeholder="Напр. 2026-07 или 2026-07-10"
                                         />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium leading-6 text-gray-900">Дата производства</label>
                                         <input
-                                            type="month"
-                                            value={editingProduct.specs?.productionDate ? new Date(editingProduct.specs.productionDate).toISOString().slice(0, 7) : ''}
-                                            onChange={(e) => handleSpecChange('productionDate', e.target.value ? new Date(e.target.value + '-01').toISOString() : '')}
+                                            type="text"
+                                            value={editingProduct.specs?.productionDate || ''}
+                                            onChange={(e) => handleSpecChange('productionDate', e.target.value)}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                            placeholder="Напр. 2025-01 или 2025-01-20"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Номер декларации</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.specs?.declarationNumber || ''}
+                                            onChange={(e) => handleSpecChange('declarationNumber', e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Дата декларации</label>
+                                        <input
+                                            type="text"
+                                            value={editingProduct.specs?.declarationDate || ''}
+                                            onChange={(e) => handleSpecChange('declarationDate', e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                            placeholder="Напр. 2026-07 или 2026-07-10"
                                         />
                                     </div>
 

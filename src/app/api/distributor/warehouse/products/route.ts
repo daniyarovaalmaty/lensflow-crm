@@ -12,17 +12,15 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { 
             name, 
-            sku, 
             barcode, 
             brand,
             model,
             diopters,
-            percentage,
             expirationDate,
             importDate,
             productionDate,
-            receiptDoc,
-            refCode,
+            declarationNumber,
+            declarationDate,
             lot,
             trackSerials, 
             purchasePrice, 
@@ -35,12 +33,11 @@ export async function POST(req: NextRequest) {
 
         const specs = {
             diopters: diopters || '',
-            percentage: percentage || '',
             expirationDate: expirationDate || '',
             importDate: importDate || '',
             productionDate: productionDate || '',
-            receiptDoc: receiptDoc || '',
-            refCode: refCode || '',
+            declarationNumber: declarationNumber || '',
+            declarationDate: declarationDate || '',
             lot: lot || '',
         };
 
@@ -48,7 +45,7 @@ export async function POST(req: NextRequest) {
             data: {
                 organizationId: session.user.organizationId,
                 name,
-                sku: sku || `SKU-${Date.now()}`, // auto-generate if empty
+                sku: `SKU-${Date.now()}`, // auto-generated
                 barcode: barcode || null,
                 brand: brand || null,
                 model: model || null,
