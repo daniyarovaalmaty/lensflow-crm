@@ -201,6 +201,12 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             toast.success(isEditing ? 'Товар успешно обновлен!' : 'Товар успешно создан!');
             // update items if editing an existing item in the array might be needed? No, items are added later.
             setSelectedProduct(data.product || data);
+            
+            // Автоматически переносим серийный номер/партию в поле ввода серийных номеров
+            if (newProductTrackSerials && newProductLot.trim()) {
+                setSerials([newProductLot.trim()]);
+            }
+
             setIsCreatingProduct(false);
             setSearchResults([]);
             setNewProductName('');
