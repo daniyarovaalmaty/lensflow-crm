@@ -280,7 +280,6 @@ export default function ProductBalances() {
                                 <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Наименование</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">С/Н (Партия)</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Бренд</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Диоптр.</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Срок годн.</th>
@@ -305,9 +304,8 @@ export default function ProductBalances() {
                                             <span className="min-w-0 break-words">{product.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.barcode || '-'}</td>
+                                    <td className="px-2 py-3 text-sm font-medium text-gray-900">{product.trackSerials ? '-' : (product.barcode || '-')}</td>
                                     <td className="px-2 py-3 text-sm text-gray-300">-</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-300">-</td>
                                     <td className="px-2 py-3 text-sm text-gray-300">-</td>
@@ -393,6 +391,15 @@ export default function ProductBalances() {
                                                     <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Цена закупки ед.</span>
                                                     <span className="leading-tight text-gray-700">{(batch.purchasePrice || product.purchasePrice || 0).toLocaleString()} ₸</span>
                                                 </div>
+                                                {batch.receiptDocId && (
+                                                    <div>
+                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Документ прихода</span>
+                                                        <a href={`/distributor/warehouse/documents/${batch.receiptDocId}`} className="text-indigo-600 hover:text-indigo-900 leading-tight flex items-center gap-1 group">
+                                                            <svg className="w-3 h-3 text-indigo-400 group-hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                                            Перейти
+                                                        </a>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-2 py-2 text-center">
@@ -446,17 +453,7 @@ export default function ProductBalances() {
                                         />
                                     </div>
                                     
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Бренд</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.brand || ''}
-                                            onChange={(e) => setEditingProduct({...editingProduct, brand: e.target.value})}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
-                                    
-                                    <div>
+                                    <div className="sm:col-span-2">
                                         <label className="block text-sm font-medium leading-6 text-gray-900">Модель</label>
                                         <input
                                             type="text"
@@ -487,39 +484,43 @@ export default function ProductBalances() {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Диоптрийность</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.specs?.diopters || ''}
-                                            onChange={(e) => handleSpecChange('diopters', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
+                                    {!editingProduct.trackSerials && (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-medium leading-6 text-gray-900">Диоптрийность</label>
+                                                <input
+                                                    type="text"
+                                                    value={editingProduct.specs?.diopters || ''}
+                                                    onChange={(e) => handleSpecChange('diopters', e.target.value)}
+                                                    className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                                />
+                                            </div>
 
-                                    <div>
-                                        <FlexibleDateInput
-                                            label="Срок годности"
-                                            value={editingProduct.specs?.expirationDate || ''}
-                                            onChange={(val) => handleSpecChange('expirationDate', val)}
-                                        />
-                                    </div>
+                                            <div>
+                                                <FlexibleDateInput
+                                                    label="Срок годности"
+                                                    value={editingProduct.specs?.expirationDate || ''}
+                                                    onChange={(val) => handleSpecChange('expirationDate', val)}
+                                                />
+                                            </div>
 
-                                    <div>
-                                        <FlexibleDateInput
-                                            label="Дата импорта"
-                                            value={editingProduct.specs?.importDate || ''}
-                                            onChange={(val) => handleSpecChange('importDate', val)}
-                                        />
-                                    </div>
+                                            <div>
+                                                <FlexibleDateInput
+                                                    label="Дата импорта"
+                                                    value={editingProduct.specs?.importDate || ''}
+                                                    onChange={(val) => handleSpecChange('importDate', val)}
+                                                />
+                                            </div>
 
-                                    <div>
-                                        <FlexibleDateInput
-                                            label="Дата производства"
-                                            value={editingProduct.specs?.productionDate || ''}
-                                            onChange={(val) => handleSpecChange('productionDate', val)}
-                                        />
-                                    </div>
+                                            <div>
+                                                <FlexibleDateInput
+                                                    label="Дата производства"
+                                                    value={editingProduct.specs?.productionDate || ''}
+                                                    onChange={(val) => handleSpecChange('productionDate', val)}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                             <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">

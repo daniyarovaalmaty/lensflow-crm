@@ -36,7 +36,9 @@ export async function GET(req: NextRequest) {
                         expiryDate: true,
                         productionDate: true,
                         importDate: true,
-                        diopters: true
+                        diopters: true,
+                        receiptDocId: true,
+                        purchasePrice: true
                     },
                     orderBy: { expiryDate: 'asc' }
                 }
