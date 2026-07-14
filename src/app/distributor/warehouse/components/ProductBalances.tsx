@@ -281,7 +281,42 @@ export default function ProductBalances() {
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.expirationDate || '-'}</td>
+                                    <td className="px-2 py-3 text-sm">
+                                        {(() => {
+                                            const exp = product.specs?.expirationDate;
+                                            if (!exp) return <span className="text-gray-500">-</span>;
+                                            
+                                            // Parse date: supports YYYY-MM and YYYY-MM-DD
+                                            const parts = exp.split('-');
+                                            const expDate = parts.length >= 3 
+                                                ? new Date(+parts[0], +parts[1] - 1, +parts[2])
+                                                : parts.length === 2
+                                                    ? new Date(+parts[0], +parts[1] - 1, 28) // end of month approx
+                                                    : null;
+                                            
+                                            if (!expDate || isNaN(expDate.getTime())) return <span className="text-gray-500">{exp}</span>;
+                                            
+                                            const now = new Date();
+                                            const diffMs = expDate.getTime() - now.getTime();
+                                            const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
+                                            
+                                            let badgeClass = 'bg-green-50 text-green-700 ring-green-600/20'; // >6 months
+                                            if (diffMonths <= 0) {
+                                                badgeClass = 'bg-red-100 text-red-800 ring-red-600/30'; // expired
+                                            } else if (diffMonths <= 3) {
+                                                badgeClass = 'bg-red-50 text-red-700 ring-red-600/20'; // ≤3 months
+                                            } else if (diffMonths <= 6) {
+                                                badgeClass = 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'; // ≤6 months
+                                            }
+                                            
+                                            return (
+                                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${badgeClass}`}>
+                                                    {exp}
+                                                    {diffMonths <= 0 && ' ✕'}
+                                                </span>
+                                            );
+                                        })()}
+                                    </td>
                                     <td className="px-2 py-3 text-center">
                                         <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                             {product.currentStock} {product.unit || 'шт'}

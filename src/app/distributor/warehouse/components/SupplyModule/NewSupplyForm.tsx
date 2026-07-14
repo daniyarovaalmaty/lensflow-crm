@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, Tag, Edit2 } from 'lucide-react';
+import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, Tag, Edit2, Wifi, WifiOff, CloudOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+
+const LOCAL_DRAFT_KEY = 'lensflow_supply_draft';
 
 interface NewSupplyFormProps {
     onSuccess: () => void;
@@ -11,11 +13,20 @@ interface NewSupplyFormProps {
 }
 
 export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyFormProps) {
-    const [counterpartyName, setCounterpartyName] = useState(initialDraft?.counterpartyName || '');
-    const [documentNumber, setDocumentNumber] = useState(initialDraft?.documentNumber || '');
-    const [declarationNumber, setDeclarationNumber] = useState(initialDraft?.declarationNumber || '');
-    const [declarationDate, setDeclarationDate] = useState(initialDraft?.declarationDate || '');
-    const [items, setItems] = useState<any[]>(initialDraft?.items || []);
+    // Try to restore from localStorage if no initialDraft
+    const savedDraft = typeof window !== 'undefined' && !initialDraft 
+        ? (() => { try { return JSON.parse(localStorage.getItem(LOCAL_DRAFT_KEY) || 'null'); } catch { return null; } })()
+        : null;
+    const draft = initialDraft || savedDraft;
+
+    const [counterpartyName, setCounterpartyName] = useState(draft?.counterpartyName || '');
+    const [documentNumber, setDocumentNumber] = useState(draft?.documentNumber || '');
+    const [declarationNumber, setDeclarationNumber] = useState(draft?.declarationNumber || '');
+    const [declarationDate, setDeclarationDate] = useState(draft?.declarationDate || '');
+    const [items, setItems] = useState<any[]>(draft?.items || []);
+    
+    const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+    const [lastSavedAt, setLastSavedAt] = useState<string | null>(savedDraft ? 'восстановлено' : null);
     
     // Search state
     const [nameSearch, setNameSearch] = useState('');
@@ -75,6 +86,43 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
         return () => clearTimeout(delayDebounceFn);
     }, [nameSearch, barcodeSearch]);
+
+    // Auto-save draft to localStorage (debounced)
+    useEffect(() => {
+        const draftData = { counterpartyName, documentNumber, declarationNumber, declarationDate, items };
+        // Only save if there's meaningful data
+        const hasData = counterpartyName || documentNumber || declarationNumber || declarationDate || items.length > 0;
+        if (!hasData) return;
+
+        const timeout = setTimeout(() => {
+            try {
+                localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify({ ...draftData, savedAt: new Date().toISOString() }));
+                const now = new Date();
+                setLastSavedAt(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`);
+            } catch (e) {
+                console.error('Failed to save draft to localStorage', e);
+            }
+        }, 2000);
+
+        return () => clearTimeout(timeout);
+    }, [counterpartyName, documentNumber, declarationNumber, declarationDate, items]);
+
+    // Online/offline listener
+    useEffect(() => {
+        const handleOnline = () => { setIsOnline(true); toast.success('Подключение восстановлено'); };
+        const handleOffline = () => { setIsOnline(false); toast('Нет подключения. Черновик сохраняется локально', { icon: '📡' }); };
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    // Clear localStorage draft on successful save
+    const clearLocalDraft = useCallback(() => {
+        try { localStorage.removeItem(LOCAL_DRAFT_KEY); setLastSavedAt(null); } catch {}
+    }, []);
 
     const handleCreateProduct = async (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
@@ -221,6 +269,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             }
             
             toast.success(status === 'draft' ? 'Черновик сохранен' : 'Поставка проведена успешно!');
+            clearLocalDraft();
             onSuccess();
         } catch (error: any) {
             toast.error(error.message || 'Ошибка сохранения');
@@ -230,7 +279,27 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     return (
         <div className="bg-white">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-medium text-gray-900">Оформление новой поставки</h2>
+                <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-medium text-gray-900">Оформление новой поставки</h2>
+                    <div className="flex items-center gap-2">
+                        {isOnline ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                                <Wifi className="h-3.5 w-3.5" />
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">
+                                <WifiOff className="h-3.5 w-3.5" />
+                                Оффлайн
+                            </span>
+                        )}
+                        {lastSavedAt && (
+                            <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                <CloudOff className="h-3 w-3" />
+                                Локально: {lastSavedAt}
+                            </span>
+                        )}
+                    </div>
+                </div>
                 <div className="space-x-3">
                     <button 
                         onClick={() => handleSave('draft')}
@@ -248,6 +317,22 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     </button>
                 </div>
             </div>
+
+            {savedDraft && (
+                <div className="mb-4 rounded-md bg-blue-50 p-3 ring-1 ring-inset ring-blue-200">
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm text-blue-700">
+                            📋 Восстановлен незавершённый черновик. Данные сохранены локально.
+                        </p>
+                        <button
+                            onClick={() => { clearLocalDraft(); window.location.reload(); }}
+                            className="text-xs text-blue-600 underline hover:text-blue-800"
+                        >
+                            Очистить
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 mb-8 border-b pb-8">
                 <div className="sm:col-span-3">
