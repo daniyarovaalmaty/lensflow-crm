@@ -548,15 +548,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     placeholder="Сканируйте общий штрихкод..."
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Бренд</label>
-                                <input
-                                    type="text"
-                                    value={newProductBrand}
-                                    onChange={(e) => setNewProductBrand(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Модель</label>
                                 <input
