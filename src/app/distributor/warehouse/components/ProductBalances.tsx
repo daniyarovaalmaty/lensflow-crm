@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save, ChevronDown, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 import UnitsModal from './UnitsModal';
@@ -52,6 +52,18 @@ export default function ProductBalances() {
     useEffect(() => {
         fetchBalances();
     }, []);
+
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+    const toggleRow = (productId: string) => {
+        const newSet = new Set(expandedRows);
+        if (newSet.has(productId)) {
+            newSet.delete(productId);
+        } else {
+            newSet.add(productId);
+        }
+        setExpandedRows(newSet);
+    };
 
     const fetchBalances = async () => {
         try {
@@ -279,72 +291,26 @@ export default function ProductBalances() {
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {filteredProducts.map((product) => (
-                                <tr key={product.id} className="hover:bg-gray-50">
+                                <><tr key={product.id} className="hover:bg-gray-50">
                                     <td className="py-3 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                         <div className="flex items-center gap-2">
+                                            {product.stockItems?.length > 0 ? (
+                                                <button onClick={() => toggleRow(product.id)} className="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                                    {expandedRows.has(product.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                                </button>
+                                            ) : (
+                                                <div className="w-4" />
+                                            )}
                                             {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                                             <span className="min-w-0 break-words">{product.name}</span>
                                         </div>
                                     </td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.barcode || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">
-                                        {(() => {
-                                            const serials: string[] = product.specs?.serialNumbers || [];
-                                            const lot = product.specs?.lot;
-                                            // Combine: lot (if set and not already in serials) + accumulated serials
-                                            const allSerials = lot && !serials.includes(lot) ? [lot, ...serials] : serials.length > 0 ? serials : lot ? [lot] : [];
-                                            if (allSerials.length === 0) return '-';
-                                            if (allSerials.length === 1) return allSerials[0];
-                                            return (
-                                                <div className="flex flex-wrap gap-1">
-                                                    {allSerials.map((sn: string, i: number) => (
-                                                        <span key={i} className="inline-flex px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 text-xs">
-                                                            {sn}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            );
-                                        })()}
-                                    </td>
+                                    <td className="px-2 py-3 text-sm text-gray-300">-</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
-                                    <td className="px-2 py-3 text-sm">
-                                        {(() => {
-                                            const exp = product.specs?.expirationDate;
-                                            if (!exp) return <span className="text-gray-500">-</span>;
-                                            
-                                            // Parse date: supports YYYY-MM and YYYY-MM-DD
-                                            const parts = exp.split('-');
-                                            const expDate = parts.length >= 3 
-                                                ? new Date(+parts[0], +parts[1] - 1, +parts[2])
-                                                : parts.length === 2
-                                                    ? new Date(+parts[0], +parts[1] - 1, 28) // end of month approx
-                                                    : null;
-                                            
-                                            if (!expDate || isNaN(expDate.getTime())) return <span className="text-gray-500">{exp}</span>;
-                                            
-                                            const now = new Date();
-                                            const diffMs = expDate.getTime() - now.getTime();
-                                            const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
-                                            
-                                            let badgeClass = 'bg-green-50 text-green-700 ring-green-600/20'; // >6 months
-                                            if (diffMonths <= 0) {
-                                                badgeClass = 'bg-red-100 text-red-800 ring-red-600/30'; // expired
-                                            } else if (diffMonths <= 3) {
-                                                badgeClass = 'bg-red-50 text-red-700 ring-red-600/20'; // ≤3 months
-                                            } else if (diffMonths <= 6) {
-                                                badgeClass = 'bg-yellow-50 text-yellow-700 ring-yellow-600/20'; // ≤6 months
-                                            }
-                                            
-                                            return (
-                                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${badgeClass}`}>
-                                                    {exp}
-                                                    {diffMonths <= 0 && ' ✕'}
-                                                </span>
-                                            );
-                                        })()}
-                                    </td>
+                                    <td className="px-2 py-3 text-sm text-gray-300">-</td>
+                                    <td className="px-2 py-3 text-sm text-gray-300">-</td>
                                     <td className="px-2 py-3 text-center">
                                         <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                             {product.currentStock} {product.unit || 'шт'}
@@ -372,6 +338,73 @@ export default function ProductBalances() {
                                         </div>
                                     </td>
                                 </tr>
+                                {expandedRows.has(product.id) && product.stockItems?.map((batch: any) => (
+                                    <tr key={batch.id} className="bg-indigo-50/30">
+                                        <td className="py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-12 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>
+                                            Партия
+                                        </td>
+                                        <td colSpan={6} className="px-2 py-2 text-sm align-middle">
+                                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-600">
+                                                <div>
+                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Штрихкод партии</span>
+                                                    <span className="font-medium text-indigo-600 leading-tight">{batch.serialNumber}</span>
+                                                </div>
+                                                {batch.diopters && (
+                                                    <div>
+                                                        <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Диоптрии</span>
+                                                        <span className="leading-tight text-gray-700">{batch.diopters}</span>
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата производства</span>
+                                                    <span className="leading-tight text-gray-700">{batch.productionDate ? new Date(batch.productionDate).toLocaleDateString() : '-'}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Дата импорта</span>
+                                                    <span className="leading-tight text-gray-700">{batch.importDate ? new Date(batch.importDate).toLocaleDateString() : '-'}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Срок годности</span>
+                                                    <div className="leading-tight">
+                                                        {(() => {
+                                                            const expDate = batch.expiryDate ? new Date(batch.expiryDate) : null;
+                                                            if (!expDate || isNaN(expDate.getTime())) return <span className="text-gray-500">-</span>;
+                                                            
+                                                            const now = new Date();
+                                                            const diffMs = expDate.getTime() - now.getTime();
+                                                            const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
+                                                            
+                                                            let badgeClass = 'bg-green-50 text-green-700 ring-green-600/20';
+                                                            if (diffMonths <= 0) badgeClass = 'bg-red-100 text-red-800 ring-red-600/30';
+                                                            else if (diffMonths <= 3) badgeClass = 'bg-red-50 text-red-700 ring-red-600/20';
+                                                            else if (diffMonths <= 6) badgeClass = 'bg-yellow-50 text-yellow-700 ring-yellow-600/20';
+                                                            
+                                                            return (
+                                                                <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${badgeClass}`}>
+                                                                    {expDate.toLocaleDateString()}
+                                                                    {diffMonths <= 0 && ' ✕'}
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Цена закупки ед.</span>
+                                                    <span className="leading-tight text-gray-700">{(batch.purchasePrice || product.purchasePrice || 0).toLocaleString()} ₸</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-2 py-2 text-center">
+                                            <span className="text-sm font-medium text-gray-700">{batch.quantity}</span>
+                                        </td>
+                                        <td className="px-2 py-2 text-right text-sm text-gray-500">
+                                            {(batch.quantity * product.purchasePrice).toLocaleString()} ₸
+                                        </td>
+                                        <td className="relative py-2 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 whitespace-nowrap">
+                                        </td>
+                                    </tr>
+                                ))}</>
                             ))}
                             {filteredProducts.length === 0 && (
                                 <tr>

@@ -31,7 +31,8 @@ export async function GET(req: NextRequest) {
             conditions.push({
                 OR: barcodeQueries.flatMap(bq => [
                     { barcode: { contains: bq, mode: 'insensitive' as const } },
-                    { stockItems: { some: { barcode: { contains: bq, mode: 'insensitive' as const } } } }
+                    { stockItems: { some: { barcode: { contains: bq, mode: 'insensitive' as const } } } },
+                    { stockItems: { some: { serialNumber: { contains: bq, mode: 'insensitive' as const } } } }
                 ])
             });
         }
@@ -39,6 +40,11 @@ export async function GET(req: NextRequest) {
         const products = await prisma.opticProduct.findMany({
             where: {
                 AND: conditions
+            },
+            include: {
+                stockItems: {
+                    where: { quantity: { gt: 0 } }
+                }
             },
             take: 10,
             orderBy: { name: 'asc' }

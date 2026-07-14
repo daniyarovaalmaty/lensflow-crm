@@ -75,25 +75,59 @@ export async function POST(req: NextRequest) {
                     const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
                     if (!product) continue;
 
-                    // Update total stock, purchase price, and accumulate serial numbers
-                    const existingSpecs = (product.specs as any || {});
-                    const existingSerials: string[] = existingSpecs.serialNumbers || [];
-                    const newSerials = item.serialNumbers || [];
-                    const allSerials = [...existingSerials, ...newSerials];
-                    const newSpecs = { 
-                        ...existingSpecs, 
-                        receiptDocument: documentNumber,
-                        ...(allSerials.length > 0 ? { serialNumbers: allSerials } : {})
-                    };
+                    // Update total stock and purchase price on Product
                     await tx.opticProduct.update({
                         where: { id: product.id },
                         data: { 
                             currentStock: product.currentStock + item.qty,
                             purchasePrice: item.price,
-                            ...(product.retailPrice === 0 ? { retailPrice: item.price } : {}),
-                            specs: newSpecs
+                            ...(product.retailPrice === 0 ? { retailPrice: item.price } : {})
                         }
                     });
+
+                    // Upsert Batch (StockItem)
+                    const batchBarcode = item.batchBarcode || `AUTO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    
+                    const existingBatch = await tx.stockItem.findUnique({
+                        where: {
+                            organizationId_serialNumber: {
+                                organizationId,
+                                serialNumber: batchBarcode
+                            }
+                        }
+                    });
+
+                    let stockItemId = '';
+                    if (existingBatch) {
+                        await tx.stockItem.update({
+                            where: { id: existingBatch.id },
+                            data: {
+                                quantity: existingBatch.quantity + item.qty,
+                                purchasePrice: item.price,
+                                expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : existingBatch.expiryDate,
+                                productionDate: item.batchProduction ? new Date(item.batchProduction) : existingBatch.productionDate,
+                                importDate: item.batchImport ? new Date(item.batchImport) : existingBatch.importDate,
+                                diopters: item.batchDiopters || existingBatch.diopters
+                            }
+                        });
+                        stockItemId = existingBatch.id;
+                    } else {
+                        const newBatch = await tx.stockItem.create({
+                            data: {
+                                productId: product.id,
+                                organizationId,
+                                serialNumber: batchBarcode,
+                                quantity: item.qty,
+                                purchasePrice: item.price,
+                                expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : null,
+                                productionDate: item.batchProduction ? new Date(item.batchProduction) : null,
+                                importDate: item.batchImport ? new Date(item.batchImport) : null,
+                                diopters: item.batchDiopters || null,
+                                receiptDocId: doc.id
+                            }
+                        });
+                        stockItemId = newBatch.id;
+                    }
 
                     // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
@@ -102,7 +136,7 @@ export async function POST(req: NextRequest) {
                             productId: product.id,
                             type: 'receipt',
                             quantity: item.qty,
-                            serialNumbers: item.serialNumbers || [],
+                            serialNumbers: [batchBarcode],
                             documentNumber,
                             documentId: doc.id,
                             supplier: counterpartyName,
@@ -121,6 +155,34 @@ export async function POST(req: NextRequest) {
                         where: { id: product.id },
                         data: { currentStock: Math.max(0, product.currentStock - item.qty) }
                     });
+
+                    // Deduct from Batches (StockItems)
+                    if (item.batchBarcode) {
+                        const batch = await tx.stockItem.findUnique({
+                            where: { organizationId_serialNumber: { organizationId, serialNumber: item.batchBarcode } }
+                        });
+                        if (batch) {
+                            await tx.stockItem.update({
+                                where: { id: batch.id },
+                                data: { quantity: Math.max(0, batch.quantity - item.qty) }
+                            });
+                        }
+                    } else if (item.serialNumbers && item.serialNumbers.length > 0) {
+                        for (const serial of item.serialNumbers) {
+                            const batch = await tx.stockItem.findUnique({
+                                where: { organizationId_serialNumber: { organizationId, serialNumber: serial } }
+                            });
+                            if (batch) {
+                                // if it's a batch, how much do we deduct? if serialNumbers length matches qty, then 1 per serial
+                                // if there is only 1 serialNumber but qty is larger, we deduct full qty from it.
+                                const deductQty = item.serialNumbers.length === 1 ? item.qty : 1;
+                                await tx.stockItem.update({
+                                    where: { id: batch.id },
+                                    data: { quantity: Math.max(0, batch.quantity - deductQty) }
+                                });
+                            }
+                        }
+                    }
 
                     // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({

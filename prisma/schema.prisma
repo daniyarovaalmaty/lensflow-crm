@@ -692,7 +692,11 @@ model StockItem {
 
   batchNumber     String?
   expiryDate      DateTime?
+  productionDate  DateTime?
+  importDate      DateTime?
+  diopters        String?
   purchasePrice   Int?
+  quantity        Int      @default(1)
 
   receiptDocId    String?
 

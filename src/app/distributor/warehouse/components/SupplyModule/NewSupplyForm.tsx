@@ -75,17 +75,15 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     // Create New Product state
     const [isCreatingProduct, setIsCreatingProduct] = useState(false);
     const [newProductName, setNewProductName] = useState('');
-    const [newProductBrand, setNewProductBrand] = useState('');
     const [newProductModel, setNewProductModel] = useState('');
     const [newProductBarcode, setNewProductBarcode] = useState('');
-    const [newProductDiopters, setNewProductDiopters] = useState('');
-    const [newProductExpiration, setNewProductExpiration] = useState('');
-    const [newProductImportDate, setNewProductImportDate] = useState('');
-    const [newProductProductionDate, setNewProductProductionDate] = useState('');
 
-    const [newProductLot, setNewProductLot] = useState('');
-    const [newProductTrackSerials, setNewProductTrackSerials] = useState(false);
-    const [batchSerialNumber, setBatchSerialNumber] = useState('');
+    // Batch details state (for row addition)
+    const [batchBarcode, setBatchBarcode] = useState('');
+    const [batchDiopters, setBatchDiopters] = useState('');
+    const [batchExpiration, setBatchExpiration] = useState('');
+    const [batchProduction, setBatchProduction] = useState('');
+    const [batchImport, setBatchImport] = useState('');
 
     useEffect(() => {
         if (!nameSearch.trim() && !barcodeSearch.trim()) {
@@ -173,25 +171,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 body: JSON.stringify({
                     name: newProductName,
                     barcode: newProductBarcode,
-                    brand: newProductBrand,
                     model: newProductModel,
-                    diopters: newProductDiopters,
-                    expirationDate: newProductExpiration,
-                    importDate: newProductImportDate,
-                    productionDate: newProductProductionDate,
-                    declarationNumber,
-                    declarationDate,
-                    lot: newProductLot,
-                    trackSerials: newProductTrackSerials,
-                    specs: {
-                        diopters: newProductDiopters || '',
-                        expirationDate: newProductExpiration || '',
-                        importDate: newProductImportDate || '',
-                        productionDate: newProductProductionDate || '',
-                        declarationNumber: declarationNumber || '',
-                        declarationDate: declarationDate || '',
-                        lot: newProductLot || ''
-                    }
+                    trackSerials: true // All products are now batch-tracked
                 })
             });
 
@@ -199,72 +180,39 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             const data = await res.json();
             
             toast.success(isEditing ? 'Товар успешно обновлен!' : 'Товар успешно создан!');
-            // update items if editing an existing item in the array might be needed? No, items are added later.
             setSelectedProduct(data.product || data);
             
-            // Автоматически переносим серийный номер/партию в поле ввода серийных номеров
-            if (newProductTrackSerials && newProductLot.trim()) {
-                setSerials([newProductLot.trim()]);
-            }
-
             setIsCreatingProduct(false);
             setSearchResults([]);
             setNewProductName('');
             setNewProductBarcode('');
-            setNewProductBrand('');
             setNewProductModel('');
-            setNewProductDiopters('');
-            setNewProductExpiration('');
-            setNewProductImportDate('');
-            setNewProductProductionDate('');
-            setNewProductLot('');
-            setBatchSerialNumber(newProductTrackSerials ? newProductLot : '');
-            setNewProductTrackSerials(false);
-            setIsCreatingProduct(false);
         } catch (error) {
             toast.error('Ошибка создания товара');
         }
     };
 
-    const handleAddSerial = () => {
-        if (!currentSerial.trim()) return;
-        
-        const code = currentSerial.trim();
-        setSerials(prev => {
-            if (prev.includes(code)) {
-                toast.error('Этот серийный номер уже добавлен');
-                return prev;
-            }
-            return [...prev, code];
-        });
-        setCurrentSerial('');
-        // Auto-refocus for continuous entry
-        setTimeout(() => serialTagInputRef.current?.focus(), 0);
-    };
-
     const handleAddItem = () => {
         if (!selectedProduct) return;
-        
-        // For serial products: collect any pending serial number
-        let finalSerials = [...serials];
-        if (selectedProduct.trackSerials && currentSerial.trim()) {
-            if (!finalSerials.includes(currentSerial.trim())) {
-                finalSerials.push(currentSerial.trim());
-            }
-        }
         
         const newItem = {
             productId: selectedProduct.id,
             name: selectedProduct.name,
-            qty: qty,  // Always use manual qty
+            qty: qty,
             price: Number(price) || 0,
-            trackSerials: selectedProduct.trackSerials,
-            serialNumbers: selectedProduct.trackSerials ? finalSerials : [],
-            batchSerialNumber: selectedProduct.trackSerials ? batchSerialNumber : '',
+            batchBarcode: batchBarcode.trim(),
+            batchDiopters,
+            batchExpiration,
+            batchProduction,
+            batchImport,
         };
         
         if (newItem.qty <= 0) {
             toast.error('Количество должно быть больше нуля');
+            return;
+        }
+        if (!newItem.batchBarcode) {
+            toast.error('Укажите штрихкод партии (серийный номер)');
             return;
         }
 
@@ -276,9 +224,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         setBarcodeSearch('');
         setQty(1);
         setPrice('');
-        setSerials([]);
-        setCurrentSerial('');
-        setBatchSerialNumber('');
+        setBatchBarcode('');
+        setBatchDiopters('');
+        setBatchExpiration('');
+        setBatchProduction('');
+        setBatchImport('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -558,58 +508,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер</label>
-                                <input
-                                    type="text"
-                                    value={newProductLot}
-                                    onChange={(e) => setNewProductLot(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
-                                <input
-                                    type="text"
-                                    value={newProductDiopters}
-                                    onChange={(e) => setNewProductDiopters(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
-                                <FlexibleDateInput 
-                                    label="Срок годности" 
-                                    value={newProductExpiration} 
-                                    onChange={setNewProductExpiration} 
-                                />
-                            </div>
-                            <div>
-                                <FlexibleDateInput 
-                                    label="Дата производства" 
-                                    value={newProductProductionDate} 
-                                    onChange={setNewProductProductionDate} 
-                                />
-                            </div>
-                            <div>
-                                <FlexibleDateInput 
-                                    label="Дата импорта" 
-                                    value={newProductImportDate} 
-                                    onChange={setNewProductImportDate} 
-                                />
-                            </div>
-
-                            <div className="sm:col-span-2 flex items-center">
-                                <input
-                                    id="trackSerials"
-                                    type="checkbox"
-                                    checked={newProductTrackSerials}
-                                    onChange={(e) => setNewProductTrackSerials(e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                />
-                                <label htmlFor="trackSerials" className="ml-2 block text-sm text-gray-900">
-                                    Вести серийный учет для этого товара
-                                </label>
-                            </div>
                         </div>
                         <button
                             type="button"
@@ -632,14 +530,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 <button onClick={() => {
                                     setNewProductName(selectedProduct.name || '');
                                     setNewProductBarcode(selectedProduct.barcode || '');
-                                    setNewProductBrand(selectedProduct.brand || '');
                                     setNewProductModel(selectedProduct.model || '');
-                                    setNewProductDiopters(selectedProduct.specs?.diopters || '');
-                                    setNewProductExpiration(selectedProduct.specs?.expirationDate || '');
-                                    setNewProductImportDate(selectedProduct.specs?.importDate || '');
-                                    setNewProductProductionDate(selectedProduct.specs?.productionDate || '');
-                                    setNewProductLot(selectedProduct.specs?.lot || '');
-                                    setNewProductTrackSerials(selectedProduct.trackSerials || false);
                                     setIsCreatingProduct(true);
                                 }} className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
                                     <Edit2 className="h-4 w-4" />
@@ -649,7 +540,40 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             </div>
                         </div>
                         
-                        <div className="flex gap-4 items-end flex-wrap">
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 className="text-sm font-medium text-gray-900 mb-4">Данные партии товара</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Штрихкод партии *</label>
+                                    <input
+                                        type="text"
+                                        value={batchBarcode}
+                                        onChange={(e) => setBatchBarcode(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        placeholder="Уникальный код"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
+                                    <input
+                                        type="text"
+                                        value={batchDiopters}
+                                        onChange={(e) => setBatchDiopters(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <FlexibleDateInput label="Срок годности" value={batchExpiration} onChange={setBatchExpiration} />
+                                </div>
+                                <div>
+                                    <FlexibleDateInput label="Дата производства" value={batchProduction} onChange={setBatchProduction} />
+                                </div>
+                                <div>
+                                    <FlexibleDateInput label="Дата импорта" value={batchImport} onChange={setBatchImport} />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 items-end flex-wrap">
                             <div className="w-32">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Количество</label>
                                 <input
@@ -683,46 +607,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 Добавить
                             </button>
                         </div>
-
-                        {/* Serial numbers section for serial-tracked products */}
-                        {selectedProduct.trackSerials && (
-                            <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg ring-1 ring-indigo-100">
-                                <label className="block text-sm font-medium text-indigo-800 mb-2">
-                                    <Tag className="h-4 w-4 inline mr-1" />
-                                    Серийные номера (партия)
-                                </label>
-                                <div className="flex gap-2 mb-2">
-                                    <input
-                                        type="text"
-                                        ref={serialTagInputRef}
-                                        value={currentSerial}
-                                        onChange={(e) => setCurrentSerial(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
-                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                        placeholder="Введите серийный номер и нажмите Enter..."
-                                    />
-                                    <button onClick={handleAddSerial} className="px-3 py-1.5 bg-white border border-indigo-200 rounded hover:bg-indigo-50 text-indigo-600">
-                                        <Plus className="h-4 w-4" />
-                                    </button>
-                                </div>
-                                {serials.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {serials.map(sn => (
-                                            <span key={sn} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-indigo-100 rounded text-indigo-700 text-xs font-medium">
-                                                {sn}
-                                                <button 
-                                                    onClick={() => setSerials(prev => prev.filter(s => s !== sn))}
-                                                    className="text-indigo-400 hover:text-red-500 p-0.5"
-                                                >
-                                                    <Trash2 className="h-3 w-3" />
-                                                </button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                                <p className="text-xs text-indigo-500 mt-1">Один товар может иметь несколько серийных номеров в партии</p>
-                            </div>
-                        )}
+                    </div>
                     </div>
                 )}
             </div>
@@ -745,19 +630,20 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             <tr key={idx}>
                                 <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                     {item.name}
-                                    {item.trackSerials && item.serialNumbers?.length > 0 && (
-                                        <div className="mt-1 text-xs text-gray-500 flex gap-1 flex-wrap">
-                                            <span className="text-gray-400 mr-1">С/Н:</span>
-                                            {item.serialNumbers.map((sn: string) => (
-                                                <span key={sn} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 text-xs">
-                                                    {sn}
-                                                </span>
-                                            ))}
+                                    {item.batchBarcode && (
+                                        <div className="mt-1 text-xs text-gray-500 flex flex-col gap-1">
+                                            <div><span className="text-gray-400">Штрихкод партии:</span> <span className="font-medium text-indigo-600">{item.batchBarcode}</span></div>
+                                            {(item.batchExpiration || item.batchProduction) && (
+                                                <div className="flex gap-2">
+                                                    {item.batchProduction && <span>Произв: {item.batchProduction}</span>}
+                                                    {item.batchExpiration && <span>Годен до: {item.batchExpiration}</span>}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {item.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" /> : <Box className="h-4 w-4 text-gray-400" />}
+                                    <Tag className="h-4 w-4 text-indigo-500" />
                                 </td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     <input
@@ -789,10 +675,14 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         <button 
                                             onClick={() => {
                                                 // Load item back into form for editing
-                                                setSelectedProduct({ id: item.productId, name: item.name, trackSerials: item.trackSerials });
+                                                setSelectedProduct({ id: item.productId, name: item.name });
                                                 setQty(item.qty);
                                                 setPrice(item.price);
-                                                setSerials(item.serialNumbers || []);
+                                                setBatchBarcode(item.batchBarcode || '');
+                                                setBatchDiopters(item.batchDiopters || '');
+                                                setBatchExpiration(item.batchExpiration || '');
+                                                setBatchProduction(item.batchProduction || '');
+                                                setBatchImport(item.batchImport || '');
                                                 // Remove from items list
                                                 setItems(items.filter((_, i) => i !== idx));
                                             }}

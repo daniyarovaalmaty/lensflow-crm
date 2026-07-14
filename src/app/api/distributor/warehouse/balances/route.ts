@@ -28,8 +28,17 @@ export async function GET(req: NextRequest) {
                 barcode: true,
                 specs: true,
                 stockItems: {
-                    where: { status: 'in_stock' },
-                    select: { serialNumber: true, barcode: true }
+                    where: { quantity: { gt: 0 } },
+                    select: { 
+                        id: true,
+                        serialNumber: true, 
+                        quantity: true,
+                        expiryDate: true,
+                        productionDate: true,
+                        importDate: true,
+                        diopters: true
+                    },
+                    orderBy: { expiryDate: 'asc' }
                 }
             },
             orderBy: { name: 'asc' }
