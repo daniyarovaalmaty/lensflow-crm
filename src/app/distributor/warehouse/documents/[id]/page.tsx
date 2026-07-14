@@ -106,7 +106,7 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                     {parsedNotes.userNotes && (
                                         <p><span className="text-gray-500">Примечание:</span> {parsedNotes.userNotes}</p>
                                     )}
-                                    {!parsedNotes.declarationNumber && !parsedNotes.declarationDate && !parsedNotes.userNotes && (
+                                    {!parsedNotes.declarationNumber && !parsedNotes.declarationDate && !parsedNotes.userNotes && !parsedNotes.documentDate && (
                                         <p className="text-gray-400 italic">Нет дополнительных данных</p>
                                     )}
                                 </div>

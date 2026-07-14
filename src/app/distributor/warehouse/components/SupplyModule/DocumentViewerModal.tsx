@@ -91,7 +91,7 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                     <p className="mt-1 text-sm text-gray-900">{decl.userNotes}</p>
                                                 </div>
                                             )}
-                                            {!decl.declarationNumber && !decl.declarationDate && !decl.userNotes && document.notes && (
+                                            {Object.keys(decl).length === 0 && document.notes && (
                                                 <div className="col-span-2">
                                                     <p className="text-sm font-medium text-gray-500">Примечание</p>
                                                     <p className="mt-1 text-sm text-gray-900">{document.notes}</p>
