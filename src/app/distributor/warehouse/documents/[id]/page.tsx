@@ -20,6 +20,18 @@ export default async function DocumentPage({ params }: { params: { id: string } 
 
     const items = doc.items as any[] || [];
 
+    // Parse JSON notes if it exists
+    let parsedNotes: any = {};
+    let isJsonNotes = false;
+    if (doc.notes) {
+        try {
+            parsedNotes = JSON.parse(doc.notes);
+            isJsonNotes = true;
+        } catch (e) {
+            isJsonNotes = false;
+        }
+    }
+
     const getDocumentTypeLabel = (type: string) => {
         switch (type) {
             case 'receipt': return 'Приходная накладная';
@@ -74,8 +86,25 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                     </div>
                     {doc.notes && (
                         <div className="col-span-2">
-                            <p className="text-sm font-medium text-gray-500 mb-1">Примечание</p>
-                            <p className="text-sm text-gray-900">{doc.notes}</p>
+                            <p className="text-sm font-medium text-gray-500 mb-2">Дополнительная информация</p>
+                            {isJsonNotes ? (
+                                <div className="space-y-1 text-sm text-gray-900">
+                                    {parsedNotes.declarationNumber && (
+                                        <p><span className="text-gray-500">Номер декларации:</span> {parsedNotes.declarationNumber}</p>
+                                    )}
+                                    {parsedNotes.declarationDate && (
+                                        <p><span className="text-gray-500">Дата декларации:</span> {parsedNotes.declarationDate}</p>
+                                    )}
+                                    {parsedNotes.userNotes && (
+                                        <p><span className="text-gray-500">Примечание:</span> {parsedNotes.userNotes}</p>
+                                    )}
+                                    {!parsedNotes.declarationNumber && !parsedNotes.declarationDate && !parsedNotes.userNotes && (
+                                        <p className="text-gray-400 italic">Нет дополнительных данных</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-900">{doc.notes}</p>
+                            )}
                         </div>
                     )}
                 </div>
@@ -99,8 +128,8 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                             <div className="flex items-center gap-3">
                                                 {item.trackSerials ? <Barcode className="w-5 h-5 text-indigo-500" /> : <Package className="w-5 h-5 text-gray-400" />}
                                                 <div>
-                                                    <p>{item.name}</p>
-                                                    {item.trackSerials && item.serialNumbers && (
+                                                    <p className="font-semibold text-gray-900">{item.name}</p>
+                                                    {(item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0) ? (
                                                         <div className="mt-1 flex gap-1 flex-wrap">
                                                             {item.serialNumbers.map((sn: string) => (
                                                                 <span key={sn} className="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-600">
@@ -108,7 +137,19 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                                                 </span>
                                                             ))}
                                                         </div>
-                                                    )}
+                                                    ) : item.batchBarcode ? (
+                                                        <div className="mt-1.5 space-y-1">
+                                                            <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit block">
+                                                                С/Н: {item.batchBarcode}
+                                                            </span>
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+                                                                {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
+                                                                {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
+                                                                {item.batchImport && <span>Импорт: {new Date(item.batchImport).toLocaleDateString('ru-RU')}</span>}
+                                                                {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
+                                                            </div>
+                                                        </div>
+                                                    ) : null}
                                                 </div>
                                             </div>
                                         </td>

@@ -68,6 +68,20 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этот черновик?')) return;
+        try {
+            const res = await fetch(`/api/distributor/warehouse/documents/${id}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('Failed to delete');
+            toast.success('Черновик удален');
+            fetchDocuments();
+        } catch (error) {
+            toast.error('Ошибка при удалении');
+        }
+    };
+
     useEffect(() => {
         if (!searchQuery.trim()) {
             setSearchResults([]);
@@ -209,16 +223,19 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Контрагент</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сумма</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата</th>
+                                <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                    <span className="sr-only">Действия</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {documents.map((doc) => (
                                 <tr key={doc.id} className="hover:bg-gray-50">
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="h-4 w-4 text-gray-400" />
+                                        <a href={`/distributor/warehouse/documents/${doc.id}`} className="flex items-center gap-2 text-indigo-600 hover:text-indigo-900">
+                                            <FileText className="h-4 w-4" />
                                             {doc.documentNumber}
-                                        </div>
+                                        </a>
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                         {getDocumentTypeLabel(doc.type)}
@@ -233,6 +250,18 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{doc.counterpartyName || '-'}</td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{doc.totalAmount.toLocaleString()} ₸</td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{new Date(doc.createdAt).toLocaleDateString('ru-RU')}</td>
+                                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                        {doc.status === 'draft' && (
+                                            <button 
+                                                type="button"
+                                                className="text-red-600 hover:text-red-900 p-2"
+                                                onClick={() => handleDelete(doc.id)}
+                                                title="Удалить черновик"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                             {documents.length === 0 && !isLoading && (

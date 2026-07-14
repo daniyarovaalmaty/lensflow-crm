@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, Edit, CheckCircle } from 'lucide-react';
+import { Eye, Edit, CheckCircle, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewerModal from './DocumentViewerModal';
 
@@ -40,6 +40,20 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
             toast.error('Ошибка загрузки журнала');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этот черновик?')) return;
+        try {
+            const res = await fetch(`/api/distributor/warehouse/documents/${id}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('Failed to delete');
+            toast.success('Черновик удален');
+            fetchDocuments();
+        } catch (error) {
+            toast.error('Ошибка при удалении');
         }
     };
 
@@ -99,9 +113,20 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                                             type="button"
                                             className="relative z-10 p-2 cursor-pointer text-indigo-600 hover:text-indigo-900 mr-2"
                                             onClick={() => doc.status === 'confirmed' ? setSelectedDocument(doc) : (onEdit && onEdit(doc))}
+                                            title={doc.status === 'confirmed' ? "Просмотр" : "Редактировать"}
                                         >
                                             {doc.status === 'confirmed' ? <Eye className="h-5 w-5 pointer-events-none" /> : <Edit className="h-5 w-5 pointer-events-none" />}
                                         </button>
+                                        {doc.status === 'draft' && (
+                                            <button 
+                                                type="button"
+                                                className="relative z-10 p-2 cursor-pointer text-red-600 hover:text-red-900"
+                                                onClick={() => handleDelete(doc.id)}
+                                                title="Удалить черновик"
+                                            >
+                                                <Trash2 className="h-5 w-5 pointer-events-none" />
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

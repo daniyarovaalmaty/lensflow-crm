@@ -72,6 +72,18 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                     <p className="mt-1 text-sm text-gray-900">{decl.declarationDate}</p>
                                                 </div>
                                             )}
+                                            {decl.userNotes && (
+                                                <div className="col-span-2">
+                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{decl.userNotes}</p>
+                                                </div>
+                                            )}
+                                            {!decl.declarationNumber && !decl.declarationDate && !decl.userNotes && document.notes && (
+                                                <div className="col-span-2">
+                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{document.notes}</p>
+                                                </div>
+                                            )}
                                         </>
                                     );
                                 })()}
@@ -99,15 +111,20 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                         <div className="font-medium">{item.name || item.productName || 'Неизвестный товар'}</div>
                                                         {product && (
                                                             <div className="mt-1 text-xs text-gray-500">
-                                                                {product.brand && <span className="mr-3">Бренд: {product.brand}</span>}
                                                                 {product.model && <span className="mr-3">Модель: {product.model}</span>}
-                                                                {product.specs?.diopters && <span className="mr-3">Диоптр: {product.specs.diopters}</span>}
-                                                                {product.specs?.percentage && <span className="mr-3">Процент: {product.specs.percentage}</span>}
-                                                                {product.barcode && <span className="mr-3">Штрихкод: {product.barcode}</span>}
-                                                                {product.specs?.expirationDate && <span className="mr-3">Годен до: {new Date(product.specs.expirationDate).toLocaleDateString('ru-RU')}</span>}
-                                                                {product.specs?.importDate && <span className="mr-3">Импорт: {new Date(product.specs.importDate).toLocaleDateString('ru-RU')}</span>}
-                                                                {product.specs?.productionDate && <span className="mr-3">Произведен: {new Date(product.specs.productionDate).toLocaleDateString('ru-RU')}</span>}
-                                                                {product.specs?.refCode && <span className="mr-3">Реф. код: {product.specs.refCode}</span>}
+                                                            </div>
+                                                        )}
+                                                        {item.batchBarcode && (
+                                                            <div className="mt-1.5 space-y-1">
+                                                                <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit block">
+                                                                    С/Н (Партия): {item.batchBarcode}
+                                                                </span>
+                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+                                                                    {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
+                                                                    {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
+                                                                    {item.batchImport && <span>Импорт: {new Date(item.batchImport).toLocaleDateString('ru-RU')}</span>}
+                                                                    {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
+                                                                </div>
                                                             </div>
                                                         )}
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (

@@ -118,3 +118,33 @@ export async function PUT(
         return NextResponse.json({ error: error.message || 'Internal server error', details: error }, { status: 500 });
     }
 }
+
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const session = await auth();
+        if (!session?.user?.organizationId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const id = params.id;
+        const organizationId = session.user.organizationId;
+
+        const existingDoc = await prisma.stockDocument.findUnique({ where: { id } });
+        if (!existingDoc || existingDoc.organizationId !== organizationId) {
+            return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+        }
+
+        if (existingDoc.status !== 'draft') {
+            return NextResponse.json({ error: 'Only drafts can be deleted' }, { status: 400 });
+        }
+
+        await prisma.stockDocument.delete({ where: { id } });
+        
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message || 'Internal server error', details: error }, { status: 500 });
+    }
+}
