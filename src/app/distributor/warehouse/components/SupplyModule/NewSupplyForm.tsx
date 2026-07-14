@@ -484,7 +484,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Срок годности</label>
                                 <input
-                                    type="date"
+                                    type="month"
                                     value={newProductExpiration}
                                     onChange={(e) => setNewProductExpiration(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
@@ -493,7 +493,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Дата производства</label>
                                 <input
-                                    type="date"
+                                    type="month"
                                     value={newProductProductionDate}
                                     onChange={(e) => setNewProductProductionDate(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
@@ -502,7 +502,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Дата импорта</label>
                                 <input
-                                    type="date"
+                                    type="month"
                                     value={newProductImportDate}
                                     onChange={(e) => setNewProductImportDate(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"

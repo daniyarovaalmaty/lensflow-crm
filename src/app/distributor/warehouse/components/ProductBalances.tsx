@@ -437,9 +437,9 @@ export default function ProductBalances() {
                                     <div>
                                         <label className="block text-sm font-medium leading-6 text-gray-900">Срок годности</label>
                                         <input
-                                            type="date"
-                                            value={editingProduct.specs?.expirationDate ? new Date(editingProduct.specs.expirationDate).toISOString().split('T')[0] : ''}
-                                            onChange={(e) => handleSpecChange('expirationDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                            type="month"
+                                            value={editingProduct.specs?.expirationDate ? new Date(editingProduct.specs.expirationDate).toISOString().slice(0, 7) : ''}
+                                            onChange={(e) => handleSpecChange('expirationDate', e.target.value ? new Date(e.target.value + '-01').toISOString() : '')}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
                                     </div>
@@ -447,9 +447,9 @@ export default function ProductBalances() {
                                     <div>
                                         <label className="block text-sm font-medium leading-6 text-gray-900">Дата импорта</label>
                                         <input
-                                            type="date"
-                                            value={editingProduct.specs?.importDate ? new Date(editingProduct.specs.importDate).toISOString().split('T')[0] : ''}
-                                            onChange={(e) => handleSpecChange('importDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                            type="month"
+                                            value={editingProduct.specs?.importDate ? new Date(editingProduct.specs.importDate).toISOString().slice(0, 7) : ''}
+                                            onChange={(e) => handleSpecChange('importDate', e.target.value ? new Date(e.target.value + '-01').toISOString() : '')}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
                                     </div>
@@ -457,9 +457,9 @@ export default function ProductBalances() {
                                     <div>
                                         <label className="block text-sm font-medium leading-6 text-gray-900">Дата производства</label>
                                         <input
-                                            type="date"
-                                            value={editingProduct.specs?.productionDate ? new Date(editingProduct.specs.productionDate).toISOString().split('T')[0] : ''}
-                                            onChange={(e) => handleSpecChange('productionDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                            type="month"
+                                            value={editingProduct.specs?.productionDate ? new Date(editingProduct.specs.productionDate).toISOString().slice(0, 7) : ''}
+                                            onChange={(e) => handleSpecChange('productionDate', e.target.value ? new Date(e.target.value + '-01').toISOString() : '')}
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
                                     </div>
