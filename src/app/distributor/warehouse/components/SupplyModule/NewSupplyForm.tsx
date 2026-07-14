@@ -685,7 +685,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                                 setBatchDiopters(item.batchDiopters || '');
                                                 setBatchExpiration(item.batchExpiration || '');
                                                 setBatchProduction(item.batchProduction || '');
-                                                setBatchImport(item.batchImport || '');
                                                 // Remove from items list
                                                 setItems(items.filter((_, i) => i !== idx));
                                             }}
