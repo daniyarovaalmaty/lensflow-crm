@@ -75,8 +75,16 @@ export async function POST(req: NextRequest) {
                     const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
                     if (!product) continue;
 
-                    // Update total stock and purchase price
-                    const newSpecs = { ...(product.specs as any || {}), receiptDocument: documentNumber };
+                    // Update total stock, purchase price, and accumulate serial numbers
+                    const existingSpecs = (product.specs as any || {});
+                    const existingSerials: string[] = existingSpecs.serialNumbers || [];
+                    const newSerials = item.serialNumbers || [];
+                    const allSerials = [...existingSerials, ...newSerials];
+                    const newSpecs = { 
+                        ...existingSpecs, 
+                        receiptDocument: documentNumber,
+                        ...(allSerials.length > 0 ? { serialNumbers: allSerials } : {})
+                    };
                     await tx.opticProduct.update({
                         where: { id: product.id },
                         data: { 

@@ -259,7 +259,25 @@ export default function ProductBalances() {
                                         </div>
                                     </td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.barcode || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.lot || '-'}</td>
+                                    <td className="px-2 py-3 text-sm text-gray-500">
+                                        {(() => {
+                                            const serials: string[] = product.specs?.serialNumbers || [];
+                                            const lot = product.specs?.lot;
+                                            // Combine: lot (if set and not already in serials) + accumulated serials
+                                            const allSerials = lot && !serials.includes(lot) ? [lot, ...serials] : serials.length > 0 ? serials : lot ? [lot] : [];
+                                            if (allSerials.length === 0) return '-';
+                                            if (allSerials.length === 1) return allSerials[0];
+                                            return (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {allSerials.map((sn: string, i: number) => (
+                                                        <span key={i} className="inline-flex px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 text-xs">
+                                                            {sn}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+                                    </td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.brand || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.specs?.diopters || '-'}</td>
