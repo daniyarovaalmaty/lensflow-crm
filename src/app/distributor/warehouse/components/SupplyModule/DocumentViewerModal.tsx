@@ -91,7 +91,8 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                             </div>
                                                         )}
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (
-                                                            <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap">
+                                                            <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap items-center">
+                                                                <span className="text-gray-400 mr-1">С/Н:</span>
                                                                 {item.serialNumbers.map((sn: string) => (
                                                                     <span key={sn} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100">{sn}</span>
                                                                 ))}

@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
+import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
-import { useUsbScanner } from '@/hooks/useUsbScanner';
 
 interface NewSupplyFormProps {
     onSuccess: () => void;
@@ -30,27 +29,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [currentSerial, setCurrentSerial] = useState('');
     const serialInputRef = useRef<HTMLInputElement>(null);
 
-    // USB barcode scanner integration — active only when serial product is selected
-    const handleUsbScan = useCallback((rawCode: string) => {
-        if (!selectedProduct?.trackSerials) return;
-        
-        const code = translateCyrillicToEnglishLayout(rawCode.trim());
-        if (!code) return;
-        
-        setSerials(prev => {
-            if (prev.includes(code)) {
-                toast.error(`Штрихкод ${code} уже добавлен`);
-                return prev;
-            }
-            const updated = [...prev, code];
-            setQty(updated.length);
-            toast.success(`✅ ${code}`);
-            return updated;
-        });
-        setCurrentSerial('');
-    }, [selectedProduct]);
-
-    useUsbScanner(handleUsbScan, !!selectedProduct?.trackSerials);
+    // Serial number input ref for auto-focus
+    const serialTagInputRef = useRef<HTMLInputElement>(null);
 
     // Create New Product state
     const [isCreatingProduct, setIsCreatingProduct] = useState(false);
@@ -163,24 +143,23 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
         
-        const code = translateCyrillicToEnglishLayout(currentSerial.trim());
+        const code = currentSerial.trim();
         setSerials(prev => {
             if (prev.includes(code)) {
                 toast.error('Этот серийный номер уже добавлен');
                 return prev;
             }
-            const updated = [...prev, code];
-            setQty(updated.length);
-            return updated;
+            return [...prev, code];
         });
         setCurrentSerial('');
-        // Auto-refocus for continuous scanning
-        setTimeout(() => serialInputRef.current?.focus(), 0);
+        // Auto-refocus for continuous entry
+        setTimeout(() => serialTagInputRef.current?.focus(), 0);
     };
 
     const handleAddItem = () => {
         if (!selectedProduct) return;
         
+        // For serial products: collect any pending serial number
         let finalSerials = [...serials];
         if (selectedProduct.trackSerials && currentSerial.trim()) {
             if (!finalSerials.includes(currentSerial.trim())) {
@@ -191,7 +170,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         const newItem = {
             productId: selectedProduct.id,
             name: selectedProduct.name,
-            qty: selectedProduct.trackSerials ? finalSerials.length : qty,
+            qty: qty,  // Always use manual qty
             price: Number(price) || 0,
             trackSerials: selectedProduct.trackSerials,
             serialNumbers: selectedProduct.trackSerials ? finalSerials : [],
@@ -199,7 +178,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         };
         
         if (newItem.qty <= 0) {
-            toast.error('Количество должно быть больше нуля (добавьте хотя бы один штрихкод)');
+            toast.error('Количество должно быть больше нуля');
             return;
         }
 
@@ -577,71 +556,16 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         </div>
                         
                         <div className="flex gap-4 items-end flex-wrap">
-                            {selectedProduct.trackSerials && (
-                                <div className="w-48">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер партии</label>
-                                    <input
-                                        type="text"
-                                        value={batchSerialNumber}
-                                        onChange={(e) => setBatchSerialNumber(e.target.value)}
-                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                        placeholder="Например, L-10294"
-                                    />
-                                </div>
-                            )}
-
-                            {selectedProduct.trackSerials ? (
-                                <div className="flex-1 min-w-[200px]">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Уникальные штрихкоды (сканируйте)</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            ref={serialInputRef}
-                                            autoFocus
-                                            value={currentSerial}
-                                            onChange={(e) => setCurrentSerial(translateCyrillicToEnglishLayout(e.target.value))}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
-                                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                            placeholder="Сканируйте штрихкод..."
-                                        />
-                                        <button onClick={handleAddSerial} className="px-3 py-1.5 bg-gray-100 border rounded hover:bg-gray-200">
-                                            <Barcode className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                    {serials.length > 0 && (
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            {serials.map(sn => (
-                                                <span key={sn} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-gray-100 rounded text-gray-600 text-xs font-medium">
-                                                    {sn}
-                                                    <button 
-                                                        onClick={() => {
-                                                            setSerials(prev => {
-                                                                const updated = prev.filter(s => s !== sn);
-                                                                setQty(updated.length);
-                                                                return updated;
-                                                            });
-                                                        }}
-                                                        className="text-gray-400 hover:text-red-500 p-0.5"
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="w-32">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Количество</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={qty}
-                                        onChange={(e) => setQty(Number(e.target.value))}
-                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    />
-                                </div>
-                            )}
+                            <div className="w-32">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Количество</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={qty}
+                                    onChange={(e) => setQty(Number(e.target.value))}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                />
+                            </div>
 
                             <div className="w-40">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Цена закупки (₸)</label>
@@ -665,6 +589,46 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 Добавить
                             </button>
                         </div>
+
+                        {/* Serial numbers section for serial-tracked products */}
+                        {selectedProduct.trackSerials && (
+                            <div className="mt-4 p-3 bg-indigo-50/50 rounded-lg ring-1 ring-indigo-100">
+                                <label className="block text-sm font-medium text-indigo-800 mb-2">
+                                    <Tag className="h-4 w-4 inline mr-1" />
+                                    Серийные номера (партия)
+                                </label>
+                                <div className="flex gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        ref={serialTagInputRef}
+                                        value={currentSerial}
+                                        onChange={(e) => setCurrentSerial(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        placeholder="Введите серийный номер и нажмите Enter..."
+                                    />
+                                    <button onClick={handleAddSerial} className="px-3 py-1.5 bg-white border border-indigo-200 rounded hover:bg-indigo-50 text-indigo-600">
+                                        <Plus className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                {serials.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {serials.map(sn => (
+                                            <span key={sn} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-indigo-100 rounded text-indigo-700 text-xs font-medium">
+                                                {sn}
+                                                <button 
+                                                    onClick={() => setSerials(prev => prev.filter(s => s !== sn))}
+                                                    className="text-indigo-400 hover:text-red-500 p-0.5"
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                                <p className="text-xs text-indigo-500 mt-1">Один товар может иметь несколько серийных номеров в партии</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -685,29 +649,14 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     <tbody className="divide-y divide-gray-200 bg-white">
                         {items.map((item, idx) => (
                             <tr key={idx}>
-                                <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                     {item.name}
-                                    {item.trackSerials && (
+                                    {item.trackSerials && item.serialNumbers?.length > 0 && (
                                         <div className="mt-1 text-xs text-gray-500 flex gap-1 flex-wrap">
+                                            <span className="text-gray-400 mr-1">С/Н:</span>
                                             {item.serialNumbers.map((sn: string) => (
-                                                <span key={sn} className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 bg-gray-100 rounded text-gray-600">
+                                                <span key={sn} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 text-xs">
                                                     {sn}
-                                                    <button 
-                                                        onClick={() => {
-                                                            const updatedItems = [...items];
-                                                            const updatedSerials = updatedItems[idx].serialNumbers.filter((s: string) => s !== sn);
-                                                            if (updatedSerials.length === 0) {
-                                                                updatedItems.splice(idx, 1);
-                                                            } else {
-                                                                updatedItems[idx].serialNumbers = updatedSerials;
-                                                                updatedItems[idx].qty = updatedSerials.length;
-                                                            }
-                                                            setItems(updatedItems);
-                                                        }}
-                                                        className="text-gray-400 hover:text-red-500 p-0.5"
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </button>
                                                 </span>
                                             ))}
                                         </div>

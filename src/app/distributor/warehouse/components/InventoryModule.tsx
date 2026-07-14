@@ -41,21 +41,8 @@ export default function InventoryModule() {
 
             if (idx !== -1) {
                 const item = { ...newItems[idx] };
-                if (item.trackSerials) {
-                    if (item.barcode === code || item.sku === code) {
-                        setTimeout(() => toast.error(`Для серийного товара нужно сканировать серийные номера, а не штрихкод товара (${code})`), 0);
-                        return prevInventory;
-                    }
-                    if (!item.scannedSerials) item.scannedSerials = [];
-                    if (item.scannedSerials.includes(code)) {
-                        setTimeout(() => toast.error(`Штрихкод ${code} уже отсканирован`), 0);
-                        return prevInventory;
-                    }
-                    item.scannedSerials = [...item.scannedSerials, code];
-                    item.actualQty = item.scannedSerials.length;
-                } else {
-                    item.actualQty = (item.actualQty || 0) + 1;
-                }
+                // For all products (serial and quantity): increment by 1 on scan
+                item.actualQty = (item.actualQty || 0) + 1;
                 item.diff = item.actualQty - item.systemQty;
                 newItems[idx] = item;
                 setTimeout(() => toast.success(`Добавлено: ${item.name}`), 0);
@@ -317,25 +304,13 @@ export default function InventoryModule() {
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">{item.systemQty}</td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
                                         {view === 'edit' ? (
-                                            item.trackSerials ? (
-                                                <div className="flex flex-col items-center">
-                                                    <span className="font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-md">{item.actualQty}</span>
-                                                    <button 
-                                                        onClick={() => setViewingSerialsItem(item)}
-                                                        className="mt-1 text-xs text-indigo-600 hover:text-indigo-900 underline"
-                                                    >
-                                                        Штрихкоды
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={item.actualQty}
-                                                    onChange={(e) => updateActualQty(realIdx, e.target.value)}
-                                                    className="block w-24 mx-auto rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                                />
-                                            )
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={item.actualQty}
+                                                onChange={(e) => updateActualQty(realIdx, e.target.value)}
+                                                className="block w-24 mx-auto rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                            />
                                         ) : (
                                             <div className="flex flex-col items-center">
                                                 <span className="font-medium text-gray-900">{item.actualQty}</span>

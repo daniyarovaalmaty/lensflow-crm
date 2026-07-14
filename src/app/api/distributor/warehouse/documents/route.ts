@@ -87,21 +87,7 @@ export async function POST(req: NextRequest) {
                         }
                     });
 
-                    // Handle serial tracking if applicable
-                    if (item.trackSerials && item.serialNumbers?.length > 0) {
-                        const stockItemsData = item.serialNumbers.map((sn: string) => ({
-                            productId: product.id,
-                            organizationId,
-                            barcode: sn,
-                            serialNumber: item.batchSerialNumber || null,
-                            status: 'in_stock',
-                            purchasePrice: item.price,
-                            receiptDocId: doc.id,
-                        }));
-                        await tx.stockItem.createMany({ data: stockItemsData });
-                    }
-
-                    // Create Movement Log
+                    // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
                         data: {
                             organizationId,
@@ -128,19 +114,7 @@ export async function POST(req: NextRequest) {
                         data: { currentStock: Math.max(0, product.currentStock - item.qty) }
                     });
 
-                    // Handle serial tracking if applicable
-                    if (item.trackSerials && item.serialNumbers?.length > 0) {
-                        await tx.stockItem.updateMany({
-                            where: {
-                                organizationId,
-                                barcode: { in: item.serialNumbers },
-                                status: 'in_stock'
-                            },
-                            data: { status: type === 'write_off' ? 'written_off' : 'sold' }
-                        });
-                    }
-
-                    // Create Movement Log
+                    // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
                         data: {
                             organizationId,
