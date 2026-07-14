@@ -12,6 +12,34 @@ interface NewSupplyFormProps {
     initialDraft?: any;
 }
 
+function FlexibleDateInput({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
+    const [mode, setMode] = useState<'month' | 'date'>(value.length > 7 ? 'date' : 'month');
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium text-gray-700">{label}</label>
+                <button 
+                    type="button" 
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setMode(m => m === 'month' ? 'date' : 'month');
+                        onChange('');
+                    }}
+                    className="text-xs text-indigo-600 hover:text-indigo-800"
+                >
+                    {mode === 'month' ? 'Указать день' : 'Только месяц'}
+                </button>
+            </div>
+            <input
+                type={mode}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+            />
+        </div>
+    );
+}
+
 export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyFormProps) {
     // Try to restore from localStorage if no initialDraft
     const savedDraft = typeof window !== 'undefined' && !initialDraft 
@@ -372,16 +400,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     </div>
                 </div>
                 <div className="sm:col-span-3">
-                    <label className="block text-sm font-medium leading-6 text-gray-900">Дата декларации</label>
-                    <div className="mt-2">
-                        <input
-                            type="text"
-                            value={declarationDate}
-                            onChange={(e) => setDeclarationDate(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                            placeholder="Напр. 2026-07 или 2026-07-10"
-                        />
-                    </div>
+                    <FlexibleDateInput 
+                        label="Дата декларации" 
+                        value={declarationDate} 
+                        onChange={setDeclarationDate} 
+                    />
                 </div>
             </div>
 
@@ -538,33 +561,24 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Срок годности</label>
-                                <input
-                                    type="text"
-                                    value={newProductExpiration}
-                                    onChange={(e) => setNewProductExpiration(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    placeholder="Напр. 2027-03 или 2027-03-15"
+                                <FlexibleDateInput 
+                                    label="Срок годности" 
+                                    value={newProductExpiration} 
+                                    onChange={setNewProductExpiration} 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Дата производства</label>
-                                <input
-                                    type="text"
-                                    value={newProductProductionDate}
-                                    onChange={(e) => setNewProductProductionDate(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    placeholder="Напр. 2025-01 или 2025-01-20"
+                                <FlexibleDateInput 
+                                    label="Дата производства" 
+                                    value={newProductProductionDate} 
+                                    onChange={setNewProductProductionDate} 
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Дата импорта</label>
-                                <input
-                                    type="text"
-                                    value={newProductImportDate}
-                                    onChange={(e) => setNewProductImportDate(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    placeholder="Напр. 2026-07 или 2026-07-10"
+                                <FlexibleDateInput 
+                                    label="Дата импорта" 
+                                    value={newProductImportDate} 
+                                    onChange={setNewProductImportDate} 
                                 />
                             </div>
 
