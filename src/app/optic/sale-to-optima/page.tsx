@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import QuickNav from '@/components/ui/QuickNav';
 import { Send, Loader2, Check, Plus, Trash2, Package, AlertTriangle, Building2 } from 'lucide-react';
 
@@ -15,7 +16,8 @@ const CAT_MAP: Record<string, string> = {
     spectacle_lens: 'lenses', solution: 'accessories', accessory: 'accessories',
 };
 
-export default function SaleToOptimaPage() {
+function SaleToOptimaForm() {
+    const searchParams = useSearchParams();
     const [notConfigured, setNotConfigured] = useState(false);
     const [loading, setLoading] = useState(true);
     const [depts, setDepts] = useState<Dept[]>([]);
@@ -24,8 +26,8 @@ export default function SaleToOptimaPage() {
     const [departmentId, setDepartmentId] = useState('');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [pick, setPick] = useState('');
-    const [clientId, setClientId] = useState('');
-    const [clientInfo, setClientInfo] = useState('');
+    const [clientId, setClientId] = useState(searchParams.get('clientId') || '');
+    const [clientInfo, setClientInfo] = useState(searchParams.get('clientInfo') || '');
     const [paidSum, setPaidSum] = useState('');
     const [paymentType, setPaymentType] = useState('CASH');
     const [receiveType, setReceiveType] = useState('STORE');
@@ -170,5 +172,17 @@ export default function SaleToOptimaPage() {
 
             {toast && <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${toast.ok ? 'bg-emerald-600' : 'bg-red-600'}`}>{toast.text}</div>}
         </div>
+    );
+}
+
+export default function SaleToOptimaPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+            </div>
+        }>
+            <SaleToOptimaForm />
+        </Suspense>
     );
 }

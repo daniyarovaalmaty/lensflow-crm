@@ -1094,7 +1094,7 @@ export default function PatientDetailPage() {
                                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                                 <Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS
                                             </h2>
-                                            <Link href={`/optic/orders/itigris/new?patientId=${patient.id}`} className="btn bg-orange-100 hover:bg-orange-200 text-orange-700 border-none btn-sm flex items-center gap-1">
+                                            <Link href={`/optic/sale-to-optima?clientInfo=${encodeURIComponent(patient.phone || patient.name)}&clientId=${itg?.id || itg?.clientId || ''}`} className="btn bg-orange-100 hover:bg-orange-200 text-orange-700 border-none btn-sm flex items-center gap-1">
                                                 <Plus className="w-4 h-4" /> Создать заказ ITIGRIS
                                             </Link>
                                         </div>
