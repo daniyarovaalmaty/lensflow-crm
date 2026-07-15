@@ -49,10 +49,10 @@ async function findOrderWithAccess(idOrNumber: string, session: any) {
     // Clinic sees its org's orders + procurement sees all branches
     if (session.user.role === 'optic') {
         if (order.organizationId === session.user.organizationId) return order;
-        // Procurement: also check parent/sibling orgs
-        if (session.user.subRole === 'optic_procurement' && session.user.organizationId) {
+        // Procurement or Headquarters: also check parent/sibling orgs
+        if ((session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager') && session.user.organizationId) {
             const userOrg = await prisma.organization.findUnique({ where: { id: session.user.organizationId }, select: { id: true, type: true, parentId: true } });
-            if (userOrg) {
+            if (userOrg && (session.user.subRole === 'optic_procurement' || userOrg.type === 'headquarters')) {
                 const hqId = userOrg.type === 'headquarters' ? userOrg.id : userOrg.parentId;
                 if (hqId) {
                     const branches = await prisma.organization.findMany({ where: { parentId: hqId }, select: { id: true } });

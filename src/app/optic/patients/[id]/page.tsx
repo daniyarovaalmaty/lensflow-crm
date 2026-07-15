@@ -1066,9 +1066,16 @@ export default function PatientDetailPage() {
                             </div>
 
                             {/* Данные ITIGRIS */}
+                            <div id="itigris" className="scroll-mt-24">
                             {(() => {
                                 const itg = (patient as any).metadata?.itigris;
-                                if (!itg) return null;
+                                if (!itg) return (
+                                    <div className="bg-white rounded-3xl border border-gray-100 p-8 text-center shadow-sm">
+                                        <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                        <h3 className="text-gray-900 font-bold mb-1">Нет данных ITIGRIS</h3>
+                                        <p className="text-gray-500 text-sm">Пациент не связан с профилем в ITIGRIS или у него нет бонусов.</p>
+                                    </div>
+                                );
                                 const rows = ([
                                     itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
                                     itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
@@ -1079,10 +1086,10 @@ export default function PatientDetailPage() {
                                     itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
                                     itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
                                 ].filter(Boolean)) as { label: string; value: string }[];
-                                if (rows.length === 0) return null;
+                                
                                 const d = itg.discount;
                                 return (
-                                    <div id="itigris" className="scroll-mt-24">
+                                    <>
                                         <div className="flex items-center justify-between mb-3">
                                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                                 <Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS
@@ -1113,9 +1120,10 @@ export default function PatientDetailPage() {
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
+                                    </>
                                 );
                             })()}
+                            </div>
 
                             {/* Prescriptions */}
                             <div id="prescriptions" className="scroll-mt-24">
