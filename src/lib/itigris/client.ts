@@ -391,6 +391,7 @@ export class ItigrisApiClient {
                 }
             }
             return { ok: false, message: 'Не удалось получить токен' };
+        } catch (err: any) {
             const status = err.response?.status;
             const errorBody = err.response?.data;
             let detailMsg = err.message;
