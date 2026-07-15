@@ -391,22 +391,25 @@ export class ItigrisApiClient {
                 }
             }
             return { ok: false, message: 'Не удалось получить токен' };
-        } catch (err: any) {
             const status = err.response?.status;
+            const errorBody = err.response?.data;
+            let detailMsg = err.message;
+
+            if (errorBody && typeof errorBody === 'object') {
+                if (Array.isArray(errorBody.errors) && errorBody.errors[0]?.message) {
+                    detailMsg = errorBody.errors.map((e: any) => e.message).join(', ');
+                    return { ok: false, message: `Ошибка подключения: ${detailMsg}` };
+                } else if (errorBody.message || errorBody.error) {
+                    detailMsg = errorBody.message || errorBody.error;
+                    return { ok: false, message: `Ошибка подключения: ${detailMsg}` };
+                }
+            }
+
             if (status === 401 || status === 403) {
                 return { ok: false, message: 'Неверный логин/пароль или нет доступа к API' };
             }
             if (status === 404) {
                 return { ok: false, message: 'Приложение не найдено. Проверьте название company.' };
-            }
-            const errorBody = err.response?.data;
-            let detailMsg = err.message;
-            if (errorBody) {
-                if (Array.isArray(errorBody.errors) && errorBody.errors[0]?.message) {
-                    detailMsg = errorBody.errors.map((e: any) => e.message).join(', ');
-                } else {
-                    detailMsg = errorBody.message || errorBody.error || err.message;
-                }
             }
 
             return {
