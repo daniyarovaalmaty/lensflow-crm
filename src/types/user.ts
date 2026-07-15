@@ -359,6 +359,10 @@ export interface ClinicPermissions {
     canViewBooking: boolean;
     canViewTasks: boolean;
     canViewAnalytics: boolean;
+    canViewIssue: boolean;
+    canViewRepairs: boolean;
+    canViewReworks: boolean;
+    canViewSupplierOrders: boolean;
 }
 
 export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
@@ -376,6 +380,10 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewBooking: true,
         canViewTasks: true,
         canViewAnalytics: true,
+        canViewIssue: true,
+        canViewRepairs: true,
+        canViewReworks: true,
+        canViewSupplierOrders: true,
     },
     optic_doctor: {
         canViewPos: true,
@@ -391,6 +399,10 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewBooking: false,
         canViewTasks: false,
         canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
     },
     optic_accountant: {
         canViewPos: false,
@@ -406,6 +418,10 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewBooking: false,
         canViewTasks: false,
         canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
     },
     optic_procurement: {
         canViewPos: false,
@@ -421,14 +437,18 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewBooking: false,
         canViewTasks: false,
         canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
     },
     // Fallbacks for other roles to be fully typed and safe
-    lab_engineer: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    lab_quality: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    lab_logistics: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    lab_head: { canViewPos: false, canViewWarehouse: true, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: true, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    lab_admin: { canViewPos: false, canViewWarehouse: true, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: true, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    lab_accountant: { canViewPos: false, canViewWarehouse: true, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
+    lab_engineer: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    lab_quality: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    lab_logistics: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    lab_head: { canViewPos: false, canViewWarehouse: true, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: true, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    lab_admin: { canViewPos: false, canViewWarehouse: true, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: true, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    lab_accountant: { canViewPos: false, canViewWarehouse: true, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: false, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
     doctor: {
         canViewPos: true,
         canViewWarehouse: false,
@@ -443,12 +463,16 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewBooking: false,
         canViewTasks: false,
         canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
     },
-    sales_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: true, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    dist_head: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    dist_admin: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    dist_manager: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: false, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
-    dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false },
+    sales_manager: { canViewPos: false, canViewWarehouse: false, canViewCatalog: false, canViewCash: false, canViewPatients: false, canViewFinance: false, canViewOrders: false, canViewCrm: true, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    dist_head: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    dist_admin: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    dist_manager: { canViewPos: true, canViewWarehouse: true, canViewCatalog: true, canViewCash: true, canViewPatients: true, canViewFinance: false, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
+    dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
 };
 
 export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {
@@ -466,6 +490,10 @@ export function getEffectiveClinicPermissions(user: { subRole: string; permissio
         canViewBooking: false,
         canViewTasks: false,
         canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
     };
 
     if (!user.permissions || typeof user.permissions !== 'object') {
@@ -487,6 +515,10 @@ export function getEffectiveClinicPermissions(user: { subRole: string; permissio
         canViewBooking: typeof p.canViewBooking === 'boolean' ? p.canViewBooking : roleDefault.canViewBooking,
         canViewTasks: typeof p.canViewTasks === 'boolean' ? p.canViewTasks : roleDefault.canViewTasks,
         canViewAnalytics: typeof p.canViewAnalytics === 'boolean' ? p.canViewAnalytics : roleDefault.canViewAnalytics,
+        canViewIssue: typeof p.canViewIssue === 'boolean' ? p.canViewIssue : roleDefault.canViewIssue,
+        canViewRepairs: typeof p.canViewRepairs === 'boolean' ? p.canViewRepairs : roleDefault.canViewRepairs,
+        canViewReworks: typeof p.canViewReworks === 'boolean' ? p.canViewReworks : roleDefault.canViewReworks,
+        canViewSupplierOrders: typeof p.canViewSupplierOrders === 'boolean' ? p.canViewSupplierOrders : roleDefault.canViewSupplierOrders,
     };
 }
 

@@ -9,7 +9,7 @@ import {
 import { SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import Link from 'next/link';
-import { ShoppingCart, Warehouse, Package, Banknote, FileText, Target, Calendar, ArrowLeftRight, Newspaper, CalendarPlus, ClipboardList, BarChart3 } from 'lucide-react';
+import { ShoppingCart, Warehouse, Package, Banknote, FileText, Target, Calendar, ArrowLeftRight, Newspaper, CalendarPlus, ClipboardList, BarChart3, PackageCheck, Wrench, AlertTriangle, Truck } from 'lucide-react';
 
 interface StaffMember {
     id: string;
@@ -60,6 +60,10 @@ export default function ClinicStaffPage() {
         canViewBooking: false,
         canViewTasks: false,
         canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
     });
     const [saving, setSaving] = useState(false);
     const [editError, setEditError] = useState('');
@@ -404,6 +408,10 @@ export default function ClinicStaffPage() {
                                             { key: 'canViewBooking', label: 'Запись на прием', desc: 'Онлайн-запись пациентов', icon: CalendarPlus },
                                             { key: 'canViewTasks', label: 'Задания', desc: 'Задачи и поручения сотрудникам', icon: ClipboardList },
                                             { key: 'canViewAnalytics', label: 'Аналитика', desc: 'Отчеты и статистика', icon: BarChart3 },
+                                            { key: 'canViewIssue', label: 'Выдача заказов', desc: 'Выдача готовых заказов', icon: PackageCheck },
+                                            { key: 'canViewRepairs', label: 'Ремонт', desc: 'Заказы на ремонт', icon: Wrench },
+                                            { key: 'canViewReworks', label: 'Переделки', desc: 'Возвраты и переделки', icon: AlertTriangle },
+                                            { key: 'canViewSupplierOrders', label: 'Закуп', desc: 'Заказы поставщикам', icon: Truck },
                                         ].map(p => {
                                             const Icon = p.icon;
                                             const isChecked = (editPermissions as any)[p.key] || false;

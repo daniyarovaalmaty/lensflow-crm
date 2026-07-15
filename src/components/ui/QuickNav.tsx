@@ -9,13 +9,13 @@ import FullscreenButton from '@/components/ui/FullscreenButton';
 import { getEffectiveClinicPermissions } from '@/types/user';
 
 const baseNavItems = [
-    { href: '/optic/dashboard', label: 'Заказы', icon: LayoutDashboard, color: 'text-gray-500' },
-    { href: '/optic/issue', label: 'Выдать заказ', icon: PackageCheck, color: 'text-teal-500' },
-    { href: '/optic/repairs', label: 'Ремонт', icon: Wrench, color: 'text-purple-500' },
-    { href: '/optic/reworks', label: 'Переделки', icon: AlertTriangle, color: 'text-orange-500' },
+    { href: '/optic/dashboard', label: 'Заказы', icon: LayoutDashboard, color: 'text-gray-500', permKey: 'canViewOrders' },
+    { href: '/optic/issue', label: 'Выдать заказ', icon: PackageCheck, color: 'text-teal-500', permKey: 'canViewIssue' },
+    { href: '/optic/repairs', label: 'Ремонт', icon: Wrench, color: 'text-purple-500', permKey: 'canViewRepairs' },
+    { href: '/optic/reworks', label: 'Переделки', icon: AlertTriangle, color: 'text-orange-500', permKey: 'canViewReworks' },
     { href: '/optic/catalog', label: 'Каталог', icon: Package, color: 'text-blue-500', permKey: 'canViewCatalog' },
     { href: '/optic/warehouse', label: 'Склад', icon: Warehouse, color: 'text-amber-500', permKey: 'canViewWarehouse' },
-    { href: '/optic/supplier-orders', label: 'Закуп', icon: Truck, color: 'text-indigo-500' },
+    { href: '/optic/supplier-orders', label: 'Закуп', icon: Truck, color: 'text-indigo-500', permKey: 'canViewSupplierOrders' },
     { href: '/optic/transfers', label: 'Трансферы', icon: ArrowLeftRight, color: 'text-sky-500', permKey: 'canViewTransfers' },
     { href: '/optic/pos', label: 'Касса', icon: ShoppingCart, color: 'text-green-500', permKey: 'canViewPos' },
     { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500', permKey: 'canViewCash' },
