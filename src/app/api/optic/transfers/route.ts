@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 // GET — transfers involving this org (outgoing + incoming).
 export async function GET() {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
     const orgId = user.organizationId;
     const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { type: true } });
@@ -30,8 +30,8 @@ export async function GET() {
 // POST — create a transfer (draft) from the current org to another branch.
 export async function POST(req: NextRequest) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
     const myOrgId = user.organizationId;
 

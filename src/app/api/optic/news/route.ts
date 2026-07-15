@@ -5,8 +5,8 @@ import prisma from '@/lib/db/prisma';
 export const dynamic = 'force-dynamic';
 
 /** Current user + org set they can see (self, + branches if HQ). */
-async function resolveScope(email: string) {
-    const me = await prisma.user.findUnique({ where: { email } });
+async function resolveScope(userId: string) {
+    const me = await prisma.user.findUnique({ where: { id: userId } });
     if (!me?.organizationId) return null;
     const org = await prisma.organization.findUnique({ where: { id: me.organizationId }, select: { type: true } });
     let orgIds: string[] = [me.organizationId];
@@ -32,8 +32,8 @@ async function unreadCount(userId: string, orgIds: string[]) {
 // ==================== GET — news feed + unread count ====================
 export async function GET() {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const scope = await resolveScope(session.user.email!);
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const scope = await resolveScope(session.user.id);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
     const { me, orgIds, orgType } = scope;
 
@@ -50,8 +50,8 @@ export async function GET() {
 // ==================== POST — publish news (manager only) ====================
 export async function POST(req: NextRequest) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const scope = await resolveScope(session.user.email!);
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const scope = await resolveScope(session.user.id);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
     const { me, orgType } = scope;
     if (me.subRole !== 'optic_manager' && orgType !== 'headquarters') return NextResponse.json({ error: 'Публиковать новости может управляющий или штаб-квартира' }, { status: 403 });
@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
 // ==================== PATCH — mark all read, or edit a post ====================
 export async function PATCH(req: NextRequest) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const scope = await resolveScope(session.user.email!);
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const scope = await resolveScope(session.user.id);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
     const { me, orgIds, orgType } = scope;
 
@@ -110,8 +110,8 @@ export async function PATCH(req: NextRequest) {
 // ==================== DELETE — remove a post (author or manager) ====================
 export async function DELETE(req: NextRequest) {
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const scope = await resolveScope(session.user.email!);
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const scope = await resolveScope(session.user.id);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
     const { me, orgIds, orgType } = scope;
 
