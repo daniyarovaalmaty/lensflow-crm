@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import QuickNav from '@/components/ui/QuickNav';
-import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap } from 'lucide-react';
+import { Link2, Check, X, RefreshCw, Loader2, AlertCircle, Unplug, Plug, Shield, ChevronDown, ChevronUp, Clock, Zap, ClipboardList, Package, Send } from 'lucide-react';
 
 interface SyncResult {
     entity: string;
@@ -42,6 +43,19 @@ export default function ClinicManagerItigrisPage() {
     const [error, setError] = useState<string | null>(null);
     const [expandedLog, setExpandedLog] = useState<string | null>(null);
     const [stats, setStats] = useState<{ patientsCount: number; ordersCount: number } | null>(null);
+    // Legacy (key-based) external API
+    const [legacyClient, setLegacyClient] = useState('');
+    const [legacyKey, setLegacyKey] = useState('');
+    const [legacyConnected, setLegacyConnected] = useState(false);
+    const [testingLegacy, setTestingLegacy] = useState(false);
+    const [savingLegacy, setSavingLegacy] = useState(false);
+    const [legacyResult, setLegacyResult] = useState<{ ok: boolean; message: string } | null>(null);
+    // RemoteAPI (separate key — catalog + two-way cluster)
+    const [remoteKey, setRemoteKey] = useState('');
+    const [remoteConnected, setRemoteConnected] = useState(false);
+    const [testingRemote, setTestingRemote] = useState(false);
+    const [savingRemote, setSavingRemote] = useState(false);
+    const [remoteResult, setRemoteResult] = useState<{ ok: boolean; message: string } | null>(null);
 
     const loadData = useCallback(async () => {
         try {
@@ -56,6 +70,9 @@ export default function ClinicManagerItigrisPage() {
                 if (data.departmentId) setDepartmentId(String(data.departmentId));
                 setSyncLogs(data.syncLogs || []);
                 setStats(data.stats);
+                if (data.legacyClient) setLegacyClient(data.legacyClient);
+                setLegacyConnected(!!data.legacyConnected);
+                setRemoteConnected(!!data.remoteConnected);
             }
         } finally {
             setLoading(false);
@@ -97,6 +114,16 @@ export default function ClinicManagerItigrisPage() {
         setSyncing(false);
     };
 
+    const handleSyncProducts = async () => {
+        setSyncing(true); setSyncResults(null); setError(null);
+        try {
+            const data = await (await post({ action: 'sync_products' })).json();
+            if (data.ok) { setSyncResults(data.results); await loadData(); }
+            else setError(data.error || 'Ошибка синхронизации товаров');
+        } catch { setError('Ошибка синхронизации товаров'); }
+        setSyncing(false);
+    };
+
     const handleDisconnect = async () => {
         if (!confirm('Отключить ITIGRIS? Импортированные данные останутся.')) return;
         setDisconnecting(true);
@@ -108,7 +135,51 @@ export default function ClinicManagerItigrisPage() {
         setDisconnecting(false);
     };
 
-    const entityLabels: Record<string, string> = { clients: 'Пациенты', orders: 'Заказы', prescriptions: 'Рецепты', full: 'Полная синхронизация' };
+    const handleTestLegacy = async () => {
+        setTestingLegacy(true); setLegacyResult(null);
+        try { setLegacyResult(await (await post({ action: 'test_legacy', legacyClient: legacyClient || company, legacyKey })).json()); }
+        catch { setLegacyResult({ ok: false, message: 'Ошибка проверки' }); }
+        setTestingLegacy(false);
+    };
+
+    const handleSaveLegacy = async () => {
+        setSavingLegacy(true);
+        try {
+            const d = await (await post({ action: 'save_legacy', legacyClient: legacyClient || company, legacyKey })).json();
+            if (d.ok) { setLegacyConnected(true); setLegacyResult({ ok: true, message: d.message || 'Сохранено' }); }
+            else setLegacyResult({ ok: false, message: d.error || 'Ошибка сохранения' });
+        } catch { setLegacyResult({ ok: false, message: 'Ошибка сохранения' }); }
+        setSavingLegacy(false);
+    };
+
+    const handleTestRemote = async () => {
+        setTestingRemote(true); setRemoteResult(null);
+        try { setRemoteResult(await (await post({ action: 'test_remote', remoteClient: legacyClient || company, remoteKey })).json()); }
+        catch { setRemoteResult({ ok: false, message: 'Ошибка проверки' }); }
+        setTestingRemote(false);
+    };
+
+    const handleSaveRemote = async () => {
+        setSavingRemote(true);
+        try {
+            const d = await (await post({ action: 'save_remote', remoteClient: legacyClient || company, remoteKey })).json();
+            if (d.ok) { setRemoteConnected(true); setRemoteResult({ ok: true, message: d.message || 'Сохранено' }); }
+            else setRemoteResult({ ok: false, message: d.error || 'Ошибка сохранения' });
+        } catch { setRemoteResult({ ok: false, message: 'Ошибка сохранения' }); }
+        setSavingRemote(false);
+    };
+
+    const handleSyncProductsLegacy = async () => {
+        setSyncing(true); setSyncResults(null); setError(null);
+        try {
+            const data = await (await post({ action: 'sync_products_legacy' })).json();
+            if (data.ok) { setSyncResults(data.results); await loadData(); }
+            else setError(data.error || 'Ошибка синхронизации каталога (RemoteAPI)');
+        } catch { setError('Ошибка синхронизации каталога (RemoteAPI)'); }
+        setSyncing(false);
+    };
+
+    const entityLabels: Record<string, string> = { clients: 'Пациенты', orders: 'Заказы', prescriptions: 'Рецепты', full: 'Полная синхронизация', products: 'Товары (каталог)' };
     const fmtDate = (s: string) => new Date(s).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
 
     return (
@@ -124,6 +195,25 @@ export default function ClinicManagerItigrisPage() {
                         <h1 className="text-xl font-bold text-gray-900">Интеграция ITIGRIS Optima</h1>
                         <p className="text-sm text-gray-500">Синхронизация пациентов и заказов с Оптимой v.2</p>
                     </div>
+                    {(connected || legacyConnected || remoteConnected) && (
+                        <div className="ml-auto flex items-center gap-2">
+                            {connected && (
+                                <Link href="/clinic-manager/itigris/browse" className="flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-medium transition-colors">
+                                    <ClipboardList className="w-4 h-4" /> Данные
+                                </Link>
+                            )}
+                            {legacyConnected && (
+                                <Link href="/clinic-manager/itigris/services" className="flex items-center gap-2 px-3 py-2 bg-white border border-orange-200 text-orange-600 hover:bg-orange-50 rounded-xl text-sm font-medium transition-colors">
+                                    <Zap className="w-4 h-4" /> Сервисы
+                                </Link>
+                            )}
+                            {remoteConnected && (
+                                <Link href="/optic/sale-to-optima" className="flex items-center gap-2 px-3 py-2 bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl text-sm font-medium transition-colors">
+                                    <Send className="w-4 h-4" /> Заказ в Оптиму
+                                </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Stats when connected */}
@@ -216,6 +306,69 @@ export default function ClinicManagerItigrisPage() {
                     </div>
                 </div>
 
+                {/* Legacy (key-based) external API */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+                    <div className="flex items-center justify-between mb-1">
+                        <h2 className="text-base font-semibold text-gray-900">Внешнее (легаси) API</h2>
+                        {legacyConnected && <span className="text-xs text-emerald-600 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Подключено</span>}
+                    </div>
+                    <p className="text-sm text-gray-500 mb-4">Ключ-доступ к сервисам: остатки линз, статус заказа, бонусы и скидка по дисконтной карте.</p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Компания (легаси)</label>
+                            <input value={legacyClient} onChange={e => setLegacyClient(e.target.value)} placeholder={company || 'optika_narodnaya'} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-400" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Легаси-ключ</label>
+                            <input type="password" value={legacyKey} onChange={e => setLegacyKey(e.target.value)} placeholder={legacyConnected ? '•••••••• (сохранён)' : 'key'} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-400" />
+                        </div>
+                    </div>
+                    {legacyResult && (
+                        <div className={`mt-4 p-3 rounded-xl flex items-center gap-2 text-sm ${legacyResult.ok ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                            {legacyResult.ok ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />} {legacyResult.message}
+                        </div>
+                    )}
+                    <div className="flex gap-3 mt-5">
+                        <button onClick={handleTestLegacy} disabled={!legacyKey || testingLegacy} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 disabled:opacity-50 transition-colors">
+                            {testingLegacy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plug className="w-4 h-4" />} Проверить
+                        </button>
+                        <button onClick={handleSaveLegacy} disabled={!legacyKey || savingLegacy} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium text-white disabled:opacity-50 transition-colors">
+                            {savingLegacy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Сохранить
+                        </button>
+                    </div>
+                </div>
+
+                {/* RemoteAPI (separate key — catalog + two-way cluster) */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-5">
+                    <div className="flex items-center justify-between mb-1">
+                        <h2 className="text-base font-semibold text-gray-900">RemoteAPI (каталог + двусторонние)</h2>
+                        {remoteConnected && <span className="text-xs text-emerald-600 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Подключено</span>}
+                    </div>
+                    <p className="text-sm text-gray-500 mb-4">Отдельный ключ «для интернет-магазина и мобильного приложения» (выдаёт поддержка Itigris). Открывает каталог товаров и двусторонние сценарии (запись на приём, заказы, бонусы, СМС). Это НЕ легаси-ключ выше.</p>
+                    <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">RemoteAPI-ключ</label>
+                        <input type="password" value={remoteKey} onChange={e => setRemoteKey(e.target.value)} placeholder={remoteConnected ? '•••••••• (сохранён)' : 'remote api key'} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-400" />
+                    </div>
+                    {remoteResult && (
+                        <div className={`mt-4 p-3 rounded-xl flex items-center gap-2 text-sm ${remoteResult.ok ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                            {remoteResult.ok ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />} {remoteResult.message}
+                        </div>
+                    )}
+                    <div className="flex gap-3 mt-5">
+                        <button onClick={handleTestRemote} disabled={!remoteKey || testingRemote} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium text-gray-700 disabled:opacity-50 transition-colors">
+                            {testingRemote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plug className="w-4 h-4" />} Проверить
+                        </button>
+                        <button onClick={handleSaveRemote} disabled={!remoteKey || savingRemote} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-medium text-white disabled:opacity-50 transition-colors">
+                            {savingRemote ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Сохранить
+                        </button>
+                        {remoteConnected && (
+                            <button onClick={handleSyncProductsLegacy} disabled={syncing} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-orange-300 hover:bg-orange-50 rounded-xl text-sm font-medium text-orange-700 disabled:opacity-50 transition-colors ml-auto">
+                                {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />} Товары (RemoteAPI)
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 {/* Sync section */}
                 {connected && (
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -231,10 +384,14 @@ export default function ClinicManagerItigrisPage() {
                                     {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                                     {syncing ? 'Синхронизация...' : 'Полная'}
                                 </button>
+                                <button onClick={handleSyncProducts} disabled={syncing} className="flex items-center gap-2 px-3 py-2 bg-white border border-orange-300 hover:bg-orange-50 rounded-xl text-sm font-medium text-orange-700 disabled:opacity-50 transition-colors">
+                                    <Package className="w-3.5 h-3.5" /> Товары
+                                </button>
                             </div>
                         </div>
                         <p className="text-sm text-gray-500 mb-5">
-                            Импортирует клиентов и заказы из ITIGRIS → LensFlow. «Обновление» — только изменения с последней синхронизации.
+                            «Полная»/«Обновление» — клиенты и заказы из ITIGRIS → LensFlow. «Товары» — каталог из остатков
+                            ITIGRIS (оправы, линзы, КЛ, аксессуары) с количеством и ценой; требует у пользователя ITIGRIS доступ к складу.
                         </p>
 
                         {syncResults && (

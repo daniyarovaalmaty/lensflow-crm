@@ -36,8 +36,12 @@ interface OpticProduct {
     currentStock: number;
     unit: string;
     trackSerials: boolean;
+    expiryDate?: string | null;
+    shelfLocation?: string | null;
+    isMedical?: boolean;
+    certNumber?: string | null;
+    certUntil?: string | null;
     isPublic: boolean;
-    isFreePrice: boolean;
     isActive: boolean;
     createdAt: string;
     _count?: { stockItems: number };
@@ -113,7 +117,8 @@ export default function OpticCatalogPage() {
     const [form, setForm] = useState({
         name: '', category: 'frame', brand: '', model: '', sku: '', barcode: '',
         shortDescription: '', fullDescription: '', purchasePrice: '', retailPrice: '',
-        minStock: '0', unit: 'шт', trackSerials: false, isPublic: false, isFreePrice: false,
+        minStock: '0', unit: 'шт', trackSerials: false, isPublic: false,
+        expiryDate: '', shelfLocation: '', isMedical: false, certNumber: '', certUntil: '',
         images: [] as string[], specs: {} as Record<string, string>,
     });
     const [saving, setSaving] = useState(false);
@@ -812,7 +817,6 @@ export default function OpticCatalogPage() {
             unit: form.unit,
             trackSerials: form.trackSerials,
             isPublic: form.isPublic,
-            isFreePrice: form.isFreePrice,
             isActive: true,
             createdAt: new Date().toISOString()
         };
@@ -842,7 +846,8 @@ export default function OpticCatalogPage() {
         setForm({
             name: '', category: 'frame', brand: '', model: '', sku: '', barcode: '',
             shortDescription: '', fullDescription: '', purchasePrice: '', retailPrice: '',
-            minStock: '0', unit: 'шт', trackSerials: false, isPublic: false, isFreePrice: false,
+            minStock: '0', unit: 'шт', trackSerials: false, isPublic: false,
+            expiryDate: '', shelfLocation: '', isMedical: false, certNumber: '', certUntil: '',
             images: [], specs: {},
         });
         setShowForm(true);
@@ -856,7 +861,12 @@ export default function OpticCatalogPage() {
             shortDescription: p.shortDescription || '', fullDescription: p.fullDescription || '',
             purchasePrice: String(p.purchasePrice || ''), retailPrice: String(p.retailPrice || ''),
             minStock: String(p.minStock || '0'), unit: p.unit || 'шт',
-            trackSerials: p.trackSerials, isPublic: p.isPublic, isFreePrice: !!p.isFreePrice,
+            trackSerials: p.trackSerials, isPublic: p.isPublic,
+            expiryDate: p.expiryDate ? String(p.expiryDate).slice(0, 10) : '',
+            shelfLocation: p.shelfLocation || '',
+            isMedical: !!p.isMedical,
+            certNumber: p.certNumber || '',
+            certUntil: p.certUntil ? String(p.certUntil).slice(0, 10) : '',
             images: (p.images as string[]) || [], specs: (p.specs as Record<string, string>) || {},
         });
         setShowForm(true);
@@ -1356,6 +1366,9 @@ export default function OpticCatalogPage() {
                             const margin = product.retailPrice - product.purchasePrice;
                             const marginPct = product.purchasePrice > 0 ? Math.round((margin / product.purchasePrice) * 100) : 0;
                             const mainImage = (product.images as string[] | null)?.[0];
+                            const expDate = product.expiryDate ? new Date(product.expiryDate) : null;
+                            const expired = expDate ? expDate.getTime() < Date.now() : false;
+                            const expSoon = expDate ? (expDate.getTime() - Date.now()) <= 1000 * 60 * 60 * 24 * 183 : false; // ≤ ~6 мес (вкл. просроченные)
 
                             return (
                                 <motion.div
@@ -1389,6 +1402,11 @@ export default function OpticCatalogPage() {
                                                 На витрине
                                             </div>
                                         )}
+                                        {expSoon && (
+                                            <div className="absolute bottom-3 left-3 px-2 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center gap-1">
+                                                <AlertTriangle className="w-3 h-3" /> {expired ? 'Просрочен' : 'Срок ≤6 мес'}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Info */}
@@ -1399,6 +1417,12 @@ export default function OpticCatalogPage() {
                                         <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{product.name}</h3>
                                         {product.shortDescription && (
                                             <p className="text-xs text-gray-500 mt-1 line-clamp-1">{product.shortDescription}</p>
+                                        )}
+                                        {(product.shelfLocation || expDate) && (
+                                            <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-1 flex-wrap">
+                                                {product.shelfLocation && <span>Ячейка: {product.shelfLocation}</span>}
+                                                {expDate && <span className={expSoon ? 'text-red-500 font-medium' : ''}>годен до {expDate.toLocaleDateString('ru-RU')}</span>}
+                                            </div>
                                         )}
 
                                         <div className="flex items-end justify-between mt-3">
@@ -1602,6 +1626,43 @@ export default function OpticCatalogPage() {
                                     </div>
                                 )}
 
+                                {/* Expiry / shelf / certification (products only) */}
+                                {!isService && (
+                                    <div className="space-y-3 border-t border-gray-100 pt-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Срок годности</label>
+                                                <input type="date" value={form.expiryDate} onChange={e => setForm({ ...form, expiryDate: e.target.value })}
+                                                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">Ячейка склада</label>
+                                                <input value={form.shelfLocation} onChange={e => setForm({ ...form, shelfLocation: e.target.value })}
+                                                    placeholder="напр. A-12" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
+                                            </div>
+                                        </div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" checked={form.isMedical} onChange={e => setForm({ ...form, isMedical: e.target.checked })}
+                                                className="w-4 h-4 rounded border-gray-300 text-primary-600" />
+                                            <span className="text-sm text-gray-600">Товар мед. назначения (нужна сертификация)</span>
+                                        </label>
+                                        {form.isMedical && (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">№ сертификата</label>
+                                                    <input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })}
+                                                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Сертификат до</label>
+                                                    <input type="date" value={form.certUntil} onChange={e => setForm({ ...form, certUntil: e.target.value })}
+                                                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Public toggle */}
                                 <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer">
                                     <input type="checkbox" checked={form.isPublic}
@@ -1612,18 +1673,6 @@ export default function OpticCatalogPage() {
                                         <p className="text-xs text-gray-400">Будет виден на публичной странице оптики</p>
                                     </div>
                                 </label>
-                                {/* Free Price toggle (only for managers) */}
-                                {session?.user?.subRole === 'optic_manager' && (
-                                    <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer">
-                                        <input type="checkbox" checked={form.isFreePrice}
-                                            onChange={e => setForm({ ...form, isFreePrice: e.target.checked })}
-                                            className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
-                                        <div>
-                                            <span className="text-sm font-medium text-gray-700">Свободная цена</span>
-                                            <p className="text-xs text-gray-400">Кассир вводит цену при продаже</p>
-                                        </div>
-                                    </label>
-                                )}
                             </div>
 
                             {/* Footer */}

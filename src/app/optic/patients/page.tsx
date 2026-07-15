@@ -17,6 +17,8 @@ interface Patient {
     birthDate: string | null;
     gender: string | null;
     medmundusId: number | null;
+    externalId: string | null;
+    externalSource: string | null;
     createdAt: string;
     _count: { orders: number; prescriptions: number; consultations: number };
     prescriptions: Array<{
@@ -42,7 +44,6 @@ function calcAge(birthDate: string | null): string {
 
 export default function PatientsPage() {
     const { data: session } = useSession();
-    const isDoctor = session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor';
     const router = useRouter();
 
     // permissions visibility check
@@ -275,9 +276,12 @@ export default function PatientsPage() {
                                             {p.medmundusId && (
                                                 <span className="text-xs bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-medium">MM</span>
                                             )}
+                                            {p.externalSource === 'itigris' && (
+                                                <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-medium">ITIGRIS</span>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-gray-500">
-                                            {(!isDoctor && p.phone) && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
+                                            {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
                                             <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.consultations} прием.</span>
                                             <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{p._count.orders} заказ.</span>
                                             <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{p._count.prescriptions} рецепт.</span>

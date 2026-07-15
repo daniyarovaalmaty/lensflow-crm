@@ -2,57 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Award
 } from 'lucide-react';
 import Link from 'next/link';
-import MedicalTextarea from '@/components/ui/MedicalTextarea';
-
-// Helper to remove payment-related text (kaspi, ckk, terminals, etc) for doctors
-const filterMedicalText = (text: string | null | undefined, userRole?: string) => {
-    if (!text) return text;
-    if (userRole !== 'doctor') return text; // Only filter for doctors to not hide from managers
-    
-    return text.split(/[.\n;]/).map(sentence => {
-        const lower = sentence.toLowerCase();
-        if (
-            lower.includes('каспий') || lower.includes('kaspi') || lower.includes('каспи') ||
-            lower.includes('терминал') || lower.includes('цкк') || 
-            lower.includes('предоплата') || lower.includes('оплата') || 
-            lower.includes('оплатить') || lower.includes('чек') ||
-            lower.includes('наличными') || lower.includes('нал ')
-        ) {
-            // Check if it's separated by comma inside a single line
-            const commaParts = sentence.split(',');
-            const cleanCommaParts = commaParts.filter(p => {
-                const lp = p.toLowerCase();
-                return !(lp.includes('каспий') || lp.includes('kaspi') || lp.includes('каспи') || lp.includes('терминал') || lp.includes('цкк') || lp.includes('предоплата') || lp.includes('оплата') || lp.includes('оплатить') || lp.includes('чек') || lp.includes('наличными') || lp.includes('нал '));
-            });
-            if (cleanCommaParts.length === 0) return '';
-            return cleanCommaParts.join(',');
-        }
-        return sentence;
-    })
-    .filter(s => s.trim().length > 0)
-    .join('. ')
-    .replace(/\.\s*\./g, '.') // cleanup double dots
-    .trim();
-};
 
 interface Prescription {
     id: string;
-    patientId: string;
     odSph: number | null; odCyl: number | null; odAx: number | null; odAdd: number | null; odPd: number | null;
-    odPdNear: number | null; odPrism: string | null; odBc: string | null; odDia: string | null;
     osSph: number | null; osCyl: number | null; osAx: number | null; osAdd: number | null; osPd: number | null;
-    osPdNear: number | null; osPrism: string | null; osBc: string | null; osDia: string | null;
-    visualAcuityODAfter: number | null; visualAcuityOSAfter: number | null;
-    refraction: string | null; cycloplegia: string | null; complaints: string | null;
-    medicalHistory: string | null; diseaseHistory: string | null; biomicroscopy: string | null; pzo: string | null;
-    type: string; notes: string | null; prescribedAt: string;
+    pdTotal: number | null; type: string; notes: string | null; prescribedAt: string;
 }
 
 interface Consultation {
@@ -68,10 +29,6 @@ interface Consultation {
     visualAcuityOS: number | null;
     k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null;
     k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null;
-    lensFittingOD: string | null;
-    lensFittingOS: string | null;
-    refractionOD: string | null;
-    refractionOS: string | null;
     notes: string | null;
     doctor: { fullName: string } | null;
 }
@@ -83,18 +40,6 @@ interface PatientDetail {
     email: string | null;
     birthDate: string | null;
     gender: string | null;
-    iin: string | null;
-    address: string | null;
-    profession: string | null;
-    complaints: string | null;
-    anamnesisDisease: string | null;
-    anamnesisLife: string | null;
-    allergies: string | null;
-    heredity: string | null;
-    medications: string | null;
-    dispensary: string | null;
-    surgeries: string | null;
-    lastCorrection: string | null;
     notes: string | null;
     attachments: Array<{
         id: string; name: string; url: string; type: string; size: number; uploadedAt: string;
@@ -106,7 +51,6 @@ interface PatientDetail {
         id: string; orderNumber: string; status: string; createdAt: string;
         totalPrice: number | null; isUrgent: boolean; source?: string | null;
     }>;
-    sales?: any[];
 }
 
 const fmt = (v: number | null, plus = true) => {
@@ -122,7 +66,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
     cancelled: { label: 'Отменён', color: 'bg-red-100 text-red-700' },
 };
 
-function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete: () => void; onEdit: () => void }) {
+function PrescriptionCard({ rx, onDelete }: { rx: Prescription; onDelete: () => void }) {
     const [expanded, setExpanded] = useState(false);
     const typeLabels: Record<string, string> = {
         glasses: '👓 Очки', contacts: '🔵 Контактные линзы', 'ortho-k': '🌙 Орто-К'
@@ -162,23 +106,12 @@ function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete
                             <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">OD (Правый)</h4>
                             <table className="w-full text-sm">
                                 <tbody>
-                                    {[['Sph', rx.odSph], ['Cyl', rx.odCyl], ['Ax', rx.odAx, false], ['Add', rx.odAdd], 
-                                          rx.type !== 'contacts' && rx.type !== 'ortho-k' ? ['PD Даль', rx.odPd, false] : null, 
-                                          rx.type !== 'contacts' && rx.type !== 'ortho-k' ? ['PD Близь', rx.odPdNear, false] : null, 
-                                          rx.type !== 'contacts' && rx.type !== 'ortho-k' ? ['Призма', rx.odPrism, false] : null, 
-                                          rx.type === 'contacts' || rx.type === 'ortho-k' ? ['BC', rx.odBc, false] : null, 
-                                          rx.type === 'contacts' || rx.type === 'ortho-k' ? ['DIA', rx.odDia, false] : null, 
-                                          ['Visus с корр.', rx.visualAcuityODAfter, false]
-                                      ].filter(Boolean).map((item) => {
-                                        const [label, val, p = true] = item as any[];
-                                        if (val == null || val === '') return null;
-                                        return (
-                                            <tr key={label as string}>
-                                                <td className="text-gray-500 py-0.5 pr-3 w-20">{label}</td>
-                                                <td className="font-mono font-medium text-gray-900">{typeof val === 'number' ? fmt(val as number, p as boolean) : val}</td>
-                                            </tr>
-                                        )
-                                    })}
+                                    {[['Sph', rx.odSph], ['Cyl', rx.odCyl], ['Ax', rx.odAx, false], ['Add', rx.odAdd], ['PD', rx.odPd, false]].map(([label, val, p = true]) => (
+                                        <tr key={label as string}>
+                                            <td className="text-gray-500 py-0.5 pr-3 w-10">{label}</td>
+                                            <td className="font-mono font-medium text-gray-900">{fmt(val as number | null, p as boolean)}</td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
@@ -187,37 +120,21 @@ function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete
                             <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">OS (Левый)</h4>
                             <table className="w-full text-sm">
                                 <tbody>
-                                    {[['Sph', rx.osSph], ['Cyl', rx.osCyl], ['Ax', rx.osAx, false], ['Add', rx.osAdd], 
-                                          rx.type !== 'contacts' && rx.type !== 'ortho-k' ? ['PD Даль', rx.osPd, false] : null, 
-                                          rx.type !== 'contacts' && rx.type !== 'ortho-k' ? ['PD Близь', rx.osPdNear, false] : null, 
-                                          rx.type !== 'contacts' && rx.type !== 'ortho-k' ? ['Призма', rx.osPrism, false] : null, 
-                                          rx.type === 'contacts' || rx.type === 'ortho-k' ? ['BC', rx.osBc, false] : null, 
-                                          rx.type === 'contacts' || rx.type === 'ortho-k' ? ['DIA', rx.osDia, false] : null, 
-                                          ['Visus с корр.', rx.visualAcuityOSAfter, false]
-                                      ].filter(Boolean).map((item) => {
-                                        const [label, val, p = true] = item as any[];
-                                        if (val == null || val === '') return null;
-                                        return (
-                                            <tr key={label as string}>
-                                                <td className="text-gray-500 py-0.5 pr-3 w-20">{label}</td>
-                                                <td className="font-mono font-medium text-gray-900">{typeof val === 'number' ? fmt(val as number, p as boolean) : val}</td>
-                                            </tr>
-                                        )
-                                    })}
+                                    {[['Sph', rx.osSph], ['Cyl', rx.osCyl], ['Ax', rx.osAx, false], ['Add', rx.osAdd], ['PD', rx.osPd, false]].map(([label, val, p = true]) => (
+                                        <tr key={label as string}>
+                                            <td className="text-gray-500 py-0.5 pr-3 w-10">{label}</td>
+                                            <td className="font-mono font-medium text-gray-900">{fmt(val as number | null, p as boolean)}</td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                    {rx.pdTotal && <p className="text-sm text-gray-600 mb-2">PD общий: <span className="font-mono font-medium">{rx.pdTotal}</span> мм</p>}
                     {rx.notes && <p className="text-sm text-gray-600 italic">{rx.notes}</p>}
-                    <div className="flex justify-end mt-4 gap-2">
-                        <Link href={`/optic/patients/${rx.patientId}/prescriptions/${rx.id}/print`} target="_blank" className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm flex items-center gap-1 text-gray-600 px-3 py-1.5 rounded-lg transition-colors">
-                            <Printer className="w-4 h-4" /> Печать
-                        </Link>
-                        <button onClick={onEdit} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm flex items-center gap-1 text-gray-700 px-3 py-1.5 rounded-lg transition-colors">
-                            <Edit2 className="w-4 h-4" /> Редактировать
-                        </button>
-                        <button onClick={onDelete} className="btn bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 shadow-sm text-sm text-red-600 flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors">
-                            <Trash2 className="w-4 h-4" /> Удалить
+                    <div className="flex justify-end mt-3">
+                        <button onClick={onDelete} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" /> Удалить рецепт
                         </button>
                     </div>
                 </div>
@@ -226,28 +143,10 @@ function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete
     );
 }
 
-
-const RxField = ({ label, field, rxForm, setRxForm }: { label: string; field: string; rxForm: any; setRxForm: any }) => (
-    <div>
-        <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
-        <input
-            type="text" inputMode="decimal"
-            value={rxForm[field] ?? ''}
-            onChange={e => {
-                const val = e.target.value.replace(',', '.');
-                setRxForm((f: any) => ({ ...f, [field]: val }));
-            }}
-            className="input text-sm h-9 font-mono w-full"
-            placeholder="0.00"
-        />
-    </div>
-);
-
 export default function PatientDetailPage() {
     const params = useParams();
     const router = useRouter();
     const id = params.id as string;
-    const { data: session } = useSession();
 
     const [patient, setPatient] = useState<PatientDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -255,7 +154,6 @@ export default function PatientDetailPage() {
     const [editForm, setEditForm] = useState<any>({});
     const [saving, setSaving] = useState(false);
     const [showRxForm, setShowRxForm] = useState(false);
-    const [editingRxId, setEditingRxId] = useState<string | null>(null);
     const [rxForm, setRxForm] = useState<any>({ type: 'glasses', prescribedAt: new Date().toISOString().split('T')[0] });
     const [savingRx, setSavingRx] = useState(false);
 
@@ -272,15 +170,7 @@ export default function PatientDetailPage() {
     });
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
-    const [editingConsultId, setEditingConsultId] = useState<string | null>(null);
 
-    // Invoice Form (Send to Cashier)
-    const [showInvoiceForm, setShowInvoiceForm] = useState(false);
-    const [invoiceProducts, setInvoiceProducts] = useState<any[]>([]);
-    const [invoiceCart, setInvoiceCart] = useState<any[]>([]);
-    const [invoiceSearch, setInvoiceSearch] = useState('');
-    const [invoiceCategoryFilter, setInvoiceCategoryFilter] = useState('all');
-    const [savingInvoice, setSavingInvoice] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
@@ -312,29 +202,15 @@ export default function PatientDetailPage() {
     const handleAddRx = async (e: React.FormEvent) => {
         e.preventDefault();
         setSavingRx(true);
-        
-        const url = editingRxId 
-            ? `/api/prescriptions/${editingRxId}` 
-            : `/api/patients/${id}/prescriptions`;
-            
-        const res = await fetch(url, {
-            method: editingRxId ? 'PUT' : 'POST',
+        const res = await fetch(`/api/patients/${id}/prescriptions`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(rxForm),
         });
-        
         if (res.ok) {
             const rx = await res.json();
-            setPatient(p => {
-                if (!p) return p;
-                if (editingRxId) {
-                    return { ...p, prescriptions: p.prescriptions.map(r => r.id === editingRxId ? rx : r) };
-                } else {
-                    return { ...p, prescriptions: [rx, ...p.prescriptions] };
-                }
-            });
+            setPatient(p => p ? { ...p, prescriptions: [rx, ...p.prescriptions] } : p);
             setShowRxForm(false);
-            setEditingRxId(null);
             setRxForm({ type: 'glasses', prescribedAt: new Date().toISOString().split('T')[0] });
         }
         setSavingRx(false);
@@ -346,41 +222,18 @@ export default function PatientDetailPage() {
         setPatient(p => p ? { ...p, prescriptions: p.prescriptions.filter(r => r.id !== rxId) } : p);
     };
 
-    const handleEditRxClick = (rx: Prescription) => {
-        setEditingRxId(rx.id);
-        setRxForm({
-            ...rx,
-            prescribedAt: new Date(rx.prescribedAt).toISOString().split('T')[0]
-        });
-        setShowRxForm(true);
-        // Scroll to the top of the form smoothly
-        setTimeout(() => {
-            document.getElementById('rx-form')?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    };
-
     const handleAddConsult = async (e: React.FormEvent) => {
         e.preventDefault();
         setSavingConsult(true);
-        const url = editingConsultId 
-            ? `/api/consultations/${editingConsultId}`
-            : `/api/patients/${id}/consultations`;
-        
-        const res = await fetch(url, {
-            method: editingConsultId ? 'PUT' : 'POST',
+        const res = await fetch(`/api/patients/${id}/consultations`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(consultForm),
         });
-        
         if (res.ok) {
             const c = await res.json();
-            if (editingConsultId) {
-                setConsultations(prev => prev.map(item => item.id === editingConsultId ? c : item));
-            } else {
-                setConsultations(prev => [c, ...prev]);
-            }
+            setConsultations(prev => [c, ...prev]);
             setShowConsultForm(false);
-            setEditingConsultId(null);
             setConsultForm({ 
                 visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
                 intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
@@ -391,93 +244,10 @@ export default function PatientDetailPage() {
         setSavingConsult(false);
     };
 
-    const handleEditConsultClick = (c: Consultation) => {
-        setEditingConsultId(c.id);
-        setConsultForm({
-            visitDate: c.visitDate ? new Date(c.visitDate).toISOString().split('T')[0] : '',
-            type: c.type || 'exam',
-            diagnosis: c.diagnosis || '',
-            treatment: c.treatment || '',
-            nextVisit: c.nextVisit ? new Date(c.nextVisit).toISOString().split('T')[0] : '',
-            intraocularPressureOD: c.intraocularPressureOD ?? '',
-            intraocularPressureOS: c.intraocularPressureOS ?? '',
-            visualAcuityOD: c.visualAcuityOD ?? '',
-            visualAcuityOS: c.visualAcuityOS ?? '',
-            notes: c.notes || '',
-            k1OD: c.k1OD ?? '', k2OD: c.k2OD ?? '', axisOD: c.axisOD ?? '', astigmatismOD: c.astigmatismOD ?? '', pachymetryOD: c.pachymetryOD ?? '', eccentricityOD: c.eccentricityOD ?? '',
-            k1OS: c.k1OS ?? '', k2OS: c.k2OS ?? '', axisOS: c.axisOS ?? '', astigmatismOS: c.astigmatismOS ?? '', pachymetryOS: c.pachymetryOS ?? '', eccentricityOS: c.eccentricityOS ?? '',
-            lensFittingOD: c.lensFittingOD || '', lensFittingOS: c.lensFittingOS || '',
-            refractionOD: c.refractionOD || '', refractionOS: c.refractionOS || ''
-        });
-        setShowConsultForm(true);
-        document.getElementById('consultations')?.scrollIntoView({ behavior: 'smooth' });
-    };
-
     const handleDeleteConsult = async (cId: string) => {
         if (!confirm('Удалить запись консультации?')) return;
         await fetch(`/api/consultations/${cId}`, { method: 'DELETE' });
         setConsultations(prev => prev.filter(c => c.id !== cId));
-    };
-
-    // Load products for invoice modal
-    const handleOpenInvoice = async () => {
-        setShowInvoiceForm(true);
-        if (invoiceProducts.length === 0) {
-            try {
-                const res = await fetch('/api/optic/products');
-                if (res.ok) setInvoiceProducts(await res.json());
-            } catch (e) {
-                console.error(e);
-            }
-        }
-    };
-
-    const addToInvoiceCart = (p: any) => {
-        setInvoiceCart(prev => {
-            const existing = prev.find(i => i.productId === p.id);
-            if (existing) {
-                return prev.map(i => i.productId === p.id ? { ...i, quantity: i.quantity + 1 } : i);
-            }
-            return [...prev, { productId: p.id, name: p.name, unitPrice: p.retailPrice, quantity: 1 }];
-        });
-    };
-
-    const updateInvoiceCartQty = (productId: string, delta: number) => {
-        setInvoiceCart(prev => prev.map(i => {
-            if (i.productId === productId) {
-                const newQ = i.quantity + delta;
-                return newQ > 0 ? { ...i, quantity: newQ } : i;
-            }
-            return i;
-        }));
-    };
-
-    const removeInvoiceCart = (productId: string) => setInvoiceCart(prev => prev.filter(i => i.productId !== productId));
-
-    const handleSubmitInvoice = async () => {
-        if (!invoiceCart.length) return;
-        setSavingInvoice(true);
-        try {
-            const res = await fetch('/api/optic/sales/draft', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    patientId: id,
-                    items: invoiceCart
-                }),
-            });
-            if (res.ok) {
-                alert('Счет успешно отправлен на кассу!');
-                setShowInvoiceForm(false);
-                setInvoiceCart([]);
-            } else {
-                alert('Ошибка при отправке счета');
-            }
-        } catch (e) {
-            alert('Сетевая ошибка');
-        } finally {
-            setSavingInvoice(false);
-        }
     };
 
     const calcAge = (birthDate: string | null) => {
@@ -618,6 +388,18 @@ export default function PatientDetailPage() {
 
     if (!patient) return <div className="min-h-screen bg-surface flex items-center justify-center"><p className="text-gray-500">Пациент не найден</p></div>;
 
+    const RxField = ({ label, field }: { label: string; field: string }) => (
+        <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
+            <input
+                type="number" step="0.01"
+                value={rxForm[field] ?? ''}
+                onChange={e => setRxForm((f: any) => ({ ...f, [field]: e.target.value }))}
+                className="input text-sm h-9 font-mono w-full"
+                placeholder="0.00"
+            />
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-surface">
@@ -651,12 +433,8 @@ export default function PatientDetailPage() {
                     <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
                         <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">ФИО</span> <strong className="text-lg text-gray-900">{patient.name}</strong></div>
                         <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Дата рождения</span> <strong className="text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
-                        {session?.user?.role !== 'doctor' && session?.user?.subRole !== 'optic_doctor' && (
-                            <>
-                                <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
-                                <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
-                            </>
-                        )}
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
+                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
                         {patient.notes && (
                             <div className="col-span-2 mt-2 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
                                 <span className="text-xs font-bold text-orange-400 uppercase mb-1 block">Анамнез / Заметки</span>
@@ -731,6 +509,45 @@ export default function PatientDetailPage() {
                     </div>
                 )}
 
+                {/* Данные ITIGRIS (доп. поля клиента из Оптимы) */}
+                {(() => {
+                    const itg = (patient as any).metadata?.itigris;
+                    if (!itg) return null;
+                    const rows = ([
+                        itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
+                        itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
+                        itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
+                        itg.city ? { label: 'Город', value: itg.city } : null,
+                        itg.address ? { label: 'Адрес', value: itg.address } : null,
+                        itg.profession ? { label: 'Профессия', value: itg.profession } : null,
+                        itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
+                        itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
+                    ].filter(Boolean)) as { label: string; value: string }[];
+                    if (rows.length === 0) return null;
+                    const d = itg.discount;
+                    return (
+                        <div className="mb-8">
+                            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
+                                <Award className="w-5 h-5 text-orange-500" />
+                                <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Данные ITIGRIS</h2>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {rows.map((r, i) => (
+                                    <div key={i} className="bg-gray-50 rounded-xl p-3">
+                                        <div className="text-xs text-gray-400 mb-0.5">{r.label}</div>
+                                        <div className="text-sm font-semibold text-gray-900 break-words">{r.value}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            {d && typeof d === 'object' && (
+                                <p className="mt-3 text-xs text-gray-500">
+                                    Скидка по карте: оправы {d.glasses ?? 0}% · солнцезащ. {d.sunglasses ?? 0}% · КЛ {d.contactLenses ?? 0}% · линзы {d.lenses ?? 0}% · аксесс. {d.accessories ?? 0}%
+                                </p>
+                            )}
+                        </div>
+                    );
+                })()}
+
                 {/* Последний рецепт (если есть) */}
                 {patient.prescriptions.length > 0 && (
                     <div className="mb-8">
@@ -776,6 +593,7 @@ export default function PatientDetailPage() {
                                         </table>
                                     </div>
                                     <div className="flex gap-8">
+                                        {rx.pdTotal && <p className="bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">PD общий:</span> <strong className="text-gray-900 ml-2">{rx.pdTotal} мм</strong></p>}
                                         {rx.notes && <p className="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">Заметки:</span> <span className="text-gray-800 ml-2">{rx.notes}</span></p>}
                                     </div>
                                 </div>
@@ -836,63 +654,44 @@ export default function PatientDetailPage() {
                                     {patient.birthDate && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{calcAge(patient.birthDate)}</span>}
                                 </div>
                                 
-                                <div className="flex flex-col gap-2 w-full">
-                                    <div className="flex gap-2 w-full">
-                                        {isEditing ? (
-                                            <>
-                                                <button onClick={() => setIsEditing(false)} className="btn bg-gray-100 hover:bg-gray-200 flex-1 text-sm"><X className="w-4 h-4 mx-auto" /></button>
-                                                <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-[2] text-sm flex items-center justify-center gap-1">
-                                                    <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить'}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <button onClick={() => window.print()} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-1 text-sm flex justify-center text-gray-600">
-                                                    <Printer className="w-4 h-4" />
-                                                </button>
-                                                <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
-                                                    <Edit2 className="w-4 h-4" /> Редактировать
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                    {!isEditing && (
-                                        <button onClick={handleOpenInvoice} className="btn bg-white border border-orange-200 hover:border-orange-300 text-orange-600 w-full text-sm flex items-center justify-center gap-2 transition-colors shadow-sm py-2.5">
-                                            <Banknote className="w-4 h-4" /> Выставить счет на кассу
-                                        </button>
+                                <div className="flex gap-2 w-full">
+                                    {isEditing ? (
+                                        <>
+                                            <button onClick={() => setIsEditing(false)} className="btn bg-gray-100 hover:bg-gray-200 flex-1 text-sm"><X className="w-4 h-4 mx-auto" /></button>
+                                            <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-[2] text-sm flex items-center justify-center gap-1">
+                                                <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить'}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button onClick={() => window.print()} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-1 text-sm flex justify-center text-gray-600">
+                                                <Printer className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
+                                                <Edit2 className="w-4 h-4" /> Редактировать
+                                            </button>
+                                        </>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-4 relative z-10 text-left">
-                                {!(session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor') && (
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
-                                        {isEditing ? (
-                                            <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
-                                        ) : (
-                                            <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone}</p>
-                                        )}
-                                    </div>
-                                )}
+                            <div className="mt-6 space-y-4 relative z-10">
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Город / Адрес</label>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
                                     {isEditing ? (
-                                        <input type="text" value={editForm.address || ''} onChange={e => setEditForm((f: any) => ({ ...f, address: e.target.value }))} className="input text-sm w-full" />
+                                        <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
                                     ) : (
-                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.address ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.address}</> : '—'}</p>
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone}</p>
                                     )}
                                 </div>
-                                {!(session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor') && (
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
-                                        {isEditing ? (
-                                            <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
-                                        ) : (
-                                            <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
-                                        )}
-                                    </div>
-                                )}
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
+                                    {isEditing ? (
+                                        <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
+                                    )}
+                                </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дата рождения</label>
                                     {isEditing ? (
@@ -902,8 +701,18 @@ export default function PatientDetailPage() {
                                     )}
                                 </div>
                             </div>
-                        </div>
 
+                            {(isEditing || patient.notes) && (
+                                <div className="mt-6 pt-6 border-t border-gray-100 relative z-10">
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Заметки / Анамнез</label>
+                                    {isEditing ? (
+                                        <textarea value={editForm.notes || ''} onChange={e => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={4} placeholder="Аллергии, особенности здоровья..." />
+                                    ) : (
+                                        <p className="text-gray-700 text-sm bg-orange-50/50 rounded-xl p-4 border border-orange-100/50 leading-relaxed">{patient.notes}</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* MAIN CONTENT AREA */}
@@ -915,7 +724,6 @@ export default function PatientDetailPage() {
                                 { id: 'consultations', icon: Activity, label: 'Консультации', count: consultations.length },
                                 { id: 'prescriptions', icon: Eye, label: 'Рецепты', count: patient.prescriptions.length },
                                 { id: 'orders', icon: ClipboardList, label: 'Заказы', count: patient.orders.length },
-                                { id: 'sales', icon: ShoppingBag, label: 'Покупки', count: patient.sales?.length || 0 },
                                 { id: 'files', icon: Paperclip, label: 'Снимки', count: patient.attachments?.length || 0 }
                             ].map(tab => (
                                 <button
@@ -933,7 +741,6 @@ export default function PatientDetailPage() {
                                     )}
                                 </button>
                             ))}
-
                         </div>
 
                         {/* MAIN CONTENT STACK */}
@@ -982,78 +789,43 @@ export default function PatientDetailPage() {
                                         <p className="text-sm text-teal-700/70">Нет данных о зрении в последнем визите.</p>
                                     )}
                                 </div>
-
-                                {(isEditing || patient.complaints || patient.anamnesisDisease || patient.anamnesisLife || patient.allergies || patient.heredity || patient.medications || patient.surgeries || patient.notes || patient.iin || patient.profession) && (
-                                    <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                                        <h3 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-500" /> Медицинская карта / Анамнез</h3>
-                                        
-                                        {isEditing ? (
-                                            <div className="space-y-6">
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">ИИН</label>
-                                                        <input type="text" value={editForm.iin || ''} onChange={e => setEditForm((f: any) => ({ ...f, iin: e.target.value }))} className="input text-sm w-full h-10" placeholder="ИИН" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Профессия</label>
-                                                        <input type="text" value={editForm.profession || ''} onChange={e => setEditForm((f: any) => ({ ...f, profession: e.target.value }))} className="input text-sm w-full h-10" placeholder="Профессия" />
-                                                    </div>
-                                                </div>
-
-                                                <div className="pt-4 border-t border-gray-100 space-y-4">
-                                                        <MedicalTextarea category="complaints" label="Жалобы" value={editForm.complaints || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                                        <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания (Anamnesis morbi)" value={editForm.anamnesisDisease || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, anamnesisDisease: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            <MedicalTextarea category="allergies" label="Аллергоанамнез" value={editForm.allergies || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, allergies: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Лекарственная, пищевая аллергия" />
-                                                            <MedicalTextarea category="heredity" label="Наследственность" value={editForm.heredity || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, heredity: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Глаукома, СД..." />
-                                                    </div>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            <MedicalTextarea category="surgeries" label="Перенесенные операции" value={editForm.surgeries || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, surgeries: val }))} className="input text-sm min-h-[40px]" rows={1} />
-                                                            <MedicalTextarea category="medications" label="Постоянный прием медикаментов" value={editForm.medications || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, medications: val }))} className="input text-sm min-h-[40px]" rows={1} />
-                                                    </div>
-                                                        <MedicalTextarea category="last_correction" label="Последняя коррекция" value={editForm.lastCorrection || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, lastCorrection: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Очки, МКЛ (дата)" />
-                                                        <MedicalTextarea category="notes" label="Прочие заметки" value={editForm.notes || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-6">
-                                                {(patient.iin || patient.profession) && (
-                                                    <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-100">
-                                                        {patient.iin && <div><p className="text-[10px] font-bold text-gray-400 uppercase mb-1">ИИН</p><p className="text-gray-900 text-sm font-medium">{patient.iin}</p></div>}
-                                                        {patient.profession && <div><p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Профессия</p><p className="text-gray-900 text-sm font-medium">{patient.profession}</p></div>}
-                                                    </div>
-                                                )}
-                                                
-                                                {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-4 rounded-xl border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
-                                                {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-4 rounded-xl border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
-                                                
-                                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                                    <div className="bg-rose-50 p-3 rounded-xl border border-rose-100">
-                                                        <p className="text-[10px] font-bold text-rose-500 uppercase mb-1">Аллергоанамнез</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.allergies ? `отягощен/да: ${patient.allergies}` : 'не отягощен/нет'}</p>
-                                                    </div>
-                                                    <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
-                                                        <p className="text-[10px] font-bold text-indigo-500 uppercase mb-1">Наследственность</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.heredity ? `отягощен/да: ${patient.heredity}` : 'не отягощен/нет'}</p>
-                                                    </div>
-                                                    <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
-                                                        <p className="text-[10px] font-bold text-sky-500 uppercase mb-1">Прием медикаментов</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.medications ? `да: ${patient.medications}` : 'нет'}</p>
-                                                    </div>
-                                                    <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                                                        <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Операции</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.surgeries ? `да: ${patient.surgeries}` : 'нет'}</p>
-                                                    </div>
-                                                </div>
-                                                
-                                                {patient.lastCorrection && <div><p className="text-[10px] font-bold text-purple-500 uppercase mb-1">Последняя коррекция</p><p className="text-gray-800 text-sm bg-purple-50 p-4 rounded-xl border border-purple-100/50">{patient.lastCorrection}</p></div>}
-                                                
-                                                {patient.notes && <div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Прочие заметки</p><p className="text-gray-700 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100 leading-relaxed">{patient.notes}</p></div>}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
                             </div>
+
+                            {/* Данные ITIGRIS (доп. поля клиента из Оптимы) */}
+                            {(() => {
+                                const itg = (patient as any).metadata?.itigris;
+                                if (!itg) return null;
+                                const rows = ([
+                                    itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
+                                    itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
+                                    itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
+                                    itg.city ? { label: 'Город', value: itg.city } : null,
+                                    itg.address ? { label: 'Адрес', value: itg.address } : null,
+                                    itg.profession ? { label: 'Профессия', value: itg.profession } : null,
+                                    itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
+                                    itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
+                                ].filter(Boolean)) as { label: string; value: string }[];
+                                if (rows.length === 0) return null;
+                                const d = itg.discount;
+                                return (
+                                    <div id="itigris-data" className="scroll-mt-24">
+                                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-3"><Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS</h2>
+                                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                {rows.map((r, i) => (
+                                                    <div key={i} className="bg-gray-50 rounded-xl p-3">
+                                                        <div className="text-xs text-gray-400 mb-0.5">{r.label}</div>
+                                                        <div className="text-sm font-semibold text-gray-900 break-words">{r.value}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {d && typeof d === 'object' && (
+                                                <p className="mt-3 text-xs text-gray-500">Скидка по карте: оправы {d.glasses ?? 0}% · солнцезащ. {d.sunglasses ?? 0}% · КЛ {d.contactLenses ?? 0}% · линзы {d.lenses ?? 0}% · аксесс. {d.accessories ?? 0}%</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Prescriptions */}
                             <div id="prescriptions" className="scroll-mt-24">
@@ -1077,7 +849,7 @@ export default function PatientDetailPage() {
                                         <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'prescription')} disabled={parsingAi} />
                                     </label>
                                 </div>
-                                <form id="rx-form" onSubmit={handleAddRx}>
+                                <form onSubmit={handleAddRx}>
                                     <div className="grid grid-cols-2 gap-3 mb-4">
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1">Тип</label>
@@ -1097,74 +869,28 @@ export default function PatientDetailPage() {
                                         <div>
                                             <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OD — Правый</p>
                                             <div className="space-y-2">
-                                                <RxField label="Sph" field="odSph" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Cyl" field="odCyl" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Ax" field="odAx" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Add" field="odAdd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                {rxForm.type !== 'contacts' && rxForm.type !== 'ortho-k' && (
-                                                    <>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            <RxField label="PD Даль" field="odPd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                            <RxField label="PD Близь" field="odPdNear" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        </div>
-                                                        <RxField label="Призма" field="odPrism" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </>
-                                                )}
-                                                {(rxForm.type === 'contacts' || rxForm.type === 'ortho-k') && (
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <RxField label="BC (Кривизна)" field="odBc" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        <RxField label="DIA (Диаметр)" field="odDia" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </div>
-                                                )}
-                                                <RxField label="Острота (с корр.)" field="visualAcuityODAfter" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Sph" field="odSph" />
+                                                <RxField label="Cyl" field="odCyl" />
+                                                <RxField label="Ax" field="odAx" />
+                                                <RxField label="Add" field="odAdd" />
+                                                <RxField label="PD" field="odPd" />
                                             </div>
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OS — Левый</p>
                                             <div className="space-y-2">
-                                                <RxField label="Sph" field="osSph" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Cyl" field="osCyl" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Ax" field="osAx" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Add" field="osAdd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                {rxForm.type !== 'contacts' && rxForm.type !== 'ortho-k' && (
-                                                    <>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            <RxField label="PD Даль" field="osPd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                            <RxField label="PD Близь" field="osPdNear" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        </div>
-                                                        <RxField label="Призма" field="osPrism" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </>
-                                                )}
-                                                {(rxForm.type === 'contacts' || rxForm.type === 'ortho-k') && (
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <RxField label="BC (Кривизна)" field="osBc" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        <RxField label="DIA (Диаметр)" field="osDia" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </div>
-                                                )}
-                                                <RxField label="Острота (с корр.)" field="visualAcuityOSAfter" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Sph" field="osSph" />
+                                                <RxField label="Cyl" field="osCyl" />
+                                                <RxField label="Ax" field="osAx" />
+                                                <RxField label="Add" field="osAdd" />
+                                                <RxField label="PD" field="osPd" />
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-4 space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Рефракция</label>
-                                            <input type="text" value={rxForm.refraction || ''} onChange={e => setRxForm((f: any) => ({ ...f, refraction: e.target.value }))} className="input w-full text-sm h-9" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Циклоплегия</label>
-                                            <input type="text" value={rxForm.cycloplegia || ''} onChange={e => setRxForm((f: any) => ({ ...f, cycloplegia: e.target.value }))} className="input w-full text-sm h-9" />
-                                        </div>
-                                        <MedicalTextarea category="complaints" label="Жалобы" value={rxForm.complaints || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm" rows={2} />
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <MedicalTextarea category="anamnesis_life" label="Анамнез жизни" value={rxForm.medicalHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, medicalHistory: val }))} className="input text-sm" rows={2} />
-                                            <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания" value={rxForm.diseaseHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, diseaseHistory: val }))} className="input text-sm" rows={2} />
-                                        </div>
-                                        <MedicalTextarea category="biomicroscopy" label="Биомикроскопия" value={rxForm.biomicroscopy || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, biomicroscopy: val }))} className="input text-sm" rows={2} />
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">ПЗО</label>
-                                            <input type="text" value={rxForm.pzo || ''} onChange={e => setRxForm((f: any) => ({ ...f, pzo: e.target.value }))} className="input w-full text-sm h-9" />
-                                        </div>
-                                        <MedicalTextarea category="notes" label="Заметки к рецепту" value={rxForm.notes || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, notes: val }))} className="input text-sm" rows={2} />
+                                    <RxField label="PD общий (мм)" field="pdTotal" />
+                                    <div className="mt-3">
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки к рецепту</label>
+                                        <textarea value={rxForm.notes || ''} onChange={e => setRxForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full resize-none text-sm" rows={2} />
                                     </div>
                                     <div className="flex gap-2 mt-4">
                                         <button type="button" onClick={() => setShowRxForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>
@@ -1184,12 +910,7 @@ export default function PatientDetailPage() {
                         ) : (
                             <div className="space-y-3">
                                 {patient.prescriptions.map(rx => (
-                                    <PrescriptionCard 
-                                        key={rx.id} 
-                                        rx={rx} 
-                                        onDelete={() => handleDeleteRx(rx.id)} 
-                                        onEdit={() => handleEditRxClick(rx)}
-                                    />
+                                    <PrescriptionCard key={rx.id} rx={rx} onDelete={() => handleDeleteRx(rx.id)} />
                                 ))}
                             </div>
                         )}
@@ -1249,59 +970,6 @@ export default function PatientDetailPage() {
                         )}
                     </div>
 
-                    <div id="sales" className="scroll-mt-24 mt-8">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <ShoppingBag className="w-5 h-5 text-indigo-500" /> История покупок (Касса)
-                            </h2>
-                        </div>
-
-                        {(!patient.sales || patient.sales.length === 0) ? (
-                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                                <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500 text-sm">Пациент еще ничего не покупал на кассе</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {patient.sales.map((sale: any) => (
-                                    <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-all">
-                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-semibold text-gray-900">Чек #{sale.saleNumber}</span>
-                                                    <span className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">ОПЛАЧЕНО</span>
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {new Date(sale.createdAt).toLocaleDateString('ru-RU')}
-                                                    {sale.doctor && <span className="ml-2 font-medium text-indigo-600">· 🩺 {sale.doctor.fullName}</span>}
-                                                </p>
-                                            </div>
-                                            <div className="text-right w-full sm:w-auto">
-                                                <div className="text-sm font-bold text-gray-900">{fmt(sale.total)} ₸</div>
-                                                <div className="text-xs text-gray-500">
-                                                    {sale.paymentMethod === 'card' ? 'Карта' : sale.paymentMethod === 'transfer' ? 'Перевод' : sale.paymentMethod === 'mixed' ? 'Смешанная' : 'Наличные'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {sale.items && sale.items.length > 0 && (
-                                            <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
-                                                {sale.items.map((item: any, i: number) => (
-                                                    <div key={i} className="flex justify-between items-center text-xs">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-medium text-gray-700">{item.name}</span>
-                                                            <span className="text-gray-400">x{item.quantity}</span>
-                                                        </div>
-                                                        <span className="font-semibold text-gray-600">{fmt(item.total)} ₸</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
                     {/* Consultations */}
                     <div id="consultations" className="scroll-mt-24">
                     <div className="flex items-center justify-between mb-3">
@@ -1311,19 +979,8 @@ export default function PatientDetailPage() {
                                 <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{consultations.length}</span>
                             )}
                         </h2>
-                        <button onClick={() => {
-                            setShowConsultForm(!showConsultForm);
-                            if (showConsultForm) {
-                                setEditingConsultId(null);
-                                setConsultForm({ 
-                                    visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
-                                    intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
-                                    k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
-                                    k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
-                                });
-                            }
-                        }} className="btn btn-secondary btn-sm flex items-center gap-1">
-                            <Plus className="w-4 h-4" /> {showConsultForm && !editingConsultId ? 'Отменить' : (editingConsultId ? 'Отменить ред.' : 'Добавить визит')}
+                        <button onClick={() => setShowConsultForm(!showConsultForm)} className="btn btn-secondary btn-sm flex items-center gap-1">
+                            <Plus className="w-4 h-4" /> Добавить визит
                         </button>
                     </div>
 
@@ -1331,7 +988,7 @@ export default function PatientDetailPage() {
                     {showConsultForm && (
                         <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-semibold text-gray-900">{editingConsultId ? 'Редактирование записи' : 'Новая запись консультации'}</h3>
+                                <h3 className="font-semibold text-gray-900">Новая запись консультации</h3>
                                 <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
                                     <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
                                     {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
@@ -1359,11 +1016,11 @@ export default function PatientDetailPage() {
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OD</label>
-                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOD} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                        <input type="number" step="0.1" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOD} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OS</label>
-                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOS} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                        <input type="number" step="0.1" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOS} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OD (мм рт.)</label>
@@ -1404,45 +1061,24 @@ export default function PatientDetailPage() {
                                     </div>
                                 </div>
 
-                                {/* Lens Fitting and Refraction (Free Text) */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                                        <h4 className="text-xs font-bold text-blue-800 uppercase mb-2">Подбор линз (Параметры)</h4>
-                                        <div className="space-y-2">
-                                            <div>
-                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OD — Правый</label>
-                                                <input type="text" value={consultForm.lensFittingOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA, Paragon 10.5..." />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OS — Левый</label>
-                                                <input type="text" value={consultForm.lensFittingOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA..." />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                        <h4 className="text-xs font-bold text-purple-800 uppercase mb-2">Рефрактометрия (ROL)</h4>
-                                        <div className="space-y-2">
-                                            <div>
-                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
-                                                <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
-                                                <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <div className="space-y-3 mb-4">
-                                    <MedicalTextarea category="diagnosis" label="Диагноз / Клинические данные" value={consultForm.diagnosis || ''} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, diagnosis: val }))} className="input text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
-                                    <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Диагноз / Клинические данные</label>
+                                        <textarea value={consultForm.diagnosis} onChange={e => setConsultForm((f: any) => ({ ...f, diagnosis: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">План лечения / Рекомендации</label>
+                                        <textarea value={consultForm.treatment} onChange={e => setConsultForm((f: any) => ({ ...f, treatment: e.target.value }))} className="input w-full resize-none text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
+                                    </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит</label>
                                             <input type="date" value={consultForm.nextVisit} onChange={e => setConsultForm((f: any) => ({ ...f, nextVisit: e.target.value }))} className="input w-full text-sm h-9" />
                                         </div>
-                                            <MedicalTextarea category="notes" label="Заметки" value={consultForm.notes} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Дополнительно..." />
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки</label>
+                                            <input type="text" value={consultForm.notes} onChange={e => setConsultForm((f: any) => ({ ...f, notes: e.target.value }))} className="input w-full text-sm h-9" placeholder="Дополнительно..." />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1522,34 +1158,16 @@ export default function PatientDetailPage() {
                                                         </div>
                                                     </div>
                                                 )}
-                                                {(c.lensFittingOD || c.lensFittingOS) && (
-                                                    <div className="bg-blue-50/50 rounded-lg p-3 border border-blue-100">
-                                                        <p className="text-xs font-semibold text-blue-700 mb-2">Подбор линз</p>
-                                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                                            <div><span className="text-blue-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.lensFittingOD || '—'}</span></div>
-                                                            <div><span className="text-blue-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.lensFittingOS || '—'}</span></div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {(c.refractionOD || c.refractionOS) && (
-                                                    <div className="bg-purple-50/50 rounded-lg p-3 border border-purple-100">
-                                                        <p className="text-xs font-semibold text-purple-700 mb-2">Рефрактометрия</p>
-                                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                                            <div><span className="text-purple-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.refractionOD || '—'}</span></div>
-                                                            <div><span className="text-purple-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.refractionOS || '—'}</span></div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role) && (
+                                                {c.diagnosis && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{c.diagnosis}</p>
                                                     </div>
                                                 )}
-                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role) && (
+                                                {c.treatment && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Рекомендации</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{c.treatment}</p>
                                                     </div>
                                                 )}
                                                 {c.nextVisit && (
@@ -1558,14 +1176,8 @@ export default function PatientDetailPage() {
                                                         Следующий визит: <strong>{new Date(c.nextVisit).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
                                                     </div>
                                                 )}
-                                                {c.notes && <p className="text-xs text-gray-500 italic">{filterMedicalText(c.notes, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>}
-                                                <div className="flex justify-end gap-3">
-                                                    <Link target="_blank" href={`/optic/patients/${id}/consultations/${c.id}/print`} className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors">
-                                                        <FileText className="w-3.5 h-3.5" /> Печать
-                                                    </Link>
-                                                    <button onClick={() => handleEditConsultClick(c)} className="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors">
-                                                        <Plus className="w-3.5 h-3.5" /> Редактировать
-                                                    </button>
+                                                {c.notes && <p className="text-xs text-gray-500 italic">{c.notes}</p>}
+                                                <div className="flex justify-end">
                                                     <button onClick={() => handleDeleteConsult(c.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors">
                                                         <Trash2 className="w-3.5 h-3.5" /> Удалить запись
                                                     </button>
@@ -1638,92 +1250,6 @@ export default function PatientDetailPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Modal for Invoice */}
-            {showInvoiceForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowInvoiceForm(false)}>
-                    <div className="bg-white rounded-3xl max-w-4xl w-full flex overflow-hidden shadow-2xl h-[80vh]" onClick={e => e.stopPropagation()}>
-                        
-                        {/* Left side - Products */}
-                        <div className="w-1/2 md:w-2/3 border-r border-gray-100 flex flex-col bg-gray-50/50">
-                            <div className="p-4 border-b border-gray-200 bg-white">
-                                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                    <Banknote className="w-5 h-5 text-orange-500" /> Выставить счет на кассу
-                                </h3>
-                                <div className="relative mb-3">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input type="text" placeholder="Поиск услуг или товаров..." value={invoiceSearch} onChange={e => setInvoiceSearch(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none" />
-                                </div>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setInvoiceCategoryFilter('all')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${invoiceCategoryFilter === 'all' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Все</button>
-                                    <button onClick={() => setInvoiceCategoryFilter('service')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${invoiceCategoryFilter === 'service' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Услуги</button>
-                                    <button onClick={() => setInvoiceCategoryFilter('product')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${invoiceCategoryFilter === 'product' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Товары</button>
-                                </div>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                    {invoiceProducts.filter(p => {
-                                        if (p.isActive === false) return false;
-                                        if (invoiceCategoryFilter !== 'all' && p.type !== invoiceCategoryFilter) return false;
-                                        return p.name.toLowerCase().includes(invoiceSearch.toLowerCase());
-                                    }).map(p => (
-                                        <div key={p.id} onClick={() => addToInvoiceCart(p)}
-                                            className="bg-white p-3 border border-gray-200 rounded-xl hover:border-orange-400 hover:shadow-md cursor-pointer transition-all active:scale-95 group">
-                                            <p className="text-sm font-bold text-gray-800 line-clamp-2 group-hover:text-orange-700 transition-colors mb-2">{p.name}</p>
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-500 font-medium">{p.type === 'service' ? 'Услуга' : 'Товар'}</span>
-                                                <span className="font-bold text-gray-900">{fmt(p.retailPrice)} ₸</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right side - Cart */}
-                        <div className="w-1/2 md:w-1/3 flex flex-col bg-white">
-                            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
-                                <h4 className="font-bold text-gray-900">Выбрано</h4>
-                                <button onClick={() => setShowInvoiceForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                                {invoiceCart.length === 0 ? (
-                                    <p className="text-sm text-gray-400 text-center py-10">Добавьте услуги из списка слева</p>
-                                ) : (
-                                    invoiceCart.map(item => (
-                                        <div key={item.productId} className="flex justify-between items-center gap-2 border-b border-gray-50 pb-3">
-                                            <div className="flex-1">
-                                                <p className="text-xs font-bold text-gray-800 leading-tight">{item.name}</p>
-                                                <p className="text-[10px] text-gray-500 mt-0.5">{fmt(item.unitPrice)} ₸</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-0.5 border border-gray-200">
-                                                    <button onClick={() => updateInvoiceCartQty(item.productId, -1)} className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded text-gray-600"><Minus className="w-3 h-3" /></button>
-                                                    <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
-                                                    <button onClick={() => updateInvoiceCartQty(item.productId, 1)} className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded text-gray-600"><Plus className="w-3 h-3" /></button>
-                                                </div>
-                                                <button onClick={() => removeInvoiceCart(item.productId)} className="text-red-400 hover:text-red-600 p-1"><Trash2 className="w-4 h-4" /></button>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                            <div className="p-5 border-t border-gray-100 bg-gray-50 space-y-4">
-                                <div className="flex justify-between items-center text-lg font-black text-gray-900">
-                                    <span>Итого:</span>
-                                    <span className="text-orange-600">{fmt(invoiceCart.reduce((s, i) => s + (i.unitPrice * i.quantity), 0))} ₸</span>
-                                </div>
-                                <button onClick={handleSubmitInvoice} disabled={invoiceCart.length === 0 || savingInvoice}
-                                    className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl disabled:opacity-50 transition-all shadow-md active:scale-95">
-                                    {savingInvoice ? 'Отправка...' : 'Отправить на кассу'}
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

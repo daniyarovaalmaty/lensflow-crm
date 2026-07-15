@@ -63,7 +63,6 @@ export async function PATCH(
         // Set timestamps based on status
         if (validatedData.status === 'in_production' && !order.productionStartedAt) {
             updateData.productionStartedAt = now;
-            updateData.engineerId = session.user.id;
         }
         if (validatedData.status === 'ready' && !order.productionCompletedAt) {
             updateData.productionCompletedAt = now;
@@ -84,14 +83,25 @@ export async function PATCH(
             include: { patient: true, organization: { select: { name: true } } },
         });
 
-        // Trigger write-off when order is moved to docs_ready
-        if (newStatus === 'docs_ready') {
-            try {
-                // Ignore error if module doesn't exist yet, we will create it next
-                const { writeOffOrderMaterials } = require('@/lib/labInventory');
-                await writeOffOrderMaterials(order.id, session.user.organizationId || '');
-            } catch (err) {
-                console.error('Failed to write-off order materials:', err);
+        // Order issue → write off selected stock items (выдача списывает склад).
+        const writeOff = (body as any).writeOff;
+        if (validatedData.status === 'delivered' && Array.isArray(writeOff) && writeOff.length > 0 && order.organizationId) {
+            for (const w of writeOff) {
+                const qty = Number(w.qty) || 0;
+                if (qty <= 0 || !w.productId) continue;
+                await prisma.opticProduct.update({ where: { id: w.productId }, data: { currentStock: { decrement: qty } } }).catch(() => {});
+                await prisma.stockMovement.create({
+                    data: {
+                        organizationId: order.organizationId,
+                        productId: w.productId,
+                        type: 'write_off',
+                        quantity: qty,
+                        documentNumber: order.orderNumber,
+                        reason: `Выдача заказа ${order.orderNumber}`,
+                        performedById: (session.user as any).id || null,
+                        performedByName: (session.user as any).name || null,
+                    },
+                });
             }
         }
 
