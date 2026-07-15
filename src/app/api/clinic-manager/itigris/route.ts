@@ -141,9 +141,9 @@ export async function POST(req: NextRequest) {
 
     if (action === 'test_legacy') {
         const { legacyClient, legacyKey } = body;
-        const client = new ItigrisLegacyClient({ clientName: legacyClient, apiKey: legacyKey });
-        const ok = await client.testConnection();
-        return NextResponse.json({ ok, message: ok ? 'Подключено успешно (Legacy)' : 'Ошибка проверки ключа' });
+        const client = new ItigrisLegacyClient({ client: legacyClient, key: legacyKey });
+        const result = await client.test();
+        return NextResponse.json({ ok: result.ok, message: result.ok ? 'Подключено успешно (Legacy)' : result.message });
     }
 
     if (action === 'save_legacy') {
@@ -159,9 +159,9 @@ export async function POST(req: NextRequest) {
 
     if (action === 'test_remote') {
         const { remoteClient, remoteKey } = body;
-        const client = new ItigrisRemoteClient({ clientName: remoteClient, apiKey: remoteKey });
-        const ok = await client.testConnection();
-        return NextResponse.json({ ok, message: ok ? 'Подключено успешно (RemoteAPI)' : 'Ошибка проверки ключа' });
+        const client = new ItigrisRemoteClient({ client: remoteClient, key: remoteKey });
+        const result = await client.test();
+        return NextResponse.json({ ok: result.ok, message: result.ok ? 'Подключено успешно (RemoteAPI)' : result.message });
     }
 
     if (action === 'save_remote') {
