@@ -6,23 +6,24 @@ import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect, useRef } from 'react';
 import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight, ChevronLeft, ChevronRight, ClipboardList, Newspaper, Wrench, AlertTriangle, CalendarPlus } from 'lucide-react';
 import FullscreenButton from '@/components/ui/FullscreenButton';
+import { getEffectiveClinicPermissions } from '@/types/user';
 
 const baseNavItems = [
     { href: '/optic/dashboard', label: 'Заказы', icon: LayoutDashboard, color: 'text-gray-500' },
     { href: '/optic/issue', label: 'Выдать заказ', icon: PackageCheck, color: 'text-teal-500' },
     { href: '/optic/repairs', label: 'Ремонт', icon: Wrench, color: 'text-purple-500' },
     { href: '/optic/reworks', label: 'Переделки', icon: AlertTriangle, color: 'text-orange-500' },
-    { href: '/optic/catalog', label: 'Каталог', icon: Package, color: 'text-blue-500' },
-    { href: '/optic/warehouse', label: 'Склад', icon: Warehouse, color: 'text-amber-500' },
+    { href: '/optic/catalog', label: 'Каталог', icon: Package, color: 'text-blue-500', permKey: 'canViewCatalog' },
+    { href: '/optic/warehouse', label: 'Склад', icon: Warehouse, color: 'text-amber-500', permKey: 'canViewWarehouse' },
     { href: '/optic/supplier-orders', label: 'Закуп', icon: Truck, color: 'text-indigo-500' },
-    { href: '/optic/transfers', label: 'Трансферы', icon: ArrowLeftRight, color: 'text-sky-500' },
-    { href: '/optic/pos', label: 'Касса', icon: ShoppingCart, color: 'text-green-500' },
-    { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500' },
-    { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500' },
-    { href: '/optic/booking', label: 'Запись', icon: CalendarPlus, color: 'text-teal-500' },
-    { href: '/optic/tasks', label: 'Задания', icon: ClipboardList, color: 'text-fuchsia-500' },
-    { href: '/optic/news', label: 'Новости', icon: Newspaper, color: 'text-rose-500' },
-    { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500' },
+    { href: '/optic/transfers', label: 'Трансферы', icon: ArrowLeftRight, color: 'text-sky-500', permKey: 'canViewTransfers' },
+    { href: '/optic/pos', label: 'Касса', icon: ShoppingCart, color: 'text-green-500', permKey: 'canViewPos' },
+    { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500', permKey: 'canViewCash' },
+    { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500', permKey: 'canViewPatients' },
+    { href: '/optic/booking', label: 'Запись', icon: CalendarPlus, color: 'text-teal-500', permKey: 'canViewBooking' },
+    { href: '/optic/tasks', label: 'Задания', icon: ClipboardList, color: 'text-fuchsia-500', permKey: 'canViewTasks' },
+    { href: '/optic/news', label: 'Новости', icon: Newspaper, color: 'text-rose-500', permKey: 'canViewNews' },
+    { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500', permKey: 'canViewAnalytics' },
 ];
 
 const procurementNavItems = [
@@ -120,7 +121,20 @@ export default function QuickNav() {
         : branches.find(b => b.id === selectedBranch)?.name || 'Все';
 
     const isAigerim = userName.toLowerCase().includes('айгерим') || userName.toLowerCase().includes('шораева');
-    const allItems = isProcurement ? procurementNavItems : (isManager ? [...baseNavItems, ...managerNavItems] : [...baseNavItems]);
+
+    // Permissions-based navigation filtering
+    const clinicPerms = session?.user ? getEffectiveClinicPermissions({
+        subRole: subRole || 'optic_doctor',
+        permissions: (session.user as any).permissions,
+    }) : null;
+
+    const rawItems = isProcurement ? procurementNavItems : (isManager ? [...baseNavItems, ...managerNavItems] : [...baseNavItems]);
+    // Filter by permissions: items without permKey are always visible, items with permKey require the permission to be true
+    const allItems = rawItems.filter(item => {
+        if (!('permKey' in item) || !(item as any).permKey) return true;
+        if (!clinicPerms) return false;
+        return (clinicPerms as any)[(item as any).permKey] === true;
+    });
     
     if (isAigerim && !isProcurement) {
         allItems.push({ href: '/profile/payroll', label: 'Зарплата', icon: Banknote, color: 'text-amber-500' } as any);

@@ -9,7 +9,7 @@ import {
 import { SubRoleLabels, getEffectiveClinicPermissions } from '@/types/user';
 import type { SubRole } from '@/types/user';
 import Link from 'next/link';
-import { ShoppingCart, Warehouse, Package, Banknote, FileText, Target, Calendar } from 'lucide-react';
+import { ShoppingCart, Warehouse, Package, Banknote, FileText, Target, Calendar, ArrowLeftRight, Newspaper, CalendarPlus, ClipboardList, BarChart3 } from 'lucide-react';
 
 interface StaffMember {
     id: string;
@@ -55,6 +55,11 @@ export default function ClinicStaffPage() {
         canViewPatients: false,
         canViewFinance: false,
         canViewOrders: false,
+        canViewTransfers: false,
+        canViewNews: false,
+        canViewBooking: false,
+        canViewTasks: false,
+        canViewAnalytics: false,
     });
     const [saving, setSaving] = useState(false);
     const [editError, setEditError] = useState('');
@@ -394,6 +399,11 @@ export default function ClinicStaffPage() {
                                             { key: 'canViewFinance', label: 'Цены и Финансы', desc: 'Показатели выручки и маржи', icon: Target },
                                             { key: 'canViewOrders', label: 'Заказы линз', desc: 'Отправка бланков линз в лабу', icon: FileText },
                                             { key: 'canViewCrm', label: 'CRM и Календарь', desc: 'Записи на прием, воронка', icon: Calendar },
+                                            { key: 'canViewTransfers', label: 'Трансферы', desc: 'Перемещения между складами', icon: ArrowLeftRight },
+                                            { key: 'canViewNews', label: 'Новости', desc: 'Объявления и новости компании', icon: Newspaper },
+                                            { key: 'canViewBooking', label: 'Запись на прием', desc: 'Онлайн-запись пациентов', icon: CalendarPlus },
+                                            { key: 'canViewTasks', label: 'Задания', desc: 'Задачи и поручения сотрудникам', icon: ClipboardList },
+                                            { key: 'canViewAnalytics', label: 'Аналитика', desc: 'Отчеты и статистика', icon: BarChart3 },
                                         ].map(p => {
                                             const Icon = p.icon;
                                             const isChecked = (editPermissions as any)[p.key] || false;
