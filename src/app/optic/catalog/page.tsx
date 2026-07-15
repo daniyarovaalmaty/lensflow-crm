@@ -1560,16 +1560,19 @@ export default function OpticCatalogPage() {
                                     {!isService && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Закупочная цена (₸)</label>
-                                            <input type="number" value={form.purchasePrice} onChange={e => setForm({ ...form, purchasePrice: e.target.value })}
-                                                placeholder="15000" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
+                                            <input type="number" value={form.purchasePrice} onChange={e => setForm({ ...form, purchasePrice: e.target.value })} disabled={!!(editProduct && (editProduct.specs as any)?.source === 'itigris')}
+                                                placeholder="15000" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500" />
                                         </div>
                                     )}
                                     <div className={isService ? 'col-span-2' : ''}>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                                             {isService ? 'Стоимость услуги (₸)' : 'Розничная цена (₸)'}
+                                            {editProduct && (editProduct.specs as any)?.source === 'itigris' && (
+                                                <span className="text-[10px] bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded-full font-semibold uppercase">ITIGRIS</span>
+                                            )}
                                         </label>
-                                        <input type="number" value={form.retailPrice} onChange={e => setForm({ ...form, retailPrice: e.target.value })}
-                                            placeholder="25000" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
+                                        <input type="number" value={form.retailPrice} onChange={e => setForm({ ...form, retailPrice: e.target.value })} disabled={!!(editProduct && (editProduct.specs as any)?.source === 'itigris')}
+                                            placeholder="25000" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500" />
                                     </div>
                                 </div>
 
@@ -1616,8 +1619,8 @@ export default function OpticCatalogPage() {
                                 {session?.user?.subRole === 'optic_manager' && (
                                     <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer">
                                         <input type="checkbox" checked={form.isFreePrice}
-                                            onChange={e => setForm({ ...form, isFreePrice: e.target.checked })}
-                                            className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+                                            onChange={e => setForm({ ...form, isFreePrice: e.target.checked })} disabled={!!(editProduct && (editProduct.specs as any)?.source === 'itigris')}
+                                            className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500 disabled:opacity-50" />
                                         <div>
                                             <span className="text-sm font-medium text-gray-700">Свободная цена</span>
                                             <p className="text-xs text-gray-400">Кассир вводит цену при продаже</p>
