@@ -14,7 +14,7 @@ async function resolveScope(email: string) {
         const branches = await prisma.organization.findMany({ where: { parentId: me.organizationId, status: 'active' }, select: { id: true } });
         orgIds = [me.organizationId, ...branches.map((b) => b.id)];
     }
-    return { me, orgIds };
+    return { me, orgIds, orgType: org?.type };
 }
 
 async function unreadCount(userId: string, orgIds: string[]) {
@@ -35,7 +35,7 @@ export async function GET() {
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const scope = await resolveScope(session.user.email!);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-    const { me, orgIds } = scope;
+    const { me, orgIds, orgType } = scope;
 
     const [posts, unread] = await Promise.all([
         prisma.newsPost.findMany({
@@ -44,7 +44,7 @@ export async function GET() {
         }),
         unreadCount(me.id, orgIds),
     ]);
-    return NextResponse.json({ posts, unread, canPost: me.subRole === 'optic_manager' });
+    return NextResponse.json({ posts, unread, canPost: me.subRole === 'optic_manager' || orgType === 'headquarters' });
 }
 
 // ==================== POST — publish news (manager only) ====================
@@ -53,8 +53,8 @@ export async function POST(req: NextRequest) {
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const scope = await resolveScope(session.user.email!);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-    const { me } = scope;
-    if (me.subRole !== 'optic_manager') return NextResponse.json({ error: 'Публиковать новости может управляющий' }, { status: 403 });
+    const { me, orgType } = scope;
+    if (me.subRole !== 'optic_manager' && orgType !== 'headquarters') return NextResponse.json({ error: 'Публиковать новости может управляющий или штаб-квартира' }, { status: 403 });
 
     const body = await req.json();
     const title = String(body.title || '').trim();
@@ -80,7 +80,7 @@ export async function PATCH(req: NextRequest) {
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const scope = await resolveScope(session.user.email!);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-    const { me, orgIds } = scope;
+    const { me, orgIds, orgType } = scope;
 
     const body = await req.json();
 
@@ -96,7 +96,7 @@ export async function PATCH(req: NextRequest) {
     if (!body.id) return NextResponse.json({ error: 'id обязателен' }, { status: 400 });
     const existing = await prisma.newsPost.findUnique({ where: { id: body.id } });
     if (!existing || !orgIds.includes(existing.organizationId)) return NextResponse.json({ error: 'Новость не найдена' }, { status: 404 });
-    if (existing.authorId !== me.id && me.subRole !== 'optic_manager') return NextResponse.json({ error: 'Редактировать может автор или управляющий' }, { status: 403 });
+    if (existing.authorId !== me.id && me.subRole !== 'optic_manager' && orgType !== 'headquarters') return NextResponse.json({ error: 'Редактировать может автор или управляющий' }, { status: 403 });
 
     const data: any = {};
     if (typeof body.title === 'string' && body.title.trim()) data.title = body.title.trim();
@@ -113,13 +113,13 @@ export async function DELETE(req: NextRequest) {
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const scope = await resolveScope(session.user.email!);
     if (!scope) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-    const { me, orgIds } = scope;
+    const { me, orgIds, orgType } = scope;
 
     const id = new URL(req.url).searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'id обязателен' }, { status: 400 });
     const existing = await prisma.newsPost.findUnique({ where: { id } });
     if (!existing || !orgIds.includes(existing.organizationId)) return NextResponse.json({ error: 'Новость не найдена' }, { status: 404 });
-    if (existing.authorId !== me.id && me.subRole !== 'optic_manager') return NextResponse.json({ error: 'Удалять может автор или управляющий' }, { status: 403 });
+    if (existing.authorId !== me.id && me.subRole !== 'optic_manager' && orgType !== 'headquarters') return NextResponse.json({ error: 'Удалять может автор или управляющий' }, { status: 403 });
 
     await prisma.newsPost.delete({ where: { id } });
     return NextResponse.json({ ok: true });
