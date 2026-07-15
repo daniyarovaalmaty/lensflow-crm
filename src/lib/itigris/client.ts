@@ -399,9 +399,12 @@ export class ItigrisApiClient {
             if (status === 404) {
                 return { ok: false, message: 'Приложение не найдено. Проверьте название company.' };
             }
+            const errorBody = err.response?.data;
+            const detailMsg = errorBody?.message || errorBody?.error || err.message;
+
             return {
                 ok: false,
-                message: `Ошибка подключения: ${err.message || 'неизвестная ошибка'}`,
+                message: `Ошибка подключения: ${detailMsg}`,
             };
         }
     }

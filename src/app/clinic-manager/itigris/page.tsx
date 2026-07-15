@@ -312,7 +312,7 @@ export default function ClinicManagerItigrisPage() {
                         <h2 className="text-base font-semibold text-gray-900">Внешнее (легаси) API</h2>
                         {legacyConnected && <span className="text-xs text-emerald-600 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Подключено</span>}
                     </div>
-                    <p className="text-sm text-gray-500 mb-4">Ключ-доступ к сервисам: остатки линз, статус заказа, бонусы и скидка по дисконтной карте.</p>
+                    <p className="text-sm text-gray-500 mb-4">Отвечает за: остатки складских линз, статус заказа, бонусы и скидку по дисконтной карте.</p>
                     <div className="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Компания (легаси)</label>
@@ -344,7 +344,7 @@ export default function ClinicManagerItigrisPage() {
                         <h2 className="text-base font-semibold text-gray-900">RemoteAPI (каталог + двусторонние)</h2>
                         {remoteConnected && <span className="text-xs text-emerald-600 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Подключено</span>}
                     </div>
-                    <p className="text-sm text-gray-500 mb-4">Отдельный ключ «для интернет-магазина и мобильного приложения» (выдаёт поддержка Itigris). Открывает каталог товаров и двусторонние сценарии (запись на приём, заказы, бонусы, СМС). Это НЕ легаси-ключ выше.</p>
+                    <p className="text-sm text-gray-500 mb-4">Отвечает за: запись на приём, создание заказов, списание бонусов, отправку СМС и полный каталог товаров.</p>
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">RemoteAPI-ключ</label>
                         <input type="password" value={remoteKey} onChange={e => setRemoteKey(e.target.value)} placeholder={remoteConnected ? '•••••••• (сохранён)' : 'remote api key'} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-400" />
