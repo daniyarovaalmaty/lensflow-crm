@@ -23,6 +23,8 @@ export default function TransfersPage() {
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [toOrgId, setToOrgId] = useState('');
+    const [fromOrgId, setFromOrgId] = useState('');
+    const [isHQ, setIsHQ] = useState(false);
     const [notes, setNotes] = useState('');
     const [cart, setCart] = useState<Item[]>([]);
     const [pick, setPick] = useState('');
@@ -30,19 +32,36 @@ export default function TransfersPage() {
     const [busy, setBusy] = useState<string | null>(null);
     const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
 
+    const loadProducts = async (orgId?: string) => {
+        const url = orgId ? `/api/optic/products?orgId=${orgId}` : '/api/optic/products';
+        const p = await fetch(url).then(r => (r.ok ? r.json() : []));
+        setProducts(Array.isArray(p) ? p : []);
+    };
+
     const load = () => {
         setLoading(true);
         Promise.all([
-            fetch('/api/optic/transfers').then(r => (r.ok ? r.json() : [])),
+            fetch('/api/optic/transfers').then(r => (r.ok ? r.json() : { transfers: [], isHQ: false, orgId: '' })),
             fetch('/api/branches').then(r => (r.ok ? r.json() : { branches: [] })).catch(() => ({ branches: [] })),
-            fetch('/api/optic/products').then(r => (r.ok ? r.json() : [])),
-        ]).then(([t, b, p]) => {
-            setTransfers(Array.isArray(t) ? t : []);
+        ]).then(([tData, b]) => {
+            setTransfers(Array.isArray(tData.transfers) ? tData.transfers : []);
             setBranches(b?.branches || []);
-            setProducts(Array.isArray(p) ? p : []);
+            setIsHQ(tData.isHQ || false);
+            const myOrgId = tData.orgId || '';
+            setFromOrgId(myOrgId);
+            loadProducts(myOrgId);
         }).finally(() => setLoading(false));
     };
     useEffect(load, []);
+
+    // Effect for changing fromOrgId
+    useEffect(() => {
+        if (fromOrgId && !loading) {
+            setCart([]);
+            setPick('');
+            loadProducts(fromOrgId);
+        }
+    }, [fromOrgId]);
 
     const flash = (ok: boolean, text: string) => { setToast({ ok, text }); setTimeout(() => setToast(null), 3000); };
     const addItem = () => { const p = products.find(x => x.id === pick); if (!p || cart.some(c => c.productId === p.id)) return; setCart([...cart, { productId: p.id, name: p.name, sku: p.sku, qty: 1 }]); setPick(''); };
@@ -51,7 +70,7 @@ export default function TransfersPage() {
     const submit = async () => {
         if (!toOrgId || cart.length === 0) return;
         setSaving(true);
-        const res = await fetch('/api/optic/transfers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toOrgId, notes, items: cart }) });
+        const res = await fetch('/api/optic/transfers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromOrgId, toOrgId, notes, items: cart }) });
         if (res.ok) { setShowForm(false); setCart([]); setToOrgId(''); setNotes(''); flash(true, 'Трансфер создан'); load(); }
         else { const d = await res.json().catch(() => ({})); flash(false, d.error || 'Ошибка'); }
         setSaving(false);
@@ -130,10 +149,19 @@ export default function TransfersPage() {
                             <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400" /></button>
                         </div>
                         <div className="p-5 space-y-4">
+                            {isHQ && (
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-400 uppercase">Откуда (филиал отправки)</label>
+                                    <select value={fromOrgId} onChange={e => setFromOrgId(e.target.value)} className="w-full mt-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 font-medium">
+                                        <option value="">— выбрать отправителя —</option>
+                                        {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                    </select>
+                                </div>
+                            )}
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 uppercase">Куда (филиал)</label>
+                                <label className="text-xs font-semibold text-gray-400 uppercase">Куда (филиал назначения)</label>
                                 <select value={toOrgId} onChange={e => setToOrgId(e.target.value)} className="w-full mt-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm">
-                                    <option value="">— выбрать филиал —</option>
+                                    <option value="">— выбрать получателя —</option>
                                     {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                                 </select>
                             </div>
