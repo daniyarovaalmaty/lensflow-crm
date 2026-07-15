@@ -6,25 +6,30 @@ export const dynamic = 'force-dynamic';
 
 // GET — transfers involving this org (outgoing + incoming).
 export async function GET() {
-    const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-    if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-    const orgId = user.organizationId;
-    const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { type: true } });
-    const isHQ = org?.type === 'headquarters';
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized', debug: 'no session.user.id', session: JSON.stringify(session) }, { status: 401 });
+        const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+        if (!user?.organizationId) return NextResponse.json({ error: 'No organization', debug: 'no user.organizationId', userId: session.user.id }, { status: 403 });
+        const orgId = user.organizationId;
+        const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { type: true } });
+        const isHQ = org?.type === 'headquarters';
 
-    const where = isHQ ? {} : { OR: [{ fromOrgId: orgId }, { toOrgId: orgId }] };
+        const where = isHQ ? {} : { OR: [{ fromOrgId: orgId }, { toOrgId: orgId }] };
 
-    const transfers = await prisma.stockTransfer.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-    });
-    return NextResponse.json({
-        transfers: transfers.map(t => ({ ...t, direction: t.fromOrgId === orgId ? 'out' : 'in' })),
-        orgId,
-        isHQ,
-    });
+        const transfers = await prisma.stockTransfer.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+        });
+        return NextResponse.json({
+            transfers: transfers.map(t => ({ ...t, direction: t.fromOrgId === orgId ? 'out' : 'in' })),
+            orgId,
+            isHQ,
+        });
+    } catch (err: any) {
+        console.error('TRANSFERS GET ERROR:', err);
+        return NextResponse.json({ error: 'Internal error', message: err?.message, stack: err?.stack?.slice(0, 500) }, { status: 500 });
+    }
 }
 
 // POST — create a transfer (draft) from the current org to another branch.
