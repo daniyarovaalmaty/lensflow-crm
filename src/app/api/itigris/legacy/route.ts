@@ -21,8 +21,9 @@ export async function GET(req: NextRequest) {
 
     const org = await prisma.organization.findUnique({ where: { id: orgId } });
     const itg = (org as any)?.metadata?.itigris || {};
-    const client = itg.legacyClient || itg.company;
-    const key = itg.legacyKey;
+    const legacyMeta = (org as any)?.metadata?.itigrisLegacy || {};
+    const client = legacyMeta.client || itg.company;
+    const key = legacyMeta.key;
     if (!client || !key) {
         return NextResponse.json({ error: 'Легаси-API ITIGRIS не настроен (нужны legacyClient + legacyKey)' }, { status: 400 });
     }

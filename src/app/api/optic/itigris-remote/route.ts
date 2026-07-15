@@ -10,9 +10,12 @@ async function remoteForSession(email: string) {
     const me = await prisma.user.findUnique({ where: { email } });
     if (!me?.organizationId) return { error: 'no-org' as const };
     const org = await prisma.organization.findUnique({ where: { id: me.organizationId } });
-    const itigris = ((org as any)?.metadata || {}).itigris;
-    const client = itigris?.remoteClient || itigris?.legacyClient || itigris?.company;
-    const key = itigris?.remoteKey;
+    const itigris = ((org as any)?.metadata || {}).itigris || {};
+    const remoteMeta = ((org as any)?.metadata || {}).itigrisRemote || {};
+    const legacyMeta = ((org as any)?.metadata || {}).itigrisLegacy || {};
+    
+    const client = remoteMeta.client || legacyMeta.client || itigris.company;
+    const key = remoteMeta.key;
     if (!client || !key) return { notConfigured: true as const };
     return { remote: new ItigrisRemoteClient({ client, key }) };
 }
