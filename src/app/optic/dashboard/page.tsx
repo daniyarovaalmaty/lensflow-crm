@@ -27,19 +27,6 @@ const SortLabels: Record<SortOption, string> = {
     patient_za: 'Пациент Я → А',
 };
 
-// Left-edge accent colour per order status — visual order tracking in the journal
-// (ТЗ: «подсветка заказов цветом»). Inline hex so it reliably overrides the base border.
-const STATUS_COLOR: Record<string, string> = {
-    new_order: '#60a5fa',        // blue-400
-    in_production: '#fbbf24',    // amber-400
-    rework: '#fbbf24',
-    ready: '#22c55e',            // green-500
-    shipped: '#818cf8',          // indigo-400
-    out_for_delivery: '#818cf8',
-    delivered: '#10b981',        // emerald-500
-    cancelled: '#fca5a5',        // red-300
-};
-
 export default function OpticDashboard() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -274,6 +261,31 @@ export default function OpticDashboard() {
         });
     };
 
+    const handlePrintWaybill = (order: Order) => {
+        import('@/lib/generateWaybillPdf').then(({ generateWaybillPdf }) => {
+            generateWaybillPdf({
+                order_id: order.order_id,
+                patient: order.patient,
+                meta: order.meta,
+                company: order.company,
+                config: order.config,
+                is_urgent: order.is_urgent,
+                total_price: order.total_price,
+                discount_percent: (order as any).discount_percent,
+                document_name_od: (order as any).document_name_od,
+                document_name_os: (order as any).document_name_os,
+                price_od: (order as any).price_od,
+                price_os: (order as any).price_os,
+                products: (order as any).products,
+                contract: (order as any).contract,
+                optic_inn: (order as any).optic_inn,
+                optic_address: (order as any).optic_address,
+                lab_org: (order as any).lab_org,
+                distributor_org: (order as any).distributor_org,
+            });
+        });
+    };
+
 
     const renderParamRow = (label: string, value: any) => (
         <div className="flex justify-between text-xs py-1 border-b border-gray-100">
@@ -334,7 +346,7 @@ export default function OpticDashboard() {
                                     Создать заказ
                                 </Link>
                             )}
-                            {clinicPerms.canViewFinance && (
+                            {clinicPerms.canViewCrm && (
                                 <Link
                                     href="/sales/pipeline"
                                     className="flex items-center gap-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors py-2 px-3 rounded-lg"
@@ -470,14 +482,16 @@ export default function OpticDashboard() {
                                     ЛК Менеджера
                                 </Link>
                             )}
-                            <Link
-                                href="/sales/pipeline"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                            >
-                                <Target className="w-4 h-4" />
-                                CRM Продажи
-                            </Link>
+                            {clinicPerms.canViewCrm && (
+                                <Link
+                                    href="/sales/pipeline"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                                >
+                                    <Target className="w-4 h-4" />
+                                    CRM Продажи
+                                </Link>
+                            )}
                             {clinicPerms.canViewFinance && (
                                 <Link
                                     href="/optic/finances"
@@ -562,7 +576,7 @@ export default function OpticDashboard() {
             )}
 
             {/* === DOCTOR CALENDAR === */}
-            {clinicPerms.canViewPatients && (
+            {(clinicPerms.canViewPatients || clinicPerms.canViewCrm) && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
                     <DoctorCalendar />
                 </div>
@@ -698,15 +712,6 @@ export default function OpticDashboard() {
                             const isExpanded = expandedOrders.has(order.order_id);
                             const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
                             const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
-                            // ITIGRIS orders use a different lensConfig shape (prescription/lens),
-                            // not the native MediLens eyes.od/os — detect and summarize separately.
-                            const isItigris = String(order.order_id || '').startsWith('ITG-');
-                            const itgType = (order.config as any)?.orderType as string | undefined;
-                            const itgTypeLabel = ({ GLASSES: 'Очки', CONTACT_LENS: 'Контактные линзы', SALE: 'Продажа', REPAIR: 'Ремонт', REPAIR_GLASSES_ORDER: 'Ремонт очков', CHECK_VISION: 'Проверка зрения' } as Record<string, string>)[itgType || ''] || 'Заказ ITIGRIS';
-                            const itgRx = (order.config as any)?.prescription as any;
-                            const itgPayment = (order.config as any)?.payment as any;
-                            const itgFmt = (v: any) => v == null ? '—' : (Number(v) > 0 ? '+' : '') + Number(v).toFixed(2);
-                            const itgEye = (e: any) => e ? `Sph ${itgFmt(e.sph)} Cyl ${itgFmt(e.cyl)} Ax ${e.ax != null ? Math.round(e.ax) + '°' : '—'}` : '—';
                             const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
                             const osQty = os.characteristic ? (Number(os.qty) || 0) : 0;
                             const odPrice = (order as any).price_od ?? PRICE_PER_LENS;
@@ -724,8 +729,7 @@ export default function OpticDashboard() {
                                     layout
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white rounded-2xl border border-gray-100 border-l-4 overflow-hidden hover:shadow-lg transition-shadow p-4 sm:p-5"
-                                    style={{ borderLeftColor: STATUS_COLOR[order.status] || '#e5e7eb' }}
+                                    className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow p-4 sm:p-5"
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                                         <div className="flex-1 min-w-0">
@@ -783,24 +787,11 @@ export default function OpticDashboard() {
                                                         {order.company}
                                                     </span>
                                                 )}
-                                                <span>Тип: {isItigris ? itgTypeLabel : 'MediLens'}</span>
+                                                <span>Тип: MediLens</span>
                                             </div>
                                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
-                                                {isItigris ? (
-                                                    itgRx ? (
-                                                        <>
-                                                            <span>OD: {itgEye(itgRx.od)}</span>
-                                                            <span>OS: {itgEye(itgRx.os)}</span>
-                                                        </>
-                                                    ) : (
-                                                        <span className="italic text-gray-400">Детали — в карточке заказа</span>
-                                                    )
-                                                ) : (
-                                                    <>
-                                                        <span>OD: Km {od.km} | DIA {od.dia} | Dk {od.dk}</span>
-                                                        <span>OS: Km {os.km} | DIA {os.dia} | Dk {os.dk}</span>
-                                                    </>
-                                                )}
+                                                <span>OD: Km {od.km} | DIA {od.dia} | Dk {od.dk}</span>
+                                                <span>OS: Km {os.km} | DIA {os.dia} | Dk {os.dk}</span>
                                             </div>
                                         </div>
                                         <div className="text-left sm:text-right text-sm text-gray-500 sm:ml-4 flex-shrink-0 flex sm:block items-center gap-3">
@@ -824,16 +815,7 @@ export default function OpticDashboard() {
                                             {isExpanded ? 'Свернуть' : 'Подробнее'}
                                         </button>
 
-                                        {isItigris && (
-                                            <Link
-                                                href={`/optic/orders/itigris/${order.order_id}`}
-                                                className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium transition-colors ml-2"
-                                            >
-                                                Открыть карточку ITIGRIS →
-                                            </Link>
-                                        )}
-
-                                        {!isItigris && !order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
+                                        {!order.is_urgent && !['shipped', 'out_for_delivery', 'delivered', 'cancelled'].includes(order.status) && (
                                             <button
                                                 onClick={() => setExpediteOrderId(order.order_id)}
                                                 className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors ml-2"
@@ -871,8 +853,8 @@ export default function OpticDashboard() {
                                             </div>
                                         )}
 
-                                        {/* Edit window indicator (native MediLens orders only — ITIGRIS orders are read-only) */}
-                                        {!isItigris && (() => {
+                                        {/* Edit window indicator */}
+                                        {(() => {
                                             const editable = canEditOrder(order);
                                             const remainMs = editWindowRemainingMs(order);
                                             const countdown = formatCountdown(remainMs);
@@ -1029,13 +1011,22 @@ export default function OpticDashboard() {
                                         )}
 
                                         {perms.canViewPayments && (
-                                            <button
-                                                onClick={() => handlePrintInvoice(order)}
-                                                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors ml-auto"
-                                            >
-                                                <Download className="w-3.5 h-3.5" />
-                                                Скачать счёт PDF
-                                            </button>
+                                            <div className="flex items-center gap-4 ml-auto">
+                                                <button
+                                                    onClick={() => handlePrintInvoice(order)}
+                                                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                                                >
+                                                    <Download className="w-3.5 h-3.5" />
+                                                    Счёт на оплату
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePrintWaybill(order)}
+                                                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 font-medium transition-colors"
+                                                >
+                                                    <Download className="w-3.5 h-3.5" />
+                                                    Товарная накладная
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
 
@@ -1088,31 +1079,7 @@ export default function OpticDashboard() {
                                                         </div>
                                                     )}
 
-                                                    {isItigris ? (
-                                                        <Link
-                                                            href={`/optic/orders/itigris/${order.order_id}`}
-                                                            className="block bg-orange-50 border border-orange-100 rounded-lg p-3 mt-4 hover:bg-orange-100 transition-colors"
-                                                        >
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="text-sm font-medium text-orange-700">
-                                                                    Полная информация — в карточке ITIGRIS →
-                                                                </span>
-                                                                {canSeePrices && (
-                                                                    <span className="text-lg font-bold text-orange-700">
-                                                                        {totalPrice.toLocaleString('ru-RU')} ₸
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            {canSeePrices && itgPayment && (itgPayment.paid > 0 || itgPayment.due > 0) && (
-                                                                <div className="flex items-center gap-4 mt-2 text-xs">
-                                                                    <span className="text-emerald-700 font-medium">Оплачено: {Number(itgPayment.paid).toLocaleString('ru-RU')} ₸</span>
-                                                                    {itgPayment.due > 0 && (
-                                                                        <span className="text-red-600 font-medium">Остаток: {Number(itgPayment.due).toLocaleString('ru-RU')} ₸</span>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </Link>
-                                                    ) : canSeePrices && (
+                                                    {canSeePrices && (
                                                         <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mt-4">
                                                             <div className="text-sm text-gray-600 space-y-0.5">
                                                                 <div>

@@ -5,13 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     ArrowLeft, Eye, Package, User,
     Building2, Stethoscope, AlertCircle, CheckCircle2, Clock,
-    ShoppingBag, Wrench, Glasses, Wallet
+    ShoppingBag, Wrench, Glasses
 } from 'lucide-react';
-
-const PAY_METHOD_LABELS: Record<string, string> = {
-    CASH: 'Наличные', CARD: 'Карта', CASHLESS: 'Безнал', BANK: 'Безнал',
-    BONUS: 'Бонусы', CERTIFICATE: 'Сертификат', CREDIT: 'Кредит', MIXED: 'Смешанная',
-};
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
     new_order: { label: 'Новый', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Clock },
@@ -66,7 +61,6 @@ export default function ItigrisOrderPage() {
     const rx = lc.prescription;
     const lens = lc.lens;
     const frame = lc.frame;
-    const items = Array.isArray(lc.items) ? lc.items : [];
     const orderType = lc.orderType || '';
     const statusInfo = STATUS_MAP[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Clock };
     const StatusIcon = statusInfo.icon;
@@ -75,9 +69,7 @@ export default function ItigrisOrderPage() {
         GLASSES: { label: 'Изготовление очков', badge: 'bg-blue-50 text-blue-600 border-blue-200' },
         SALE:    { label: 'Продажа', badge: 'bg-green-50 text-green-600 border-green-200' },
         REPAIR:  { label: 'Ремонт', badge: 'bg-purple-50 text-purple-600 border-purple-200' },
-        REPAIR_GLASSES_ORDER: { label: 'Ремонт очков', badge: 'bg-purple-50 text-purple-600 border-purple-200' },
         CONTACT_LENS: { label: 'Контактные линзы', badge: 'bg-teal-50 text-teal-600 border-teal-200' },
-        CHECK_VISION: { label: 'Проверка зрения', badge: 'bg-amber-50 text-amber-600 border-amber-200' },
     };
     const typeInfo = ORDER_TYPE_LABELS[orderType] || null;
 
@@ -149,39 +141,6 @@ export default function ItigrisOrderPage() {
                         )}
                     </div>
                 </div>
-
-                {/* Payment */}
-                {lc.payment && (lc.payment.sum > 0 || lc.payment.paid > 0) && (
-                    <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-5 shadow-sm">
-                        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
-                            <Wallet className="w-5 h-5 text-emerald-500" />
-                            Оплата
-                        </h2>
-                        <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="bg-gray-50 rounded-xl p-3">
-                                <div className="text-xs text-gray-400 uppercase font-semibold mb-1">Сумма</div>
-                                <div className="text-lg font-bold text-gray-900">{Number(lc.payment.sum).toLocaleString('ru-RU')} ₸</div>
-                            </div>
-                            <div className="bg-emerald-50 rounded-xl p-3">
-                                <div className="text-xs text-emerald-500 uppercase font-semibold mb-1">Оплачено</div>
-                                <div className="text-lg font-bold text-emerald-700">{Number(lc.payment.paid).toLocaleString('ru-RU')} ₸</div>
-                            </div>
-                            <div className={`rounded-xl p-3 ${lc.payment.due > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
-                                <div className={`text-xs uppercase font-semibold mb-1 ${lc.payment.due > 0 ? 'text-red-400' : 'text-gray-400'}`}>Остаток</div>
-                                <div className={`text-lg font-bold ${lc.payment.due > 0 ? 'text-red-600' : 'text-gray-400'}`}>{Number(lc.payment.due).toLocaleString('ru-RU')} ₸</div>
-                            </div>
-                        </div>
-                        {Array.isArray(lc.payment.methods) && lc.payment.methods.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                                {lc.payment.methods.map((m: any, i: number) => (
-                                    <span key={i} className="text-xs bg-gray-100 text-gray-600 rounded-full px-3 py-1">
-                                        {PAY_METHOD_LABELS[m.type] || m.type}: {Number(m.sum).toLocaleString('ru-RU')} ₸
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Prescription */}
                 {rx && (
@@ -311,32 +270,8 @@ export default function ItigrisOrderPage() {
                     </div>
                 )}
 
-                {/* Order line items (goods / frame / services) */}
-                {items.length > 0 && (
-                    <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-5 shadow-sm">
-                        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-4">
-                            <ShoppingBag className="w-5 h-5 text-green-500" />
-                            Состав заказа
-                        </h2>
-                        <div className="divide-y divide-gray-50">
-                            {items.map((it: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between py-2.5 text-sm">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="font-medium text-gray-800 truncate">{it.name}</span>
-                                        {it.eye && <span className="text-xs text-gray-400 flex-shrink-0">({it.eye})</span>}
-                                        {it.qty > 1 && <span className="text-gray-400 flex-shrink-0">× {it.qty}</span>}
-                                    </div>
-                                    {it.price > 0 && (
-                                        <span className="font-mono text-gray-600 flex-shrink-0 ml-3">{Number(it.price).toLocaleString('ru-RU')} ₸</span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 {/* No details */}
-                {!rx && !lens?.od && !lens?.os && !frame && items.length === 0 && (
+                {!rx && !lens?.od && !lens?.os && !frame && (
                     orderType === 'SALE' ? (
                         <div className="bg-green-50 rounded-2xl border border-green-100 p-8 text-center">
                             <ShoppingBag className="w-10 h-10 mx-auto mb-3 text-green-400" />
