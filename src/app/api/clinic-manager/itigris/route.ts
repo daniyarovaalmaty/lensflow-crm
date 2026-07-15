@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         if (!company || !login || !password) {
             return NextResponse.json({ error: 'Заполните все поля' }, { status: 400 });
         }
-        const client = new ItigrisApiClient({ company, login, password, departmentId: Number(departmentId) || 0, organizationId: orgId });
+        const client = new ItigrisApiClient({ company: company.trim(), login: login.trim(), password: password.trim(), departmentId: Number(departmentId) || 0, organizationId: orgId });
         const result = await client.testConnection();
         return NextResponse.json(result);
     }
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
             data: {
                 metadata: {
                     ...existingMeta,
-                    itigris: { company, login, password, departmentId: Number(departmentId) || 0, connectedAt: new Date().toISOString() },
+                    itigris: { company: company.trim(), login: login.trim(), password: password.trim(), departmentId: Number(departmentId) || 0, connectedAt: new Date().toISOString() },
                 },
             } as any,
         });
