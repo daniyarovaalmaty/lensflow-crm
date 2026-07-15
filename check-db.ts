@@ -1,0 +1,1 @@
+import p from './src/lib/db/prisma'; async function run() { const user = await p.user.findUnique({ where: { email: 'optika.narodnaya.astana@gmail.com' }, include: { organization: true } }); console.log('ORG TYPE IS:', user?.organization?.type); } run();

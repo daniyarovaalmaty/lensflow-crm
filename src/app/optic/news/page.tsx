@@ -31,7 +31,7 @@ export default function NewsPage() {
 
     const load = useCallback(() => {
         setLoading(true);
-        fetch('/api/optic/news')
+        fetch('/api/optic/news', { cache: 'no-store' })
             .then(r => (r.ok ? r.json() : { posts: [], canPost: false }))
             .then(d => { setPosts(Array.isArray(d.posts) ? d.posts : []); setCanPost(!!d.canPost); })
             .finally(() => setLoading(false));

@@ -34,15 +34,15 @@ export default function TransfersPage() {
 
     const loadProducts = async (orgId?: string) => {
         const url = orgId ? `/api/optic/products?orgId=${orgId}` : '/api/optic/products';
-        const p = await fetch(url).then(r => (r.ok ? r.json() : []));
+        const p = await fetch(url, { cache: 'no-store' }).then(r => (r.ok ? r.json() : []));
         setProducts(Array.isArray(p) ? p : []);
     };
 
     const load = () => {
         setLoading(true);
         Promise.all([
-            fetch('/api/optic/transfers').then(r => (r.ok ? r.json() : { transfers: [], isHQ: false, orgId: '' })),
-            fetch('/api/branches').then(r => (r.ok ? r.json() : { branches: [] })).catch(() => ({ branches: [] })),
+            fetch('/api/optic/transfers', { cache: 'no-store' }).then(r => (r.ok ? r.json() : { transfers: [], isHQ: false, orgId: '' })),
+            fetch('/api/branches', { cache: 'no-store' }).then(r => (r.ok ? r.json() : { branches: [] })).catch(() => ({ branches: [] })),
         ]).then(([tData, b]) => {
             setTransfers(Array.isArray(tData.transfers) ? tData.transfers : []);
             setBranches(b?.branches || []);
