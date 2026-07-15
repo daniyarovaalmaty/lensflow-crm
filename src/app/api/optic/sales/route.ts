@@ -94,9 +94,11 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    // Calculate totals
+    // ========== PHASE 1: Collect items & calculate totals (NO stock changes yet) ==========
     let subtotal = 0;
     const saleItems: any[] = [];
+    // Deferred stock operations — executed AFTER the Sale is created with its final number
+    const stockOps: { product: any; qty: number; serialNumbers?: string[] }[] = [];
 
     for (const item of items) {
         let product;
@@ -133,61 +135,23 @@ export async function POST(req: NextRequest) {
         const total = qty * unitPrice;
         subtotal += total;
 
-        // For products (not services), deduct from stock
         if (product.type === 'product') {
+            // Collect serial numbers now (read-only) so we can include them in sale items
+            let soldSerials: string[] | undefined;
             if (product.trackSerials) {
-                // Mark N stock items as sold
                 const stockItems = await prisma.stockItem.findMany({
                     where: { organizationId: orgId, productId: product.id, status: 'in_stock' },
                     take: qty,
                 });
-                const soldSerials: string[] = [];
-                for (const si of stockItems) {
-                    await prisma.stockItem.update({
-                        where: { id: si.id },
-                        data: { status: 'sold', soldAt: new Date() },
-                    });
-                    if (si.serialNumber) soldSerials.push(si.serialNumber);
-                }
-                saleItems.push({
-                    productId: product.id, name: product.name, category: product.category,
-                    quantity: qty, unitPrice, total, serialNumbers: soldSerials,
-                });
-            } else {
-                // Bulk — mark items as sold
-                const stockItems = await prisma.stockItem.findMany({
-                    where: { organizationId: orgId, productId: product.id, status: 'in_stock' },
-                    take: qty,
-                });
-                for (const si of stockItems) {
-                    await prisma.stockItem.update({
-                        where: { id: si.id },
-                        data: { status: 'sold', soldAt: new Date() },
-                    });
-                }
-                saleItems.push({
-                    productId: product.id, name: product.name, category: product.category,
-                    quantity: qty, unitPrice, total,
-                });
+                soldSerials = stockItems.filter(si => si.serialNumber).map(si => si.serialNumber!);
             }
-
-            // Decrement currentStock
-            await prisma.opticProduct.update({
-                where: { id: product.id },
-                data: { currentStock: { decrement: qty } },
+            saleItems.push({
+                productId: product.id, name: product.name, category: product.category,
+                quantity: qty, unitPrice, total,
+                ...(soldSerials ? { serialNumbers: soldSerials } : {}),
             });
-
-            // Record movement
-            await prisma.stockMovement.create({
-                data: {
-                    organizationId: orgId, productId: product.id,
-                    type: 'sale', quantity: -qty,
-                    documentNumber: saleNumber,
-                    customerName: customerName || null,
-                    performedById: user.id,
-                    performedByName: user.fullName || user.email,
-                },
-            });
+            // Queue stock deduction for Phase 2
+            stockOps.push({ product, qty, serialNumbers: soldSerials });
         } else {
             // Service — no stock change
             saleItems.push({
@@ -270,6 +234,39 @@ export async function POST(req: NextRequest) {
         }
         throw e;
       }
+    }
+
+    // ========== PHASE 2: Deduct stock using the FINAL saleNumber ==========
+    for (const op of stockOps) {
+        // Mark stock items as sold
+        const stockItems = await prisma.stockItem.findMany({
+            where: { organizationId: orgId, productId: op.product.id, status: 'in_stock' },
+            take: op.qty,
+        });
+        for (const si of stockItems) {
+            await prisma.stockItem.update({
+                where: { id: si.id },
+                data: { status: 'sold', soldAt: new Date() },
+            });
+        }
+
+        // Decrement currentStock
+        await prisma.opticProduct.update({
+            where: { id: op.product.id },
+            data: { currentStock: { decrement: op.qty } },
+        });
+
+        // Record movement with the FINAL saleNumber
+        await prisma.stockMovement.create({
+            data: {
+                organizationId: orgId, productId: op.product.id,
+                type: 'sale', quantity: -op.qty,
+                documentNumber: saleNumber,
+                customerName: customerName || null,
+                performedById: user.id,
+                performedByName: user.fullName || user.email,
+            },
+        });
     }
 
     // Attribute revenue and update lead stage
