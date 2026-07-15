@@ -400,7 +400,14 @@ export class ItigrisApiClient {
                 return { ok: false, message: 'Приложение не найдено. Проверьте название company.' };
             }
             const errorBody = err.response?.data;
-            const detailMsg = errorBody?.message || errorBody?.error || err.message;
+            let detailMsg = err.message;
+            if (errorBody) {
+                if (Array.isArray(errorBody.errors) && errorBody.errors[0]?.message) {
+                    detailMsg = errorBody.errors.map((e: any) => e.message).join(', ');
+                } else {
+                    detailMsg = errorBody.message || errorBody.error || err.message;
+                }
+            }
 
             return {
                 ok: false,
