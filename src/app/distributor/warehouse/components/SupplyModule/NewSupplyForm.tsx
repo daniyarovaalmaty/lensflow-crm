@@ -499,18 +499,17 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Штрихкод товара</label>
-                                <input
-                                    type="text"
-                                    value={newProductBarcode}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        const hasCyrillic = /[\u0400-\u04FF]/.test(val);
-                                        setNewProductBarcode(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
-                                    }}
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Категория</label>
+                                <select
+                                    value={newProductCategory}
+                                    onChange={(e) => setNewProductCategory(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    placeholder="Сканируйте общий штрихкод..."
-                                />
+                                >
+                                    <option value="spectacle_lens">Линзы</option>
+                                    <option value="rings">Кольца</option>
+                                    <option value="solutions">Растворы</option>
+                                    <option value="other">Другое</option>
+                                </select>
                             </div>
 
                             <div>
@@ -521,19 +520,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     onChange={(e) => setNewProductModel(e.target.value)}
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Категория</label>
-                                <select
-                                    value={newProductCategory}
-                                    onChange={(e) => setNewProductCategory(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                >
-                                    <option value="spectacle_lens">Линзы</option>
-                                    <option value="rings">Кольца</option>
-                                    <option value="solution">Растворы</option>
-                                    <option value="other">Другое</option>
-                                </select>
                             </div>
                         </div>
                         <button

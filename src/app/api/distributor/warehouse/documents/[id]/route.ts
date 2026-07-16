@@ -72,6 +72,42 @@ export async function PUT(
                         }
                     });
 
+                    // Upsert Batch (StockItem)
+                    const batchBarcode = item.batchBarcode || `AUTO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    const existingBatch = await tx.stockItem.findUnique({
+                        where: {
+                            organizationId_serialNumber: {
+                                organizationId,
+                                serialNumber: batchBarcode
+                            }
+                        }
+                    });
+
+                    let stockItemId = '';
+                    if (existingBatch) {
+                        await tx.stockItem.update({
+                            where: { id: existingBatch.id },
+                            data: { quantity: existingBatch.quantity + item.qty, purchasePrice: item.price }
+                        });
+                        stockItemId = existingBatch.id;
+                    } else {
+                        const newBatch = await tx.stockItem.create({
+                            data: {
+                                productId: product.id,
+                                organizationId,
+                                serialNumber: batchBarcode,
+                                quantity: item.qty,
+                                purchasePrice: item.price,
+                                expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : null,
+                                productionDate: item.batchProduction ? new Date(item.batchProduction) : null,
+                                diopters: item.batchDiopters || null,
+                                size: item.batchSize || null,
+                                receiptDocId: doc.id
+                            }
+                        });
+                        stockItemId = newBatch.id;
+                    }
+
                     // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
                         data: {
@@ -79,7 +115,7 @@ export async function PUT(
                             productId: product.id,
                             type: 'receipt',
                             quantity: item.qty,
-                            serialNumbers: item.serialNumbers || [],
+                            serialNumbers: [batchBarcode],
                             documentNumber,
                             documentId: doc.id,
                             supplier: counterpartyName,
@@ -98,6 +134,32 @@ export async function PUT(
                         where: { id: product.id },
                         data: { currentStock: Math.max(0, product.currentStock - item.qty) }
                     });
+
+                    // Deduct from Batches (StockItems)
+                    if (item.batchBarcode) {
+                        const batch = await tx.stockItem.findUnique({
+                            where: { organizationId_serialNumber: { organizationId, serialNumber: item.batchBarcode } }
+                        });
+                        if (batch) {
+                            await tx.stockItem.update({
+                                where: { id: batch.id },
+                                data: { quantity: Math.max(0, batch.quantity - item.qty) }
+                            });
+                        }
+                    } else if (item.serialNumbers && item.serialNumbers.length > 0) {
+                        for (const serial of item.serialNumbers) {
+                            const batch = await tx.stockItem.findUnique({
+                                where: { organizationId_serialNumber: { organizationId, serialNumber: serial } }
+                            });
+                            if (batch) {
+                                const deductQty = item.serialNumbers.length === 1 ? item.qty : 1;
+                                await tx.stockItem.update({
+                                    where: { id: batch.id },
+                                    data: { quantity: Math.max(0, batch.quantity - deductQty) }
+                                });
+                            }
+                        }
+                    }
 
                     // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
