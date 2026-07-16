@@ -185,20 +185,6 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                                         <p className="mt-1 text-sm text-gray-900">{decl.declarationDate || '—'}</p>
                                     )}
                                 </div>
-
-                                <div className="col-span-2">
-                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
-                                    {isEditing ? (
-                                        <input
-                                            type="text"
-                                            value={decl.userNotes || document.notes || ''}
-                                            onChange={(e) => setDecl({ ...decl, userNotes: e.target.value })}
-                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        />
-                                    ) : (
-                                        <p className="mt-1 text-sm text-gray-900">{decl.userNotes || document.notes || '—'}</p>
-                                    )}
-                                </div>
                             </div>
 
                             <div className="mt-4">

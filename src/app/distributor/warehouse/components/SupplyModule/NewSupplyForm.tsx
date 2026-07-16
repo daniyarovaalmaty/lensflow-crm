@@ -14,11 +14,20 @@ interface NewSupplyFormProps {
 }
 
 function FlexibleDateInput({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
-    const [mode, setMode] = useState<'month' | 'date'>(value.length > 7 ? 'date' : 'month');
+    const [mode, setMode] = useState<'month' | 'date'>((value && value.length > 7) ? 'date' : 'month');
+
+    useEffect(() => {
+        if (value && value.length > 7 && mode === 'month') {
+            setMode('date');
+        } else if (value && value.length <= 7 && value.length > 0 && mode === 'date') {
+            setMode('month');
+        }
+    }, [value, mode]);
+
     return (
         <div>
             <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-medium text-gray-700">{label}</label>
+                <label className="block text-sm font-medium leading-6 text-gray-900">{label}</label>
                 <button 
                     type="button" 
                     onClick={(e) => {
@@ -206,7 +215,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             batchBarcode: batchBarcode.trim(),
             batchDiopters,
             batchExpiration,
-            batchProduction: batchSerial, // Map to DB field
+            batchSerial,
         };
         
         if (newItem.qty <= 0) {
@@ -570,11 +579,18 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         type="text"
                                         value={batchBarcode}
                                         onChange={(e) => {
-                                            const val = e.target.value;
+                                            const rawVal = e.target.value;
+                                            const hasCyrillic = /[\u0400-\u04FF]/.test(rawVal);
+                                            const val = hasCyrillic ? translateCyrillicToEnglishLayout(rawVal) : rawVal;
+                                            
                                             setBatchBarcode(val);
                                             const parsed = parseGS1Barcode(val);
                                             if (parsed.expirationDate) {
-                                                setBatchExpiration(parsed.expirationDate.toISOString().split('T')[0]);
+                                                const d = parsed.expirationDate;
+                                                const yyyy = d.getFullYear();
+                                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                                const dd = String(d.getDate()).padStart(2, '0');
+                                                setBatchExpiration(`${yyyy}-${mm}-${dd}`);
                                             }
                                             if (parsed.serialNumber) {
                                                 setBatchSerial(parsed.serialNumber);
