@@ -695,8 +695,9 @@ export class ItigrisSyncService {
                 }
 
                 if (accessDenied) {
-                    result.details.push(`${cat}: нет доступа к остаткам (403) — нужна роль со складом`);
-                } else {
+                    result.errors++;
+                    result.details.push(`${cat}: доступ к остаткам запрещен (403)`);
+                } else if (catRows > 0) {
                     result.details.push(`${cat}: строк остатков ${catRows}`);
                 }
             }
