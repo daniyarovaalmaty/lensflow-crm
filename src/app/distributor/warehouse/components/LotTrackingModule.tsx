@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Search, Package, ArrowRight, Building, FileText, Calendar, Box } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { parseGS1Barcode } from '@/lib/utils/gs1Parser';
 
 export default function LotTrackingModule() {
     const [lotQuery, setLotQuery] = useState('');
@@ -48,8 +49,8 @@ export default function LotTrackingModule() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-lg font-medium text-gray-900">Поиск и история по LOT / Серийному номеру</h2>
-                    <p className="text-sm text-gray-500 mt-1">Отследите куда и когда ушел товар по его LOT (например, 00AC00020) или части штрихкода.</p>
+                    <h2 className="text-lg font-medium text-gray-900">Поиск товара</h2>
+                    <p className="text-sm text-gray-500 mt-1">Отследите куда и когда ушел товар по его LOT, серийному номеру или части штрихкода.</p>
                 </div>
             </div>
 
@@ -63,7 +64,7 @@ export default function LotTrackingModule() {
                         value={lotQuery}
                         onChange={(e) => setLotQuery(e.target.value)}
                         className="block w-full rounded-md border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                        placeholder="Введите LOT или часть серийного номера (мин 3 символа)..."
+                        placeholder="Введите часть штрихкода или серийного номера (мин 3 символа)..."
                     />
                 </div>
                 <button
@@ -88,7 +89,7 @@ export default function LotTrackingModule() {
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Товар / LOT</th>
+                                <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Товар</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Статус</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Приход</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Расход / Продажа</th>
@@ -98,11 +99,28 @@ export default function LotTrackingModule() {
                             {items.map((item) => (
                                 <tr key={item.id}>
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        <div className="font-semibold text-gray-900">{item.product?.name || 'Неизвестный товар'}</div>
-                                        <div className="text-gray-500 text-xs mt-0.5">Артикул: {item.product?.sku || item.product?.model || '—'}</div>
-                                        <div className="mt-2 inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-600/20">
-                                            С/Н (LOT): {item.serialNumber}
-                                        </div>
+                                        <div className="font-semibold text-gray-900 mb-1">{item.product?.name || 'Неизвестный товар'}</div>
+                                        {(() => {
+                                            const parsed = parseGS1Barcode(item.serialNumber || '');
+                                            const sn = parsed.serialNumber || parsed.batchNumber;
+                                            return (
+                                                <div className="flex flex-col gap-1 mt-2">
+                                                    <div className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-[11px] font-medium text-gray-700 ring-1 ring-inset ring-gray-600/20 w-fit">
+                                                        <span className="text-gray-400 mr-1">Штрихкод:</span> {item.serialNumber}
+                                                    </div>
+                                                    {sn && (
+                                                        <div className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-[11px] font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20 w-fit">
+                                                            <span className="text-indigo-400 mr-1">Серийный номер:</span> {sn}
+                                                        </div>
+                                                    )}
+                                                    {item.expiryDate && (
+                                                        <div className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 w-fit">
+                                                            <span className="text-amber-400 mr-1">Срок годности:</span> {new Date(item.expiryDate).toLocaleDateString('ru-RU')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                         {getStatusLabel(item.status)}

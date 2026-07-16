@@ -15,6 +15,7 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
     const [isSaving, setIsSaving] = useState(false);
     
     const [counterpartyName, setCounterpartyName] = useState(document?.counterpartyName || '');
+    const [documentNumber, setDocumentNumber] = useState(document?.documentNumber || '');
     const [decl, setDecl] = useState<any>(() => {
         try { return JSON.parse(document?.notes || '{}'); } catch { return {}; }
     });
@@ -30,6 +31,7 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                 body: JSON.stringify({
                     ...document, // existing document fields
                     counterpartyName,
+                    documentNumber,
                     notes: JSON.stringify(decl),
                 })
             });
@@ -70,8 +72,18 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                     <div>
                         <div className="mt-3 text-center sm:mt-0 sm:text-left">
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-semibold leading-6 text-gray-900">
-                                    Детали поставки №{document.documentNumber}
+                                <h3 className="text-xl font-semibold leading-6 text-gray-900 flex items-center">
+                                    Детали поставки №
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={documentNumber}
+                                            onChange={(e) => setDocumentNumber(e.target.value)}
+                                            className="ml-2 block w-48 rounded-md border-gray-300 py-1 text-lg font-semibold shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        documentNumber || document.documentNumber
+                                    )}
                                 </h3>
                                 {document.status === 'confirmed' && (
                                     isEditing ? (
