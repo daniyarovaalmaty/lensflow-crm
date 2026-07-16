@@ -212,6 +212,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         const newItem = {
             productId: selectedProduct.id,
             name: selectedProduct.name,
+            model: selectedProduct.model,
             qty: qty,
             price: Number(price) || 0,
             batchBarcode: batchBarcode.trim(),
@@ -466,7 +467,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                             >
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <span className="block truncate font-medium">{product.name}</span>
+                                                        <span className="block truncate font-medium">
+                                                            {product.name} {product.model && <span className="text-gray-500 font-normal ml-1">/ {product.model}</span>}
+                                                        </span>
                                                     </div>
                                                     <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
                                                         {product.trackSerials ? 'Серийный' : 'Количественный'}
@@ -535,8 +538,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 ) : (
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                            <div className="text-sm font-medium text-gray-900">
-                                {selectedProduct.name} 
+                            <div className="text-sm font-medium text-gray-900 flex items-center">
+                                <span>{selectedProduct.name} {selectedProduct.model && <span className="text-gray-500 font-normal ml-1">/ {selectedProduct.model}</span>}</span>
                                 <span className="ml-2 inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                                     {selectedProduct.trackSerials ? 'Серийный учет' : 'Количественный учет'}
                                 </span>
@@ -696,7 +699,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         {items.map((item, idx) => (
                             <tr key={idx}>
                                 <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                    {item.name}
+                                    {item.name} {item.model && <span className="text-gray-500 font-normal ml-1">/ {item.model}</span>}
                                     {item.batchBarcode && (
                                         <div className="mt-1 text-xs text-gray-500 flex flex-col gap-1">
                                             <div>

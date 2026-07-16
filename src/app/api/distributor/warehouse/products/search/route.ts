@@ -22,7 +22,12 @@ export async function GET(req: NextRequest) {
         const conditions: any[] = [{ organizationId: session.user.organizationId }];
 
         if (nameQuery) {
-            conditions.push({ name: { contains: nameQuery, mode: 'insensitive' as const } });
+            conditions.push({ 
+                OR: [
+                    { name: { contains: nameQuery, mode: 'insensitive' as const } },
+                    { model: { contains: nameQuery, mode: 'insensitive' as const } }
+                ]
+            });
         }
         if (skuQuery) {
             conditions.push({ sku: { contains: skuQuery, mode: 'insensitive' as const } });
