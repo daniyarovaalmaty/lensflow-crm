@@ -495,7 +495,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Название товара *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Бренд *</label>
                                 <input
                                     type="text"
                                     value={newProductName}
