@@ -175,15 +175,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, message: 'RemoteAPI настройки сохранены' });
     }
 
-    if (action === 'sync_products_legacy') {
+    if (action === 'sync_products_legacy' || action === 'sync_products') {
         // Just reuse the normal product sync which now uses RemoteClient under the hood if available
         const config = await getOrgConfig(orgId);
         if (!config) return NextResponse.json({ error: 'ITIGRIS не подключен' }, { status: 400 });
         
         const client = new ItigrisApiClient(config);
         const syncService = new ItigrisSyncService(client, prisma as any, orgId);
-        const results = await syncService.syncProducts();
-        return NextResponse.json({ ok: true, results, syncedAt: new Date().toISOString() });
+        const result = await syncService.syncProducts();
+        return NextResponse.json({ ok: true, results: [result], syncedAt: new Date().toISOString() });
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
