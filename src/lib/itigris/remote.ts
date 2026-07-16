@@ -52,7 +52,9 @@ export class ItigrisRemoteClient {
             timeout: 30_000,
             transformResponse: [(d) => d],
         });
-        try { return JSON.parse(resp.data); } catch { return resp.data; }
+        let data = resp.data;
+        if (typeof data === 'string') data = data.trim().replace(/^\uFEFF/, '');
+        try { return typeof data === 'string' ? JSON.parse(data) : data; } catch { return data; }
     }
 
     private async post(controllerMethod: string, body: any): Promise<any> {
@@ -63,7 +65,9 @@ export class ItigrisRemoteClient {
             headers: { 'Content-Type': 'application/json' },
             transformResponse: [(d) => d],
         });
-        try { return JSON.parse(resp.data); } catch { return resp.data; }
+        let data = resp.data;
+        if (typeof data === 'string') data = data.trim().replace(/^\uFEFF/, '');
+        try { return typeof data === 'string' ? JSON.parse(data) : data; } catch { return data; }
     }
 
     // ----- Catalog (barcode-less stock by category) -----
