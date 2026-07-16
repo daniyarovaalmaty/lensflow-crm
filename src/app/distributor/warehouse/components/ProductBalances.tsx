@@ -43,6 +43,13 @@ export default function ProductBalances() {
     const [searchQuery, setSearchQuery] = useState('');
     const [barcodeSearch, setBarcodeSearch] = useState('');
     const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
+    const [brandFilter, setBrandFilter] = useState('all');
+    const [modelFilter, setModelFilter] = useState('all');
+
+    const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort();
+    const uniqueModelsForBrand = brandFilter === 'all' 
+        ? Array.from(new Set(products.map(p => p.model).filter(Boolean))).sort()
+        : Array.from(new Set(products.filter(p => p.brand === brandFilter).map(p => p.model).filter(Boolean))).sort();
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -178,9 +185,11 @@ export default function ProductBalances() {
         const bSearch = barcodeSearch.toLowerCase();
         
         const matchesName = !query || 
-               p.name.toLowerCase().includes(query) || 
+               p.name?.toLowerCase().includes(query) || 
+               p.brand?.toLowerCase().includes(query) || 
+               p.model?.toLowerCase().includes(query) || 
                p.sku?.toLowerCase().includes(query) ||
-               p.specs?.lot?.toLowerCase().includes(query); // also include lot/SN here just in case
+               p.specs?.lot?.toLowerCase().includes(query);
                
         const matchesBarcode = !bSearch ||
                p.barcode?.toLowerCase().includes(bSearch) ||
@@ -193,8 +202,11 @@ export default function ProductBalances() {
             (stockFilter === 'in_stock' && p.currentStock > 0) ||
             (stockFilter === 'low_stock' && p.currentStock > 0 && p.currentStock <= (p.minStock || 3)) ||
             (stockFilter === 'out_of_stock' && p.currentStock === 0);
+
+        const matchesBrand = brandFilter === 'all' || p.brand === brandFilter;
+        const matchesModel = modelFilter === 'all' || p.model === modelFilter;
         
-        return matchesName && matchesBarcode && matchesStock;
+        return matchesName && matchesBarcode && matchesStock && matchesBrand && matchesModel;
     });
 
     return (
@@ -241,6 +253,32 @@ export default function ProductBalances() {
             {/* Filters Row */}
             <div className="mb-6 flex gap-4 flex-wrap">
                 <select
+                    value={brandFilter}
+                    onChange={(e) => {
+                        setBrandFilter(e.target.value);
+                        setModelFilter('all');
+                    }}
+                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
+                >
+                    <option value="all">Все бренды</option>
+                    {uniqueBrands.map((b: any) => (
+                        <option key={b} value={b}>{b}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={modelFilter}
+                    onChange={(e) => setModelFilter(e.target.value)}
+                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
+                    disabled={brandFilter === 'all' && uniqueModelsForBrand.length === 0}
+                >
+                    <option value="all">Все модели</option>
+                    {uniqueModelsForBrand.map((m: any) => (
+                        <option key={m} value={m}>{m}</option>
+                    ))}
+                </select>
+
+                <select
                     value={stockFilter}
                     onChange={(e) => setStockFilter(e.target.value as any)}
                     className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
@@ -266,12 +304,8 @@ export default function ProductBalances() {
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Наименование</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Штрихкод</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">С/Н (Партия)</th>
+                                <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Бренд</th>
                                 <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Диоптр.</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Срок годн.</th>
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
                                 <th className="relative py-2 pl-3 pr-4 sm:pr-6"></th>
@@ -290,14 +324,10 @@ export default function ProductBalances() {
                                                 <div className="w-4" />
                                             )}
                                             {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
-                                            <span className="min-w-0 break-words">{product.name}</span>
+                                            <span className="min-w-0 break-words">{product.brand || product.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-2 py-3 text-sm font-medium text-gray-900">{product.trackSerials ? '-' : (product.barcode || '-')}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-300">-</td>
                                     <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
-                                    <td className="px-2 py-3 text-sm text-gray-300">-</td>
-                                    <td className="px-2 py-3 text-sm text-gray-300">-</td>
                                     <td className="px-2 py-3 text-center">
                                         <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                             {product.currentStock} {product.unit || 'шт'}
@@ -327,7 +357,7 @@ export default function ProductBalances() {
                                 </tr>
                                 {expandedRows.has(product.id) && product.stockItems?.map((batch: any) => (
                                     <tr key={batch.id} className="bg-indigo-50/30">
-                                        <td colSpan={6} className="py-3 pl-4 pr-3 text-sm text-gray-500 sm:pl-12 align-middle">
+                                        <td colSpan={2} className="py-3 pl-4 pr-3 text-sm text-gray-500 sm:pl-12 align-middle">
                                             <div className="flex items-center gap-6">
                                                 <div className="flex items-center gap-2 flex-shrink-0">
                                                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>
@@ -354,8 +384,12 @@ export default function ProductBalances() {
                                                             <span className="leading-tight text-gray-700">{batch.diopters}</span>
                                                         </div>
                                                     )}
-
-
+                                                    {batch.size && (
+                                                        <div>
+                                                            <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Размер</span>
+                                                            <span className="leading-tight text-gray-700">{batch.size}</span>
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Срок годности</span>
                                                         <div className="leading-tight">
@@ -382,7 +416,7 @@ export default function ProductBalances() {
                                             <span className="text-sm font-medium text-gray-700">{batch.quantity}</span>
                                         </td>
                                         <td className="px-2 py-2 text-right text-sm text-gray-500">
-                                            {(batch.quantity * product.purchasePrice).toLocaleString()} ₸
+                                            {(batch.quantity * (batch.purchasePrice || product.purchasePrice || 0)).toLocaleString()} ₸
                                         </td>
                                         <td className="relative py-2 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 whitespace-nowrap">
                                         </td>
