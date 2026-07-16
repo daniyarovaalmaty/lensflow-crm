@@ -175,14 +175,28 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, message: 'RemoteAPI настройки сохранены' });
     }
 
-    if (action === 'sync_products_legacy' || action === 'sync_products') {
-        // Just reuse the normal product sync which now uses RemoteClient under the hood if available
+    if (action === 'sync_products') {
         const config = await getOrgConfig(orgId);
         if (!config) return NextResponse.json({ error: 'ITIGRIS не подключен' }, { status: 400 });
         
         const client = new ItigrisApiClient(config);
         const syncService = new ItigrisSyncService(client, prisma as any, orgId);
         const result = await syncService.syncProducts();
+        return NextResponse.json({ ok: true, results: [result], syncedAt: new Date().toISOString() });
+    }
+
+    if (action === 'sync_products_legacy') {
+        const org = await prisma.organization.findUnique({ where: { id: orgId } });
+        const meta = (org as any)?.metadata || {};
+        const remoteConf = meta.itigrisRemote;
+        
+        if (!remoteConf?.client || !remoteConf?.key) {
+            return NextResponse.json({ error: 'RemoteAPI не подключен' }, { status: 400 });
+        }
+        
+        const remoteClient = new ItigrisRemoteClient({ client: remoteConf.client, key: remoteConf.key });
+        const syncService = new ItigrisSyncService(null as any, prisma as any, orgId);
+        const result = await syncService.syncProductsLegacy(remoteClient);
         return NextResponse.json({ ok: true, results: [result], syncedAt: new Date().toISOString() });
     }
 
