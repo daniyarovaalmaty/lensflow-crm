@@ -9,9 +9,10 @@ interface DocumentViewerModalProps {
     allProducts?: any[];
     onClose: () => void;
     onUpdated?: () => void;
+    onEditFull?: () => void;
 }
 
-export default function DocumentViewerModal({ document, allProducts, onClose, onUpdated }: DocumentViewerModalProps) {
+export default function DocumentViewerModal({ document, allProducts, onClose, onUpdated, onEditFull }: DocumentViewerModalProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -105,13 +106,24 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                                             </button>
                                         </div>
                                     ) : (
-                                        <button
-                                            onClick={() => setIsEditing(true)}
-                                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none mr-6"
-                                        >
-                                            <Edit2 className="w-4 h-4 mr-1" />
-                                            Изменить реквизиты
-                                        </button>
+                                        <div className="flex space-x-2 mr-6">
+                                            {onEditFull && document.type === 'receipt' && (
+                                                <button
+                                                    onClick={onEditFull}
+                                                    className="inline-flex items-center px-3 py-1.5 border border-indigo-300 shadow-sm text-sm font-medium rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none"
+                                                >
+                                                    <Box className="w-4 h-4 mr-1" />
+                                                    Редактировать товары
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => setIsEditing(true)}
+                                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                                            >
+                                                <Edit2 className="w-4 h-4 mr-1" />
+                                                Изменить реквизиты
+                                            </button>
+                                        </div>
                                     )
                                 )}
                             </div>

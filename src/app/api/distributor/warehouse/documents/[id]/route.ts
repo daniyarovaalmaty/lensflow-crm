@@ -31,6 +31,7 @@ export async function PUT(
         }
 
         const isConfirmingNow = existingDoc.status === 'draft' && status === 'confirmed';
+        const isReconfirmingNow = existingDoc.status === 'confirmed' && status === 'confirmed';
 
         const document = await prisma.$transaction(async (tx) => {
             // For confirmed documents, we shouldn't allow changing items, totalAmount or targetOrganizationId
@@ -47,6 +48,10 @@ export async function PUT(
                 dataToUpdate.totalAmount = totalAmount;
                 dataToUpdate.items = items;
                 dataToUpdate.confirmedAt = status === 'confirmed' ? new Date() : null;
+            } else if (isReconfirmingNow) {
+                // Allows updating items and totalAmount of confirmed document
+                dataToUpdate.totalAmount = totalAmount;
+                dataToUpdate.items = items;
             }
 
             const doc = await tx.stockDocument.update({
@@ -116,6 +121,139 @@ export async function PUT(
                             type: 'receipt',
                             quantity: item.qty,
                             serialNumbers: [batchBarcode],
+                            documentNumber,
+                            documentId: doc.id,
+                            supplier: counterpartyName,
+                            performedById,
+                            performedByName,
+                        }
+                    });
+                }
+            } else if (isReconfirmingNow && doc.type === 'receipt') {
+                const oldItems = existingDoc.items as any[] || [];
+                const newItems = items as any[] || [];
+                
+                // Diff by batchBarcode
+                const diffMap = new Map<string, { product: any, diffQty: number, price: number, oldItem?: any, newItem?: any }>();
+                
+                for (const oldItem of oldItems) {
+                    if (!oldItem.batchBarcode) continue; 
+                    diffMap.set(oldItem.batchBarcode, { 
+                        product: oldItem.productId, 
+                        diffQty: -oldItem.qty, 
+                        price: oldItem.price,
+                        oldItem: oldItem
+                    });
+                }
+                
+                for (const newItem of newItems) {
+                    const barcode = newItem.batchBarcode;
+                    if (!barcode) continue;
+                    if (diffMap.has(barcode)) {
+                        const existing = diffMap.get(barcode)!;
+                        existing.diffQty += newItem.qty;
+                        existing.newItem = newItem;
+                        existing.price = newItem.price;
+                    } else {
+                        diffMap.set(barcode, {
+                            product: newItem.productId,
+                            diffQty: newItem.qty,
+                            price: newItem.price,
+                            newItem: newItem
+                        });
+                    }
+                }
+
+                // Apply diffs
+                for (const [barcode, data] of diffMap.entries()) {
+                    if (data.diffQty === 0 && (!data.newItem || data.newItem.price === data.oldItem?.price)) {
+                        // Same qty and price, just update metadata if needed
+                        if (data.newItem) {
+                            await tx.stockItem.updateMany({
+                                where: { organizationId, serialNumber: barcode },
+                                data: {
+                                    purchasePrice: data.newItem.price,
+                                    expiryDate: data.newItem.batchExpiration ? new Date(data.newItem.batchExpiration) : null,
+                                    diopters: data.newItem.batchDiopters || null,
+                                    size: data.newItem.batchSize || null,
+                                }
+                            });
+                        }
+                        continue;
+                    }
+
+                    const product = await tx.opticProduct.findUnique({ where: { id: data.product } });
+                    if (!product) continue;
+
+                    const batch = await tx.stockItem.findUnique({
+                        where: { organizationId_serialNumber: { organizationId, serialNumber: barcode } }
+                    });
+
+                    if (data.diffQty < 0) {
+                        const reduceBy = Math.abs(data.diffQty);
+                        if (batch && batch.quantity < reduceBy) {
+                            throw new Error(`Партия ${barcode} уже продана/списана (остаток ${batch.quantity}, попытка уменьшить на ${reduceBy}).`);
+                        }
+                        if (product.currentStock < reduceBy) {
+                            throw new Error(`Общий остаток товара "${product.name}" недостаточен для уменьшения партии.`);
+                        }
+                    }
+
+                    if (data.diffQty !== 0) {
+                        await tx.opticProduct.update({
+                            where: { id: product.id },
+                            data: { 
+                                currentStock: product.currentStock + data.diffQty,
+                                ...(data.newItem && data.newItem.price > 0 ? { purchasePrice: data.newItem.price } : {})
+                            }
+                        });
+                    }
+
+                    if (batch) {
+                        const newQty = batch.quantity + data.diffQty;
+                        await tx.stockItem.update({
+                            where: { id: batch.id },
+                            data: { 
+                                quantity: newQty,
+                                ...(data.newItem ? {
+                                    purchasePrice: data.newItem.price,
+                                    expiryDate: data.newItem.batchExpiration ? new Date(data.newItem.batchExpiration) : null,
+                                    diopters: data.newItem.batchDiopters || null,
+                                    size: data.newItem.batchSize || null,
+                                } : {})
+                            }
+                        });
+                    } else if (data.diffQty > 0 && data.newItem) {
+                        await tx.stockItem.create({
+                            data: {
+                                productId: product.id,
+                                organizationId,
+                                serialNumber: barcode,
+                                quantity: data.diffQty,
+                                purchasePrice: data.newItem.price,
+                                expiryDate: data.newItem.batchExpiration ? new Date(data.newItem.batchExpiration) : null,
+                                productionDate: data.newItem.batchProduction ? new Date(data.newItem.batchProduction) : null,
+                                diopters: data.newItem.batchDiopters || null,
+                                size: data.newItem.batchSize || null,
+                                receiptDocId: doc.id
+                            }
+                        });
+                    }
+                }
+
+                await tx.stockMovement.deleteMany({
+                    where: { documentId: doc.id, organizationId }
+                });
+
+                for (const newItem of newItems) {
+                    if (!newItem.batchBarcode) continue;
+                    await tx.stockMovement.create({
+                        data: {
+                            organizationId,
+                            productId: newItem.productId,
+                            type: 'receipt',
+                            quantity: newItem.qty,
+                            serialNumbers: [newItem.batchBarcode],
                             documentNumber,
                             documentId: doc.id,
                             supplier: counterpartyName,

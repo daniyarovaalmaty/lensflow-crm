@@ -277,7 +277,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 throw new Error(errorData?.error || 'Failed to save document');
             }
             
-            toast.success(status === 'draft' ? 'Черновик сохранен' : 'Поставка проведена успешно!');
+            toast.success(status === 'draft' ? 'Черновик сохранен' : (initialDraft?.status === 'confirmed' ? 'Изменения сохранены!' : 'Поставка проведена успешно!'));
             clearLocalDraft();
             onSuccess();
         } catch (error: any) {
@@ -310,19 +310,21 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     </div>
                 </div>
                 <div className="space-x-3">
-                    <button 
-                        onClick={() => handleSave('draft')}
-                        className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                    >
-                        <Save className="h-4 w-4 mr-2 text-gray-500" />
-                        Сохранить черновик
-                    </button>
+                    {(!initialDraft || initialDraft.status !== 'confirmed') && (
+                        <button 
+                            onClick={() => handleSave('draft')}
+                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                        >
+                            <Save className="h-4 w-4 mr-2 text-gray-500" />
+                            Сохранить черновик
+                        </button>
+                    )}
                     <button 
                         onClick={() => handleSave('confirmed')}
                         className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
                     >
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        Провести накладную
+                        {initialDraft?.status === 'confirmed' ? 'Сохранить изменения' : 'Провести накладную'}
                     </button>
                 </div>
             </div>

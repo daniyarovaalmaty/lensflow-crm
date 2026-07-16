@@ -163,6 +163,10 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                     allProducts={allProducts}
                     onClose={() => setSelectedDocument(null)} 
                     onUpdated={fetchDocuments}
+                    onEditFull={() => {
+                        setSelectedDocument(null);
+                        if (onEdit) onEdit(selectedDocument);
+                    }}
                 />
             )}
         </div>
