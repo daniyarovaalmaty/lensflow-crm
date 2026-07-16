@@ -21,7 +21,7 @@ export default function DistributorWarehousePage() {
         { id: 'requests', label: 'Заявки на товар', icon: ClipboardList },
         { id: 'transfers', label: 'Трансферы', icon: ArrowRightLeft },
         { id: 'balances', label: 'Остатки товара', icon: Target },
-        { id: 'tracking', label: 'Поиск по LOT', icon: Search },
+        { id: 'tracking', label: 'Поиск товара', icon: Search },
         { id: 'documents', label: 'Документооборот', icon: FileText },
         { id: 'writeoffs', label: 'Списания', icon: TrendingDown },
         { id: 'inventory', label: 'Ревизии', icon: RefreshCcw }

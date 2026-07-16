@@ -2,6 +2,7 @@ import { X, Box, Barcode, Edit2, Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { formatGS1Barcode, parseGS1Barcode } from '@/lib/utils/gs1Parser';
+import ExpiryDateBadge from '../ExpiryDateBadge';
 
 interface DocumentViewerModalProps {
     document: any;
@@ -225,16 +226,34 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                                                             </div>
                                                         )}
                                                         {item.batchBarcode && (
-                                                            <div className="mt-1.5 space-y-1">
-                                                                <div className="inline-flex flex-col items-start rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit">
-                                                                    <span className="text-indigo-400 mb-0.5">Штрихкод партии:</span>
-                                                                    {formatGS1Barcode(item.batchBarcode).map((block, i) => (
-                                                                        <span key={i} className="block">{block}</span>
-                                                                    ))}
+                                                            <div className="mt-1.5 space-y-2">
+                                                                <div className="flex flex-wrap gap-4">
+                                                                    <div className="inline-flex flex-col items-start rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit">
+                                                                        <span className="text-indigo-400 mb-0.5">Штрихкод партии:</span>
+                                                                        {formatGS1Barcode(item.batchBarcode).map((block, i) => (
+                                                                            <span key={i} className="block">{block}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                    {(() => {
+                                                                        const parsed = parseGS1Barcode(item.batchBarcode);
+                                                                        const extracted = parsed.serialNumber || parsed.batchNumber;
+                                                                        if (!extracted) return null;
+                                                                        return (
+                                                                            <div className="inline-flex flex-col items-start rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 mb-1 w-fit h-fit">
+                                                                                <span className="text-blue-400 mb-0.5">Серийный номер:</span>
+                                                                                <span className="font-semibold">{extracted}</span>
+                                                                            </div>
+                                                                        );
+                                                                    })()}
                                                                 </div>
-                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
-                                                                    {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
-                                                                    {item.batchProduction && <span>С/Н: {item.batchProduction}</span>}
+                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500 items-center">
+                                                                    {item.batchExpiration && (
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span>Срок:</span>
+                                                                            <ExpiryDateBadge date={item.batchExpiration} />
+                                                                        </div>
+                                                                    )}
+                                                                    {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
                                                                     {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
                                                                 </div>
                                                             </div>

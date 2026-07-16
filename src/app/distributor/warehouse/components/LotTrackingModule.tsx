@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Search, Package, ArrowRight, Building, FileText, Calendar, Box } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { parseGS1Barcode } from '@/lib/utils/gs1Parser';
+import ExpiryDateBadge from './ExpiryDateBadge';
 
 export default function LotTrackingModule() {
     const [lotQuery, setLotQuery] = useState('');
@@ -114,8 +115,9 @@ export default function LotTrackingModule() {
                                                         </div>
                                                     )}
                                                     {item.expiryDate && (
-                                                        <div className="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 w-fit">
-                                                            <span className="text-amber-400 mr-1">Срок годности:</span> {new Date(item.expiryDate).toLocaleDateString('ru-RU')}
+                                                        <div className="flex items-center gap-1 w-fit">
+                                                            <span className="text-gray-400 text-[11px] mr-1">Срок годности:</span>
+                                                            <ExpiryDateBadge date={item.expiryDate} />
                                                         </div>
                                                     )}
                                                 </div>

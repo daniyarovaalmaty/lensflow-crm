@@ -162,6 +162,7 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                     document={selectedDocument}
                     allProducts={allProducts}
                     onClose={() => setSelectedDocument(null)} 
+                    onUpdated={fetchDocuments}
                 />
             )}
         </div>

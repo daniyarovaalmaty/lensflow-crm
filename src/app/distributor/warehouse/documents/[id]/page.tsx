@@ -3,6 +3,8 @@ import prisma from '@/lib/db/prisma';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileText, CheckCircle, Clock, Package, Barcode } from 'lucide-react';
+import { formatGS1Barcode, parseGS1Barcode } from '@/lib/utils/gs1Parser';
+import ExpiryDateBadge from '../../components/ExpiryDateBadge';
 
 export default async function DocumentPage({ params }: { params: { id: string } }) {
     const session = await auth();
@@ -146,12 +148,33 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                                             ))}
                                                         </div>
                                                     ) : item.batchBarcode ? (
-                                                        <div className="mt-1.5 space-y-1">
-                                                            <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit block">
-                                                                С/Н: {item.batchBarcode}
-                                                            </span>
-                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
-                                                                {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
+                                                        <div className="mt-1.5 space-y-2">
+                                                            <div className="flex flex-wrap gap-4">
+                                                                <div className="inline-flex flex-col items-start rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit">
+                                                                    <span className="text-indigo-400 mb-0.5">Штрихкод партии:</span>
+                                                                    {formatGS1Barcode(item.batchBarcode).map((block, i) => (
+                                                                        <span key={i} className="block">{block}</span>
+                                                                    ))}
+                                                                </div>
+                                                                {(() => {
+                                                                    const parsed = parseGS1Barcode(item.batchBarcode);
+                                                                    const extracted = parsed.serialNumber || parsed.batchNumber;
+                                                                    if (!extracted) return null;
+                                                                    return (
+                                                                        <div className="inline-flex flex-col items-start rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 mb-1 w-fit h-fit">
+                                                                            <span className="text-blue-400 mb-0.5">Серийный номер:</span>
+                                                                            <span className="font-semibold">{extracted}</span>
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500 items-center">
+                                                                {item.batchExpiration && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <span>Срок:</span>
+                                                                        <ExpiryDateBadge date={item.batchExpiration} />
+                                                                    </div>
+                                                                )}
                                                                 {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
                                                                 {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
                                                             </div>
