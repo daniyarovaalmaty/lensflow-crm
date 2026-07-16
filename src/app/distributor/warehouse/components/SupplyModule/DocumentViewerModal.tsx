@@ -1,13 +1,53 @@
-import { X, Box, Barcode } from 'lucide-react';
+import { X, Box, Barcode, Edit2, Check, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface DocumentViewerModalProps {
     document: any;
     allProducts?: any[];
     onClose: () => void;
+    onUpdated?: () => void;
 }
 
-export default function DocumentViewerModal({ document, allProducts, onClose }: DocumentViewerModalProps) {
+export default function DocumentViewerModal({ document, allProducts, onClose, onUpdated }: DocumentViewerModalProps) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    
+    const [counterpartyName, setCounterpartyName] = useState(document?.counterpartyName || '');
+    const [decl, setDecl] = useState<any>(() => {
+        try { return JSON.parse(document?.notes || '{}'); } catch { return {}; }
+    });
+
     if (!document) return null;
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/distributor/warehouse/documents/${document.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...document, // existing document fields
+                    counterpartyName,
+                    notes: JSON.stringify(decl),
+                })
+            });
+            
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update');
+            }
+            
+            toast.success('Реквизиты обновлены');
+            setIsEditing(false);
+            if (onUpdated) onUpdated();
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Ошибка при сохранении');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -28,14 +68,53 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
 
                     <div>
                         <div className="mt-3 text-center sm:mt-0 sm:text-left">
-                            <h3 className="text-xl font-semibold leading-6 text-gray-900 mb-6">
-                                Детали поставки №{document.documentNumber}
-                            </h3>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-semibold leading-6 text-gray-900">
+                                    Детали поставки №{document.documentNumber}
+                                </h3>
+                                {document.status === 'confirmed' && (
+                                    isEditing ? (
+                                        <div className="flex space-x-2 pr-6">
+                                            <button
+                                                onClick={() => setIsEditing(false)}
+                                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                                            >
+                                                Отмена
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                disabled={isSaving}
+                                                className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none disabled:opacity-50"
+                                            >
+                                                {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+                                                Сохранить
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsEditing(true)}
+                                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none mr-6"
+                                        >
+                                            <Edit2 className="w-4 h-4 mr-1" />
+                                            Изменить реквизиты
+                                        </button>
+                                    )
+                                )}
+                            </div>
                             
                             <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Поставщик</p>
-                                    <p className="mt-1 text-sm text-gray-900">{document.counterpartyName || 'Не указан'}</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={counterpartyName}
+                                            onChange={(e) => setCounterpartyName(e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">{counterpartyName || 'Не указан'}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Дата создания</p>
@@ -55,51 +134,70 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                     <p className="text-sm font-medium text-gray-500">Общая сумма</p>
                                     <p className="mt-1 text-lg font-semibold text-gray-900">{document.totalAmount.toLocaleString()} ₸</p>
                                 </div>
-                                {(() => {
-                                    let decl: any = {};
-                                    try { decl = JSON.parse(document.notes || '{}'); } catch {}
-                                    return (
-                                        <>
-                                            {decl.documentDate && (
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-500">Дата накладной</p>
-                                                    <p className="mt-1 text-sm text-gray-900">
-                                                    {(() => {
-                                                        const parts = decl.documentDate.split('-');
-                                                        if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
-                                                        if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
-                                                        return decl.documentDate;
-                                                    })()}
-                                                    </p>
-                                                </div>
-                                            )}
-                                            {decl.declarationNumber && (
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-500">Номер декларации</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationNumber}</p>
-                                                </div>
-                                            )}
-                                            {decl.declarationDate && (
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-500">Дата декларации</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationDate}</p>
-                                                </div>
-                                            )}
-                                            {decl.userNotes && (
-                                                <div className="col-span-2">
-                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{decl.userNotes}</p>
-                                                </div>
-                                            )}
-                                            {Object.keys(decl).length === 0 && document.notes && (
-                                                <div className="col-span-2">
-                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{document.notes}</p>
-                                                </div>
-                                            )}
-                                        </>
-                                    );
-                                })()}
+                                
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Дата накладной</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            value={decl.documentDate || ''}
+                                            onChange={(e) => setDecl({ ...decl, documentDate: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">
+                                            {decl.documentDate ? (() => {
+                                                const parts = decl.documentDate.split('-');
+                                                if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                                if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
+                                                return decl.documentDate;
+                                            })() : '—'}
+                                        </p>
+                                    )}
+                                </div>
+                                
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Номер декларации</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={decl.declarationNumber || ''}
+                                            onChange={(e) => setDecl({ ...decl, declarationNumber: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            placeholder="Например, 10502010/120524/1234567"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">{decl.declarationNumber || '—'}</p>
+                                    )}
+                                </div>
+                                
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Дата декларации</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            value={decl.declarationDate || ''}
+                                            onChange={(e) => setDecl({ ...decl, declarationDate: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">{decl.declarationDate || '—'}</p>
+                                    )}
+                                </div>
+
+                                <div className="col-span-2">
+                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={decl.userNotes || document.notes || ''}
+                                            onChange={(e) => setDecl({ ...decl, userNotes: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">{decl.userNotes || document.notes || '—'}</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="mt-4">

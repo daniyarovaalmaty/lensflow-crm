@@ -26,26 +26,36 @@ export async function PUT(
             return NextResponse.json({ error: 'Document not found' }, { status: 404 });
         }
 
-        if (existingDoc.status !== 'draft') {
-            return NextResponse.json({ error: 'Only drafts can be edited' }, { status: 400 });
+        if (existingDoc.status !== 'draft' && existingDoc.status !== 'confirmed') {
+            return NextResponse.json({ error: 'Only drafts or confirmed documents can be edited' }, { status: 400 });
         }
 
+        const isConfirmingNow = existingDoc.status === 'draft' && status === 'confirmed';
+
         const document = await prisma.$transaction(async (tx) => {
+            // For confirmed documents, we shouldn't allow changing items, totalAmount or targetOrganizationId
+            // We only allow updating notes and counterpartyName
+            const dataToUpdate: any = {
+                counterpartyName,
+                notes,
+            };
+
+            if (existingDoc.status === 'draft') {
+                dataToUpdate.documentNumber = documentNumber;
+                dataToUpdate.targetOrganizationId = targetOrganizationId;
+                dataToUpdate.status = status;
+                dataToUpdate.totalAmount = totalAmount;
+                dataToUpdate.items = items;
+                dataToUpdate.confirmedAt = status === 'confirmed' ? new Date() : null;
+            }
+
             const doc = await tx.stockDocument.update({
                 where: { id },
-                data: {
-                    documentNumber,
-                    targetOrganizationId,
-                    status,
-                    counterpartyName,
-                    notes,
-                    totalAmount,
-                    items,
-                    confirmedAt: status === 'confirmed' ? new Date() : null,
-                }
+                data: dataToUpdate
             });
 
-            if (status === 'confirmed' && doc.type === 'receipt') {
+            // Only update stock if we are confirming a draft right now
+            if (isConfirmingNow && doc.type === 'receipt') {
                 for (const item of items) {
                     const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
                     if (!product) continue;
@@ -78,7 +88,7 @@ export async function PUT(
                         }
                     });
                 }
-            } else if (status === 'confirmed' && (doc.type === 'transfer_out' || doc.type === 'write_off')) {
+            } else if (isConfirmingNow && (doc.type === 'transfer_out' || doc.type === 'write_off')) {
                 for (const item of items) {
                     const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
                     if (!product) continue;
