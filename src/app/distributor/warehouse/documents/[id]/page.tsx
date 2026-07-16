@@ -22,6 +22,13 @@ export default async function DocumentPage({ params }: { params: { id: string } 
 
     const items = doc.items as any[] || [];
 
+    const productIds = Array.from(new Set(items.map((i: any) => i.productId).filter(Boolean))) as string[];
+    const products = await prisma.opticProduct.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, model: true }
+    });
+    const productMap = new Map(products.map(p => [p.id, p]));
+
     // Parse JSON notes if it exists
     let parsedNotes: any = {};
     let isJsonNotes = false;
@@ -125,7 +132,7 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                         <table className="min-w-full divide-y divide-gray-300">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Наименование</th>
+                                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Товар</th>
                                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Кол-во</th>
                                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Цена</th>
                                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сумма</th>
@@ -139,6 +146,13 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                                 {item.trackSerials ? <Barcode className="w-5 h-5 text-indigo-500" /> : <Package className="w-5 h-5 text-gray-400" />}
                                                 <div>
                                                     <p className="font-semibold text-gray-900">{item.name}</p>
+                                                    {(() => {
+                                                        const p = productMap.get(item.productId);
+                                                        if (p?.model) {
+                                                            return <p className="text-xs text-gray-500 mt-0.5 mb-1.5">Модель: {p.model}</p>;
+                                                        }
+                                                        return null;
+                                                    })()}
                                                     {(item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0) ? (
                                                         <div className="mt-1 flex gap-1 flex-wrap">
                                                             {item.serialNumbers.map((sn: string) => (
