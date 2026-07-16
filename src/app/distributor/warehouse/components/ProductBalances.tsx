@@ -46,10 +46,10 @@ export default function ProductBalances() {
     const [brandFilter, setBrandFilter] = useState('all');
     const [modelFilter, setModelFilter] = useState('all');
 
-    const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort();
+    const uniqueBrands = Array.from(new Set(products.map(p => p.name).filter(Boolean))).sort();
     const uniqueModelsForBrand = brandFilter === 'all' 
         ? Array.from(new Set(products.map(p => p.model).filter(Boolean))).sort()
-        : Array.from(new Set(products.filter(p => p.brand === brandFilter).map(p => p.model).filter(Boolean))).sort();
+        : Array.from(new Set(products.filter(p => p.name === brandFilter).map(p => p.model).filter(Boolean))).sort();
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -203,7 +203,7 @@ export default function ProductBalances() {
             (stockFilter === 'low_stock' && p.currentStock > 0 && p.currentStock <= (p.minStock || 3)) ||
             (stockFilter === 'out_of_stock' && p.currentStock === 0);
 
-        const matchesBrand = brandFilter === 'all' || p.brand === brandFilter;
+        const matchesBrand = brandFilter === 'all' || p.name === brandFilter;
         const matchesModel = modelFilter === 'all' || p.model === modelFilter;
         
         return matchesName && matchesBarcode && matchesStock && matchesBrand && matchesModel;
@@ -229,7 +229,7 @@ export default function ProductBalances() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                        placeholder="Поиск по названию или артикулу..."
+                        placeholder="Поиск по бренду или модели..."
                     />
                 </div>
                 <div className="relative flex-1">
@@ -454,7 +454,7 @@ export default function ProductBalances() {
                                 
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Наименование *</label>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Бренд *</label>
                                         <input
                                             type="text"
                                             value={editingProduct.name}
