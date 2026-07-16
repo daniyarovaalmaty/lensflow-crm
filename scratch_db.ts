@@ -1,1 +1,0 @@
-﻿import { PrismaClient } from '@prisma/client'; const prisma = new PrismaClient(); async function main() { const logs = await prisma.itigrisSyncLog.findMany({ orderBy: { syncedAt: 'desc' }, take: 1, select: { details: true, durationMs: true } }); console.log(JSON.stringify(logs, null, 2)); } main().finally(() => prisma.());

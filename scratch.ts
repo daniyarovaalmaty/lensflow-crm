@@ -1,1 +1,0 @@
-﻿import { ItigrisRemoteClient } from './src/lib/itigris/remote'; const client = new ItigrisRemoteClient({ client: 'optika_narodnaya', key: 'ae8207fa-00eb-43db-b985-06fada966196' }); client.remainsList('glasses', undefined, 1).then(console.log).catch(console.error);
