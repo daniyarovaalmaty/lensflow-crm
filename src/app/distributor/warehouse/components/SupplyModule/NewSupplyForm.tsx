@@ -88,11 +88,12 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [newProductName, setNewProductName] = useState('');
     const [newProductModel, setNewProductModel] = useState('');
     const [newProductBarcode, setNewProductBarcode] = useState('');
-    const [newProductTrackSerials, setNewProductTrackSerials] = useState(true);
+    const [newProductCategory, setNewProductCategory] = useState('spectacle_lens');
 
     // Batch details state (for row addition)
     const [batchBarcode, setBatchBarcode] = useState('');
     const [batchDiopters, setBatchDiopters] = useState('');
+    const [batchSize, setBatchSize] = useState('');
     const [batchExpiration, setBatchExpiration] = useState('');
     const [batchSerial, setBatchSerial] = useState('');
 
@@ -183,7 +184,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     name: newProductName,
                     barcode: newProductBarcode,
                     model: newProductModel,
-                    trackSerials: newProductTrackSerials
+                    trackSerials: true,
+                    category: newProductCategory
                 })
             });
 
@@ -198,7 +200,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             setNewProductName('');
             setNewProductBarcode('');
             setNewProductModel('');
-            setNewProductTrackSerials(true);
+            setNewProductCategory('spectacle_lens');
         } catch (error) {
             toast.error('Ошибка создания товара');
         }
@@ -213,7 +215,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             qty: qty,
             price: Number(price) || 0,
             batchBarcode: batchBarcode.trim(),
-            batchDiopters,
+            batchDiopters: (!selectedProduct.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens') ? batchDiopters : null,
+            batchSize: selectedProduct.category === 'rings' ? batchSize : null,
             batchExpiration,
             batchSerial,
         };
@@ -229,15 +232,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
         setItems([...items, newItem]);
         
-        // Reset form
-        setSelectedProduct(null);
-        setNameSearch('');
-        setBarcodeSearch('');
-        setQty(1);
-        setPrice('');
+        // Reset only barcode and serial for continuous scanning
         setBatchBarcode('');
-        setBatchDiopters('');
-        setBatchExpiration('');
         setBatchSerial('');
     };
 
@@ -526,16 +522,18 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
-                            <div className="sm:col-span-2 mt-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={newProductTrackSerials}
-                                        onChange={(e) => setNewProductTrackSerials(e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                    />
-                                    <span className="text-sm text-gray-700">Включить серийный учет (по умолчанию)</span>
-                                </label>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Категория</label>
+                                <select
+                                    value={newProductCategory}
+                                    onChange={(e) => setNewProductCategory(e.target.value)}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                >
+                                    <option value="spectacle_lens">Линзы</option>
+                                    <option value="rings">Кольца</option>
+                                    <option value="solution">Растворы</option>
+                                    <option value="other">Другое</option>
+                                </select>
                             </div>
                         </div>
                         <button
@@ -560,7 +558,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     setNewProductName(selectedProduct.name || '');
                                     setNewProductBarcode(selectedProduct.barcode || '');
                                     setNewProductModel(selectedProduct.model || '');
-                                    setNewProductTrackSerials(selectedProduct.trackSerials ?? true);
+                                    setNewProductCategory(selectedProduct.category || 'spectacle_lens');
                                     setIsCreatingProduct(true);
                                 }} className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
                                     <Edit2 className="h-4 w-4" />
@@ -600,27 +598,46 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         }}
                                         className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                         placeholder="Уникальный код"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
-                                    <input
-                                        type="text"
-                                        value={batchDiopters}
-                                        onChange={(e) => setBatchDiopters(e.target.value)}
-                                        onBlur={() => {
-                                            const val = batchDiopters.trim().replace(',', '.');
-                                            if (val) {
-                                                const parsed = parseFloat(val);
-                                                if (!isNaN(parsed)) {
-                                                    const formatted = parsed.toFixed(2);
-                                                    setBatchDiopters(val.startsWith('+') ? '+' + formatted : formatted);
-                                                }
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleAddItem();
                                             }
                                         }}
-                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                     />
                                 </div>
+                                {(!selectedProduct?.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens') && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
+                                        <input
+                                            type="text"
+                                            value={batchDiopters}
+                                            onChange={(e) => setBatchDiopters(e.target.value)}
+                                            onBlur={() => {
+                                                const val = batchDiopters.trim().replace(',', '.');
+                                                if (val) {
+                                                    const parsed = parseFloat(val);
+                                                    if (!isNaN(parsed)) {
+                                                        const formatted = parsed.toFixed(2);
+                                                        setBatchDiopters(val.startsWith('+') ? '+' + formatted : formatted);
+                                                    }
+                                                }
+                                            }}
+                                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        />
+                                    </div>
+                                )}
+                                {selectedProduct?.category === 'rings' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Размер</label>
+                                        <input
+                                            type="text"
+                                            value={batchSize}
+                                            onChange={(e) => setBatchSize(e.target.value)}
+                                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        />
+                                    </div>
+                                )}
                                 <div>
                                     <FlexibleDateInput label="Срок годности" value={batchExpiration} onChange={setBatchExpiration} />
                                 </div>
@@ -702,9 +719,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                                     ))}
                                                 </div>
                                             </div>
-                                            {(item.batchExpiration || item.batchProduction) && (
-                                                <div className="flex gap-2">
-                                                    {item.batchProduction && <span>С/Н: {item.batchProduction}</span>}
+                                            {(item.batchDiopters || item.batchSize || item.batchSerial || item.batchExpiration) && (
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {item.batchDiopters && <span>Диопт: {item.batchDiopters}</span>}
+                                                    {item.batchSize && <span>Размер: {item.batchSize}</span>}
+                                                    {item.batchSerial && <span>С/Н: {item.batchSerial}</span>}
                                                     {item.batchExpiration && <span>Годен до: {item.batchExpiration}</span>}
                                                 </div>
                                             )}
@@ -749,8 +768,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                                 setPrice(item.price);
                                                 setBatchBarcode(item.batchBarcode || '');
                                                 setBatchDiopters(item.batchDiopters || '');
+                                                setBatchSize(item.batchSize || '');
                                                 setBatchExpiration(item.batchExpiration || '');
-                                                setBatchSerial(item.batchProduction || '');
+                                                setBatchSerial(item.batchSerial || item.batchProduction || '');
                                                 // Remove from items list
                                                 setItems(items.filter((_, i) => i !== idx));
                                             }}

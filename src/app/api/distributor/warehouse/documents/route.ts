@@ -106,7 +106,8 @@ export async function POST(req: NextRequest) {
                                 purchasePrice: item.price,
                                 expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : existingBatch.expiryDate,
                                 productionDate: item.batchProduction ? new Date(item.batchProduction) : existingBatch.productionDate,
-                                diopters: item.batchDiopters || existingBatch.diopters
+                                diopters: item.batchDiopters || existingBatch.diopters,
+                                size: item.batchSize || existingBatch.size
                             }
                         });
                         stockItemId = existingBatch.id;
@@ -121,6 +122,7 @@ export async function POST(req: NextRequest) {
                                 expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : null,
                                 productionDate: item.batchProduction ? new Date(item.batchProduction) : null,
                                 diopters: item.batchDiopters || null,
+                                size: item.batchSize || null,
                                 receiptDocId: doc.id
                             }
                         });
