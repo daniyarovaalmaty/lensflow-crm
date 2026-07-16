@@ -453,19 +453,19 @@ export default function WarehousePage() {
         setLoading(true);
         try {
             if (tab === 'stock' || tab === 'receive') {
-                const res = await fetch('/api/laboratory/stock');
+                const res = await fetch('/api/laboratory/stock?t=' + Date.now());
                 if (res.ok) setProducts(await res.json());
             }
             if (tab === 'movements') {
-                const res = await fetch('/api/laboratory/stock?view=movements');
+                const res = await fetch('/api/laboratory/stock?view=movements&t=' + Date.now());
                 if (res.ok) setMovements(await res.json());
             }
             if (tab === 'documents') {
-                const res = await fetch('/api/laboratory/stock?view=documents');
+                const res = await fetch('/api/laboratory/stock?view=documents&t=' + Date.now());
                 if (res.ok) setDocuments(await res.json());
             }
             if (tab === 'inventory') {
-                const res = await fetch('/api/laboratory/inventory');
+                const res = await fetch('/api/laboratory/inventory?t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     setInventories(data);

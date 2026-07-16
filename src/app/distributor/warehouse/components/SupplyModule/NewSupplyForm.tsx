@@ -608,6 +608,16 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         type="text"
                                         value={batchDiopters}
                                         onChange={(e) => setBatchDiopters(e.target.value)}
+                                        onBlur={() => {
+                                            const val = batchDiopters.trim().replace(',', '.');
+                                            if (val) {
+                                                const parsed = parseFloat(val);
+                                                if (!isNaN(parsed)) {
+                                                    const formatted = parsed.toFixed(2);
+                                                    setBatchDiopters(val.startsWith('+') ? '+' + formatted : formatted);
+                                                }
+                                            }
+                                        }}
                                         className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                     />
                                 </div>

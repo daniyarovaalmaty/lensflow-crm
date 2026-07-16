@@ -453,19 +453,19 @@ export default function WarehousePage() {
         setLoading(true);
         try {
             if (tab === 'stock' || tab === 'receive') {
-                const res = await fetch('/api/optic/stock');
+                const res = await fetch('/api/optic/stock?t=' + Date.now());
                 if (res.ok) setProducts(await res.json());
             }
             if (tab === 'movements') {
-                const res = await fetch('/api/optic/stock?view=movements');
+                const res = await fetch('/api/optic/stock?view=movements&t=' + Date.now());
                 if (res.ok) setMovements(await res.json());
             }
             if (tab === 'documents') {
-                const res = await fetch('/api/optic/stock?view=documents');
+                const res = await fetch('/api/optic/stock?view=documents&t=' + Date.now());
                 if (res.ok) setDocuments(await res.json());
             }
             if (tab === 'inventory') {
-                const res = await fetch('/api/optic/inventory');
+                const res = await fetch('/api/optic/inventory?t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     setInventories(data);
