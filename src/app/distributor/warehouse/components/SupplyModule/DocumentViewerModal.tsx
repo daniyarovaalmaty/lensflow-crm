@@ -1,7 +1,7 @@
 import { X, Box, Barcode, Edit2, Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { formatGS1Barcode } from '@/lib/utils/gs1Parser';
+import { formatGS1Barcode, parseGS1Barcode } from '@/lib/utils/gs1Parser';
 
 interface DocumentViewerModalProps {
     document: any;
@@ -230,13 +230,27 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (
                                                             <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap items-center">
                                                                 <span className="text-gray-400 mr-1">С/Н:</span>
-                                                                {item.serialNumbers.map((sn: string, idx: number) => (
-                                                                    <div key={idx} className="px-1.5 py-1 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 flex flex-col items-center">
-                                                                        {formatGS1Barcode(sn).map((block, i) => (
-                                                                            <span key={i}>{block}</span>
-                                                                        ))}
+                                                                {item.serialNumbers.map((sn: string, idx: number) => {
+                                                                    const parsed = parseGS1Barcode(sn);
+                                                                    const extracted = parsed.serialNumber || parsed.batchNumber;
+                                                                    return (
+                                                                    <div key={idx} className="px-1.5 py-1 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 flex flex-col items-center text-center">
+                                                                        {extracted ? (
+                                                                            <>
+                                                                                <span className="font-semibold text-sm mb-0.5">{extracted}</span>
+                                                                                <div className="text-[10px] text-indigo-400 flex flex-col items-center leading-tight">
+                                                                                    {formatGS1Barcode(sn).map((block, i) => (
+                                                                                        <span key={i}>{block}</span>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </>
+                                                                        ) : (
+                                                                            formatGS1Barcode(sn).map((block, i) => (
+                                                                                <span key={i}>{block}</span>
+                                                                            ))
+                                                                        )}
                                                                     </div>
-                                                                ))}
+                                                                )})}
                                                             </div>
                                                         )}
                                                     </td>

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 import UnitsModal from './UnitsModal';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { parseGS1Barcode } from '@/lib/utils/gs1Parser';
 
 function FlexibleDateInput({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
     const [mode, setMode] = useState<'month' | 'date'>((value && value.length > 7) ? 'date' : 'month');
@@ -336,6 +337,16 @@ export default function ProductBalances() {
                                                         <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Штрихкод партии</span>
                                                         <span className="font-medium text-indigo-600 leading-tight">{batch.serialNumber}</span>
                                                     </div>
+                                                    {(() => {
+                                                        const parsed = parseGS1Barcode(batch.serialNumber || '');
+                                                        const sn = parsed.serialNumber || parsed.batchNumber;
+                                                        return sn ? (
+                                                            <div>
+                                                                <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Серийный номер</span>
+                                                                <span className="font-medium text-gray-900 leading-tight">{sn}</span>
+                                                            </div>
+                                                        ) : null;
+                                                    })()}
                                                     {batch.diopters && (
                                                         <div>
                                                             <span className="text-gray-400 text-[10px] uppercase tracking-wider block leading-tight mb-0.5">Диоптрии</span>
