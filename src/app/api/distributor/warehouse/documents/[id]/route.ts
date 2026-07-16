@@ -38,10 +38,10 @@ export async function PUT(
             const dataToUpdate: any = {
                 counterpartyName,
                 notes,
+                documentNumber,
             };
 
             if (existingDoc.status === 'draft') {
-                dataToUpdate.documentNumber = documentNumber;
                 dataToUpdate.targetOrganizationId = targetOrganizationId;
                 dataToUpdate.status = status;
                 dataToUpdate.totalAmount = totalAmount;
