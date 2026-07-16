@@ -764,9 +764,13 @@ export class ItigrisSyncService {
             }
         }
 
-        for (const [sig, p] of agg) {
-            try { await this.upsertProduct(sig, p.category, p.item, p.stock, p.price, result); }
-            catch (err: any) { result.errors++; result.details.push(`Ошибка товара ${sig}: ${err.message}`); }
+        const aggEntries = Array.from(agg.entries());
+        for (let i = 0; i < aggEntries.length; i += 50) {
+            const chunk = aggEntries.slice(i, i + 50);
+            await Promise.all(chunk.map(async ([sig, p]) => {
+                try { await this.upsertProduct(sig, p.category, p.item, p.stock, p.price, result); }
+                catch (err: any) { result.errors++; result.details.push(`Ошибка товара ${sig}: ${err.message}`); }
+            }));
         }
         result.details.push(`Уникальных позиций: ${agg.size}`);
         return result;
