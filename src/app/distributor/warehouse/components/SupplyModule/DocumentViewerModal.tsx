@@ -1,6 +1,7 @@
 import { X, Box, Barcode, Edit2, Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { formatGS1Barcode } from '@/lib/utils/gs1Parser';
 
 interface DocumentViewerModalProps {
     document: any;
@@ -227,12 +228,15 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                                                         )}
                                                         {item.batchBarcode && (
                                                             <div className="mt-1.5 space-y-1">
-                                                                <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit block">
-                                                                    С/Н (Партия): {item.batchBarcode}
-                                                                </span>
+                                                                <div className="inline-flex flex-col items-start rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit">
+                                                                    <span className="text-indigo-400 mb-0.5">Штрихкод партии:</span>
+                                                                    {formatGS1Barcode(item.batchBarcode).map((block, i) => (
+                                                                        <span key={i} className="block">{block}</span>
+                                                                    ))}
+                                                                </div>
                                                                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
                                                                     {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
-                                                                    {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
+                                                                    {item.batchProduction && <span>С/Н: {item.batchProduction}</span>}
                                                                     {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
                                                                 </div>
                                                             </div>
@@ -240,8 +244,12 @@ export default function DocumentViewerModal({ document, allProducts, onClose, on
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (
                                                             <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap items-center">
                                                                 <span className="text-gray-400 mr-1">С/Н:</span>
-                                                                {item.serialNumbers.map((sn: string) => (
-                                                                    <span key={sn} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100">{sn}</span>
+                                                                {item.serialNumbers.map((sn: string, idx: number) => (
+                                                                    <div key={idx} className="px-1.5 py-1 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 flex flex-col items-center">
+                                                                        {formatGS1Barcode(sn).map((block, i) => (
+                                                                            <span key={i}>{block}</span>
+                                                                        ))}
+                                                                    </div>
                                                                 ))}
                                                             </div>
                                                         )}

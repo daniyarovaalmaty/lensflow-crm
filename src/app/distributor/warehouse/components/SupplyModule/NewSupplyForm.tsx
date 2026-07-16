@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, Tag, Edit2, Wifi, WifiOff, CloudOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { parseGS1Barcode, formatGS1Barcode } from '@/lib/utils/gs1Parser';
 
 const LOCAL_DRAFT_KEY = 'lensflow_supply_draft';
 
@@ -78,12 +79,13 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [newProductName, setNewProductName] = useState('');
     const [newProductModel, setNewProductModel] = useState('');
     const [newProductBarcode, setNewProductBarcode] = useState('');
+    const [newProductTrackSerials, setNewProductTrackSerials] = useState(true);
 
     // Batch details state (for row addition)
     const [batchBarcode, setBatchBarcode] = useState('');
     const [batchDiopters, setBatchDiopters] = useState('');
     const [batchExpiration, setBatchExpiration] = useState('');
-    const [batchProduction, setBatchProduction] = useState('');
+    const [batchSerial, setBatchSerial] = useState('');
 
     useEffect(() => {
         if (!nameSearch.trim() && !barcodeSearch.trim()) {
@@ -172,7 +174,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     name: newProductName,
                     barcode: newProductBarcode,
                     model: newProductModel,
-                    trackSerials: true // All products are now batch-tracked
+                    trackSerials: newProductTrackSerials
                 })
             });
 
@@ -187,6 +189,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             setNewProductName('');
             setNewProductBarcode('');
             setNewProductModel('');
+            setNewProductTrackSerials(true);
         } catch (error) {
             toast.error('Ошибка создания товара');
         }
@@ -203,7 +206,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             batchBarcode: batchBarcode.trim(),
             batchDiopters,
             batchExpiration,
-            batchProduction,
+            batchProduction: batchSerial, // Map to DB field
         };
         
         if (newItem.qty <= 0) {
@@ -226,7 +229,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         setBatchBarcode('');
         setBatchDiopters('');
         setBatchExpiration('');
-        setBatchProduction('');
+        setBatchSerial('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -514,6 +517,17 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                 />
                             </div>
+                            <div className="sm:col-span-2 mt-2">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={newProductTrackSerials}
+                                        onChange={(e) => setNewProductTrackSerials(e.target.checked)}
+                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                    />
+                                    <span className="text-sm text-gray-700">Включить серийный учет (по умолчанию)</span>
+                                </label>
+                            </div>
                         </div>
                         <button
                             type="button"
@@ -537,6 +551,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     setNewProductName(selectedProduct.name || '');
                                     setNewProductBarcode(selectedProduct.barcode || '');
                                     setNewProductModel(selectedProduct.model || '');
+                                    setNewProductTrackSerials(selectedProduct.trackSerials ?? true);
                                     setIsCreatingProduct(true);
                                 }} className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
                                     <Edit2 className="h-4 w-4" />
@@ -554,7 +569,19 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     <input
                                         type="text"
                                         value={batchBarcode}
-                                        onChange={(e) => setBatchBarcode(e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setBatchBarcode(val);
+                                            const parsed = parseGS1Barcode(val);
+                                            if (parsed.expirationDate) {
+                                                setBatchExpiration(parsed.expirationDate.toISOString().split('T')[0]);
+                                            }
+                                            if (parsed.serialNumber) {
+                                                setBatchSerial(parsed.serialNumber);
+                                            } else if (parsed.batchNumber) {
+                                                setBatchSerial(parsed.batchNumber);
+                                            }
+                                        }}
                                         className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                         placeholder="Уникальный код"
                                     />
@@ -572,7 +599,13 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     <FlexibleDateInput label="Срок годности" value={batchExpiration} onChange={setBatchExpiration} />
                                 </div>
                                 <div>
-                                    <FlexibleDateInput label="Дата производства" value={batchProduction} onChange={setBatchProduction} />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер</label>
+                                    <input
+                                        type="text"
+                                        value={batchSerial}
+                                        onChange={(e) => setBatchSerial(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    />
                                 </div>
                             </div>
 
@@ -635,10 +668,17 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     {item.name}
                                     {item.batchBarcode && (
                                         <div className="mt-1 text-xs text-gray-500 flex flex-col gap-1">
-                                            <div><span className="text-gray-400">Штрихкод партии:</span> <span className="font-medium text-indigo-600">{item.batchBarcode}</span></div>
+                                            <div>
+                                                <span className="text-gray-400">Штрихкод партии:</span> 
+                                                <div className="font-medium text-indigo-600 mt-1">
+                                                    {formatGS1Barcode(item.batchBarcode).map((block, idx) => (
+                                                        <div key={idx}>{block}</div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                             {(item.batchExpiration || item.batchProduction) && (
                                                 <div className="flex gap-2">
-                                                    {item.batchProduction && <span>Произв: {item.batchProduction}</span>}
+                                                    {item.batchProduction && <span>С/Н: {item.batchProduction}</span>}
                                                     {item.batchExpiration && <span>Годен до: {item.batchExpiration}</span>}
                                                 </div>
                                             )}
@@ -684,7 +724,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                                 setBatchBarcode(item.batchBarcode || '');
                                                 setBatchDiopters(item.batchDiopters || '');
                                                 setBatchExpiration(item.batchExpiration || '');
-                                                setBatchProduction(item.batchProduction || '');
+                                                setBatchSerial(item.batchProduction || '');
                                                 // Remove from items list
                                                 setItems(items.filter((_, i) => i !== idx));
                                             }}
