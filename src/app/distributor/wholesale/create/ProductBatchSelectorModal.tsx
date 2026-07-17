@@ -1,5 +1,34 @@
 import { useState, useMemo } from 'react';
-import { Search, X, PackageOpen, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Search, X, PackageOpen, ChevronDown, ChevronUp, Plus, ChevronRight } from 'lucide-react';
+import ExpiryDateBadge from '@/app/distributor/warehouse/components/ExpiryDateBadge';
+import { parseGS1Barcode } from '@/lib/utils/gs1Parser';
+
+const getDiopterButtonClass = (items: any[]) => {
+    const validItems = items.filter((item: any) => item.quantity > 0 && item.expiryDate);
+    if (validItems.length === 0) return 'bg-white text-gray-900 ring-gray-200 hover:bg-gray-50';
+    
+    const now = new Date().getTime();
+    let minDiffMonths = Infinity;
+    
+    validItems.forEach((item: any) => {
+        const expDate = new Date(item.expiryDate);
+        if (!isNaN(expDate.getTime())) {
+            const diffMs = expDate.getTime() - now;
+            const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
+            if (diffMonths < minDiffMonths) {
+                minDiffMonths = diffMonths;
+            }
+        }
+    });
+
+    if (minDiffMonths === Infinity) return 'bg-white text-gray-900 ring-gray-200 hover:bg-gray-50';
+
+    if (minDiffMonths <= 0) return 'bg-red-100 text-red-800 ring-red-600/30 hover:bg-red-200';
+    if (minDiffMonths <= 3) return 'bg-red-50 text-red-700 ring-red-600/20 hover:bg-red-100';
+    if (minDiffMonths <= 6) return 'bg-yellow-50 text-yellow-700 ring-yellow-600/20 hover:bg-yellow-100';
+    
+    return 'bg-green-50 text-green-700 ring-green-600/20 hover:bg-green-100';
+};
 
 interface Product {
     id: string;
@@ -24,6 +53,14 @@ interface ProductBatchSelectorModalProps {
 export function ProductBatchSelectorModal({ isOpen, onClose, products, onSelectBatch }: ProductBatchSelectorModalProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
+    const [expandedDiopters, setExpandedDiopters] = useState<Set<string>>(new Set());
+
+    const toggleDiopterRow = (rowKey: string) => {
+        const newSet = new Set(expandedDiopters);
+        if (newSet.has(rowKey)) newSet.delete(rowKey);
+        else newSet.add(rowKey);
+        setExpandedDiopters(newSet);
+    };
 
     const filteredProducts = useMemo(() => {
         if (!searchQuery.trim()) return products.filter(p => p.currentStock > 0);
@@ -107,42 +144,84 @@ export function ProductBatchSelectorModal({ isOpen, onClose, products, onSelectB
                                                     <div className="space-y-2">
                                                         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Доступные партии</h4>
                                                         <div className="grid grid-cols-1 gap-2">
-                                                            {availableBatches.map(batch => (
-                                                                <div key={batch.id} className="flex items-center justify-between bg-white p-3 border rounded-md hover:border-blue-300 transition-colors">
-                                                                    <div className="flex gap-6 items-center">
-                                                                        {batch.diopters && (
-                                                                            <div className="w-24">
-                                                                                <div className="text-xs text-gray-500">Диоптрия</div>
-                                                                                <div className="font-bold text-blue-700">{batch.diopters}</div>
+                                                            {(() => {
+                                                                const groups: Record<string, any[]> = {};
+                                                                availableBatches.forEach(b => {
+                                                                    const d = b.diopters || '-';
+                                                                    if (!groups[d]) groups[d] = [];
+                                                                    groups[d].push(b);
+                                                                });
+                                                                const grouped = Object.keys(groups).sort((a, b) => {
+                                                                    if (a === '-') return 1;
+                                                                    if (b === '-') return -1;
+                                                                    return parseFloat(a) - parseFloat(b);
+                                                                }).map(d => ({
+                                                                    diopter: d,
+                                                                    items: groups[d].sort((x, y) => new Date(x.expiryDate).getTime() - new Date(y.expiryDate).getTime())
+                                                                }));
+
+                                                                return grouped.map((group, gIdx) => {
+                                                                    const rowKey = `${product.id}_${group.diopter}`;
+                                                                    const isDiopterExpanded = expandedDiopters.has(rowKey);
+                                                                    return (
+                                                                        <div key={rowKey} className="bg-white border rounded-md shadow-sm overflow-hidden">
+                                                                            <div 
+                                                                                className={`flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-50 transition-colors ${gIdx > 0 ? 'border-t border-gray-100' : ''}`}
+                                                                                onClick={() => toggleDiopterRow(rowKey)}
+                                                                            >
+                                                                                <button 
+                                                                                    className={`flex items-center gap-2 focus:outline-none px-3 py-1.5 rounded-md ring-1 shadow-sm transition-colors ${getDiopterButtonClass(group.items)}`}
+                                                                                >
+                                                                                    {isDiopterExpanded ? <ChevronDown className="h-4 w-4 opacity-50" /> : <ChevronRight className="h-4 w-4 opacity-50" />}
+                                                                                    <span className="font-bold">{group.diopter !== '-' ? group.diopter : 'Без диоптрий'}</span>
+                                                                                </button>
+                                                                                <div className="text-sm text-gray-500 ml-auto">
+                                                                                    Партий: {group.items.length} шт / Остаток: {group.items.reduce((sum, item) => sum + item.quantity, 0)} шт
+                                                                                </div>
                                                                             </div>
-                                                                        )}
-                                                                        <div className="w-40">
-                                                                            <div className="text-xs text-gray-500">Номер партии / Серийник</div>
-                                                                            <div className="font-medium text-sm">{batch.serialNumber || batch.barcode || '—'}</div>
+                                                                            
+                                                                            {isDiopterExpanded && (
+                                                                                <div className="border-t border-gray-100 bg-gray-50/30 p-3 space-y-2">
+                                                                                    {group.items.map(batch => {
+                                                                                        const parsed = parseGS1Barcode(batch.serialNumber || '');
+                                                                                        const sn = parsed.serialNumber || parsed.batchNumber || batch.serialNumber;
+                                                                                        return (
+                                                                                            <div key={batch.id} className="flex items-center justify-between bg-white p-3 border rounded-md hover:border-blue-300 transition-colors">
+                                                                                                <div className="flex gap-6 items-center flex-1">
+                                                                                                    <div className="w-48">
+                                                                                                        <div className="text-xs text-gray-500 mb-1">Номер партии / Серийник</div>
+                                                                                                        <div className="font-medium text-sm text-gray-900">{sn || '—'}</div>
+                                                                                                    </div>
+                                                                                                    <div className="w-32">
+                                                                                                        <div className="text-xs text-gray-500 mb-1">Срок годности</div>
+                                                                                                        <div>
+                                                                                                            <ExpiryDateBadge date={batch.expiryDate} />
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div className="w-24">
+                                                                                                        <div className="text-xs text-gray-500 mb-1">Доступно</div>
+                                                                                                        <div className="font-bold text-gray-900">{batch.quantity} шт</div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <button 
+                                                                                                    onClick={(e) => {
+                                                                                                        e.stopPropagation();
+                                                                                                        onSelectBatch(product, batch);
+                                                                                                    }}
+                                                                                                    className="flex items-center gap-1 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-md font-medium text-sm transition-colors"
+                                                                                                >
+                                                                                                    <Plus className="w-4 h-4" />
+                                                                                                    Добавить
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                            )}
                                                                         </div>
-                                                                        <div className="w-32">
-                                                                            <div className="text-xs text-gray-500">Срок годности</div>
-                                                                            <div className="font-medium text-sm">
-                                                                                {batch.expiryDate ? new Date(batch.expiryDate).toLocaleDateString('ru-RU') : '—'}
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="w-24">
-                                                                            <div className="text-xs text-gray-500">Доступно</div>
-                                                                            <div className="font-bold">{batch.quantity} шт</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <button 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            onSelectBatch(product, batch);
-                                                                        }}
-                                                                        className="flex items-center gap-1 bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-md font-medium text-sm"
-                                                                    >
-                                                                        <Plus className="w-4 h-4" />
-                                                                        Добавить
-                                                                    </button>
-                                                                </div>
-                                                            ))}
+                                                                    );
+                                                                });
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 )}
