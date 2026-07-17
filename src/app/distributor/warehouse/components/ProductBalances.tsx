@@ -675,7 +675,10 @@ export default function ProductBalances() {
                                                                     <tr>
                                                                         <th className="py-2 pl-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Партия (С/Н)</th>
                                                                         <th className="py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Срок годности</th>
-                                                                        <th className="py-2 pr-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Остаток</th>
+                                                                        <th className="py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Нач. остаток</th>
+                                                                        <th className="py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider text-green-700">Приход</th>
+                                                                        <th className="py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider text-red-700">Расход</th>
+                                                                        <th className="py-2 pr-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Факт (Остаток)</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody className="divide-y divide-indigo-50">
@@ -690,6 +693,19 @@ export default function ProductBalances() {
                                                                             <td className="py-2 text-sm text-gray-500">
                                                                                 <ExpiryDateBadge date={batch.expiryDate} />
                                                                             </td>
+                                                                            <td className="py-2 text-center text-sm font-medium text-gray-700">
+                                                                                {batch.initial}
+                                                                            </td>
+                                                                            <td className="py-2 text-center text-sm font-medium">
+                                                                                <span className={batch.in > 0 ? 'text-green-600' : 'text-gray-400'}>
+                                                                                    {batch.in > 0 ? `+${batch.in}` : '0'}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="py-2 text-center text-sm font-medium">
+                                                                                <span className={batch.out > 0 ? 'text-red-600' : 'text-gray-400'}>
+                                                                                    {batch.out > 0 ? `-${batch.out}` : '0'}
+                                                                                </span>
+                                                                            </td>
                                                                             <td className="py-2 pr-4 text-sm font-bold text-gray-900 text-right">
                                                                                 {batch.quantity}
                                                                             </td>
@@ -697,7 +713,7 @@ export default function ProductBalances() {
                                                                     ))}
                                                                     {data.items.length === 0 && (
                                                                         <tr>
-                                                                            <td colSpan={3} className="py-4 text-center text-sm text-gray-500">
+                                                                            <td colSpan={6} className="py-4 text-center text-sm text-gray-500">
                                                                                 Нет доступных партий в наличии
                                                                             </td>
                                                                         </tr>

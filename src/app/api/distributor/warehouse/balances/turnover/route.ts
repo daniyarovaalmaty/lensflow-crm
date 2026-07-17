@@ -20,103 +20,122 @@ export async function GET(req: NextRequest) {
         const endDate = endDateStr ? new Date(endDateStr) : new Date();
         endDate.setHours(23, 59, 59, 999);
 
-        // Fetch products and their current batches
+        // Fetch all products
         const products = await prisma.opticProduct.findMany({
-            where: { organizationId: orgId, category: { in: ['contact_lens', 'spectacle_lens'] } },
-            include: {
-                stockItems: true // current batches
-            }
+            where: { organizationId: orgId, category: { in: ['contact_lens', 'spectacle_lens'] } }
         });
 
-        // Fetch movements within the period
-        const movements = await prisma.stockMovement.findMany({
+        // Fetch ALL movements up to endDate
+        const allMovements = await prisma.stockMovement.findMany({
             where: {
                 organizationId: orgId,
                 createdAt: {
-                    gte: startDate,
                     lte: endDate
                 }
             }
         });
 
-        // Fetch all stock items (even written off/sold) to know the diopter of serials
+        // Fetch all stock items to know diopters and expiry date for serials
         const allStockItems = await prisma.stockItem.findMany({
             where: { organizationId: orgId },
-            select: { serialNumber: true, diopters: true }
+            select: { serialNumber: true, diopters: true, expiryDate: true, batchNumber: true }
         });
         
-        const serialToDiopter = new Map<string, string>();
+        const serialDetails = new Map<string, { diopters: string, expiryDate: Date | null, batchNumber: string | null }>();
         allStockItems.forEach(si => {
             if (si.serialNumber) {
-                serialToDiopter.set(si.serialNumber, si.diopters || '-');
+                serialDetails.set(si.serialNumber, {
+                    diopters: si.diopters || '-',
+                    expiryDate: si.expiryDate,
+                    batchNumber: si.batchNumber
+                });
             }
         });
 
-        // Calculate turnover
         const result = products.map(product => {
-            const currentStockByDiopter: Record<string, number> = {};
-            product.stockItems.forEach(si => {
-                const d = si.diopters || '-';
-                if (!currentStockByDiopter[d]) currentStockByDiopter[d] = 0;
-                if (si.status === 'in_stock' || si.status === 'reserved') {
-                    currentStockByDiopter[d] += si.quantity;
-                }
-            });
-
-            const productMovements = movements.filter(m => m.productId === product.id);
-            const inByDiopter: Record<string, number> = {};
-            const outByDiopter: Record<string, number> = {};
-
+            const productMovements = allMovements.filter(m => m.productId === product.id);
+            
+            // We'll track stats per serial number (or "NO_SERIAL" if none)
+            const statsBySerial: Record<string, { initial: number, in: number, out: number }> = {};
+            
             productMovements.forEach(m => {
                 let sns: string[] = [];
-                if (m.serialNumbers && Array.isArray(m.serialNumbers)) {
+                if (m.serialNumbers && Array.isArray(m.serialNumbers) && m.serialNumbers.length > 0) {
                     sns = m.serialNumbers as string[];
-                }
-
-                // Incoming if quantity > 0, Outgoing if quantity < 0
-                const isOut = m.quantity < 0;
-                const absQty = Math.abs(m.quantity);
-
-                if (sns.length > 0) {
-                    sns.forEach(sn => {
-                        const d = serialToDiopter.get(sn) || '-';
-                        if (isOut) {
-                            outByDiopter[d] = (outByDiopter[d] || 0) + 1; // 1 unit per serial
-                        } else {
-                            inByDiopter[d] = (inByDiopter[d] || 0) + 1;
-                        }
-                    });
                 } else {
-                    const d = '-';
-                    if (isOut) {
-                        outByDiopter[d] = (outByDiopter[d] || 0) + absQty;
-                    } else {
-                        inByDiopter[d] = (inByDiopter[d] || 0) + absQty;
-                    }
+                    sns = ['NO_SERIAL'];
                 }
+
+                const isPeriod = m.createdAt >= startDate && m.createdAt <= endDate;
+                const isOut = m.quantity < 0;
+                // If it's NO_SERIAL, use actual qty. If serials, each is 1 qty.
+                const qtyPerItem = sns[0] === 'NO_SERIAL' ? Math.abs(m.quantity) : 1;
+
+                sns.forEach(sn => {
+                    if (!statsBySerial[sn]) statsBySerial[sn] = { initial: 0, in: 0, out: 0 };
+                    
+                    if (!isPeriod) {
+                        // History before startDate
+                        if (isOut) {
+                            statsBySerial[sn].initial -= qtyPerItem;
+                        } else {
+                            statsBySerial[sn].initial += qtyPerItem;
+                        }
+                    } else {
+                        // Inside period
+                        if (isOut) {
+                            statsBySerial[sn].out += qtyPerItem;
+                        } else {
+                            statsBySerial[sn].in += qtyPerItem;
+                        }
+                    }
+                });
             });
 
-            const allDiopters = new Set([
-                ...Object.keys(currentStockByDiopter),
-                ...Object.keys(inByDiopter),
-                ...Object.keys(outByDiopter)
-            ]);
+            // Now group serials by diopter
+            const diopterGroups: Record<string, { initial: number, in: number, out: number, final: number, items: any[] }> = {};
 
-            const turnover = Array.from(allDiopters).map(d => {
-                const final = currentStockByDiopter[d] || 0;
-                const prihod = inByDiopter[d] || 0;
-                const rashod = outByDiopter[d] || 0;
+            Object.entries(statsBySerial).forEach(([sn, stats]) => {
+                const final = stats.initial + stats.in - stats.out;
                 
-                // Initial + Prihod - Rashod = Final => Initial = Final - Prihod + Rashod
-                const initial = final - prihod + rashod;
+                // Skip if this batch has zero history and zero current
+                if (stats.initial === 0 && stats.in === 0 && stats.out === 0 && final === 0) return;
 
+                const details = serialDetails.get(sn) || { diopters: '-', expiryDate: null, batchNumber: sn === 'NO_SERIAL' ? null : sn };
+                const d = details.diopters;
+
+                if (!diopterGroups[d]) {
+                    diopterGroups[d] = { initial: 0, in: 0, out: 0, final: 0, items: [] };
+                }
+
+                diopterGroups[d].initial += stats.initial;
+                diopterGroups[d].in += stats.in;
+                diopterGroups[d].out += stats.out;
+                diopterGroups[d].final += final;
+
+                diopterGroups[d].items.push({
+                    id: sn,
+                    serialNumber: sn === 'NO_SERIAL' ? '' : sn,
+                    batchNumber: details.batchNumber,
+                    expiryDate: details.expiryDate,
+                    initial: stats.initial,
+                    in: stats.in,
+                    out: stats.out,
+                    quantity: final // this is the final fact
+                });
+            });
+
+            const turnover = Object.entries(diopterGroups).map(([diopter, data]) => {
+                // sort items by expiry date, then serial
+                data.items.sort((a, b) => {
+                    if (a.expiryDate && b.expiryDate) {
+                        return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+                    }
+                    return 0;
+                });
                 return {
-                    diopter: d,
-                    initial,
-                    in: prihod,
-                    out: rashod,
-                    final,
-                    items: product.stockItems.filter(si => (si.diopters || '-') === d && (si.status === 'in_stock' || si.status === 'reserved'))
+                    diopter,
+                    ...data
                 };
             }).sort((a, b) => {
                 if (a.diopter === '-') return 1;
