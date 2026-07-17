@@ -7,6 +7,7 @@ import { useUsbScanner } from '@/hooks/useUsbScanner';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { ProductBatchSelectorModal } from './ProductBatchSelectorModal';
 
 interface Product {
     id: string;
@@ -47,6 +48,7 @@ export default function CreateWholesaleOrderPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [scanFeedback, setScanFeedback] = useState<string | null>(null);
     const [manualCode, setManualCode] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Fetch initial data
     useEffect(() => {
@@ -142,6 +144,43 @@ export default function CreateWholesaleOrderPage() {
             setTimeout(() => setScanFeedback(null), 3000);
         }
     }, [products]);
+
+    const handleManualSelect = useCallback((product: Product, batch: any) => {
+        const maxAvailable = batch.quantity;
+        
+        if (maxAvailable <= 0) {
+            toast.error(`Партии нет в наличии`);
+            return;
+        }
+
+        const itemKey = batch.id;
+
+        setCart(prev => {
+            const existing = prev.find(c => (c.stockItemId || c.productId) === itemKey);
+            if (existing) {
+                if (existing.quantity >= maxAvailable) {
+                    toast.error(`Достигнут максимум остатка для этой партии`);
+                    return prev;
+                }
+                toast.success(`${product.name} (${existing.quantity + 1} шт)`);
+                return prev.map(c => (c.stockItemId || c.productId) === itemKey ? { ...c, quantity: c.quantity + 1 } : c);
+            } else {
+                toast.success(`${product.name} добавлен`);
+                return [...prev, {
+                    productId: product.id,
+                    stockItemId: batch.id,
+                    name: product.name,
+                    price: product.wholesalePrice || product.retailPrice || 0,
+                    quantity: 1,
+                    maxStock: maxAvailable,
+                    diopter: batch.diopters,
+                    serialNumber: batch.serialNumber,
+                    expiryDate: batch.expiryDate,
+                }];
+            }
+        });
+        setIsModalOpen(false);
+    }, []);
 
     useUsbScanner(handleScan);
 
@@ -240,6 +279,13 @@ export default function CreateWholesaleOrderPage() {
                 </div>
 
                 <button 
+                    onClick={() => setIsModalOpen(true)}
+                    className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium text-sm"
+                >
+                    Выбрать вручную
+                </button>
+
+                <button 
                     onClick={handleSaveDraft} 
                     disabled={isSaving || cart.length === 0}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 flex items-center gap-2"
@@ -248,6 +294,13 @@ export default function CreateWholesaleOrderPage() {
                     Сохранить черновик
                 </button>
             </div>
+
+            <ProductBatchSelectorModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                products={products as any}
+                onSelectBatch={handleManualSelect}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Left Col: Cart & Scanning */}

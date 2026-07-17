@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Box, CheckCircle2, FileText, Printer } from 'lucide-react';
+import { ArrowLeft, Box, CheckCircle2, FileText, Printer, Trash2, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -71,6 +71,45 @@ export default function WholesaleOrderDetailPage() {
         }
     };
 
+    const handleDeleteDraft = async () => {
+        if (!confirm('Вы уверены, что хотите безвозвратно удалить этот черновик?')) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch(`/api/distributor/wholesale/${params.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                toast.success('Черновик удален');
+                router.push('/distributor/wholesale');
+            } else {
+                const err = await res.text();
+                toast.error(err || 'Ошибка удаления');
+            }
+        } catch (error) {
+            toast.error('Ошибка сети');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCancelReservation = async () => {
+        if (!confirm('Вы уверены, что хотите снять заказ с резерва? Товары вернутся на склад в свободную продажу.')) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch(`/api/distributor/wholesale/${params.id}/cancel`, { method: 'POST' });
+            if (res.ok) {
+                const updated = await res.json();
+                setOrder(updated);
+                toast.success('Резерв снят, заказ отменен');
+            } else {
+                const err = await res.text();
+                toast.error(err || 'Ошибка отмены резерва');
+            }
+        } catch (error) {
+            toast.error('Ошибка сети');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (loading) return <div className="p-8 text-center">Загрузка...</div>;
     if (!order) return null;
 
@@ -85,6 +124,7 @@ export default function WholesaleOrderDetailPage() {
                 {order.status === 'draft' && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 border border-gray-200">Черновик</span>}
                 {order.status === 'reserved' && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">В резерве</span>}
                 {order.status === 'completed' && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-300">Отгружен</span>}
+                {order.status === 'cancelled' && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-300">Отменен</span>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -138,25 +178,45 @@ export default function WholesaleOrderDetailPage() {
                         <h2 className="text-lg font-semibold">Действия</h2>
                         
                         {order.status === 'draft' && (
-                            <button 
-                                className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-md font-medium disabled:opacity-50" 
-                                onClick={handleReserve}
-                                disabled={actionLoading}
-                            >
-                                <Box className="w-5 h-5" />
-                                Зарезервировать на складе
-                            </button>
+                            <>
+                                <button 
+                                    className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-md font-medium disabled:opacity-50" 
+                                    onClick={handleReserve}
+                                    disabled={actionLoading}
+                                >
+                                    <Box className="w-5 h-5" />
+                                    Зарезервировать на складе
+                                </button>
+                                <button 
+                                    className="w-full flex items-center justify-center gap-2 border border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-md font-medium disabled:opacity-50" 
+                                    onClick={handleDeleteDraft}
+                                    disabled={actionLoading}
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                    Удалить черновик
+                                </button>
+                            </>
                         )}
 
                         {order.status === 'reserved' && (
-                            <button 
-                                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-md font-medium disabled:opacity-50" 
-                                onClick={handleComplete}
-                                disabled={actionLoading}
-                            >
-                                <CheckCircle2 className="w-5 h-5" />
-                                Отгрузить (Продать)
-                            </button>
+                            <>
+                                <button 
+                                    className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-md font-medium disabled:opacity-50" 
+                                    onClick={handleComplete}
+                                    disabled={actionLoading}
+                                >
+                                    <CheckCircle2 className="w-5 h-5" />
+                                    Отгрузить (Продать)
+                                </button>
+                                <button 
+                                    className="w-full flex items-center justify-center gap-2 border border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-md font-medium disabled:opacity-50 mt-2" 
+                                    onClick={handleCancelReservation}
+                                    disabled={actionLoading}
+                                >
+                                    <XCircle className="w-5 h-5" />
+                                    Снять с резерва
+                                </button>
+                            </>
                         )}
 
                         {order.status === 'completed' && (
