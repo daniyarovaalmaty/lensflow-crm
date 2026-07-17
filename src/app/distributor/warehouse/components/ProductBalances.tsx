@@ -45,6 +45,7 @@ export default function ProductBalances() {
     const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
     const [brandFilter, setBrandFilter] = useState('all');
     const [modelFilter, setModelFilter] = useState('all');
+    const [batchSort, setBatchSort] = useState<'expiry_asc' | 'expiry_desc' | 'diopters_asc' | 'diopters_desc' | 'size_asc' | 'size_desc'>('expiry_asc');
 
     const uniqueBrands = Array.from(new Set(products.map(p => p.name).filter(Boolean))).sort();
     const uniqueModelsForBrand = brandFilter === 'all' 
@@ -209,6 +210,44 @@ export default function ProductBalances() {
         return matchesName && matchesBarcode && matchesStock && matchesBrand && matchesModel;
     });
 
+    const sortBatches = (batches: any[]) => {
+        return [...batches].sort((a, b) => {
+            if (batchSort === 'expiry_asc') {
+                if (!a.expiryDate) return 1;
+                if (!b.expiryDate) return -1;
+                return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+            }
+            if (batchSort === 'expiry_desc') {
+                if (!a.expiryDate) return 1;
+                if (!b.expiryDate) return -1;
+                return new Date(b.expiryDate).getTime() - new Date(a.expiryDate).getTime();
+            }
+            if (batchSort === 'diopters_asc') {
+                const da = parseFloat(a.diopters) || 0;
+                const db = parseFloat(b.diopters) || 0;
+                return da - db;
+            }
+            if (batchSort === 'diopters_desc') {
+                const da = parseFloat(a.diopters) || 0;
+                const db = parseFloat(b.diopters) || 0;
+                return db - da;
+            }
+            if (batchSort === 'size_asc') {
+                const sa = parseFloat(a.size);
+                const sb = parseFloat(b.size);
+                if (!isNaN(sa) && !isNaN(sb)) return sa - sb;
+                return String(a.size || '').localeCompare(String(b.size || ''));
+            }
+            if (batchSort === 'size_desc') {
+                const sa = parseFloat(a.size);
+                const sb = parseFloat(b.size);
+                if (!isNaN(sa) && !isNaN(sb)) return sb - sa;
+                return String(b.size || '').localeCompare(String(a.size || ''));
+            }
+            return 0;
+        });
+    };
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -288,6 +327,20 @@ export default function ProductBalances() {
                     <option value="low_stock">Мало на складе</option>
                     <option value="out_of_stock">Нет в наличии</option>
                 </select>
+
+                <select
+                    value={batchSort}
+                    onChange={(e) => setBatchSort(e.target.value as any)}
+                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
+                >
+                    <option value="expiry_asc">Сортировка партий: Срок (возр.)</option>
+                    <option value="expiry_desc">Сортировка партий: Срок (убыв.)</option>
+                    <option value="diopters_asc">Сортировка партий: Диоптрии (возр.)</option>
+                    <option value="diopters_desc">Сортировка партий: Диоптрии (убыв.)</option>
+                    <option value="size_asc">Сортировка партий: Размер (возр.)</option>
+                    <option value="size_desc">Сортировка партий: Размер (убыв.)</option>
+                </select>
+
                 <span className="text-sm text-gray-500 self-center">
                     Найдено: {filteredProducts.length} из {products.length}
                 </span>
@@ -355,7 +408,7 @@ export default function ProductBalances() {
                                         </div>
                                     </td>
                                 </tr>
-                                {expandedRows.has(product.id) && product.stockItems?.map((batch: any) => (
+                                {expandedRows.has(product.id) && sortBatches(product.stockItems || []).map((batch: any) => (
                                     <tr key={batch.id} className="bg-indigo-50/30">
                                         <td colSpan={2} className="py-3 pl-4 pr-3 text-sm text-gray-500 sm:pl-12 align-middle">
                                             <div className="flex items-center gap-6">

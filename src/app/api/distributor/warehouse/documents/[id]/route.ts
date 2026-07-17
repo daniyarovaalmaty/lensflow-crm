@@ -14,7 +14,7 @@ export async function PUT(
 
         const id = params.id;
         const body = await req.json();
-        const { status, documentNumber, counterpartyName, items, totalAmount, targetOrganizationId, notes } = body;
+        const { status, documentNumber, counterpartyName, items, totalAmount, targetOrganizationId, notes: bodyNotes, documentDate, declarationNumber, declarationDate } = body;
 
         const organizationId = session.user.organizationId;
         const performedById = session.user.id;
@@ -33,12 +33,30 @@ export async function PUT(
         const isConfirmingNow = existingDoc.status === 'draft' && status === 'confirmed';
         const isReconfirmingNow = existingDoc.status === 'confirmed' && status === 'confirmed';
 
+        let finalNotes = bodyNotes;
+        if (documentDate !== undefined || declarationNumber !== undefined || declarationDate !== undefined) {
+            let existingNotesObj: any = {};
+            try {
+                if (existingDoc.notes) {
+                    existingNotesObj = JSON.parse(existingDoc.notes);
+                }
+            } catch (e) {}
+            
+            finalNotes = JSON.stringify({
+                ...existingNotesObj,
+                declarationNumber: declarationNumber !== undefined ? declarationNumber : existingNotesObj.declarationNumber || '',
+                declarationDate: declarationDate !== undefined ? declarationDate : existingNotesObj.declarationDate || '',
+                documentDate: documentDate !== undefined ? documentDate : existingNotesObj.documentDate || '',
+                userNotes: bodyNotes !== undefined ? bodyNotes : existingNotesObj.userNotes || ''
+            });
+        }
+
         const document = await prisma.$transaction(async (tx) => {
             // For confirmed documents, we shouldn't allow changing items, totalAmount or targetOrganizationId
             // We only allow updating notes and counterpartyName
             const dataToUpdate: any = {
                 counterpartyName,
-                notes,
+                notes: finalNotes,
                 documentNumber,
             };
 
