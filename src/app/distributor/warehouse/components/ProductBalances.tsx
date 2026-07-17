@@ -40,27 +40,43 @@ function FlexibleDateInput({ label, value, onChange }: { label: string, value: s
 export default function ProductBalances() {
     const [viewMode, setViewMode] = useState<'list' | 'matrix'>('list');
     const [expandedDiopters, setExpandedDiopters] = useState<Set<string>>(new Set());
+    const [turnoverData, setTurnoverData] = useState<any[]>([]);
+    const [turnoverLoading, setTurnoverLoading] = useState(false);
+
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const [startDate, setStartDate] = useState(firstDay.toISOString().split('T')[0]);
+    const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
+
+    const fetchTurnover = async () => {
+        try {
+            setTurnoverLoading(true);
+            const params = new URLSearchParams();
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            
+            const res = await fetch(`/api/distributor/warehouse/balances/turnover?${params.toString()}`);
+            if (!res.ok) throw new Error('Failed to fetch turnover');
+            const data = await res.json();
+            setTurnoverData(data);
+        } catch (error) {
+            toast.error('Ошибка загрузки оборотов');
+        } finally {
+            setTurnoverLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (viewMode === 'matrix') {
+            fetchTurnover();
+        }
+    }, [viewMode, startDate, endDate]);
 
     const toggleDiopterRow = (rowKey: string) => {
         const newSet = new Set(expandedDiopters);
         if (newSet.has(rowKey)) newSet.delete(rowKey);
         else newSet.add(rowKey);
         setExpandedDiopters(newSet);
-    };
-
-    const getDiopterGroups = (stockItems: any[]) => {
-        const groups: Record<string, { totalQty: number, items: any[] }> = {};
-        for (const item of stockItems) {
-            const d = item.diopters || '-';
-            if (!groups[d]) groups[d] = { totalQty: 0, items: [] };
-            groups[d].items.push(item);
-            groups[d].totalQty += item.quantity;
-        }
-        return Object.entries(groups).sort((a, b) => {
-            if (a[0] === '-') return 1;
-            if (b[0] === '-') return -1;
-            return parseFloat(a[0]) - parseFloat(b[0]);
-        });
     };
 
     const [products, setProducts] = useState<any[]>([]);
@@ -375,6 +391,25 @@ export default function ProductBalances() {
                 <span className="text-sm text-gray-500 self-center">
                     Найдено: {filteredProducts.length} из {products.length}
                 </span>
+
+                {viewMode === 'matrix' && (
+                    <div className="flex gap-2 items-center bg-gray-50 p-1 rounded-md border border-gray-200 ml-auto">
+                        <span className="text-xs text-gray-500 font-medium px-2">Период:</span>
+                        <input 
+                            type="date" 
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="rounded text-sm border-gray-300 py-1"
+                        />
+                        <span className="text-gray-400">-</span>
+                        <input 
+                            type="date" 
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="rounded text-sm border-gray-300 py-1"
+                        />
+                    </div>
+                )}
             </div>
 
             {loading ? (
@@ -555,29 +590,43 @@ export default function ProductBalances() {
                         </tbody>
                     </table>
                 </div>
-            ) : (
+            ) : viewMode === 'matrix' && turnoverLoading ? (
+                <div className="animate-pulse space-y-4">
+                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                    <div className="h-10 bg-gray-200 rounded w-full"></div>
+                </div>
+            ) : viewMode === 'matrix' ? (
                 <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                     <table className="min-w-full divide-y divide-gray-300 border-separate border-spacing-0">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 py-3 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6 backdrop-blur backdrop-filter">Бренд / Модель</th>
                                 <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-left text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Диоптрия</th>
-                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Остаток (Факт)</th>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Нач. остаток</th>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter text-green-700">Приход</th>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter text-red-700">Расход</th>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Факт (Остаток)</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
-                            {filteredProducts.map((product) => {
-                                const diopterGroups = getDiopterGroups(product.stockItems || []);
-                                if (diopterGroups.length === 0) return null;
-                                
-                                return diopterGroups.map(([diopter, data], idx) => {
-                                    const rowKey = `${product.id}_${diopter}`;
+                            {turnoverData.filter(p => {
+                                const q = searchQuery.toLowerCase();
+                                const matchesName = p.name.toLowerCase().includes(q) || 
+                                                  (p.brand && p.brand.toLowerCase().includes(q)) ||
+                                                  (p.model && p.model.toLowerCase().includes(q));
+                                const matchesBrand = brandFilter === 'all' || p.brand === brandFilter || p.name === brandFilter;
+                                const matchesModel = modelFilter === 'all' || p.model === modelFilter;
+                                return matchesName && matchesBrand && matchesModel;
+                            }).map((product, idx) => {
+                                return product.turnover.map((data: any, dIdx: number) => {
+                                    const rowKey = `${product.id}_${data.diopter}`;
                                     const isExpanded = expandedDiopters.has(rowKey);
                                     return (
                                         <React.Fragment key={rowKey}>
                                             <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                                 <td className="py-3 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 align-top">
-                                                    {idx === 0 ? (
+                                                    {dIdx === 0 ? (
                                                         <div className="flex items-center gap-2">
                                                             {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                                                             <div className="flex flex-col">
@@ -593,18 +642,33 @@ export default function ProductBalances() {
                                                         className="flex items-center gap-2 hover:text-indigo-600 focus:outline-none bg-white px-2 py-1 rounded ring-1 ring-gray-200 shadow-sm"
                                                     >
                                                         {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
-                                                        {diopter !== '-' ? diopter : 'Без диоптрий'}
+                                                        {data.diopter !== '-' ? data.diopter : 'Без диоптрий'}
                                                     </button>
                                                 </td>
                                                 <td className="px-3 py-3 text-center align-top">
-                                                    <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-bold text-green-700 ring-1 ring-inset ring-green-600/20 shadow-sm">
-                                                        {data.totalQty} {product.unit || 'шт'}
+                                                    <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-300 shadow-sm">
+                                                        {data.initial}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-3 text-center align-top">
+                                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm ${data.in > 0 ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'text-gray-400'}`}>
+                                                        {data.in > 0 ? `+${data.in}` : '0'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-3 text-center align-top">
+                                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm ${data.out > 0 ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' : 'text-gray-400'}`}>
+                                                        {data.out > 0 ? `-${data.out}` : '0'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-3 text-center align-top">
+                                                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 shadow-sm">
+                                                        {data.final}
                                                     </span>
                                                 </td>
                                             </tr>
                                             {isExpanded && (
                                                 <tr className="bg-indigo-50/30">
-                                                    <td colSpan={3} className="p-0 border-b border-indigo-100">
+                                                    <td colSpan={6} className="p-0 border-b border-indigo-100">
                                                         <div className="pl-6 sm:pl-12 pr-6 py-4">
                                                             <table className="min-w-full divide-y divide-indigo-100 bg-white shadow-sm ring-1 ring-gray-200 rounded-lg overflow-hidden">
                                                                 <thead className="bg-gray-50">
@@ -631,6 +695,13 @@ export default function ProductBalances() {
                                                                             </td>
                                                                         </tr>
                                                                     ))}
+                                                                    {data.items.length === 0 && (
+                                                                        <tr>
+                                                                            <td colSpan={3} className="py-4 text-center text-sm text-gray-500">
+                                                                                Нет доступных партий в наличии
+                                                                            </td>
+                                                                        </tr>
+                                                                    )}
                                                                 </tbody>
                                                             </table>
                                                         </div>
@@ -641,17 +712,17 @@ export default function ProductBalances() {
                                     );
                                 });
                             })}
-                            {filteredProducts.length === 0 && (
+                            {turnoverData.length === 0 && (
                                 <tr>
-                                    <td colSpan={3} className="py-8 text-center text-sm text-gray-500">
-                                        Товары не найдены
+                                    <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
+                                        Нет движений за выбранный период
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
-            )}
+            ) : null}
 
             {/* Edit Modal */}
             {editingProduct && (
