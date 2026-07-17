@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Save, ArrowLeft, Search } from 'lucide-react';
+import { Trash2, Save, ArrowLeft, Search, ChevronDown, Check } from 'lucide-react';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -49,6 +49,20 @@ export default function CreateWholesaleOrderPage() {
     const [scanFeedback, setScanFeedback] = useState<string | null>(null);
     const [manualCode, setManualCode] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [isCounterpartyOpen, setIsCounterpartyOpen] = useState(false);
+    const [counterpartySearch, setCounterpartySearch] = useState('');
+    const counterpartyRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (counterpartyRef.current && !counterpartyRef.current.contains(event.target as Node)) {
+                setIsCounterpartyOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Fetch initial data
     useEffect(() => {
@@ -392,18 +406,61 @@ export default function CreateWholesaleOrderPage() {
                     <div className="bg-white border rounded-lg p-6 shadow-sm space-y-4">
                         <h2 className="text-lg font-semibold">Детали заказа</h2>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-2 relative" ref={counterpartyRef}>
                             <label className="text-sm font-medium">Контрагент (Покупатель)</label>
-                            <select 
-                                className="w-full px-3 py-2 border rounded-md bg-white"
-                                value={selectedCounterpartyId} 
-                                onChange={(e) => setSelectedCounterpartyId(e.target.value)}
+                            
+                            <div 
+                                className="w-full px-3 py-2 border rounded-md bg-white cursor-pointer flex justify-between items-center"
+                                onClick={() => {
+                                    setIsCounterpartyOpen(!isCounterpartyOpen);
+                                    setCounterpartySearch('');
+                                }}
                             >
-                                <option value="">Выберите контрагента</option>
-                                {counterparties.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
+                                <span className={selectedCounterpartyId ? 'text-gray-900' : 'text-gray-500'}>
+                                    {selectedCounterpartyId 
+                                        ? counterparties.find(c => c.id === selectedCounterpartyId)?.name 
+                                        : 'Выберите контрагента...'}
+                                </span>
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                            </div>
+
+                            {isCounterpartyOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-hidden flex flex-col">
+                                    <div className="p-2 border-b sticky top-0 bg-white">
+                                        <div className="relative">
+                                            <Search className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                                            <input 
+                                                type="text"
+                                                className="w-full pl-8 pr-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                placeholder="Поиск..."
+                                                value={counterpartySearch}
+                                                onChange={e => setCounterpartySearch(e.target.value)}
+                                                onClick={e => e.stopPropagation()}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="overflow-y-auto">
+                                        {counterparties
+                                            .filter(c => c.name.toLowerCase().includes(counterpartySearch.toLowerCase()))
+                                            .map(c => (
+                                                <div 
+                                                    key={c.id} 
+                                                    className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center justify-between"
+                                                    onClick={() => {
+                                                        setSelectedCounterpartyId(c.id);
+                                                        setIsCounterpartyOpen(false);
+                                                    }}
+                                                >
+                                                    <span>{c.name}</span>
+                                                    {selectedCounterpartyId === c.id && <Check className="w-4 h-4 text-blue-600" />}
+                                                </div>
+                                            ))}
+                                        {counterparties.filter(c => c.name.toLowerCase().includes(counterpartySearch.toLowerCase())).length === 0 && (
+                                            <div className="px-3 py-4 text-sm text-center text-gray-500">Ничего не найдено</div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-2">
