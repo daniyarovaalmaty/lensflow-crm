@@ -37,6 +37,33 @@ function FlexibleDateInput({ label, value, onChange }: { label: string, value: s
     );
 }
 
+const getDiopterButtonClass = (items: any[]) => {
+    const validItems = items.filter((item: any) => item.quantity > 0 && item.expiryDate);
+    if (validItems.length === 0) return 'bg-white text-gray-900 ring-gray-200 hover:bg-gray-50';
+    
+    const now = new Date().getTime();
+    let minDiffMonths = Infinity;
+    
+    validItems.forEach((item: any) => {
+        const expDate = new Date(item.expiryDate);
+        if (!isNaN(expDate.getTime())) {
+            const diffMs = expDate.getTime() - now;
+            const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
+            if (diffMonths < minDiffMonths) {
+                minDiffMonths = diffMonths;
+            }
+        }
+    });
+
+    if (minDiffMonths === Infinity) return 'bg-white text-gray-900 ring-gray-200 hover:bg-gray-50';
+
+    if (minDiffMonths <= 0) return 'bg-red-100 text-red-800 ring-red-600/30 hover:bg-red-200';
+    if (minDiffMonths <= 3) return 'bg-red-50 text-red-700 ring-red-600/20 hover:bg-red-100';
+    if (minDiffMonths <= 6) return 'bg-yellow-50 text-yellow-700 ring-yellow-600/20 hover:bg-yellow-100';
+    
+    return 'bg-green-50 text-green-700 ring-green-600/20 hover:bg-green-100';
+};
+
 export default function ProductBalances() {
     const [viewMode, setViewMode] = useState<'list' | 'matrix'>('list');
     const [expandedDiopters, setExpandedDiopters] = useState<Set<string>>(new Set());
@@ -639,9 +666,9 @@ export default function ProductBalances() {
                                                 <td className="px-3 py-3 text-sm font-bold text-gray-900 align-top">
                                                     <button 
                                                         onClick={() => toggleDiopterRow(rowKey)}
-                                                        className="flex items-center gap-2 hover:text-indigo-600 focus:outline-none bg-white px-2 py-1 rounded ring-1 ring-gray-200 shadow-sm"
+                                                        className={`flex items-center gap-2 focus:outline-none px-2 py-1 rounded ring-1 shadow-sm transition-colors ${getDiopterButtonClass(data.items)}`}
                                                     >
-                                                        {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+                                                        {isExpanded ? <ChevronDown className="h-4 w-4 opacity-50" /> : <ChevronRight className="h-4 w-4 opacity-50" />}
                                                         {data.diopter !== '-' ? data.diopter : 'Без диоптрий'}
                                                     </button>
                                                 </td>
