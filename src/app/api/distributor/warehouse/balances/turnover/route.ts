@@ -38,14 +38,15 @@ export async function GET(req: NextRequest) {
         // Fetch all stock items to know diopters and expiry date for serials
         const allStockItems = await prisma.stockItem.findMany({
             where: { organizationId: orgId },
-            select: { serialNumber: true, diopters: true, expiryDate: true, batchNumber: true }
+            select: { serialNumber: true, diopters: true, expiryDate: true, batchNumber: true, size: true }
         });
         
-        const serialDetails = new Map<string, { diopters: string, expiryDate: Date | null, batchNumber: string | null }>();
+        const serialDetails = new Map<string, { diopters: string, size: string | null, expiryDate: Date | null, batchNumber: string | null }>();
         allStockItems.forEach(si => {
             if (si.serialNumber) {
                 serialDetails.set(si.serialNumber, {
                     diopters: si.diopters || '-',
+                    size: si.size || null,
                     expiryDate: si.expiryDate,
                     batchNumber: si.batchNumber
                 });
@@ -101,8 +102,10 @@ export async function GET(req: NextRequest) {
                 // Skip if this batch has zero history and zero current
                 if (stats.initial === 0 && stats.in === 0 && stats.out === 0 && final === 0) return;
 
-                const details = serialDetails.get(sn) || { diopters: '-', expiryDate: null, batchNumber: sn === 'NO_SERIAL' ? null : sn };
-                const d = details.diopters;
+                const details = serialDetails.get(sn) || { diopters: '-', size: null, expiryDate: null, batchNumber: sn === 'NO_SERIAL' ? null : sn };
+                
+                // Group by size if no diopter is present but size is present
+                const d = details.diopters !== '-' ? details.diopters : (details.size ? details.size : '-');
 
                 if (!diopterGroups[d]) {
                     diopterGroups[d] = { initial: 0, in: 0, out: 0, final: 0, items: [] };

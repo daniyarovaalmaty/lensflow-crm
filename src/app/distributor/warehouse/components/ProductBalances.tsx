@@ -358,7 +358,7 @@ export default function ProductBalances() {
             product.turnover.forEach((data: any) => {
                 exportData.push({
                     'Модель': fullName,
-                    'dioptry': data.diopter !== '-' ? data.diopter : '',
+                    'Диоптрия / Размер': data.diopter !== '-' ? data.diopter : '',
                     [startDate]: data.initial || 0,
                     'Приход': data.in || 0,
                     'Расход': data.out || 0,
@@ -374,7 +374,7 @@ export default function ProductBalances() {
             // Добавляем строку итого по модели
             exportData.push({
                 'Модель': `Всего ${fullName}`,
-                'dioptry': '',
+                'Диоптрия / Размер': '',
                 [startDate]: totalInitial,
                 'Приход': totalIn,
                 'Расход': totalOut,
@@ -387,7 +387,7 @@ export default function ProductBalances() {
         // Настройка ширины колонок
         const wscols = [
             { wch: 30 }, // Модель
-            { wch: 15 }, // dioptry
+            { wch: 20 }, // dioptry / size
             { wch: 15 }, // Start Date
             { wch: 15 }, // Приход
             { wch: 15 }, // Расход
