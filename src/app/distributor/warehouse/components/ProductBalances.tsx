@@ -483,7 +483,10 @@ export default function ProductBalances() {
                                         <td className="relative py-2 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 whitespace-nowrap">
                                         </td>
                                     </tr>
-                                ))}</>
+                                ))}
+                                </>
+                                )}
+                                </>
                             ))}
                             {filteredProducts.length === 0 && (
                                 <tr>
