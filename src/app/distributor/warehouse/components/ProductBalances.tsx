@@ -407,12 +407,26 @@ export default function ProductBalances() {
                                                         onChange={(e) => setBatchSorts({ ...batchSorts, [product.id]: e.target.value })}
                                                         className="block rounded-md border-0 py-1 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 text-xs sm:leading-6 bg-white shadow-sm"
                                                     >
-                                                        <option value="expiry_asc">По сроку годности (возрастание)</option>
-                                                        <option value="expiry_desc">По сроку годности (убывание)</option>
-                                                        <option value="diopters_asc">По диоптриям (возрастание)</option>
-                                                        <option value="diopters_desc">По диоптриям (убывание)</option>
-                                                        <option value="size_asc">По размеру (возрастание)</option>
-                                                        <option value="size_desc">По размеру (убывание)</option>
+                                                        {product.category === 'contact_lens' || product.category === 'spectacle_lens' ? (
+                                                            <>
+                                                                <option value="expiry_asc">По сроку годности (возрастание)</option>
+                                                                <option value="expiry_desc">По сроку годности (убывание)</option>
+                                                                <option value="diopters_asc">По диоптриям (возрастание)</option>
+                                                                <option value="diopters_desc">По диоптриям (убывание)</option>
+                                                            </>
+                                                        ) : product.category === 'solution' ? (
+                                                            <>
+                                                                <option value="expiry_asc">По сроку годности (возрастание)</option>
+                                                                <option value="expiry_desc">По сроку годности (убывание)</option>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <option value="expiry_asc">По сроку годности (возрастание)</option>
+                                                                <option value="expiry_desc">По сроку годности (убывание)</option>
+                                                                <option value="size_asc">По размеру (возрастание)</option>
+                                                                <option value="size_desc">По размеру (убывание)</option>
+                                                            </>
+                                                        )}
                                                     </select>
                                                 </div>
                                             </td>
