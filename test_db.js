@@ -1,37 +1,74 @@
-require('dotenv').config();
-const { Client } = require('pg');
-const client = new Client({ connectionString: process.env.DATABASE_URL });
 
-async function run() {
-    await client.connect();
-    const res = await client.query(`
-        SELECT s.id, si.name, si.category
-        FROM sales s
-        JOIN sale_items si ON s.id = si."saleId"
-        WHERE s."doctorId" = 'cmm64iwmr0007jxu35ncgntbt'
-    `);
-    
-    let fittingsCount = 0;
-    const aigerimSales = {};
-    for (let r of res.rows) {
-        if (!aigerimSales[r.id]) aigerimSales[r.id] = [];
-        aigerimSales[r.id].push(r);
-    }
-    
-    for (let saleId in aigerimSales) {
-        const items = aigerimSales[saleId];
-        const hasFitting = items.some(item => {
-            const isFittingByName = typeof item.name === 'string' && item.name.toLowerCase().includes('подбор');
-            const isFittingByCategory = item.category === 'service_fitting';
-            if (!isFittingByName && !isFittingByCategory) return false;
-            
-            // For Aigerim, ONLY count night lenses!
-            return typeof item.name === 'string' && item.name.toLowerCase().includes('ночн');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+async function test() {
+    const orgs = await prisma.organization.findMany({ take: 1 });
+    const org = orgs[0];
+    const products = await prisma.opticProduct.findMany({ where: { organizationId: org.id }, take: 1 });
+    const product = products[0];
+    const doc = await prisma.stockDocument.create({
+        data: {
+            documentNumber: 'draft-test-1234',
+            organizationId: org.id,
+            type: 'receipt',
+            status: 'draft',
+            totalAmount: 100,
+            items: [{ productId: product.id, qty: 1, price: 100, batchBarcode: 'test1234' }]
+        }
+    });
+    console.log('Created draft', doc.id);
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            await tx.stockDocument.update({
+                where: { id: doc.id },
+                data: { status: 'confirmed', confirmedAt: new Date() }
+            });
+            for (const item of doc.items) {
+                const p = await tx.opticProduct.findUnique({ where: { id: item.productId } });
+                await tx.opticProduct.update({
+                    where: { id: p.id },
+                    data: { currentStock: p.currentStock + item.qty, purchasePrice: item.price }
+                });
+                const existingBatch = await tx.stockItem.findUnique({
+                    where: { organizationId_serialNumber: { organizationId: org.id, serialNumber: item.batchBarcode } }
+                });
+                if (existingBatch) {
+                    await tx.stockItem.update({
+                        where: { id: existingBatch.id },
+                        data: { quantity: existingBatch.quantity + item.qty }
+                    });
+                } else {
+                    await tx.stockItem.create({
+                        data: {
+                            productId: p.id,
+                            organizationId: org.id,
+                            serialNumber: item.batchBarcode,
+                            quantity: item.qty,
+                            purchasePrice: item.price,
+                            receiptDocId: doc.id
+                        }
+                    });
+                }
+                await tx.stockMovement.create({
+                    data: {
+                        organizationId: org.id,
+                        productId: p.id,
+                        type: 'receipt',
+                        quantity: item.qty,
+                        serialNumbers: [item.batchBarcode],
+                        documentNumber: doc.documentNumber,
+                        documentId: doc.id
+                    }
+                });
+            }
+            return true;
         });
-        if (hasFitting) fittingsCount++;
+        console.log('Transaction success:', result);
+    } catch(e) {
+        console.error('Transaction failed:', e);
+    } finally {
+        await prisma.$disconnect();
     }
-    
-    console.log("Fittings for Aigerim with new logic: " + fittingsCount);
-    await client.end();
 }
-run();
+test();
+
