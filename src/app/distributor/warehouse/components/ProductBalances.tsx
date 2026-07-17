@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save, ChevronDown, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 import UnitsModal from './UnitsModal';
@@ -38,6 +38,31 @@ function FlexibleDateInput({ label, value, onChange }: { label: string, value: s
 }
 
 export default function ProductBalances() {
+    const [viewMode, setViewMode] = useState<'list' | 'matrix'>('list');
+    const [expandedDiopters, setExpandedDiopters] = useState<Set<string>>(new Set());
+
+    const toggleDiopterRow = (rowKey: string) => {
+        const newSet = new Set(expandedDiopters);
+        if (newSet.has(rowKey)) newSet.delete(rowKey);
+        else newSet.add(rowKey);
+        setExpandedDiopters(newSet);
+    };
+
+    const getDiopterGroups = (stockItems: any[]) => {
+        const groups: Record<string, { totalQty: number, items: any[] }> = {};
+        for (const item of stockItems) {
+            const d = item.diopters || '-';
+            if (!groups[d]) groups[d] = { totalQty: 0, items: [] };
+            groups[d].items.push(item);
+            groups[d].totalQty += item.quantity;
+        }
+        return Object.entries(groups).sort((a, b) => {
+            if (a[0] === '-') return 1;
+            if (b[0] === '-') return -1;
+            return parseFloat(a[0]) - parseFloat(b[0]);
+        });
+    };
+
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -253,10 +278,28 @@ export default function ProductBalances() {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-medium text-gray-900">Остатки товара на складе</h2>
-                <button className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-                    <Download className="h-4 w-4 mr-2 text-gray-500" />
-                    Выгрузить в Excel
-                </button>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center rounded-md bg-gray-100 p-1">
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ${viewMode === 'list' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <List className="h-4 w-4 mr-2" />
+                            Обычный вид
+                        </button>
+                        <button
+                            onClick={() => setViewMode('matrix')}
+                            className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ${viewMode === 'matrix' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <LayoutGrid className="h-4 w-4 mr-2" />
+                            По диоптриям
+                        </button>
+                    </div>
+                    <button className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 hidden sm:inline-flex">
+                        <Download className="h-4 w-4 mr-2 text-gray-500" />
+                        Выгрузить в Excel
+                    </button>
+                </div>
             </div>
 
             <div className="mb-6 flex flex-col sm:flex-row gap-4">
@@ -340,7 +383,7 @@ export default function ProductBalances() {
                     <div className="h-10 bg-gray-200 rounded w-full"></div>
                     <div className="h-10 bg-gray-200 rounded w-full"></div>
                 </div>
-            ) : (
+            ) : viewMode === 'list' ? (
                 <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
@@ -505,6 +548,102 @@ export default function ProductBalances() {
                             {filteredProducts.length === 0 && (
                                 <tr>
                                     <td colSpan={9} className="py-8 text-center text-sm text-gray-500">
+                                        Товары не найдены
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-300 border-separate border-spacing-0">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 py-3 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6 backdrop-blur backdrop-filter">Бренд / Модель</th>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-left text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Диоптрия</th>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Остаток (Факт)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                            {filteredProducts.map((product) => {
+                                const diopterGroups = getDiopterGroups(product.stockItems || []);
+                                if (diopterGroups.length === 0) return null;
+                                
+                                return diopterGroups.map(([diopter, data], idx) => {
+                                    const rowKey = `${product.id}_${diopter}`;
+                                    const isExpanded = expandedDiopters.has(rowKey);
+                                    return (
+                                        <React.Fragment key={rowKey}>
+                                            <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                <td className="py-3 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 align-top">
+                                                    {idx === 0 ? (
+                                                        <div className="flex items-center gap-2">
+                                                            {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-gray-900">{product.brand || product.name}</span>
+                                                                {product.model && <span className="text-gray-500 font-normal">{product.model}</span>}
+                                                            </div>
+                                                        </div>
+                                                    ) : null}
+                                                </td>
+                                                <td className="px-3 py-3 text-sm font-bold text-gray-900 align-top">
+                                                    <button 
+                                                        onClick={() => toggleDiopterRow(rowKey)}
+                                                        className="flex items-center gap-2 hover:text-indigo-600 focus:outline-none bg-white px-2 py-1 rounded ring-1 ring-gray-200 shadow-sm"
+                                                    >
+                                                        {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+                                                        {diopter !== '-' ? diopter : 'Без диоптрий'}
+                                                    </button>
+                                                </td>
+                                                <td className="px-3 py-3 text-center align-top">
+                                                    <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-bold text-green-700 ring-1 ring-inset ring-green-600/20 shadow-sm">
+                                                        {data.totalQty} {product.unit || 'шт'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {isExpanded && (
+                                                <tr className="bg-indigo-50/30">
+                                                    <td colSpan={3} className="p-0 border-b border-indigo-100">
+                                                        <div className="pl-6 sm:pl-12 pr-6 py-4">
+                                                            <table className="min-w-full divide-y divide-indigo-100 bg-white shadow-sm ring-1 ring-gray-200 rounded-lg overflow-hidden">
+                                                                <thead className="bg-gray-50">
+                                                                    <tr>
+                                                                        <th className="py-2 pl-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Партия (С/Н)</th>
+                                                                        <th className="py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Срок годности</th>
+                                                                        <th className="py-2 pr-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Остаток</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-indigo-50">
+                                                                    {sortBatches(product.id, data.items).map((batch: any) => (
+                                                                        <tr key={batch.id} className="hover:bg-gray-50">
+                                                                            <td className="py-2 pl-4 text-sm text-gray-900 font-medium">
+                                                                                {(() => {
+                                                                                    const parsed = parseGS1Barcode(batch.serialNumber || '');
+                                                                                    return parsed.serialNumber || parsed.batchNumber || batch.serialNumber;
+                                                                                })()}
+                                                                            </td>
+                                                                            <td className="py-2 text-sm text-gray-500">
+                                                                                <ExpiryDateBadge date={batch.expiryDate} />
+                                                                            </td>
+                                                                            <td className="py-2 pr-4 text-sm font-bold text-gray-900 text-right">
+                                                                                {batch.quantity}
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                });
+                            })}
+                            {filteredProducts.length === 0 && (
+                                <tr>
+                                    <td colSpan={3} className="py-8 text-center text-sm text-gray-500">
                                         Товары не найдены
                                     </td>
                                 </tr>
