@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
+import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, ChevronDown, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
@@ -22,6 +22,20 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
     const serialInputRef = useRef<HTMLInputElement>(null);
+
+    const [isTargetOrgOpen, setIsTargetOrgOpen] = useState(false);
+    const [targetOrgSearch, setTargetOrgSearch] = useState('');
+    const targetOrgRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (targetOrgRef.current && !targetOrgRef.current.contains(event.target as Node)) {
+                setIsTargetOrgOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // USB scanner for auto-scanning batch barcodes during transfers
     const handleUsbScan = useCallback((rawCode: string) => {
@@ -177,18 +191,60 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 mb-8 border-b pb-8">
                 <div className="sm:col-span-3">
-                    <label className="block text-sm font-medium leading-6 text-gray-900">Склад / Филиал получатель</label>
-                    <div className="mt-2">
-                        <select
-                            value={targetOrgId}
-                            onChange={(e) => setTargetOrgId(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    <label className="block text-sm font-medium leading-6 text-gray-900 mb-2">Склад / Филиал получатель</label>
+                    <div className="relative" ref={targetOrgRef}>
+                        <div 
+                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 cursor-pointer flex justify-between items-center"
+                            onClick={() => {
+                                setIsTargetOrgOpen(!isTargetOrgOpen);
+                                setTargetOrgSearch('');
+                            }}
                         >
-                            <option value="">Выберите получателя...</option>
-                            {organizations.map(org => (
-                                <option key={org.id} value={org.id}>{org.name}</option>
-                            ))}
-                        </select>
+                            <span className={targetOrgId ? 'text-gray-900' : 'text-gray-500'}>
+                                {targetOrgId 
+                                    ? organizations.find(o => o.id === targetOrgId)?.name 
+                                    : 'Выберите получателя...'}
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                        </div>
+
+                        {isTargetOrgOpen && (
+                            <div className="absolute z-20 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-hidden flex flex-col">
+                                <div className="p-2 border-b sticky top-0 bg-white">
+                                    <div className="relative">
+                                        <Search className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                                        <input 
+                                            type="text"
+                                            className="w-full pl-8 pr-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                            placeholder="Поиск..."
+                                            value={targetOrgSearch}
+                                            onChange={e => setTargetOrgSearch(e.target.value)}
+                                            onClick={e => e.stopPropagation()}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="overflow-y-auto">
+                                    {organizations
+                                        .filter(o => o.name.toLowerCase().includes(targetOrgSearch.toLowerCase()))
+                                        .map(o => (
+                                            <div 
+                                                key={o.id} 
+                                                className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center justify-between"
+                                                onClick={() => {
+                                                    setTargetOrgId(o.id);
+                                                    setIsTargetOrgOpen(false);
+                                                }}
+                                            >
+                                                <span>{o.name}</span>
+                                                {targetOrgId === o.id && <Check className="w-4 h-4 text-indigo-600" />}
+                                            </div>
+                                        ))}
+                                    {organizations.filter(o => o.name.toLowerCase().includes(targetOrgSearch.toLowerCase())).length === 0 && (
+                                        <div className="px-3 py-4 text-sm text-center text-gray-500">Ничего не найдено</div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="sm:col-span-3">
