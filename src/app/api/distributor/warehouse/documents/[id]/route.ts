@@ -327,7 +327,7 @@ export async function PUT(
                             serialNumbers: item.serialNumbers || [],
                             documentNumber,
                             documentId: doc.id,
-                            reason: notes,
+                            reason: finalNotes,
                             performedById,
                             performedByName,
                         }
