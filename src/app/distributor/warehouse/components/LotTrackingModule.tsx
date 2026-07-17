@@ -86,6 +86,14 @@ export default function LotTrackingModule() {
             )}
 
             {items.length > 0 && (
+                <div className="flex justify-between items-end mb-4">
+                    <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-md">
+                        Найдено результатов: {items.length}
+                    </span>
+                </div>
+            )}
+
+            {items.length > 0 && (
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
@@ -130,9 +138,11 @@ export default function LotTrackingModule() {
                                     <td className="px-3 py-4 text-sm text-gray-500">
                                         {item.receiptDoc ? (
                                             <div className="space-y-1">
-                                                <div className="flex items-center gap-1.5 text-gray-900 font-medium">
-                                                    <FileText className="w-3.5 h-3.5 text-gray-400" />
-                                                    № {item.receiptDoc.documentNumber}
+                                                <div className="flex items-center gap-1.5 font-medium">
+                                                    <a href={`/distributor/warehouse/documents/${item.receiptDoc.id}`} className="text-indigo-600 hover:text-indigo-900 leading-tight flex items-center gap-1 group font-medium" title="Открыть документ">
+                                                        <FileText className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-600" />
+                                                        № {item.receiptDoc.documentNumber}
+                                                    </a>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <Calendar className="w-3.5 h-3.5 text-gray-400" />
