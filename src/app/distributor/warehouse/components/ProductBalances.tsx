@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save, ChevronDown, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 import UnitsModal from './UnitsModal';
 import ExpiryDateBadge from './ExpiryDateBadge';
@@ -67,6 +68,7 @@ const getDiopterButtonClass = (items: any[]) => {
 export default function ProductBalances() {
     const [viewMode, setViewMode] = useState<'list' | 'matrix'>('list');
     const [expandedDiopters, setExpandedDiopters] = useState<Set<string>>(new Set());
+    const [expandedMatrixProducts, setExpandedMatrixProducts] = useState<Set<string>>(new Set());
     const [turnoverData, setTurnoverData] = useState<any[]>([]);
     const [turnoverLoading, setTurnoverLoading] = useState(false);
 
@@ -104,6 +106,13 @@ export default function ProductBalances() {
         if (newSet.has(rowKey)) newSet.delete(rowKey);
         else newSet.add(rowKey);
         setExpandedDiopters(newSet);
+    };
+
+    const toggleMatrixProduct = (productId: string) => {
+        const newSet = new Set(expandedMatrixProducts);
+        if (newSet.has(productId)) newSet.delete(productId);
+        else newSet.add(productId);
+        setExpandedMatrixProducts(newSet);
     };
 
     const [products, setProducts] = useState<any[]>([]);
@@ -317,6 +326,81 @@ export default function ProductBalances() {
         });
     };
 
+    const handleExportExcel = () => {
+        if (!turnoverData || turnoverData.length === 0) {
+            toast.error('Нет данных для выгрузки');
+            return;
+        }
+
+        const filteredTurnover = turnoverData.filter(p => {
+            const q = searchQuery.toLowerCase();
+            const matchesName = p.name.toLowerCase().includes(q) || 
+                              (p.brand && p.brand.toLowerCase().includes(q)) ||
+                              (p.model && p.model.toLowerCase().includes(q));
+            const matchesBrand = brandFilter === 'all' || p.brand === brandFilter || p.name === brandFilter;
+            const matchesModel = modelFilter === 'all' || p.model === modelFilter;
+            return matchesName && matchesBrand && matchesModel;
+        });
+
+        // Формирование данных для Excel
+        const exportData: any[] = [];
+        
+        filteredTurnover.forEach((product) => {
+            const modelName = product.model || product.name || '';
+            const brandName = product.brand || '';
+            const fullName = brandName ? `${brandName} ${modelName}` : modelName;
+
+            let totalInitial = 0;
+            let totalIn = 0;
+            let totalOut = 0;
+            let totalFinal = 0;
+
+            product.turnover.forEach((data: any) => {
+                exportData.push({
+                    'Модель': fullName,
+                    'dioptry': data.diopter !== '-' ? data.diopter : '',
+                    [startDate]: data.initial || 0,
+                    'Приход': data.in || 0,
+                    'Расход': data.out || 0,
+                    'Факт': data.final || 0
+                });
+
+                totalInitial += (data.initial || 0);
+                totalIn += (data.in || 0);
+                totalOut += (data.out || 0);
+                totalFinal += (data.final || 0);
+            });
+
+            // Добавляем строку итого по модели
+            exportData.push({
+                'Модель': `Всего ${fullName}`,
+                'dioptry': '',
+                [startDate]: totalInitial,
+                'Приход': totalIn,
+                'Расход': totalOut,
+                'Факт': totalFinal
+            });
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        
+        // Настройка ширины колонок
+        const wscols = [
+            { wch: 30 }, // Модель
+            { wch: 15 }, // dioptry
+            { wch: 15 }, // Start Date
+            { wch: 15 }, // Приход
+            { wch: 15 }, // Расход
+            { wch: 15 }, // Факт
+        ];
+        worksheet['!cols'] = wscols;
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Матрица по остаткам');
+        
+        XLSX.writeFile(workbook, `Остатки_${startDate}_${endDate}.xlsx`);
+    };
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -335,13 +419,18 @@ export default function ProductBalances() {
                             className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ${viewMode === 'matrix' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             <LayoutGrid className="h-4 w-4 mr-2" />
-                            По диоптриям
+                            Матрица по остаткам
                         </button>
                     </div>
-                    <button className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 hidden sm:inline-flex">
-                        <Download className="h-4 w-4 mr-2 text-gray-500" />
-                        Выгрузить в Excel
-                    </button>
+                    {viewMode === 'matrix' && (
+                        <button 
+                            onClick={handleExportExcel}
+                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 hidden sm:inline-flex"
+                        >
+                            <Download className="h-4 w-4 mr-2 text-gray-500" />
+                            Выгрузить в Excel
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -653,24 +742,52 @@ export default function ProductBalances() {
 
                                   return (
                                       <React.Fragment key={product.id}>
-                                          {product.turnover.map((data: any, dIdx: number) => {
+                                          <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                              <td className="py-3 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 align-top">
+                                                  <div className="flex items-center gap-2">
+                                                      <button onClick={() => toggleMatrixProduct(product.id)} className="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                                          {expandedMatrixProducts.has(product.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                                      </button>
+                                                      {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                                                      <div className="flex flex-col">
+                                                          <span className="font-bold text-gray-900">{product.brand || product.name}</span>
+                                                          {product.model && <span className="text-gray-500 font-normal">{product.model}</span>}
+                                                      </div>
+                                                  </div>
+                                              </td>
+                                              <td className="px-3 py-3 text-sm text-gray-500 align-top">
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className="inline-flex items-center rounded-md bg-yellow-100/50 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-yellow-400/50 shadow-sm">
+                                                      {totalInitial}
+                                                  </span>
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm ${totalIn > 0 ? 'bg-green-100/50 text-green-700 ring-1 ring-inset ring-green-600/30' : 'text-gray-400'}`}>
+                                                      {totalIn > 0 ? `+${totalIn}` : '0'}
+                                                  </span>
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm ${totalOut > 0 ? 'bg-red-100/50 text-red-700 ring-1 ring-inset ring-red-600/30' : 'text-gray-400'}`}>
+                                                      {totalOut > 0 ? `-${totalOut}` : '0'}
+                                                  </span>
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 shadow-sm">
+                                                      {totalFinal}
+                                                  </span>
+                                              </td>
+                                          </tr>
+
+                                          {expandedMatrixProducts.has(product.id) && product.turnover.map((data: any) => {
                                               const rowKey = `${product.id}_${data.diopter}`;
                                               const isExpanded = expandedDiopters.has(rowKey);
                                               return (
                                         <React.Fragment key={rowKey}>
-                                            <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                <td className="py-3 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 align-top">
-                                                    {dIdx === 0 ? (
-                                                        <div className="flex items-center gap-2">
-                                                            {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-gray-900">{product.brand || product.name}</span>
-                                                                {product.model && <span className="text-gray-500 font-normal">{product.model}</span>}
-                                                            </div>
-                                                        </div>
-                                                    ) : null}
+                                            <tr className="bg-gray-50/50">
+                                                <td className="py-2 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-12 align-top border-l-2 border-indigo-200">
                                                 </td>
-                                                <td className="px-3 py-3 text-sm font-bold text-gray-900 align-top">
+                                                <td className="px-3 py-2 text-sm font-bold text-gray-900 align-top">
                                                     <button 
                                                         onClick={() => toggleDiopterRow(rowKey)}
                                                         className={`flex items-center gap-2 focus:outline-none px-2 py-1 rounded ring-1 shadow-sm transition-colors ${getDiopterButtonClass(data.items)}`}
@@ -679,22 +796,22 @@ export default function ProductBalances() {
                                                         {data.diopter !== '-' ? data.diopter : 'Без диоптрий'}
                                                     </button>
                                                 </td>
-                                                <td className="px-3 py-3 text-center align-top">
+                                                <td className="px-3 py-2 text-center align-top">
                                                     <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-300 shadow-sm">
                                                         {data.initial}
                                                     </span>
                                                 </td>
-                                                <td className="px-3 py-3 text-center align-top">
+                                                <td className="px-3 py-2 text-center align-top">
                                                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm ${data.in > 0 ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'text-gray-400'}`}>
                                                         {data.in > 0 ? `+${data.in}` : '0'}
                                                     </span>
                                                 </td>
-                                                <td className="px-3 py-3 text-center align-top">
+                                                <td className="px-3 py-2 text-center align-top">
                                                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium shadow-sm ${data.out > 0 ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20' : 'text-gray-400'}`}>
                                                         {data.out > 0 ? `-${data.out}` : '0'}
                                                     </span>
                                                 </td>
-                                                <td className="px-3 py-3 text-center align-top">
+                                                <td className="px-3 py-2 text-center align-top">
                                                     <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-600/20 shadow-sm">
                                                         {data.final}
                                                     </span>
@@ -761,34 +878,9 @@ export default function ProductBalances() {
                                         </React.Fragment>
                                     );
                                 })}
-                                          <tr className="bg-yellow-50/80 font-bold border-y border-yellow-200">
-                                              <td colSpan={2} className="py-3 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 text-left">
-                                                  Всего {product.brand || product.name} {product.model || ''}
-                                              </td>
-                                              <td className="px-3 py-3 text-center align-top">
-                                                  <span className="inline-flex items-center rounded-md bg-yellow-100/50 px-2 py-1 text-xs font-bold text-gray-800 ring-1 ring-inset ring-yellow-400/50 shadow-sm">
-                                                      {totalInitial}
-                                                  </span>
-                                              </td>
-                                              <td className="px-3 py-3 text-center align-top">
-                                                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-bold shadow-sm ${totalIn > 0 ? 'bg-green-100/50 text-green-700 ring-1 ring-inset ring-green-600/30' : 'text-gray-500'}`}>
-                                                      {totalIn > 0 ? `+${totalIn}` : '0'}
-                                                  </span>
-                                              </td>
-                                              <td className="px-3 py-3 text-center align-top">
-                                                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-bold shadow-sm ${totalOut > 0 ? 'bg-red-100/50 text-red-700 ring-1 ring-inset ring-red-600/30' : 'text-gray-500'}`}>
-                                                      {totalOut > 0 ? `-${totalOut}` : '0'}
-                                                  </span>
-                                              </td>
-                                              <td className="px-3 py-3 text-center align-top">
-                                                  <span className="inline-flex items-center rounded-md bg-yellow-100/80 px-2 py-1 text-xs font-bold text-gray-900 ring-1 ring-inset ring-yellow-500/50 shadow-sm">
-                                                      {totalFinal}
-                                                  </span>
-                                              </td>
-                                          </tr>
-                                      </React.Fragment>
-                                  );
-                            })}
+                            </React.Fragment>
+                        );
+                    })}
                             {turnoverData.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
