@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Box, Barcode, Edit2, Trash2, X, Save, ChevronDown, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import DocumentViewerModal from './SupplyModule/DocumentViewerModal';
 import UnitsModal from './UnitsModal';
 import ExpiryDateBadge from './ExpiryDateBadge';
@@ -394,6 +394,34 @@ export default function ProductBalances() {
             { wch: 15 }, // Факт
         ];
         worksheet['!cols'] = wscols;
+
+        // Стилизация: границы и выравнивание
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:F1');
+        
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
+                if (!worksheet[cellRef]) continue;
+
+                // Базовый стиль с границами
+                const style: any = {
+                    border: {
+                        top: { style: "thin", color: { auto: 1 } },
+                        bottom: { style: "thin", color: { auto: 1 } },
+                        left: { style: "thin", color: { auto: 1 } },
+                        right: { style: "thin", color: { auto: 1 } }
+                    }
+                };
+
+                // Для первой строки (заголовков) добавляем выравнивание по центру
+                if (R === 0) {
+                    style.alignment = { horizontal: "center", vertical: "center" };
+                    style.font = { bold: true };
+                }
+
+                worksheet[cellRef].s = style;
+            }
+        }
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Матрица по остаткам');
