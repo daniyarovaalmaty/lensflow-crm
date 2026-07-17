@@ -779,12 +779,12 @@ export default function ProductBalances() {
                                               </td>
                                           </tr>
 
-                                          {expandedMatrixProducts.has(product.id) && product.turnover.map((data: any) => {
+                                          {expandedMatrixProducts.has(product.id) && product.turnover.map((data: any, dIdx: number) => {
                                               const rowKey = `${product.id}_${data.diopter}`;
                                               const isExpanded = expandedDiopters.has(rowKey);
                                               return (
                                         <React.Fragment key={rowKey}>
-                                            <tr className="bg-gray-50/50">
+                                            <tr className={dIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
                                                 <td className="py-2 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-12 align-top border-l-2 border-indigo-200">
                                                 </td>
                                                 <td className="px-3 py-2 text-sm font-bold text-gray-900 align-top">
