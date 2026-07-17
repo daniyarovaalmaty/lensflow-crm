@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
                 items: {
                     create: items.map((item: any) => ({
                         productId: item.productId,
+                        stockItemId: item.stockItemId || null,
                         quantity: item.quantity,
                         price: item.price,
                         total: item.total

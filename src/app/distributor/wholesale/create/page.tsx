@@ -26,10 +26,14 @@ interface Counterparty {
 
 interface CartItem {
     productId: string;
+    stockItemId?: string;
     name: string;
     price: number;
     quantity: number;
     maxStock: number;
+    diopter?: string;
+    serialNumber?: string;
+    expiryDate?: string;
 }
 
 export default function CreateWholesaleOrderPage() {
@@ -72,42 +76,62 @@ export default function CreateWholesaleOrderPage() {
     const handleScan = useCallback((rawCode: string) => {
         // Очистка от спецсимволов сканера (например DataMatrix ]C1)
         let code = rawCode.trim().replace(/^\]C1/, '');
-
         code = translateCyrillicToEnglishLayout(code);
 
-        const product = products.find(p => 
-            p.barcode === code || 
-            p.sku === code ||
-            (p.stockItems && p.stockItems.some((si: any) => si.serialNumber === code || si.barcode === code))
-        );
+        let foundProduct: Product | undefined;
+        let foundStockItem: any = undefined;
+
+        // Try finding by stock item first
+        for (const p of products) {
+            if (p.stockItems) {
+                const si = p.stockItems.find((s: any) => s.serialNumber === code || s.barcode === code);
+                if (si) {
+                    foundProduct = p;
+                    foundStockItem = si;
+                    break;
+                }
+            }
+        }
+
+        // Fallback to product barcode/sku
+        if (!foundProduct) {
+            foundProduct = products.find(p => p.barcode === code || p.sku === code);
+        }
         
-        if (product) {
-            const stock = product.currentStock;
-            if (stock <= 0) {
-                toast.error(`Товара ${product.name} нет на складе`);
-                setScanFeedback(`⚠️ ${product.name} — нет на складе`);
+        if (foundProduct) {
+            const maxAvailable = foundStockItem ? foundStockItem.quantity : foundProduct.currentStock;
+            
+            if (maxAvailable <= 0) {
+                toast.error(`Товара ${foundProduct.name} нет на складе`);
+                setScanFeedback(`⚠️ ${foundProduct.name} — нет на складе`);
                 setTimeout(() => setScanFeedback(null), 3000);
                 return;
             }
 
+            const itemKey = foundStockItem ? foundStockItem.id : foundProduct.id;
+
             setCart(prev => {
-                const existing = prev.find(c => c.productId === product.id);
+                const existing = prev.find(c => (c.stockItemId || c.productId) === itemKey);
                 if (existing) {
-                    if (existing.quantity >= stock) {
-                        toast.error(`Достигнут максимум остатка для ${product.name}`);
-                        setScanFeedback(`⚠️ Максимум остатка (${stock} шт)`);
+                    if (existing.quantity >= maxAvailable) {
+                        toast.error(`Достигнут максимум остатка для ${foundProduct!.name}`);
+                        setScanFeedback(`⚠️ Максимум остатка (${maxAvailable} шт)`);
                         return prev;
                     }
-                    setScanFeedback(`✅ ${product.name} (${existing.quantity + 1} шт)`);
-                    return prev.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c);
+                    setScanFeedback(`✅ ${foundProduct!.name} (${existing.quantity + 1} шт)`);
+                    return prev.map(c => (c.stockItemId || c.productId) === itemKey ? { ...c, quantity: c.quantity + 1 } : c);
                 } else {
-                    setScanFeedback(`✅ ${product.name} добавлен`);
+                    setScanFeedback(`✅ ${foundProduct!.name} добавлен`);
                     return [...prev, {
-                        productId: product.id,
-                        name: product.name,
-                        price: product.wholesalePrice || product.retailPrice || 0,
+                        productId: foundProduct!.id,
+                        stockItemId: foundStockItem?.id,
+                        name: foundProduct!.name,
+                        price: foundProduct!.wholesalePrice || foundProduct!.retailPrice || 0,
                         quantity: 1,
-                        maxStock: stock,
+                        maxStock: maxAvailable,
+                        diopter: foundStockItem?.diopters,
+                        serialNumber: foundStockItem?.serialNumber,
+                        expiryDate: foundStockItem?.expiryDate,
                     }];
                 }
             });
@@ -121,9 +145,9 @@ export default function CreateWholesaleOrderPage() {
 
     useUsbScanner(handleScan);
 
-    const updateQuantity = (productId: string, val: number) => {
+    const updateQuantity = (itemKey: string, val: number) => {
         setCart(prev => prev.map(item => {
-            if (item.productId === productId) {
+            if ((item.stockItemId || item.productId) === itemKey) {
                 let newQty = val;
                 if (newQty < 1) newQty = 1;
                 if (newQty > item.maxStock) newQty = item.maxStock;
@@ -133,17 +157,17 @@ export default function CreateWholesaleOrderPage() {
         }));
     };
 
-    const updatePrice = (productId: string, val: number) => {
+    const updatePrice = (itemKey: string, val: number) => {
         setCart(prev => prev.map(item => {
-            if (item.productId === productId) {
+            if ((item.stockItemId || item.productId) === itemKey) {
                 return { ...item, price: val >= 0 ? val : 0 };
             }
             return item;
         }));
     };
 
-    const removeItem = (productId: string) => {
-        setCart(prev => prev.filter(c => c.productId !== productId));
+    const removeItem = (itemKey: string) => {
+        setCart(prev => prev.filter(c => (c.stockItemId || c.productId) !== itemKey));
     };
 
     const totalSum = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -164,6 +188,7 @@ export default function CreateWholesaleOrderPage() {
                     notes,
                     items: cart.map(item => ({
                         productId: item.productId,
+                        stockItemId: item.stockItemId || null,
                         quantity: item.quantity,
                         price: item.price,
                         total: item.price * item.quantity
@@ -259,15 +284,27 @@ export default function CreateWholesaleOrderPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
-                                    {cart.map((item) => (
-                                        <tr key={item.productId} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-medium">{item.name}</td>
+                                    {cart.map((item) => {
+                                        const itemKey = item.stockItemId || item.productId;
+                                        return (
+                                        <tr key={itemKey} className="hover:bg-gray-50">
+                                            <td className="px-4 py-3 font-medium">
+                                                <div className="flex flex-col">
+                                                    <span>{item.name}</span>
+                                                    {item.diopter && (
+                                                        <span className="text-xs text-gray-500">Диоптрия: {item.diopter}</span>
+                                                    )}
+                                                    {item.serialNumber && (
+                                                        <span className="text-xs text-gray-500">Партия: {item.serialNumber}</span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <input 
                                                     type="number" 
                                                     className="w-20 px-3 py-1 border rounded" 
                                                     value={item.quantity} 
-                                                    onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                                                    onChange={(e) => updateQuantity(itemKey, parseInt(e.target.value) || 1)}
                                                     min={1}
                                                     max={item.maxStock}
                                                 />
@@ -277,7 +314,7 @@ export default function CreateWholesaleOrderPage() {
                                                     type="number" 
                                                     className="w-24 px-3 py-1 border rounded" 
                                                     value={item.price} 
-                                                    onChange={(e) => updatePrice(item.productId, parseInt(e.target.value) || 0)}
+                                                    onChange={(e) => updatePrice(itemKey, parseInt(e.target.value) || 0)}
                                                     min={0}
                                                 />
                                             </td>
@@ -285,12 +322,12 @@ export default function CreateWholesaleOrderPage() {
                                                 {(item.price * item.quantity).toLocaleString('ru-RU')}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <button onClick={() => removeItem(item.productId)} className="text-red-500 hover:bg-red-50 p-2 rounded">
+                                                <button onClick={() => removeItem(itemKey)} className="text-red-500 hover:bg-red-50 p-2 rounded">
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))}
+                                    )})}
                                 </tbody>
                             </table>
                         )}

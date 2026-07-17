@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 if (si.status !== 'reserved') {
                     throw new Error(`StockItem ${si.id} is not reserved`);
                 }
-                productCounts[si.productId] = (productCounts[si.productId] || 0) + 1;
+                productCounts[si.productId] = (productCounts[si.productId] || 0) + si.quantity;
             }
 
             // 2. Decrement OpticProduct currentStock and create StockMovement

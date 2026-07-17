@@ -695,6 +695,7 @@ model StockItem {
   
   wholesaleOrderId String?
   wholesaleOrder   WholesaleOrder? @relation(fields: [wholesaleOrderId], references: [id])
+  wholesaleOrderItems WholesaleOrderItem[]
 
   color           String?
   size            String?
@@ -1499,6 +1500,9 @@ model WholesaleOrderItem {
   
   productId        String
   product          OpticProduct @relation(fields: [productId], references: [id])
+  
+  stockItemId      String?
+  stockItem        StockItem? @relation(fields: [stockItemId], references: [id])
   
   quantity         Int
   price            Int
