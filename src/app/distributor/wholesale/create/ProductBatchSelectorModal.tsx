@@ -33,8 +33,7 @@ export function ProductBatchSelectorModal({ isOpen, onClose, products, onSelectB
             p.currentStock > 0 && (
                 p.name.toLowerCase().includes(q) ||
                 (p.brand && p.brand.toLowerCase().includes(q)) ||
-                (p.model && p.model.toLowerCase().includes(q)) ||
-                p.sku.toLowerCase().includes(q)
+                (p.model && p.model.toLowerCase().includes(q))
             )
         );
     }, [products, searchQuery]);
@@ -56,7 +55,7 @@ export function ProductBatchSelectorModal({ isOpen, onClose, products, onSelectB
                         <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
-                            placeholder="Поиск по названию, бренду, модели, SKU..."
+                            placeholder="Поиск по названию, бренду, модели..."
                             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
@@ -87,7 +86,6 @@ export function ProductBatchSelectorModal({ isOpen, onClose, products, onSelectB
                                                 <div className="text-sm text-gray-500 flex items-center gap-3 mt-1">
                                                     {product.brand && <span>Бренд: {product.brand}</span>}
                                                     {product.model && <span>Модель: {product.model}</span>}
-                                                    <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700">SKU: {product.sku}</span>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-6">
