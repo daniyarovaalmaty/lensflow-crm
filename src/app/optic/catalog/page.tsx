@@ -1704,12 +1704,7 @@ export default function OpticCatalogPage() {
 
                                 {/* Details grid */}
                                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                                    {detailProduct.sku && (
-                                        <div className="bg-gray-50 rounded-lg px-3 py-2">
-                                            <span className="text-gray-400 text-xs">Артикул</span>
-                                            <p className="font-medium text-gray-700">{detailProduct.sku}</p>
-                                        </div>
-                                    )}
+
                                     {detailProduct.barcode && (
                                         <div className="bg-gray-50 rounded-lg px-3 py-2">
                                             <span className="text-gray-400 text-xs">Штрих-код</span>
@@ -1744,20 +1739,7 @@ export default function OpticCatalogPage() {
                                     )}
                                 </div>
 
-                                {/* Specs */}
-                                {detailProduct.specs && Object.keys(detailProduct.specs as object).length > 0 && (
-                                    <div className="mt-4">
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Характеристики</h3>
-                                        <div className="space-y-1.5">
-                                            {Object.entries(detailProduct.specs as Record<string, string>).map(([k, v]) => (
-                                                <div key={k} className="flex justify-between text-sm">
-                                                    <span className="text-gray-400">{k}</span>
-                                                    <span className="text-gray-700 font-medium">{v}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+
 
                                 {/* Actions */}
                                 <div className="mt-6 flex gap-3">
