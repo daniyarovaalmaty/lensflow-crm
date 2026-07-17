@@ -762,7 +762,7 @@ export default function ProductBalances() {
                                     );
                                 })}
                                           <tr className="bg-yellow-50/80 font-bold border-y border-yellow-200">
-                                              <td colSpan={2} className="py-3 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 text-right">
+                                              <td colSpan={2} className="py-3 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 text-left">
                                                   Всего {product.brand || product.name} {product.model || ''}
                                               </td>
                                               <td className="px-3 py-3 text-center align-top">
