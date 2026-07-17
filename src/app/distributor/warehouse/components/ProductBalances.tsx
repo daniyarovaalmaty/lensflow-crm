@@ -646,10 +646,17 @@ export default function ProductBalances() {
                                 const matchesModel = modelFilter === 'all' || p.model === modelFilter;
                                 return matchesName && matchesBrand && matchesModel;
                             }).map((product, idx) => {
-                                return product.turnover.map((data: any, dIdx: number) => {
-                                    const rowKey = `${product.id}_${data.diopter}`;
-                                    const isExpanded = expandedDiopters.has(rowKey);
-                                    return (
+                                  const totalInitial = product.turnover.reduce((sum: number, d: any) => sum + d.initial, 0);
+                                  const totalIn = product.turnover.reduce((sum: number, d: any) => sum + d.in, 0);
+                                  const totalOut = product.turnover.reduce((sum: number, d: any) => sum + d.out, 0);
+                                  const totalFinal = product.turnover.reduce((sum: number, d: any) => sum + d.final, 0);
+
+                                  return (
+                                      <React.Fragment key={product.id}>
+                                          {product.turnover.map((data: any, dIdx: number) => {
+                                              const rowKey = `${product.id}_${data.diopter}`;
+                                              const isExpanded = expandedDiopters.has(rowKey);
+                                              return (
                                         <React.Fragment key={rowKey}>
                                             <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                                 <td className="py-3 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 align-top">
@@ -753,7 +760,34 @@ export default function ProductBalances() {
                                             )}
                                         </React.Fragment>
                                     );
-                                });
+                                })}
+                                          <tr className="bg-yellow-50/80 font-bold border-y border-yellow-200">
+                                              <td colSpan={2} className="py-3 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 text-right">
+                                                  Всего {product.brand || product.name} {product.model || ''}
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className="inline-flex items-center rounded-md bg-yellow-100/50 px-2 py-1 text-xs font-bold text-gray-800 ring-1 ring-inset ring-yellow-400/50 shadow-sm">
+                                                      {totalInitial}
+                                                  </span>
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-bold shadow-sm ${totalIn > 0 ? 'bg-green-100/50 text-green-700 ring-1 ring-inset ring-green-600/30' : 'text-gray-500'}`}>
+                                                      {totalIn > 0 ? `+${totalIn}` : '0'}
+                                                  </span>
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-bold shadow-sm ${totalOut > 0 ? 'bg-red-100/50 text-red-700 ring-1 ring-inset ring-red-600/30' : 'text-gray-500'}`}>
+                                                      {totalOut > 0 ? `-${totalOut}` : '0'}
+                                                  </span>
+                                              </td>
+                                              <td className="px-3 py-3 text-center align-top">
+                                                  <span className="inline-flex items-center rounded-md bg-yellow-100/80 px-2 py-1 text-xs font-bold text-gray-900 ring-1 ring-inset ring-yellow-500/50 shadow-sm">
+                                                      {totalFinal}
+                                                  </span>
+                                              </td>
+                                          </tr>
+                                      </React.Fragment>
+                                  );
                             })}
                             {turnoverData.length === 0 && (
                                 <tr>
