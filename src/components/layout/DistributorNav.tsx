@@ -6,17 +6,15 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { LayoutDashboard, Users, Settings, LogOut, User, Package, Menu, X, ShoppingBag, Banknote, Briefcase, BarChart3, Warehouse } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { getEffectiveDistributorPermissions } from '@/types/user';
 
 const navItems = [
-    { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
-    { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
-    { href: '/distributor/catalog', label: 'Каталог', icon: Package, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
-
-    { href: '/distributor/wholesale', label: 'Продажи', icon: ShoppingBag, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
-    { href: '/distributor/warehouse', label: 'Склад', icon: Warehouse, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
-    { href: '/distributor/analytics', label: 'Аналитика', icon: BarChart3, roles: ['dist_head', 'dist_admin'] },
-    { href: '/distributor/staff', label: 'Сотрудники', icon: User, roles: ['dist_head', 'dist_admin'] },
-    { href: '/distributor/settings', label: 'Настройки', icon: Settings, roles: ['dist_head'] },
+    { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, permKey: 'canViewCounterparties' },
+    { href: '/distributor/catalog', label: 'Товары', icon: Package, permKey: 'canViewCatalog' },
+    { href: '/distributor/wholesale', label: 'Продажи', icon: ShoppingBag, permKey: 'canViewWholesale' },
+    { href: '/distributor/warehouse', label: 'Склад', icon: Warehouse, permKey: 'canViewWarehouse' },
+    { href: '/distributor/staff', label: 'Сотрудники', icon: User, permKey: 'canViewStaff' },
+    { href: '/distributor/settings', label: 'Настройки', icon: Settings, permKey: 'canViewSettings' },
 ];
 
 export default function DistributorNav() {
@@ -28,9 +26,10 @@ export default function DistributorNav() {
     const subRole = (session?.user as any)?.subRole || '';
 
     const isActive = (item: typeof navItems[0]) =>
-        item.exact ? pathname === item.href : pathname.startsWith(item.href);
+        (item as any).exact ? pathname === item.href : pathname.startsWith(item.href);
 
-    const visibleItems = navItems.filter(item => item.roles.includes(subRole));
+    const perms = getEffectiveDistributorPermissions((session?.user as any) || { subRole: '' });
+    const visibleItems = navItems.filter(item => (perms as any)[item.permKey]);
 
     const handleLogout = async () => {
         setLoggingOut(true);

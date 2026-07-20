@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { type, status, documentNumber, documentDate, counterpartyName, declarationNumber, declarationDate, items, totalAmount, targetOrganizationId, notes } = body;
+        const { type, status, documentNumber, documentDate, counterpartyName, supplierId, declarationNumber, declarationDate, items, totalAmount, targetOrganizationId, notes } = body;
 
         const organizationId = session.user.organizationId;
         const performedById = session.user.id;
@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
                     type,
                     status,
                     counterpartyName,
+                    supplierId,
                     notes: JSON.stringify({ declarationNumber: declarationNumber || '', declarationDate: declarationDate || '', documentDate: documentDate || '', userNotes: notes || '' }),
                     totalAmount,
                     items,

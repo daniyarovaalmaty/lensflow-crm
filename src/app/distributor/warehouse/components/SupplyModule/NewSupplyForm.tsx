@@ -58,6 +58,42 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const draft = initialDraft || savedDraft;
 
     const [counterpartyName, setCounterpartyName] = useState(draft?.counterpartyName || '');
+    const [supplierId, setSupplierId] = useState(draft?.supplierId || '');
+    const [suppliers, setSuppliers] = useState<any[]>([]);
+    const [showAddSupplier, setShowAddSupplier] = useState(false);
+    const [newSupplierName, setNewSupplierName] = useState('');
+
+    useEffect(() => {
+        fetch('/api/distributor/suppliers')
+            .then(res => res.json())
+            .then(data => setSuppliers(data))
+            .catch(console.error);
+    }, []);
+
+    const handleAddSupplier = async () => {
+        if (!newSupplierName.trim()) return;
+        try {
+            const res = await fetch('/api/distributor/suppliers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newSupplierName })
+            });
+            if (res.ok) {
+                const s = await res.json();
+                setSuppliers(prev => [...prev, s].sort((a: any,b: any) => a.name.localeCompare(b.name)));
+                setSupplierId(s.id);
+                setCounterpartyName(s.name);
+                setShowAddSupplier(false);
+                setNewSupplierName('');
+                toast.success('Поставщик добавлен');
+            } else {
+                toast.error('Ошибка добавления');
+            }
+        } catch {
+            toast.error('Ошибка сети');
+        }
+    };
+
     const [documentNumber, setDocumentNumber] = useState(draft?.documentNumber || '');
     const [documentDate, setDocumentDate] = useState(draft?.documentDate || '');
     const [declarationNumber, setDeclarationNumber] = useState(draft?.declarationNumber || '');
@@ -127,9 +163,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
     // Auto-save draft to localStorage (debounced)
     useEffect(() => {
-        const draftData = { counterpartyName, documentNumber, documentDate, declarationNumber, declarationDate, items };
+        const draftData = { counterpartyName, supplierId, documentNumber, documentDate, declarationNumber, declarationDate, items };
         // Only save if there's meaningful data
-        const hasData = counterpartyName || documentNumber || documentDate || declarationNumber || declarationDate || items.length > 0;
+        const hasData = counterpartyName || supplierId || documentNumber || documentDate || declarationNumber || declarationDate || items.length > 0;
         if (!hasData) return;
 
         const timeout = setTimeout(() => {
@@ -143,7 +179,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         }, 2000);
 
         return () => clearTimeout(timeout);
-    }, [counterpartyName, documentNumber, declarationNumber, declarationDate, items]);
+    }, [counterpartyName, supplierId, documentNumber, declarationNumber, declarationDate, items]);
 
     // Online/offline listener
     useEffect(() => {
@@ -266,6 +302,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     documentNumber,
                     documentDate,
                     counterpartyName,
+                    supplierId,
                     declarationNumber,
                     declarationDate,
                     items,
@@ -348,15 +385,46 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 mb-8 border-b pb-8">
                 <div className="sm:col-span-6">
-                    <label className="block text-sm font-medium leading-6 text-gray-900">Поставщик / Контрагент</label>
-                    <div className="mt-2">
-                        <input
-                            type="text"
-                            value={counterpartyName}
-                            onChange={(e) => setCounterpartyName(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                            placeholder="Название поставщика"
-                        />
+                    <label className="block text-sm font-medium leading-6 text-gray-900">Поставщик</label>
+                    <div className="mt-2 flex gap-2 items-center">
+                        {!showAddSupplier ? (
+                            <>
+                                <select
+                                    value={supplierId}
+                                    onChange={(e) => {
+                                        setSupplierId(e.target.value);
+                                        const s = suppliers.find((x: any) => x.id === e.target.value);
+                                        if (s) setCounterpartyName(s.name);
+                                        else setCounterpartyName('');
+                                    }}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                >
+                                    <option value="">Выберите поставщика...</option>
+                                    {suppliers.map((s: any) => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
+                                <button type="button" onClick={() => setShowAddSupplier(true)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium shrink-0">
+                                    <Plus className="w-4 h-4 inline mr-1"/> Новый
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <input
+                                    type="text"
+                                    value={newSupplierName}
+                                    onChange={(e) => setNewSupplierName(e.target.value)}
+                                    placeholder="Название нового поставщика"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                />
+                                <button type="button" onClick={handleAddSupplier} className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm font-medium shrink-0">
+                                    Сохранить
+                                </button>
+                                <button type="button" onClick={() => setShowAddSupplier(false)} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium shrink-0">
+                                    Отмена
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className="sm:col-span-3">

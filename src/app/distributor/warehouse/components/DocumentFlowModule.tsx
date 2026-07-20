@@ -18,6 +18,7 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [qty, setQty] = useState(1);
@@ -83,14 +84,14 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
     };
 
     useEffect(() => {
-        if (!searchQuery.trim()) {
-            setSearchResults([]);
-            return;
-        }
         const delayDebounceFn = setTimeout(async () => {
             setIsSearching(true);
             try {
-                const res = await fetch(`/api/distributor/warehouse/products/search?q=${encodeURIComponent(searchQuery)}`);
+                const params = new URLSearchParams();
+                if (searchQuery.trim()) {
+                    params.append('q', searchQuery.trim());
+                }
+                const res = await fetch(`/api/distributor/warehouse/products/search?${params.toString()}`);
                 if (res.ok) {
                     const data = await res.json();
                     setSearchResults(data.products || []);
@@ -347,13 +348,15 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                     const hasCyrillic = /[\u0400-\u04FF]/.test(val);
                                     setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
                                 }}
+                                onFocus={() => setIsDropdownOpen(true)}
+                                onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 sm:text-sm sm:leading-6"
-                                placeholder="Поиск по остаткам..."
+                                placeholder="Поиск товара..."
                             />
                         </div>
 
                         {/* Search Results Dropdown */}
-                        {searchQuery.trim() && (
+                        {isDropdownOpen && (
                             <div className="absolute z-10 mt-1 w-full flex-1 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                                 {isSearching ? (
                                     <div className="p-4 text-sm text-gray-500 text-center">Загрузка...</div>

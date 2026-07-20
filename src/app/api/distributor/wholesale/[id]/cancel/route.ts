@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     try {
         const result = await prisma.$transaction(async (tx) => {
-            const order = await tx.wholesaleOrder.findUnique({
+            const order = await tx.wholesaleOrder.findFirst({
                 where: { id: orderId, organizationId },
                 include: { items: true, stockItems: true }
             });

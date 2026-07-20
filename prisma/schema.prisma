@@ -101,6 +101,8 @@ model Organization {
   payrollRules           PayrollRule[]
   payrollPayouts         PayrollPayout[]
 
+  suppliers              Supplier[]
+
   @@map("organizations")
 }
 
@@ -760,6 +762,9 @@ model StockDocument {
 
   counterpartyName String?
   counterpartyInn  String?
+
+  supplierId       String?
+  supplier         Supplier? @relation(fields: [supplierId], references: [id])
 
   targetOrganizationId String?
   targetOrganization   Organization? @relation("TransferTarget", fields: [targetOrganizationId], references: [id])
@@ -1509,4 +1514,19 @@ model WholesaleOrderItem {
   total            Int
 
   @@map("wholesale_order_items")
+}
+
+// ==================== Supplier (For Warehouse Receipts) ====================
+model Supplier {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  name            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  stockDocuments  StockDocument[]
+
+  @@unique([organizationId, name])
+  @@map("suppliers")
 }

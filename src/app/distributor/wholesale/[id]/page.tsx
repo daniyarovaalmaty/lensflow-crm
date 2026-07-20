@@ -226,10 +226,10 @@ export default function WholesaleOrderDetailPage() {
                             </button>
                         )}
                         
-                        <button className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-md font-medium">
+                        <Link href={`/distributor/wholesale/${order.id}/invoice`} target="_blank" className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-md font-medium">
                             <FileText className="w-5 h-5" />
                             Скачать счет на оплату
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -14,7 +14,7 @@ export async function PUT(
 
         const id = params.id;
         const body = await req.json();
-        const { status, documentNumber, counterpartyName, items, totalAmount, targetOrganizationId, notes: bodyNotes, documentDate, declarationNumber, declarationDate } = body;
+        const { status, documentNumber, counterpartyName, supplierId, items, totalAmount, targetOrganizationId, notes: bodyNotes, documentDate, declarationNumber, declarationDate } = body;
 
         const organizationId = session.user.organizationId;
         const performedById = session.user.id;
@@ -56,6 +56,7 @@ export async function PUT(
             // We only allow updating notes and counterpartyName
             const dataToUpdate: any = {
                 counterpartyName,
+                supplierId,
                 notes: finalNotes,
                 documentNumber,
             };

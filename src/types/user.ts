@@ -476,6 +476,47 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
 };
 
 export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {
+
+export interface DistributorPermissions {
+    canViewCounterparties: boolean;
+    canViewCatalog: boolean;
+    canViewWholesale: boolean;
+    canViewWarehouse: boolean;
+    canViewStaff: boolean;
+    canViewSettings: boolean;
+}
+
+export const DefaultDistributorPermissions: Record<string, DistributorPermissions> = {
+    dist_head: { canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: true },
+    dist_admin: { canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: false },
+    dist_manager: { canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: false, canViewSettings: false },
+    dist_accountant: { canViewCounterparties: false, canViewCatalog: true, canViewWholesale: false, canViewWarehouse: false, canViewStaff: false, canViewSettings: false },
+};
+
+export function getEffectiveDistributorPermissions(user: { subRole: string; permissions?: any }): DistributorPermissions {
+    const roleDefault = DefaultDistributorPermissions[user.subRole] || {
+        canViewCounterparties: false,
+        canViewCatalog: false,
+        canViewWholesale: false,
+        canViewWarehouse: false,
+        canViewStaff: false,
+        canViewSettings: false,
+    };
+
+    if (!user.permissions || typeof user.permissions !== 'object') {
+        return roleDefault;
+    }
+
+    const p = user.permissions;
+    return {
+        canViewCounterparties: typeof p.canViewCounterparties === 'boolean' ? p.canViewCounterparties : roleDefault.canViewCounterparties,
+        canViewCatalog: typeof p.canViewCatalog === 'boolean' ? p.canViewCatalog : roleDefault.canViewCatalog,
+        canViewWholesale: typeof p.canViewWholesale === 'boolean' ? p.canViewWholesale : roleDefault.canViewWholesale,
+        canViewWarehouse: typeof p.canViewWarehouse === 'boolean' ? p.canViewWarehouse : roleDefault.canViewWarehouse,
+        canViewStaff: typeof p.canViewStaff === 'boolean' ? p.canViewStaff : roleDefault.canViewStaff,
+        canViewSettings: typeof p.canViewSettings === 'boolean' ? p.canViewSettings : roleDefault.canViewSettings,
+    };
+}
     const roleDefault = DefaultClinicPermissions[user.subRole as SubRole] || {
         canViewPos: false,
         canViewWarehouse: false,
