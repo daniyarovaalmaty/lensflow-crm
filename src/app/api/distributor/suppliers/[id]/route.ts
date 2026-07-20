@@ -10,9 +10,14 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    const organizationId = session.user.organizationId;
+    if (!organizationId) {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
+
     try {
         await prisma.supplier.delete({
-            where: { id: params.id, organizationId: session.user.organizationId }
+            where: { id: params.id, organizationId }
         });
         return NextResponse.json({ success: true });
     } catch (error: any) {
