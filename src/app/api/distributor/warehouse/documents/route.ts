@@ -51,6 +51,19 @@ export async function POST(req: NextRequest) {
         const performedById = session.user.id;
         const performedByName = session.user.name || 'System';
 
+        if (type === 'receipt') {
+            const existing = await prisma.stockDocument.findFirst({
+                where: {
+                    organizationId,
+                    type: 'receipt',
+                    documentNumber
+                }
+            });
+            if (existing) {
+                return NextResponse.json({ error: 'Документ с таким номером уже существует' }, { status: 400 });
+            }
+        }
+
         // Use a transaction if we are confirming, to ensure data consistency
         const document = await prisma.$transaction(async (tx) => {
             const doc = await tx.stockDocument.create({

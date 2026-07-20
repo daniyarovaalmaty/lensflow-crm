@@ -10,7 +10,7 @@ import { getEffectiveDistributorPermissions } from '@/types/user';
 
 const navItems = [
     { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, permKey: 'canViewCounterparties' },
-    { href: '/distributor/catalog', label: 'Товары', icon: Package, permKey: 'canViewCatalog' },
+    { href: '/distributor/catalog', label: 'Каталог', icon: Package, permKey: 'canViewCatalog' },
     { href: '/distributor/wholesale', label: 'Продажи', icon: ShoppingBag, permKey: 'canViewWholesale' },
     { href: '/distributor/warehouse', label: 'Склад', icon: Warehouse, permKey: 'canViewWarehouse' },
     { href: '/distributor/staff', label: 'Сотрудники', icon: User, permKey: 'canViewStaff' },

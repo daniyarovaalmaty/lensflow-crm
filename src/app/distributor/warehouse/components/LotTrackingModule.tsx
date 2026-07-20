@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Package, ArrowRight, Building, FileText, Calendar, Box } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { parseGS1Barcode } from '@/lib/utils/gs1Parser';
@@ -11,9 +11,47 @@ export default function LotTrackingModule() {
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+    const [products, setProducts] = useState<any[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const res = await fetch('/api/optic/products');
+                const data = await res.json();
+                setProducts(data.products || []);
+            } catch (err) {}
+        };
+        fetchProducts();
+    }, []);
+
+    const filteredProducts = products.filter(p => 
+        p.name.toLowerCase().includes(lotQuery.toLowerCase()) || 
+        (p.sku && p.sku.toLowerCase().includes(lotQuery.toLowerCase()))
+    );
+
+    const handleSearchProduct = async (productId: string, productName: string) => {
+        setShowDropdown(false);
+        setLotQuery(productName);
+        try {
+            setLoading(true);
+            const res = await fetch(`/api/distributor/warehouse/lot-tracking?productId=${productId}`);
+            const data = await res.json();
+            
+            if (!res.ok) throw new Error(data.error || 'Ошибка поиска');
+            
+            setItems(data.items || []);
+            setHasSearched(true);
+        } catch (error: any) {
+            toast.error(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
+        setShowDropdown(false);
         if (lotQuery.trim().length < 3) {
             toast.error('Введите минимум 3 символа');
             return;
@@ -55,7 +93,7 @@ export default function LotTrackingModule() {
                 </div>
             </div>
 
-            <form onSubmit={handleSearch} className="flex gap-3 max-w-2xl">
+            <form onSubmit={handleSearch} className="flex gap-3 max-w-2xl relative">
                 <div className="relative flex-1">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <Search className="h-5 w-5 text-gray-400" />
@@ -63,10 +101,32 @@ export default function LotTrackingModule() {
                     <input
                         type="text"
                         value={lotQuery}
-                        onChange={(e) => setLotQuery(e.target.value)}
+                        onChange={(e) => {
+                            setLotQuery(e.target.value);
+                            setShowDropdown(true);
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                         className="block w-full rounded-md border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                        placeholder="Введите часть штрихкода или серийного номера (мин 3 символа)..."
+                        placeholder="Введите часть штрихкода, серийного номера или выберите товар..."
                     />
+                    
+                    {showDropdown && filteredProducts.length > 0 && (
+                        <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                            {filteredProducts.map((product) => (
+                                <div
+                                    key={product.id}
+                                    onClick={() => handleSearchProduct(product.id, product.name)}
+                                    className="relative cursor-pointer select-none py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="font-medium">{product.name}</span>
+                                        {product.sku && <span className="text-xs text-gray-500">Артикул: {product.sku}</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <button
                     type="submit"

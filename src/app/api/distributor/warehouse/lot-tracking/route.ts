@@ -11,19 +11,28 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
         const lotQuery = searchParams.get('lot');
+        const productId = searchParams.get('productId');
 
-        if (!lotQuery || lotQuery.length < 3) {
-            return NextResponse.json({ error: 'Минимум 3 символа для поиска' }, { status: 400 });
+        if (!lotQuery && !productId) {
+            return NextResponse.json({ error: 'Укажите запрос для поиска' }, { status: 400 });
+        }
+
+        const whereClause: any = { organizationId: session.user.organizationId };
+        
+        if (productId) {
+            whereClause.productId = productId;
+        } else if (lotQuery) {
+            if (lotQuery.length < 3) {
+                return NextResponse.json({ error: 'Минимум 3 символа для поиска' }, { status: 400 });
+            }
+            whereClause.serialNumber = {
+                contains: lotQuery,
+                mode: 'insensitive'
+            };
         }
 
         const stockItems = await prisma.stockItem.findMany({
-            where: {
-                organizationId: session.user.organizationId,
-                serialNumber: {
-                    contains: lotQuery,
-                    mode: 'insensitive'
-                }
-            },
+            where: whereClause,
             include: {
                 product: {
                     select: { name: true, sku: true, model: true }
