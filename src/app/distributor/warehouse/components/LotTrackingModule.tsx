@@ -17,7 +17,7 @@ export default function LotTrackingModule() {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await fetch('/api/optic/products');
+                const res = await fetch('/api/distributor/warehouse/products/search');
                 const data = await res.json();
                 setProducts(data.products || []);
             } catch (err) {}
@@ -27,7 +27,8 @@ export default function LotTrackingModule() {
 
     const filteredProducts = products.filter(p => 
         p.name.toLowerCase().includes(lotQuery.toLowerCase()) || 
-        (p.sku && p.sku.toLowerCase().includes(lotQuery.toLowerCase()))
+        (p.sku && p.sku.toLowerCase().includes(lotQuery.toLowerCase())) ||
+        (p.barcode && p.barcode.toLowerCase().includes(lotQuery.toLowerCase()))
     );
 
     const handleSearchProduct = async (productId: string, productName: string) => {

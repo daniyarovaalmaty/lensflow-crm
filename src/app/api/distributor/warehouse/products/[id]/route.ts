@@ -79,7 +79,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             select: { id: true }
         });
 
-        if (hasStockMovements || hasSaleItems) {
+        const hasWholesaleOrderItems = await prisma.wholesaleOrderItem.findFirst({
+            where: { 
+                productId: params.id,
+                wholesaleOrder: {
+                    organizationId: session.user.organizationId
+                }
+            },
+            select: { id: true }
+        });
+
+        if (hasStockMovements || hasSaleItems || hasWholesaleOrderItems) {
             return NextResponse.json({ error: 'Невозможно удалить товар, так как по нему есть движения на складе или он используется в заказах.' }, { status: 400 });
         }
 
