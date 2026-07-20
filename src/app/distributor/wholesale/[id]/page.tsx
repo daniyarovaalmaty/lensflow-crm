@@ -99,6 +99,7 @@ export default function WholesaleOrderDetailPage() {
                 const updated = await res.json();
                 setOrder(updated);
                 toast.success('Резерв снят, заказ отменен');
+                router.refresh();
             } else {
                 const err = await res.text();
                 toast.error(err || 'Ошибка отмены резерва');

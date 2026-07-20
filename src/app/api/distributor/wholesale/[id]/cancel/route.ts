@@ -21,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             });
 
             if (!order) {
-                throw new Error('Order not found');
+                throw new Error('Заказ не найден');
             }
 
             if (order.status !== 'reserved') {

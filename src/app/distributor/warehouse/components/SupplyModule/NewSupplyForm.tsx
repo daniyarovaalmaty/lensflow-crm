@@ -103,11 +103,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(savedDraft ? 'восстановлено' : null);
     
-    // Search state
     const [nameSearch, setNameSearch] = useState('');
     const [barcodeSearch, setBarcodeSearch] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [qty, setQty] = useState(1);
@@ -407,6 +407,28 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 <button type="button" onClick={() => setShowAddSupplier(true)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium shrink-0">
                                     <Plus className="w-4 h-4 inline mr-1"/> Новый
                                 </button>
+                                {supplierId && (
+                                    <button 
+                                        type="button" 
+                                        onClick={async () => {
+                                            if (!confirm('Удалить этого поставщика навсегда?')) return;
+                                            try {
+                                                const res = await fetch(`/api/distributor/suppliers/${supplierId}`, { method: 'DELETE' });
+                                                if (res.ok) {
+                                                    setSupplierId('');
+                                                    setCounterpartyName('');
+                                                    fetchSuppliers();
+                                                }
+                                            } catch (e) {
+                                                console.error(e);
+                                            }
+                                        }}
+                                        className="px-2 py-1.5 bg-red-100 text-red-700 rounded-md hover:bg-red-200 shrink-0"
+                                        title="Удалить поставщика"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
                             </>
                         ) : (
                             <>
@@ -483,6 +505,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         type="text"
                                         value={nameSearch}
                                         onChange={(e) => setNameSearch(e.target.value)}
+                                        onFocus={() => setIsDropdownOpen(true)}
+                                        onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                                         className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         placeholder="Поиск по названию..."
                                     />
@@ -499,6 +523,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                             const hasCyrillic = /[\u0400-\u04FF]/.test(val);
                                             setBarcodeSearch(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
                                         }}
+                                        onFocus={() => setIsDropdownOpen(true)}
+                                        onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                                         className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         placeholder="Поиск по штрихкоду..."
                                     />
@@ -507,7 +533,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         </div>
                         
                         {/* Search Results Dropdown */}
-                        {(nameSearch.trim() || barcodeSearch.trim()) && (
+                        {isDropdownOpen && (
                             <div className="absolute z-10 mt-1 w-full flex-1 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                                 {isSearching ? (
                                     <div className="p-4 text-sm text-gray-500 text-center">Загрузка...</div>

@@ -160,7 +160,7 @@ export default function DistributorStaffPage() {
                                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                                     {s.status === 'active' ? 'Активен' : s.status}
                                 </span>
-                                {s.subRole !== 'dist_head' && (
+                                {(true) && (
                                     <button 
                                         onClick={() => {
                                             setEditModal(s);

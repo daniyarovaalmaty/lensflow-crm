@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import { notFound, redirect } from 'next/navigation';
 import { format } from 'date-fns';
+import PrintButton from './PrintButton';
 
 export default async function WholesaleInvoicePage({ params }: { params: { id: string } }) {
     const session = await auth();
@@ -31,12 +32,7 @@ export default async function WholesaleInvoicePage({ params }: { params: { id: s
             <div className="max-w-4xl mx-auto border p-8 shadow-sm print:shadow-none print:border-none">
                 {/* Print button (hidden when printing) */}
                 <div className="flex justify-end mb-8 print:hidden">
-                    <button 
-                        onClick={() => typeof window !== 'undefined' && window.print()}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-500"
-                    >
-                        Распечатать
-                    </button>
+                    <PrintButton />
                 </div>
 
                 <div className="text-center mb-8 border-b pb-4">
