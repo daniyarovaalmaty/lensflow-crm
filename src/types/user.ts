@@ -475,8 +475,6 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
     dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
 };
 
-export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {
-
 export interface DistributorPermissions {
     canViewCounterparties: boolean;
     canViewCatalog: boolean;
@@ -517,6 +515,10 @@ export function getEffectiveDistributorPermissions(user: { subRole: string; perm
         canViewSettings: typeof p.canViewSettings === 'boolean' ? p.canViewSettings : roleDefault.canViewSettings,
     };
 }
+
+export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {
+
+
     const roleDefault = DefaultClinicPermissions[user.subRole as SubRole] || {
         canViewPos: false,
         canViewWarehouse: false,

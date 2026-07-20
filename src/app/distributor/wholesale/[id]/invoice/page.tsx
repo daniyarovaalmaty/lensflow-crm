@@ -49,8 +49,8 @@ export default async function WholesaleInvoicePage({ params }: { params: { id: s
                         <h2 className="font-bold text-gray-700 mb-2 border-b pb-1">Поставщик</h2>
                         <div className="text-sm">
                             <p className="font-bold text-lg mb-1">{order.organization.name}</p>
-                            {order.organization.bin && <p>БИН: {order.organization.bin}</p>}
-                            <p>Регион: {order.organization.region}</p>
+                            {order.organization.inn && <p>БИН/ИИН: {order.organization.inn}</p>}
+                            {order.organization.city && <p>Город: {order.organization.city}</p>}
                         </div>
                     </div>
                     
@@ -60,8 +60,8 @@ export default async function WholesaleInvoicePage({ params }: { params: { id: s
                             {order.counterparty ? (
                                 <>
                                     <p className="font-bold text-lg mb-1">{order.counterparty.name}</p>
-                                    {order.counterparty.bin && <p>БИН: {order.counterparty.bin}</p>}
-                                    <p>Регион: {order.counterparty.region}</p>
+                                    {order.counterparty.inn && <p>БИН/ИИН: {order.counterparty.inn}</p>}
+                                    {order.counterparty.city && <p>Город: {order.counterparty.city}</p>}
                                 </>
                             ) : (
                                 <p className="text-gray-500">Не указан</p>
