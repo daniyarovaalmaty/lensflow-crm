@@ -184,7 +184,9 @@ export async function PUT(
 
                 // Apply diffs
                 for (const [barcode, data] of diffMap.entries()) {
-                    if (data.diffQty === 0 && (!data.newItem || data.newItem.price === data.oldItem?.price)) {
+                    const productIdChanged = data.oldItem && data.newItem && data.oldItem.productId !== data.newItem.productId;
+
+                    if (!productIdChanged && data.diffQty === 0 && (!data.newItem || data.newItem.price === data.oldItem?.price)) {
                         // Same qty and price, just update metadata if needed
                         if (data.newItem) {
                             await tx.stockItem.updateMany({
@@ -200,20 +202,66 @@ export async function PUT(
                         continue;
                     }
 
-                    const product = await tx.opticProduct.findUnique({ where: { id: data.product } });
-                    if (!product) continue;
-
                     const batch = await tx.stockItem.findUnique({
                         where: { organizationId_serialNumber: { organizationId, serialNumber: barcode } }
                     });
 
+                    if (productIdChanged) {
+                        // Deduct from old product
+                        const oldProduct = await tx.opticProduct.findUnique({ where: { id: data.oldItem.productId } });
+                        if (oldProduct) {
+                            if (batch && batch.quantity < data.oldItem.qty) {
+                                throw new Error(`Для партии ${barcode} недостаточно остатка (нужно ${data.oldItem.qty}, есть ${batch.quantity}).`);
+                            }
+                            if (oldProduct.currentStock < data.oldItem.qty) {
+                                throw new Error(`Для старого товара "${oldProduct.name}" недостаточно общего остатка.`);
+                            }
+                            await tx.opticProduct.update({
+                                where: { id: oldProduct.id },
+                                data: { currentStock: oldProduct.currentStock - data.oldItem.qty }
+                            });
+                        }
+                        
+                        // Add to new product
+                        const newProduct = await tx.opticProduct.findUnique({ where: { id: data.newItem.productId } });
+                        if (newProduct) {
+                            await tx.opticProduct.update({
+                                where: { id: newProduct.id },
+                                data: { 
+                                    currentStock: newProduct.currentStock + data.newItem.qty,
+                                    ...(data.newItem.price > 0 ? { purchasePrice: data.newItem.price } : {})
+                                }
+                            });
+                        }
+
+                        // Update batch
+                        if (batch) {
+                            const newQty = batch.quantity - data.oldItem.qty + data.newItem.qty;
+                            await tx.stockItem.update({
+                                where: { id: batch.id },
+                                data: {
+                                    productId: data.newItem.productId,
+                                    quantity: newQty,
+                                    purchasePrice: data.newItem.price,
+                                    expiryDate: data.newItem.batchExpiration ? new Date(data.newItem.batchExpiration) : null,
+                                    diopters: data.newItem.batchDiopters || null,
+                                    size: data.newItem.batchSize || null,
+                                }
+                            });
+                        }
+                        continue;
+                    }
+
+                    const product = await tx.opticProduct.findUnique({ where: { id: data.product } });
+                    if (!product) continue;
+
                     if (data.diffQty < 0) {
                         const reduceBy = Math.abs(data.diffQty);
                         if (batch && batch.quantity < reduceBy) {
-                            throw new Error(`Партия ${barcode} уже продана/списана (остаток ${batch.quantity}, попытка уменьшить на ${reduceBy}).`);
+                            throw new Error(`Для штрихкода ${barcode} недостаточно остатка для отмены (нужно ${reduceBy}, есть ${batch.quantity}).`);
                         }
                         if (product.currentStock < reduceBy) {
-                            throw new Error(`Общий остаток товара "${product.name}" недостаточен для уменьшения партии.`);
+                            throw new Error(`Для товара "${product.name}" недостаточно остатка.`);
                         }
                     }
 
