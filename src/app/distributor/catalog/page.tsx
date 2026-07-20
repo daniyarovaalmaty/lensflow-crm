@@ -854,7 +854,7 @@ export default function OpticCatalogPage() {
         setForm({
             name: '', category: 'iol', brand: '', model: '', sku: '', barcode: '',
             shortDescription: '', fullDescription: '', purchasePrice: '', retailPrice: '',
-            minStock: '0', unit: 'шт', trackSerials: false, isPublic: false,
+            minStock: '0', unit: 'шт', trackSerials: true, isPublic: false,
             images: [], specs: {},
         });
         setShowForm(true);
