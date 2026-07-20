@@ -63,11 +63,15 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [showAddSupplier, setShowAddSupplier] = useState(false);
     const [newSupplierName, setNewSupplierName] = useState('');
 
-    useEffect(() => {
+    const fetchSuppliers = () => {
         fetch('/api/distributor/suppliers')
             .then(res => res.json())
             .then(data => setSuppliers(data))
             .catch(console.error);
+    };
+
+    useEffect(() => {
+        fetchSuppliers();
     }, []);
 
     const handleAddSupplier = async () => {
