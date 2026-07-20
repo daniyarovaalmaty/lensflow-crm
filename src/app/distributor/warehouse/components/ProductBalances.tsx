@@ -120,14 +120,12 @@ export default function ProductBalances() {
     const [searchQuery, setSearchQuery] = useState('');
     const [barcodeSearch, setBarcodeSearch] = useState('');
     const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
-    const [brandFilter, setBrandFilter] = useState('all');
-    const [modelFilter, setModelFilter] = useState('all');
+    const [nameFilter, setNameFilter] = useState('all');
+    
     const [batchSorts, setBatchSorts] = useState<Record<string, string>>({});
 
-    const uniqueBrands = Array.from(new Set(products.map(p => p.name).filter(Boolean))).sort();
-    const uniqueModelsForBrand = brandFilter === 'all' 
-        ? Array.from(new Set(products.map(p => p.model).filter(Boolean))).sort()
-        : Array.from(new Set(products.filter(p => p.name === brandFilter).map(p => p.model).filter(Boolean))).sort();
+    const uniqueNames = Array.from(new Set(products.map(p => p.name).filter(Boolean))).sort();
+    
 
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -281,10 +279,9 @@ export default function ProductBalances() {
             (stockFilter === 'low_stock' && p.currentStock > 0 && p.currentStock <= (p.minStock || 3)) ||
             (stockFilter === 'out_of_stock' && p.currentStock === 0);
 
-        const matchesBrand = brandFilter === 'all' || p.name === brandFilter;
-        const matchesModel = modelFilter === 'all' || p.model === modelFilter;
+        const matchesNameFilter = nameFilter === 'all' || p.name === nameFilter;
         
-        return matchesName && matchesBarcode && matchesStock && matchesBrand && matchesModel;
+        return matchesName && matchesBarcode && matchesStock && matchesNameFilter;
     });
 
     const sortBatches = (productId: string, batches: any[]) => {
@@ -337,18 +334,15 @@ export default function ProductBalances() {
             const matchesName = p.name.toLowerCase().includes(q) || 
                               (p.brand && p.brand.toLowerCase().includes(q)) ||
                               (p.model && p.model.toLowerCase().includes(q));
-            const matchesBrand = brandFilter === 'all' || p.brand === brandFilter || p.name === brandFilter;
-            const matchesModel = modelFilter === 'all' || p.model === modelFilter;
-            return matchesName && matchesBrand && matchesModel;
+            const matchesNameFilter = nameFilter === 'all' || p.name === nameFilter;
+            return matchesName && matchesNameFilter;
         });
 
         // Формирование данных для Excel
         const exportData: any[] = [];
         
         filteredTurnover.forEach((product) => {
-            const modelName = product.model || product.name || '';
-            const brandName = product.brand || '';
-            const fullName = brandName ? `${brandName} ${modelName}` : modelName;
+            const fullName = product.name || '';
 
             let totalInitial = 0;
             let totalIn = 0;
@@ -357,7 +351,7 @@ export default function ProductBalances() {
 
             product.turnover.forEach((data: any) => {
                 exportData.push({
-                    'Модель': fullName,
+                    'Название товара': fullName,
                     'Диоптрия / Размер': data.diopter !== '-' ? data.diopter : '',
                     [startDate]: data.initial || 0,
                     'Приход': data.in || 0,
@@ -373,7 +367,7 @@ export default function ProductBalances() {
 
             // Добавляем строку итого по модели
             exportData.push({
-                'Модель': `Всего ${fullName}`,
+                'Название товара': `Всего ${fullName}`,
                 'Диоптрия / Размер': '',
                 [startDate]: totalInitial,
                 'Приход': totalIn,
@@ -495,31 +489,9 @@ export default function ProductBalances() {
 
             {/* Filters Row */}
             <div className="mb-6 flex gap-4 flex-wrap">
-                <select
-                    value={brandFilter}
-                    onChange={(e) => {
-                        setBrandFilter(e.target.value);
-                        setModelFilter('all');
-                    }}
-                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
-                >
-                    <option value="all">Все бренды</option>
-                    {uniqueBrands.map((b: any) => (
-                        <option key={b} value={b}>{b}</option>
-                    ))}
-                </select>
+                <select value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"> <option value="all">Все товары</option> {uniqueNames.map((n: any) => (<option key={n} value={n}>{n}</option>))} </select>
 
-                <select
-                    value={modelFilter}
-                    onChange={(e) => setModelFilter(e.target.value)}
-                    className="rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 pr-10"
-                    disabled={brandFilter === 'all' && uniqueModelsForBrand.length === 0}
-                >
-                    <option value="all">Все модели</option>
-                    {uniqueModelsForBrand.map((m: any) => (
-                        <option key={m} value={m}>{m}</option>
-                    ))}
-                </select>
+                
 
                 <select
                     value={stockFilter}
@@ -567,8 +539,8 @@ export default function ProductBalances() {
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Бренд</th>
-                                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-900">Модель</th>
+                                <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Название товара</th>
+                                
                                 <th className="px-2 py-2 text-center text-xs font-semibold text-gray-900">Остаток</th>
                                 <th className="px-2 py-2 text-right text-xs font-semibold text-gray-900">Сумма</th>
                                 <th className="relative py-2 pl-3 pr-4 sm:pr-6"></th>
@@ -587,10 +559,10 @@ export default function ProductBalances() {
                                                 <div className="w-4" />
                                             )}
                                             {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
-                                            <span className="min-w-0 break-words">{product.brand || product.name}</span>
+                                            <span className="min-w-0 break-words">{product.name}</span>
                                         </div>
                                     </td>
-                                    <td className="px-2 py-3 text-sm text-gray-500">{product.model || '-'}</td>
+                                    
                                     <td className="px-2 py-3 text-center">
                                         <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                             {product.currentStock} {product.unit || 'шт'}
@@ -745,7 +717,7 @@ export default function ProductBalances() {
                     <table className="min-w-full divide-y divide-gray-300 border-separate border-spacing-0">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 py-3 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6 backdrop-blur backdrop-filter">Бренд / Модель</th>
+                                <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 py-3 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6 backdrop-blur backdrop-filter">Название товара</th>
                                 <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-left text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Диоптрия</th>
                                 <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter">Нач. остаток</th>
                                 <th className="sticky top-0 border-b border-gray-300 bg-gray-50 bg-opacity-75 px-3 py-3 text-center text-xs font-semibold text-gray-900 backdrop-blur backdrop-filter text-green-700">Приход</th>
@@ -759,9 +731,8 @@ export default function ProductBalances() {
                                 const matchesName = p.name.toLowerCase().includes(q) || 
                                                   (p.brand && p.brand.toLowerCase().includes(q)) ||
                                                   (p.model && p.model.toLowerCase().includes(q));
-                                const matchesBrand = brandFilter === 'all' || p.brand === brandFilter || p.name === brandFilter;
-                                const matchesModel = modelFilter === 'all' || p.model === modelFilter;
-                                return matchesName && matchesBrand && matchesModel;
+                                const matchesNameFilter = nameFilter === 'all' || p.name === nameFilter;
+                                return matchesName && matchesNameFilter;
                             }).map((product, idx) => {
                                   const totalInitial = product.turnover.reduce((sum: number, d: any) => sum + d.initial, 0);
                                   const totalIn = product.turnover.reduce((sum: number, d: any) => sum + d.in, 0);
@@ -778,8 +749,8 @@ export default function ProductBalances() {
                                                       </button>
                                                       {product.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500 flex-shrink-0" /> : <Box className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                                                       <div className="flex flex-col">
-                                                          <span className="font-bold text-gray-900">{product.brand || product.name}</span>
-                                                          {product.model && <span className="text-gray-500 font-normal">{product.model}</span>}
+                                                          <span className="font-bold text-gray-900">{product.name}</span>
+                                                          
                                                       </div>
                                                   </div>
                                               </td>
