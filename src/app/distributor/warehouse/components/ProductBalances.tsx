@@ -216,8 +216,6 @@ export default function ProductBalances() {
             setIsSaving(true);
             const payload = {
                 name: editingProduct.name,
-                brand: editingProduct.brand,
-                model: editingProduct.model,
                 barcode: editingProduct.barcode,
                 sku: editingProduct.sku,
                 purchasePrice: editingProduct.purchasePrice,
@@ -262,8 +260,6 @@ export default function ProductBalances() {
         
         const matchesName = !query || 
                p.name?.toLowerCase().includes(query) || 
-               p.brand?.toLowerCase().includes(query) || 
-               p.model?.toLowerCase().includes(query) || 
                p.sku?.toLowerCase().includes(query) ||
                p.specs?.lot?.toLowerCase().includes(query);
                
@@ -331,9 +327,7 @@ export default function ProductBalances() {
 
         const filteredTurnover = turnoverData.filter(p => {
             const q = searchQuery.toLowerCase();
-            const matchesName = p.name.toLowerCase().includes(q) || 
-                              (p.brand && p.brand.toLowerCase().includes(q)) ||
-                              (p.model && p.model.toLowerCase().includes(q));
+            const matchesName = p.name.toLowerCase().includes(q);
             const matchesNameFilter = nameFilter === 'all' || p.name === nameFilter;
             return matchesName && matchesNameFilter;
         });
@@ -728,9 +722,7 @@ export default function ProductBalances() {
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {turnoverData.filter(p => {
                                 const q = searchQuery.toLowerCase();
-                                const matchesName = p.name.toLowerCase().includes(q) || 
-                                                  (p.brand && p.brand.toLowerCase().includes(q)) ||
-                                                  (p.model && p.model.toLowerCase().includes(q));
+                                const matchesName = p.name.toLowerCase().includes(q);
                                 const matchesNameFilter = nameFilter === 'all' || p.name === nameFilter;
                                 return matchesName && matchesNameFilter;
                             }).map((product, idx) => {
@@ -911,7 +903,7 @@ export default function ProductBalances() {
                                 
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Бренд *</label>
+                                        <label className="block text-sm font-medium leading-6 text-gray-900">Название товара *</label>
                                         <input
                                             type="text"
                                             value={editingProduct.name}
@@ -919,16 +911,7 @@ export default function ProductBalances() {
                                             className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         />
                                     </div>
-                                    
-                                    <div className="sm:col-span-2">
-                                        <label className="block text-sm font-medium leading-6 text-gray-900">Модель</label>
-                                        <input
-                                            type="text"
-                                            value={editingProduct.model || ''}
-                                            onChange={(e) => setEditingProduct({...editingProduct, model: e.target.value})}
-                                            className="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                        />
-                                    </div>
+
 
                                     <div className="sm:col-span-2 grid grid-cols-2 gap-4">
                                         <div>
