@@ -49,8 +49,10 @@ const CATEGORIES: Record<string, { label: string; icon: any; color: string }> = 
     diagnostic_lens: { label: 'Диагностические линзы', icon: Eye, color: 'bg-indigo-50 text-indigo-700' },
     viscoelastic: { label: 'Вискоэластики', icon: Droplets, color: 'bg-cyan-50 text-cyan-700' },
     ophthalmic_solution: { label: 'Офтальмологические растворы', icon: Droplets, color: 'bg-teal-50 text-teal-700' },
+    solutions: { label: 'Офтальмологические растворы', icon: Droplets, color: 'bg-teal-50 text-teal-700' },
     silicone_oil: { label: 'Силиконовое масло', icon: Droplets, color: 'bg-yellow-50 text-yellow-700' },
     corneal_ring: { label: 'Роговичные кольца/сегменты', icon: Tag, color: 'bg-purple-50 text-purple-700' },
+    rings: { label: 'Роговичные кольца/сегменты', icon: Tag, color: 'bg-purple-50 text-purple-700' },
     surgical_kit: { label: 'Хирургические наборы', icon: Package, color: 'bg-red-50 text-red-700' },
     implant: { label: 'Импланты/протезы', icon: Package, color: 'bg-pink-50 text-pink-700' },
     drainage: { label: 'Дренажи', icon: Droplets, color: 'bg-green-50 text-green-700' },
@@ -1255,7 +1257,7 @@ export default function OpticCatalogPage() {
                     </div>
 
                     {/* Search + Category Filter */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col gap-3">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input

@@ -216,8 +216,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             qty: qty,
             price: Number(price) || 0,
             batchBarcode: batchBarcode.trim(),
-            batchDiopters: (!selectedProduct.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens' || selectedProduct.category === 'iol') ? batchDiopters : null,
-            batchSize: selectedProduct.category === 'rings' ? batchSize : null,
+            batchDiopters: (!selectedProduct.category || ['spectacle_lens', 'contact_lens', 'iol', 'diagnostic_lens'].includes(selectedProduct.category)) ? batchDiopters : null,
+            batchSize: ['rings', 'corneal_ring'].includes(selectedProduct.category || '') ? batchSize : null,
             batchExpiration,
             batchSerial,
         };
@@ -528,7 +528,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         }}
                                     />
                                 </div>
-                                {(!selectedProduct?.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens' || selectedProduct.category === 'iol') && (
+                                {(!selectedProduct?.category || ['spectacle_lens', 'contact_lens', 'iol', 'diagnostic_lens'].includes(selectedProduct.category)) && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
                                         <input
@@ -549,7 +549,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         />
                                     </div>
                                 )}
-                                {selectedProduct?.category === 'rings' && (
+                                {['rings', 'corneal_ring'].includes(selectedProduct?.category || '') && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Размер</label>
                                         <input
