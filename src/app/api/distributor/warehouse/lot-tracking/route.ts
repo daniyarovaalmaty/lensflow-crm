@@ -25,10 +25,30 @@ export async function GET(req: NextRequest) {
             if (lotQuery.length < 3) {
                 return NextResponse.json({ error: 'Минимум 3 символа для поиска' }, { status: 400 });
             }
-            whereClause.serialNumber = {
-                contains: lotQuery,
-                mode: 'insensitive'
-            };
+            whereClause.OR = [
+                {
+                    serialNumber: {
+                        contains: lotQuery,
+                        mode: 'insensitive'
+                    }
+                },
+                {
+                    product: {
+                        name: {
+                            contains: lotQuery,
+                            mode: 'insensitive'
+                        }
+                    }
+                },
+                {
+                    product: {
+                        sku: {
+                            contains: lotQuery,
+                            mode: 'insensitive'
+                        }
+                    }
+                }
+            ];
         }
 
         const stockItems = await prisma.stockItem.findMany({
