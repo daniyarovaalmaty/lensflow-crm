@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { SessionProvider } from '@/components/auth/SessionProvider';
 import Script from 'next/script';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({
     subsets: ['latin', 'cyrillic'],
@@ -48,6 +49,7 @@ export default function RootLayout({
                 <meta name="mobile-web-app-capable" content="yes" />
             </head>
             <body className="min-h-screen">
+                <Toaster position="top-center" />
                 <SessionProvider>
                     {children}
                 </SessionProvider>

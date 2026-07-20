@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             // Unreserve stock items
             // We just clear wholesaleOrderId and set status back to in_stock
             await tx.stockItem.updateMany({
-                where: { wholesaleOrderId: orderId },
+                where: { wholesaleOrderId: orderId, organizationId },
                 data: {
                     status: 'in_stock',
                     wholesaleOrderId: null

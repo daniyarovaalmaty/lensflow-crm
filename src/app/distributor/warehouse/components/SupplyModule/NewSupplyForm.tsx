@@ -138,11 +138,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [batchSerial, setBatchSerial] = useState('');
 
     useEffect(() => {
-        if (!nameSearch.trim() && !barcodeSearch.trim()) {
-            setSearchResults([]);
-            return;
-        }
-
         const delayDebounceFn = setTimeout(async () => {
             setIsSearching(true);
             try {
