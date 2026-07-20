@@ -1,8 +1,18 @@
 // Script to seed 99 products from matvedomost into the database
-// Run with: npx ts-node --compiler-options '{"module":"CommonJS"}' scripts/seed-matvedomost-products.ts
+// Run with: node scripts/seed-matvedomost-products.js
 
+require('dotenv').config({ path: '.env.local' });
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { PrismaPg } = require('@prisma/adapter-pg');
+const pg = require('pg');
+
+const pool = new pg.Pool({ 
+    connectionString: process.env.DATABASE_URL,
+    max: 5,
+    connectionTimeoutMillis: 10000,
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
     // Find organization by user email
