@@ -435,16 +435,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         placeholder="Поиск по штрихкоду..."
                                     />
                                 </div>
-                                <button 
-                                    onClick={() => {
-                                        setNewProductName(nameSearch || '');
-                                        setIsCreatingProduct(true);
-                                    }}
-                                    className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-300 hover:bg-indigo-50 whitespace-nowrap"
-                                >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Создать новый
-                                </button>
                             </div>
                         </div>
                         
@@ -480,60 +470,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     </ul>
                                 ) : (
                                     <div className="p-4 text-sm text-gray-500 text-center">
-                                        Товар не найден. Вы можете <button onClick={() => {setNewProductName(nameSearch || ''); setIsCreatingProduct(true);}} className="text-indigo-600 underline">создать его</button>.
+                                        Товар не найден. Сначала добавьте его в <a href="/distributor/catalog" className="text-indigo-600 underline font-medium" target="_blank">Каталог</a>.
                                     </div>
                                 )}
                             </div>
                         )}
-                    </div>
-                ) : isCreatingProduct ? (
-                    <div className="space-y-4 bg-white p-4 rounded-md ring-1 ring-gray-200">
-                        <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium text-gray-900">{selectedProduct ? 'Редактирование товара' : 'Создание нового товара'}</h4>
-                            <button onClick={() => setIsCreatingProduct(false)} className="text-sm text-gray-500 hover:text-gray-700">Отмена</button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Бренд *</label>
-                                <input
-                                    type="text"
-                                    value={newProductName}
-                                    onChange={(e) => setNewProductName(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Категория</label>
-                                <select
-                                    value={newProductCategory}
-                                    onChange={(e) => setNewProductCategory(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                >
-                                    <option value="spectacle_lens">Линзы</option>
-                                    <option value="rings">Кольца</option>
-                                    <option value="solutions">Растворы</option>
-                                    <option value="other">Другое</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Модель</label>
-                                <input
-                                    type="text"
-                                    value={newProductModel}
-                                    onChange={(e) => setNewProductModel(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleCreateProduct}
-                            className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 w-full sm:w-auto"
-                        >
-                            Сохранить и выбрать
-                        </button>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -545,16 +486,6 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                 </span>
                             </div>
                             <div className="flex items-center gap-4">
-                                <button onClick={() => {
-                                    setNewProductName(selectedProduct.name || '');
-                                    setNewProductBarcode(selectedProduct.barcode || '');
-                                    setNewProductModel(selectedProduct.model || '');
-                                    setNewProductCategory(selectedProduct.category || 'spectacle_lens');
-                                    setIsCreatingProduct(true);
-                                }} className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
-                                    <Edit2 className="h-4 w-4" />
-                                    Редактировать
-                                </button>
                                 <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Выбрать другой</button>
                             </div>
                         </div>

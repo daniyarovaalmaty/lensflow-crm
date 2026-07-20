@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
         // Fetch all products
         const products = await prisma.opticProduct.findMany({
-            where: { organizationId: orgId, category: { in: ['contact_lens', 'spectacle_lens'] } }
+            where: { organizationId: orgId }
         });
 
         // Fetch ALL movements up to endDate

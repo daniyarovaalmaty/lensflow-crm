@@ -45,12 +45,25 @@ interface OpticProduct {
 
 // ==================== Constants ====================
 const CATEGORIES: Record<string, { label: string; icon: any; color: string }> = {
+    iol: { label: 'ИОЛ (интраокулярные линзы)', icon: Eye, color: 'bg-blue-50 text-blue-700' },
+    diagnostic_lens: { label: 'Диагностические линзы', icon: Eye, color: 'bg-indigo-50 text-indigo-700' },
+    viscoelastic: { label: 'Вискоэластики', icon: Droplets, color: 'bg-cyan-50 text-cyan-700' },
+    ophthalmic_solution: { label: 'Офтальмологические растворы', icon: Droplets, color: 'bg-teal-50 text-teal-700' },
+    silicone_oil: { label: 'Силиконовое масло', icon: Droplets, color: 'bg-yellow-50 text-yellow-700' },
+    corneal_ring: { label: 'Роговичные кольца/сегменты', icon: Tag, color: 'bg-purple-50 text-purple-700' },
+    surgical_kit: { label: 'Хирургические наборы', icon: Package, color: 'bg-red-50 text-red-700' },
+    implant: { label: 'Импланты/протезы', icon: Package, color: 'bg-pink-50 text-pink-700' },
+    drainage: { label: 'Дренажи', icon: Droplets, color: 'bg-green-50 text-green-700' },
+    equipment: { label: 'Оборудование', icon: Wrench, color: 'bg-gray-50 text-gray-700' },
+    instrument: { label: 'Инструменты', icon: Wrench, color: 'bg-orange-50 text-orange-700' },
+    consumable: { label: 'Расходные материалы', icon: ShoppingBag, color: 'bg-lime-50 text-lime-700' },
+    contact_lens: { label: 'Контактные линзы', icon: Eye, color: 'bg-violet-50 text-violet-700' },
     frame: { label: 'Оправы', icon: Glasses, color: 'bg-blue-50 text-blue-700' },
-    sun_glasses: { label: 'Солнцезащитные', icon: Star, color: 'bg-amber-50 text-amber-700' },
-    contact_lens: { label: 'Контактные линзы', icon: Eye, color: 'bg-purple-50 text-purple-700' },
+    sun_glasses: { label: 'Солнцезащитные очки', icon: Star, color: 'bg-amber-50 text-amber-700' },
     spectacle_lens: { label: 'Очковые линзы', icon: Eye, color: 'bg-indigo-50 text-indigo-700' },
     solution: { label: 'Растворы', icon: Droplets, color: 'bg-cyan-50 text-cyan-700' },
     accessory: { label: 'Аксессуары', icon: ShoppingBag, color: 'bg-pink-50 text-pink-700' },
+    other: { label: 'Другое', icon: Package, color: 'bg-gray-50 text-gray-700' },
     service_exam: { label: 'Проверка зрения', icon: Wrench, color: 'bg-emerald-50 text-emerald-700' },
     service_fitting: { label: 'Подбор линз', icon: Wrench, color: 'bg-emerald-50 text-emerald-700' },
     service_cutting: { label: 'Вытачка линз', icon: Wrench, color: 'bg-emerald-50 text-emerald-700' },
@@ -839,7 +852,7 @@ export default function OpticCatalogPage() {
     const openCreateForm = () => {
         setEditProduct(null);
         setForm({
-            name: '', category: 'frame', brand: '', model: '', sku: '', barcode: '',
+            name: '', category: 'iol', brand: '', model: '', sku: '', barcode: '',
             shortDescription: '', fullDescription: '', purchasePrice: '', retailPrice: '',
             minStock: '0', unit: 'шт', trackSerials: false, isPublic: false,
             images: [], specs: {},
@@ -1480,10 +1493,26 @@ export default function OpticCatalogPage() {
                                         onChange={e => setForm({ ...form, category: e.target.value })}
                                         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     >
-                                        <optgroup label="Товары">
+                                        <optgroup label="Медицинские изделия">
+                                            <option value="iol">ИОЛ (интраокулярные линзы)</option>
+                                            <option value="diagnostic_lens">Диагностические линзы</option>
+                                            <option value="viscoelastic">Вискоэластики</option>
+                                            <option value="ophthalmic_solution">Офтальмологические растворы</option>
+                                            <option value="silicone_oil">Силиконовое масло</option>
+                                            <option value="corneal_ring">Роговичные кольца/сегменты</option>
+                                            <option value="surgical_kit">Хирургические наборы</option>
+                                            <option value="implant">Импланты/протезы</option>
+                                            <option value="drainage">Дренажи</option>
+                                            <option value="contact_lens">Контактные линзы</option>
+                                        </optgroup>
+                                        <optgroup label="Оборудование и инструменты">
+                                            <option value="equipment">Оборудование</option>
+                                            <option value="instrument">Инструменты</option>
+                                            <option value="consumable">Расходные материалы</option>
+                                        </optgroup>
+                                        <optgroup label="Оптика">
                                             <option value="frame">Оправы</option>
                                             <option value="sun_glasses">Солнцезащитные очки</option>
-                                            <option value="contact_lens">Контактные линзы</option>
                                             <option value="spectacle_lens">Очковые линзы</option>
                                             <option value="solution">Растворы</option>
                                             <option value="accessory">Аксессуары</option>
@@ -1494,6 +1523,9 @@ export default function OpticCatalogPage() {
                                             <option value="service_cutting">Вытачка / обработка линз</option>
                                             <option value="service_repair">Ремонт очков</option>
                                             <option value="service_other">Другие услуги</option>
+                                        </optgroup>
+                                        <optgroup label="Прочее">
+                                            <option value="other">Другое</option>
                                         </optgroup>
                                     </select>
                                 </div>

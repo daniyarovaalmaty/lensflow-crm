@@ -49,7 +49,7 @@ export default function WholesaleOrdersPage() {
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Оптовые заказы (B2B)</h1>
+                <h1 className="text-2xl font-bold">Продажи</h1>
                 <Link href="/distributor/wholesale/create" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 px-4 py-2">
                     <Plus className="w-4 h-4 mr-2" />
                     Создать заказ

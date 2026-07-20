@@ -10,9 +10,9 @@ import { signOut } from 'next-auth/react';
 const navItems = [
     { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
     { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
-    { href: '/distributor/catalog', label: 'B2B Прайс-лист', icon: Package, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
+    { href: '/distributor/catalog', label: 'Каталог', icon: Package, roles: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'] },
 
-    { href: '/distributor/wholesale', label: 'Оптовые заказы', icon: ShoppingBag, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
+    { href: '/distributor/wholesale', label: 'Продажи', icon: ShoppingBag, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
     { href: '/distributor/warehouse', label: 'Склад', icon: Warehouse, roles: ['dist_head', 'dist_admin', 'dist_manager'] },
     { href: '/distributor/analytics', label: 'Аналитика', icon: BarChart3, roles: ['dist_head', 'dist_admin'] },
     { href: '/distributor/staff', label: 'Сотрудники', icon: User, roles: ['dist_head', 'dist_admin'] },
