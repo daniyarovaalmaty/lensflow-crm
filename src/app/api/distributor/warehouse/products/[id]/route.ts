@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         const body = await req.json();
         const { name, brand, model, barcode, sku, purchasePrice, retailPrice, specs, trackSerials } = body;
 
-        const product = await prisma.opticProduct.findUnique({
+        const product = await prisma.opticProduct.findFirst({
             where: { id: params.id, organizationId: session.user.organizationId }
         });
 
@@ -52,7 +52,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const product = await prisma.opticProduct.findUnique({
+        const product = await prisma.opticProduct.findFirst({
             where: { id: params.id, organizationId: session.user.organizationId }
         });
 
@@ -89,10 +89,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         });
 
         await prisma.opticProduct.delete({
-            where: { 
-                id: params.id,
-                organizationId: session.user.organizationId 
-            }
+            where: { id: params.id }
         });
 
         return NextResponse.json({ success: true });
