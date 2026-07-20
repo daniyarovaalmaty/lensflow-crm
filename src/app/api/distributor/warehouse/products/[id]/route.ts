@@ -82,7 +82,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         const hasWholesaleOrderItems = await prisma.wholesaleOrderItem.findFirst({
             where: { 
                 productId: params.id,
-                wholesaleOrder: {
+                order: {
                     organizationId: session.user.organizationId
                 }
             },
