@@ -1,39 +1,59 @@
 require('dotenv').config({ path: '.env.local' });
 const { PrismaClient } = require('@prisma/client');
+const { Pool } = require('pg');
 const { PrismaPg } = require('@prisma/adapter-pg');
-const pg = require('pg');
 
-const pool = new pg.Pool({ 
-    connectionString: process.env.DATABASE_URL,
-    max: 5,
-    connectionTimeoutMillis: 10000,
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
-
-async function main() {
-    // Find organization by user email
-    const user = await prisma.user.findUnique({
-        where: { email: 'medinnovation.kaz2021@gmail.com' },
-        select: { organizationId: true, organization: { select: { name: true } } }
-    });
-    
-    if (!user?.organizationId) {
-        console.error('User or organization not found!');
+async function updateTrackSerials() {
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+        console.error('No DATABASE_URL found in .env.local');
         process.exit(1);
     }
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+    const prisma = new PrismaClient({ adapter });
 
-    const orgId = user.organizationId;
-    console.log(`Using organization: ${user.organization?.name} (${orgId})\n`);
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email: 'medinnovation.kaz2021@gmail.com' }
+        });
 
-    const result = await prisma.opticProduct.updateMany({
-        where: { organizationId: orgId },
-        data: { trackSerials: true }
-    });
+        if (!user) {
+            console.error('User not found');
+            return;
+        }
 
-    console.log(`Updated ${result.count} products to use serial tracking (trackSerials = true)`);
+        const org = await prisma.organization.findFirst({
+            where: {
+                users: {
+                    some: { id: user.id }
+                }
+            }
+        });
+
+        if (!org) {
+            console.error('Organization not found');
+            return;
+        }
+
+        console.log(`Found org: ${org.id} for user ${user.email}`);
+
+        const updateResult = await prisma.opticProduct.updateMany({
+            where: {
+                organizationId: org.id
+            },
+            data: {
+                trackSerials: true
+            }
+        });
+
+        console.log(`Successfully updated ${updateResult.count} products to have trackSerials = true.`);
+
+    } catch (error) {
+        console.error('Error updating products:', error);
+    } finally {
+        await prisma.$disconnect();
+    }
 }
 
-main()
-    .catch(e => { console.error(e); process.exit(1); })
-    .finally(() => prisma.$disconnect());
+updateTrackSerials();

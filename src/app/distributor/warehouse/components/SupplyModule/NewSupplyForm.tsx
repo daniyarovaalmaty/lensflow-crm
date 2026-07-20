@@ -216,7 +216,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             qty: qty,
             price: Number(price) || 0,
             batchBarcode: batchBarcode.trim(),
-            batchDiopters: (!selectedProduct.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens') ? batchDiopters : null,
+            batchDiopters: (!selectedProduct.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens' || selectedProduct.category === 'iol') ? batchDiopters : null,
             batchSize: selectedProduct.category === 'rings' ? batchSize : null,
             batchExpiration,
             batchSerial,
@@ -528,7 +528,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         }}
                                     />
                                 </div>
-                                {(!selectedProduct?.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens') && (
+                                {(!selectedProduct?.category || selectedProduct.category === 'spectacle_lens' || selectedProduct.category === 'contact_lens' || selectedProduct.category === 'iol') && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
                                         <input

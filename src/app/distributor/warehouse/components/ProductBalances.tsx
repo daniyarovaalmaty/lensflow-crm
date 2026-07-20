@@ -601,7 +601,7 @@ export default function ProductBalances() {
                                                         onChange={(e) => setBatchSorts({ ...batchSorts, [product.id]: e.target.value })}
                                                         className="block rounded-md border-0 py-1 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 text-xs sm:leading-6 bg-white shadow-sm"
                                                     >
-                                                        {product.category === 'contact_lens' || product.category === 'spectacle_lens' ? (
+                                                        {product.category === 'contact_lens' || product.category === 'spectacle_lens' || product.category === 'iol' ? (
                                                             <>
                                                                 <option value="expiry_asc">По сроку годности (возрастание)</option>
                                                                 <option value="expiry_desc">По сроку годности (убывание)</option>
