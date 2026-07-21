@@ -9,6 +9,7 @@ import { signOut } from 'next-auth/react';
 import { getEffectiveDistributorPermissions } from '@/types/user';
 
 const navItems = [
+    { href: '/distributor', label: 'Дашборд', icon: LayoutDashboard, exact: true, permKey: 'canViewDashboard' },
     { href: '/distributor/counterparties', label: 'Контрагенты', icon: Users, permKey: 'canViewCounterparties' },
     { href: '/distributor/catalog', label: 'Каталог', icon: Package, permKey: 'canViewCatalog' },
     { href: '/distributor/wholesale', label: 'Продажи', icon: ShoppingBag, permKey: 'canViewWholesale' },

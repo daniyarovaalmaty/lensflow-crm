@@ -322,13 +322,13 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     dist_admin: {
         canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
         canDeliver: false, canAddDefects: false, canViewPayments: true, canChangePayments: false,
-        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canShip: false, canPrint: false, canCreateOrders: true, canViewOrders: true,
         canViewAllOrders: false, canViewStats: true, canSendToAccountant: false, canProcessDocs: false,
     },
     dist_manager: {
         canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
         canDeliver: false, canAddDefects: false, canViewPayments: false, canChangePayments: false,
-        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canShip: false, canPrint: false, canCreateOrders: true, canViewOrders: true,
         canViewAllOrders: false, canViewStats: false, canSendToAccountant: false, canProcessDocs: false,
     },
     dist_accountant: {
@@ -476,6 +476,7 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
 };
 
 export interface DistributorPermissions {
+    canViewDashboard: boolean;
     canViewCounterparties: boolean;
     canViewCatalog: boolean;
     canViewWholesale: boolean;
@@ -485,14 +486,15 @@ export interface DistributorPermissions {
 }
 
 export const DefaultDistributorPermissions: Record<string, DistributorPermissions> = {
-    dist_head: { canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: true },
-    dist_admin: { canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: false },
-    dist_manager: { canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: false, canViewSettings: false },
-    dist_accountant: { canViewCounterparties: false, canViewCatalog: true, canViewWholesale: false, canViewWarehouse: false, canViewStaff: false, canViewSettings: false },
+    dist_head: { canViewDashboard: true, canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: true },
+    dist_admin: { canViewDashboard: true, canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: false },
+    dist_manager: { canViewDashboard: true, canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: false, canViewSettings: false },
+    dist_accountant: { canViewDashboard: true, canViewCounterparties: false, canViewCatalog: true, canViewWholesale: false, canViewWarehouse: false, canViewStaff: false, canViewSettings: false },
 };
 
 export function getEffectiveDistributorPermissions(user: { subRole: string; permissions?: any }): DistributorPermissions {
     const roleDefault = DefaultDistributorPermissions[user.subRole] || {
+        canViewDashboard: false,
         canViewCounterparties: false,
         canViewCatalog: false,
         canViewWholesale: false,
@@ -507,6 +509,7 @@ export function getEffectiveDistributorPermissions(user: { subRole: string; perm
 
     const p = user.permissions;
     return {
+        canViewDashboard: typeof p.canViewDashboard === 'boolean' ? p.canViewDashboard : roleDefault.canViewDashboard,
         canViewCounterparties: typeof p.canViewCounterparties === 'boolean' ? p.canViewCounterparties : roleDefault.canViewCounterparties,
         canViewCatalog: typeof p.canViewCatalog === 'boolean' ? p.canViewCatalog : roleDefault.canViewCatalog,
         canViewWholesale: typeof p.canViewWholesale === 'boolean' ? p.canViewWholesale : roleDefault.canViewWholesale,
