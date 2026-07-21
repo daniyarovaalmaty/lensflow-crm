@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Users, Search, Plus, Phone, FileText, Eye, RefreshCw, ChevronRight, Loader2, ArrowLeft } from 'lucide-react';
+import { Users, Search, Plus, Phone, FileText, Eye, RefreshCw, ChevronRight, ChevronLeft, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
@@ -55,7 +55,7 @@ export default function PatientsPage() {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
+    const [pages, setPages] = useState(1);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -96,15 +96,10 @@ export default function PatientsPage() {
             const res = await fetch(`/api/patients?${params}`);
             const data = await res.json();
             
-            if (pageNum === 1) {
-                setPatients(data.patients || []);
-            } else {
-                setPatients(prev => [...prev, ...(data.patients || [])]);
-            }
-            
+            setPatients(data.patients || []);
             setTotal(data.total || 0);
             setPage(data.page || pageNum);
-            setHasMore(data.page < data.pages);
+            setPages(data.pages || 1);
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
@@ -120,8 +115,14 @@ export default function PatientsPage() {
         searchTimer.current = setTimeout(() => load(val, 1, true), 400);
     };
 
-    const handleLoadMore = () => {
-        if (!isLoadingMore && hasMore) {
+    const handlePrevPage = () => {
+        if (!isLoadingMore && page > 1) {
+            load(q, page - 1, true);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (!isLoadingMore && page < pages) {
             load(q, page + 1, true);
         }
     };
@@ -255,6 +256,32 @@ export default function PatientsPage() {
                     </div>
                 ) : (
                     <div className="space-y-2">
+                        {pages > 1 && (
+                            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm mb-4">
+                                <div className="text-sm text-gray-500 font-medium">
+                                    Показано {(page - 1) * 30 + 1} – {Math.min(page * 30, total)} из {total}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handlePrevPage}
+                                        disabled={page === 1 || isLoadingMore}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <span className="text-sm font-bold text-gray-700 px-3">
+                                        {page} из {pages}
+                                    </span>
+                                    <button
+                                        onClick={handleNextPage}
+                                        disabled={page === pages || isLoadingMore}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         {patients.map(p => {
                             const lastRx = p.prescriptions[0];
                             const initials = p.name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
@@ -299,20 +326,30 @@ export default function PatientsPage() {
                             );
                         })}
                         
-                        {hasMore && (
-                            <div className="pt-4 pb-2 flex justify-center">
-                                <button
-                                    onClick={handleLoadMore}
-                                    disabled={isLoadingMore}
-                                    className="btn btn-secondary w-full sm:w-auto px-8"
-                                >
-                                    {isLoadingMore ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                            Загрузка...
-                                        </>
-                                    ) : 'Показать еще'}
-                                </button>
+                        {pages > 1 && (
+                            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm mt-4">
+                                <div className="text-sm text-gray-500 font-medium">
+                                    Показано {(page - 1) * 30 + 1} – {Math.min(page * 30, total)} из {total}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handlePrevPage}
+                                        disabled={page === 1 || isLoadingMore}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <span className="text-sm font-bold text-gray-700 px-3">
+                                        {page} из {pages}
+                                    </span>
+                                    <button
+                                        onClick={handleNextPage}
+                                        disabled={page === pages || isLoadingMore}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
