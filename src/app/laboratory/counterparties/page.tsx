@@ -18,6 +18,7 @@ interface Doctor {
     clinicName: string;
     clinicId: string;
     hasOrg: boolean;
+    discountPercent: number | null;
     orders: number;
     revenue: number;
     unpaid: number;
