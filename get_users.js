@@ -1,23 +1,20 @@
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: "postgresql://postgres.hxftfrjhkrybnazlmnol:Arnela645249@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
-    }
-  }
-});
+const prisma = new PrismaClient();
 
 async function main() {
-    const users = await prisma.user.findMany({
-        where: {
-            subRole: { in: ['optic_doctor', 'sales_manager', 'optic_manager'] }
-        },
-        select: {
-            fullName: true,
-            email: true,
-            subRole: true
-        }
-    });
-    console.log(users);
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { fullName: { contains: 'Айгерим' } },
+        { fullName: { contains: 'Шораева' } },
+        { organization: { name: { contains: 'New Eye' } } }
+      ]
+    },
+    include: {
+      organization: true
+    }
+  });
+  console.log(JSON.stringify(users, null, 2));
 }
+
 main().catch(console.error).finally(() => prisma.$disconnect());

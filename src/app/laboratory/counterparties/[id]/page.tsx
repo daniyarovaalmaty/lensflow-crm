@@ -51,6 +51,7 @@ export default function CounterpartyDetailPage() {
     const [showEditInfoModal, setShowEditInfoModal] = useState(false);
     const [editInfoForm, setEditInfoForm] = useState<any>({});
     const [isSavingInfo, setIsSavingInfo] = useState(false);
+    const [isTogglingApproval, setIsTogglingApproval] = useState(false);
 
     const fetchCounterparty = async () => {
         try {
@@ -157,6 +158,26 @@ export default function CounterpartyDetailPage() {
         }
     };
 
+    const handleToggleApproval = async () => {
+        setIsTogglingApproval(true);
+        try {
+            const res = await fetch(`/api/counterparties/${id}/approval`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requiresApproval: !data.requiresApproval }),
+            });
+            if (res.ok) {
+                setData((prev: any) => ({ ...prev, requiresApproval: !prev.requiresApproval }));
+            } else {
+                alert('Не удалось обновить настройки');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsTogglingApproval(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -254,6 +275,31 @@ export default function CounterpartyDetailPage() {
                         </div>
                         <p className="text-2xl font-bold text-red-600">{fmt(totalUnpaid)} ₸</p>
                     </div>
+                    {isClinic && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-4 col-span-1 sm:col-span-2 lg:col-span-4 flex items-center justify-between">
+                            <div>
+                                <div className="text-sm font-semibold text-gray-900">Подтверждение заказов бухгалтером</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                    {data.requiresApproval ? 'Включено: Заказы врачей этой клиники падают в Черновик и требуют подтверждения бухгалтером.' : 'Выключено: Заказы врачей этой клиники сразу уходят в лабораторию.'}
+                                </div>
+                            </div>
+                            {canEditPricing && (
+                                <button
+                                    onClick={handleToggleApproval}
+                                    disabled={isTogglingApproval}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                        data.requiresApproval ? 'bg-blue-600' : 'bg-gray-200'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                            data.requiresApproval ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

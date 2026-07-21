@@ -278,6 +278,9 @@ export default function NewOrderPage() {
                         </div>
 
                         <h1 className="text-2xl font-bold text-gray-900 mb-2">Заказ создан!</h1>
+                        <p className="text-sm font-medium text-amber-600 mb-4 bg-amber-50 rounded-lg p-2 max-w-sm mx-auto">
+                            {createdOrder.status === 'draft' ? 'Заказ сохранён как черновик и ожидает оплаты/подтверждения в кассе клиники. В лабораторию он отправится после подтверждения бухгалтером.' : 'Заказ успешно отправлен в лабораторию.'}
+                        </p>
                         <p className="text-gray-600 mb-1">Номер заказа:</p>
                         <p className="text-lg font-semibold text-primary-600 mb-4">{createdOrder.order_id}</p>
 

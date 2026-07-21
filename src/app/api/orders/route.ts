@@ -28,9 +28,11 @@ export async function GET(request: NextRequest) {
                 { distributorOrgId: null },
                 { labOrgId: session.user.organizationId },
             ];
+            where.status = { not: 'draft' };
         } else if (session.user.role === 'distributor') {
             // Distributor sees only orders assigned to them
             where.distributorOrgId = session.user.organizationId;
+            where.status = { not: 'draft' };
         } else if (session.user.role === 'optic') {
             if (session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager') {
                 // Procurement and Managers see orders for ALL branches of their parent org
@@ -59,6 +61,7 @@ export async function GET(request: NextRequest) {
         if (status) {
             // Map status string to enum value
             const statusMap: Record<string, string> = {
+                'draft': 'draft',
                 'new': 'new_order',
                 'in_production': 'in_production',
                 'ready': 'ready',
@@ -124,6 +127,7 @@ export async function GET(request: NextRequest) {
         const transformed = orders.map((order: any) => {
             // Map status enum back to string
             const statusMap: Record<string, string> = {
+                'draft': 'draft',
                 'new_order': 'new',
                 'in_production': 'in_production',
                 'ready': 'ready',
@@ -496,10 +500,19 @@ export async function POST(request: NextRequest) {
                 const orderOrgId = (session.user.subRole === 'optic_procurement' && body.branchOrgId)
                     ? body.branchOrgId
                     : (session.user.organizationId || undefined);
+
+                let initialStatus = 'new_order';
+                if (orderOrgId) {
+                    const org = await prisma.organization.findUnique({ where: { id: orderOrgId }, select: { requiresApproval: true } });
+                    if (org?.requiresApproval) {
+                        initialStatus = 'draft';
+                    }
+                }
+
                 order = await prisma.order.create({
                     data: {
                         orderNumber,
-                        status: 'new_order',
+                        status: initialStatus as any,
                         isUrgent: is_urgent,
                         organizationId: orderOrgId,
                         createdById: session.user.id,

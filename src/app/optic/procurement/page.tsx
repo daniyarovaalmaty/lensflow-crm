@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Upload, Paperclip, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Package, Clock, Check, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Upload, Paperclip, Trash2, Loader2 } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -900,6 +900,39 @@ export default function OpticProcurementDashboard() {
                                                         <X className="w-3.5 h-3.5" />
                                                         Заказ отменён
                                                     </span>
+                                                );
+                                            }
+                                            if (order.status === 'draft') {
+                                                return (
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (!confirm('Подтвердить заказ и отправить в лабораторию?')) return;
+                                                                try {
+                                                                    await fetch(`/api/orders/${order.order_id}/status`, {
+                                                                        method: 'PATCH',
+                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                        body: JSON.stringify({ status: 'new' }),
+                                                                    });
+                                                                    loadOrders();
+                                                                } catch (error) {
+                                                                    console.error('Failed to approve order:', error);
+                                                                }
+                                                            }}
+                                                            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                                        >
+                                                            <Check className="w-3.5 h-3.5" />
+                                                            Подтвердить заказ
+                                                        </button>
+                                                        <Link
+                                                            href={`/optic/orders/${order.order_id}/edit`}
+                                                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                                                        >
+                                                            <Pencil className="w-3.5 h-3.5" />
+                                                            Ред.
+                                                        </Link>
+                                                    </div>
                                                 );
                                             }
                                             if (order.status !== 'new') {

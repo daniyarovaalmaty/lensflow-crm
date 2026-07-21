@@ -27,7 +27,7 @@ export async function PATCH(
 
         // Map status string to enum
         const statusMap: Record<string, string> = {
-            'new': 'new_order', 'in_production': 'in_production', 'ready': 'ready',
+            'draft': 'draft', 'new': 'new_order', 'in_production': 'in_production', 'ready': 'ready',
             'rework': 'rework', 'docs_prep': 'docs_prep', 'accountant_review': 'accountant_review',
             'docs_ready': 'docs_ready', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
             'delivered': 'delivered', 'cancelled': 'cancelled',
@@ -107,7 +107,7 @@ export async function PATCH(
 
         // Transform to frontend format
         const reverseStatusMap: Record<string, string> = {
-            'new_order': 'new', 'in_production': 'in_production', 'ready': 'ready',
+            'draft': 'draft', 'new_order': 'new', 'in_production': 'in_production', 'ready': 'ready',
             'rework': 'rework', 'docs_prep': 'docs_prep', 'accountant_review': 'accountant_review',
             'docs_ready': 'docs_ready', 'shipped': 'shipped', 'out_for_delivery': 'out_for_delivery',
             'delivered': 'delivered', 'cancelled': 'cancelled',

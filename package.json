@@ -40,7 +40,7 @@
     "next": "^14.1.0",
     "next-auth": "^5.0.0-beta.30",
     "number-to-words-ru": "^2.4.1",
-    "pg": "^8.21.0",
+    "pg": "^8.22.0",
     "prisma": "^7.8.0",
     "react": "^18.2.0",
     "react-datepicker": "^9.1.0",

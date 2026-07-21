@@ -92,6 +92,7 @@ export type Patient = z.infer<typeof PatientSchema>;
 
 // ==================== Order Status ====================
 export const OrderStatusEnum = z.enum([
+    'draft',
     'new',
     'in_production',
     'ready',
@@ -108,6 +109,7 @@ export const OrderStatusEnum = z.enum([
 export type OrderStatus = z.infer<typeof OrderStatusEnum>;
 
 export const OrderStatusLabels: Record<OrderStatus, string> = {
+    draft: 'Ожидает оплаты',
     new: 'Новый',
     in_production: 'В производстве',
     ready: 'Готов',
@@ -122,6 +124,7 @@ export const OrderStatusLabels: Record<OrderStatus, string> = {
 };
 
 export const OrderStatusColors: Record<OrderStatus, string> = {
+    draft: 'bg-orange-100 text-orange-700',
     new: 'bg-blue-100 text-blue-700',
     in_production: 'bg-yellow-100 text-yellow-700',
     ready: 'bg-green-100 text-green-700',
