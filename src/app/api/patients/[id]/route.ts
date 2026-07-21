@@ -16,6 +16,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
         where: { id: params.id },
         include: {
             prescriptions: { orderBy: { prescribedAt: 'desc' } },
+            sales: { orderBy: { createdAt: 'desc' }, include: { items: true, doctor: true } },
             orders: {
                 orderBy: { createdAt: 'desc' },
                 take: 20,
