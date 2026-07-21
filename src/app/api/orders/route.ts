@@ -503,8 +503,13 @@ export async function POST(request: NextRequest) {
 
                 let initialStatus = 'new_order';
                 if (orderOrgId) {
-                    const org = await prisma.organization.findUnique({ where: { id: orderOrgId }, select: { requiresApproval: true } });
-                    if (org?.requiresApproval) {
+                    const org = await prisma.organization.findUnique({ where: { id: orderOrgId }, select: { requiresApproval: true, parentId: true } });
+                    let requiresApproval = org?.requiresApproval;
+                    if (!requiresApproval && org?.parentId) {
+                        const parentOrg = await prisma.organization.findUnique({ where: { id: org.parentId }, select: { requiresApproval: true } });
+                        if (parentOrg?.requiresApproval) requiresApproval = true;
+                    }
+                    if (requiresApproval) {
                         initialStatus = 'draft';
                     }
                 }
