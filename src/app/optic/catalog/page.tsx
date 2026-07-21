@@ -1378,6 +1378,32 @@ export default function OpticCatalogPage() {
 
             {/* Product Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between mb-6 px-4">
+                        <div className="text-sm text-gray-500">
+                            Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <span className="text-sm font-medium px-4">
+                                Страница {page} из {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {filteredProducts.length === 0 ? (
                     <div className="text-center py-20">
                         <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -1490,33 +1516,6 @@ export default function OpticCatalogPage() {
                                 </motion.div>
                             );
                         })}
-                    </div>
-                )}
-
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-6 px-4">
-                        <div className="text-sm text-gray-500">
-                            Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <span className="text-sm font-medium px-4">
-                                Страница {page} из {totalPages}
-                            </span>
-                            <button
-                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages}
-                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
                     </div>
                 )}
             </div>
