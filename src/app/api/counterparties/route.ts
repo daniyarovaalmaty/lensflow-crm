@@ -51,6 +51,7 @@ export async function GET() {
                         email: true,
                         organizationId: true,
                         discountPercent: true,
+                        status: true,
                         organization: { select: { name: true } },
                     },
                 },
@@ -67,6 +68,7 @@ export async function GET() {
             clinicId: string;
             hasOrg: boolean;
             discountPercent: number | null;
+            status: string;
             orders: number;
             revenue: number;
             unpaid: number;
@@ -84,6 +86,7 @@ export async function GET() {
                 clinicId: order.createdBy?.organizationId || order.organizationId || '',
                 hasOrg: !!(order.createdBy?.organizationId),
                 discountPercent: order.createdBy?.discountPercent ?? null,
+                status: order.createdBy?.status || 'active',
                 orders: 0,
                 revenue: 0,
                 unpaid: 0,
