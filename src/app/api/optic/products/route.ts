@@ -17,8 +17,17 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type');
     const active = searchParams.get('active');
     const search = searchParams.get('search');
+    const targetOrgId = searchParams.get('orgId');
 
-    const where: any = { organizationId: user.organizationId };
+    let fetchOrgId = user.organizationId;
+    if (targetOrgId && targetOrgId !== user.organizationId) {
+        const myOrg = await prisma.organization.findUnique({ where: { id: user.organizationId }, select: { type: true } });
+        if (myOrg?.type === 'headquarters') {
+            fetchOrgId = targetOrgId;
+        }
+    }
+
+    const where: any = { organizationId: fetchOrgId };
     if (category) where.category = category;
     if (type) where.type = type;
     if (active !== null && active !== '') where.isActive = active === 'true';

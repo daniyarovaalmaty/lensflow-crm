@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { type, status, documentNumber, counterpartyName, items, totalAmount, targetOrganizationId, notes } = body;
+        const { type, status, documentNumber, documentDate, counterpartyName, declarationNumber, declarationDate, items, totalAmount, targetOrganizationId, notes } = body;
 
         const organizationId = session.user.organizationId;
         const performedById = session.user.id;
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
                     type,
                     status,
                     counterpartyName,
-                    notes,
+                    notes: JSON.stringify({ declarationNumber: declarationNumber || '', declarationDate: declarationDate || '', documentDate: documentDate || '', userNotes: notes || '' }),
                     totalAmount,
                     items,
                     performedById,
@@ -75,38 +75,66 @@ export async function POST(req: NextRequest) {
                     const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
                     if (!product) continue;
 
-                    // Update total stock
-                    const newSpecs = { ...(product.specs as any || {}), receiptDocument: documentNumber };
+                    // Update total stock and purchase price on Product
                     await tx.opticProduct.update({
                         where: { id: product.id },
                         data: { 
                             currentStock: product.currentStock + item.qty,
-                            specs: newSpecs
+                            purchasePrice: item.price,
+                            ...(product.retailPrice === 0 ? { retailPrice: item.price } : {})
                         }
                     });
 
-                    // Handle serial tracking if applicable
-                    if (item.trackSerials && item.serialNumbers?.length > 0) {
-                        const stockItemsData = item.serialNumbers.map((sn: string) => ({
-                            productId: product.id,
-                            organizationId,
-                            barcode: sn,
-                            serialNumber: item.batchSerialNumber || null,
-                            status: 'in_stock',
-                            purchasePrice: item.price,
-                            receiptDocId: doc.id,
-                        }));
-                        await tx.stockItem.createMany({ data: stockItemsData });
+                    // Upsert Batch (StockItem)
+                    const batchBarcode = item.batchBarcode || `AUTO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    
+                    const existingBatch = await tx.stockItem.findUnique({
+                        where: {
+                            organizationId_serialNumber: {
+                                organizationId,
+                                serialNumber: batchBarcode
+                            }
+                        }
+                    });
+
+                    let stockItemId = '';
+                    if (existingBatch) {
+                        await tx.stockItem.update({
+                            where: { id: existingBatch.id },
+                            data: {
+                                quantity: existingBatch.quantity + item.qty,
+                                purchasePrice: item.price,
+                                expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : existingBatch.expiryDate,
+                                productionDate: item.batchProduction ? new Date(item.batchProduction) : existingBatch.productionDate,
+                                diopters: item.batchDiopters || existingBatch.diopters
+                            }
+                        });
+                        stockItemId = existingBatch.id;
+                    } else {
+                        const newBatch = await tx.stockItem.create({
+                            data: {
+                                productId: product.id,
+                                organizationId,
+                                serialNumber: batchBarcode,
+                                quantity: item.qty,
+                                purchasePrice: item.price,
+                                expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : null,
+                                productionDate: item.batchProduction ? new Date(item.batchProduction) : null,
+                                diopters: item.batchDiopters || null,
+                                receiptDocId: doc.id
+                            }
+                        });
+                        stockItemId = newBatch.id;
                     }
 
-                    // Create Movement Log
+                    // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
                         data: {
                             organizationId,
                             productId: product.id,
                             type: 'receipt',
                             quantity: item.qty,
-                            serialNumbers: item.serialNumbers || [],
+                            serialNumbers: [batchBarcode],
                             documentNumber,
                             documentId: doc.id,
                             supplier: counterpartyName,
@@ -126,19 +154,35 @@ export async function POST(req: NextRequest) {
                         data: { currentStock: Math.max(0, product.currentStock - item.qty) }
                     });
 
-                    // Handle serial tracking if applicable
-                    if (item.trackSerials && item.serialNumbers?.length > 0) {
-                        await tx.stockItem.updateMany({
-                            where: {
-                                organizationId,
-                                serialNumber: { in: item.serialNumbers },
-                                status: 'in_stock'
-                            },
-                            data: { status: type === 'write_off' ? 'written_off' : 'sold' }
+                    // Deduct from Batches (StockItems)
+                    if (item.batchBarcode) {
+                        const batch = await tx.stockItem.findUnique({
+                            where: { organizationId_serialNumber: { organizationId, serialNumber: item.batchBarcode } }
                         });
+                        if (batch) {
+                            await tx.stockItem.update({
+                                where: { id: batch.id },
+                                data: { quantity: Math.max(0, batch.quantity - item.qty) }
+                            });
+                        }
+                    } else if (item.serialNumbers && item.serialNumbers.length > 0) {
+                        for (const serial of item.serialNumbers) {
+                            const batch = await tx.stockItem.findUnique({
+                                where: { organizationId_serialNumber: { organizationId, serialNumber: serial } }
+                            });
+                            if (batch) {
+                                // if it's a batch, how much do we deduct? if serialNumbers length matches qty, then 1 per serial
+                                // if there is only 1 serialNumber but qty is larger, we deduct full qty from it.
+                                const deductQty = item.serialNumbers.length === 1 ? item.qty : 1;
+                                await tx.stockItem.update({
+                                    where: { id: batch.id },
+                                    data: { quantity: Math.max(0, batch.quantity - deductQty) }
+                                });
+                            }
+                        }
                     }
 
-                    // Create Movement Log
+                    // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
                         data: {
                             organizationId,

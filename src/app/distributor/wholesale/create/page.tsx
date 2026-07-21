@@ -6,6 +6,7 @@ import { Trash2, Save, ArrowLeft, Search } from 'lucide-react';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
 interface Product {
     id: string;
@@ -72,14 +73,7 @@ export default function CreateWholesaleOrderPage() {
         // Очистка от спецсимволов сканера (например DataMatrix ]C1)
         let code = rawCode.trim().replace(/^\]C1/, '');
 
-        // Если сканер в русской раскладке напечатал кириллицу вместо латиницы
-        const cyrillicToLatin: Record<string, string> = {
-            'Ф':'A', 'И':'B', 'С':'C', 'В':'D', 'У':'E', 'А':'F', 'П':'G', 'Р':'H', 'Ш':'I', 'О':'J', 'Л':'K', 'Д':'L', 'Ь':'M',
-            'Т':'N', 'Щ':'O', 'З':'P', 'Й':'Q', 'К':'R', 'Ы':'S', 'Е':'T', 'Г':'U', 'М':'V', 'Ц':'W', 'Ч':'X', 'Н':'Y', 'Я':'Z',
-            'ф':'a', 'и':'b', 'с':'c', 'в':'d', 'у':'e', 'а':'f', 'п':'g', 'р':'h', 'ш':'i', 'о':'j', 'л':'k', 'д':'l', 'ь':'m',
-            'т':'n', 'щ':'o', 'з':'p', 'й':'q', 'к':'r', 'ы':'s', 'е':'t', 'г':'u', 'м':'v', 'ц':'w', 'ч':'x', 'н':'y', 'я':'z'
-        };
-        code = code.split('').map(char => cyrillicToLatin[char] || char).join('');
+        code = translateCyrillicToEnglishLayout(code);
 
         const product = products.find(p => 
             p.barcode === code || 
@@ -207,7 +201,7 @@ export default function CreateWholesaleOrderPage() {
                         placeholder="Ручной ввод штрихкода..."
                         className="w-full bg-transparent border-none focus:outline-none text-sm"
                         value={manualCode}
-                        onChange={e => setManualCode(e.target.value)}
+                        onChange={e => setManualCode(translateCyrillicToEnglishLayout(e.target.value))}
                         onKeyDown={e => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();

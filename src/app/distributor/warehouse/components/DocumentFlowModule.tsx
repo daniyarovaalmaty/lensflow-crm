@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { useUsbScanner } from '@/hooks/useUsbScanner';
 
 export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWriteOffOnly?: boolean }) {
     const [documents, setDocuments] = useState<any[]>([]);
@@ -21,6 +23,27 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
     const [qty, setQty] = useState(1);
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
+    const serialInputRef = useRef<HTMLInputElement>(null);
+
+    // USB scanner for auto-scanning serial barcodes during write-offs
+    const handleUsbScan = useCallback((rawCode: string) => {
+        if (!selectedProduct?.trackSerials) return;
+        const code = translateCyrillicToEnglishLayout(rawCode.trim());
+        if (!code) return;
+        setSerials(prev => {
+            if (prev.includes(code)) {
+                toast.error(`Штрихкод ${code} уже добавлен`);
+                return prev;
+            }
+            const updated = [...prev, code];
+            setQty(updated.length);
+            toast.success(`✅ ${code}`);
+            return updated;
+        });
+        setCurrentSerial('');
+    }, [selectedProduct]);
+
+    useUsbScanner(handleUsbScan, !!selectedProduct?.trackSerials);
 
     useEffect(() => {
         if (!isWriteOffOnly) {
@@ -42,6 +65,20 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
             toast.error('Ошибка загрузки документов');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этот черновик?')) return;
+        try {
+            const res = await fetch(`/api/distributor/warehouse/documents/${id}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('Failed to delete');
+            toast.success('Черновик удален');
+            fetchDocuments();
+        } catch (error) {
+            toast.error('Ошибка при удалении');
         }
     };
 
@@ -69,13 +106,15 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
 
     const handleAddSerial = () => {
         if (!currentSerial.trim()) return;
-        if (serials.includes(currentSerial.trim())) {
+        const code = translateCyrillicToEnglishLayout(currentSerial.trim());
+        if (serials.includes(code)) {
             toast.error('Этот серийный номер уже добавлен');
             return;
         }
-        setSerials([...serials, currentSerial.trim()]);
+        setSerials([...serials, code]);
         setQty(serials.length + 1);
         setCurrentSerial('');
+        setTimeout(() => serialInputRef.current?.focus(), 0);
     };
 
     const handleAddItem = () => {
@@ -84,8 +123,9 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
         let finalSerials = [...serials];
         // UX Fix: Automatically grab the serial from the input if user forgot to press Enter or the Add button
         if (selectedProduct.trackSerials && currentSerial.trim()) {
-            if (!finalSerials.includes(currentSerial.trim())) {
-                finalSerials.push(currentSerial.trim());
+            const translatedSerial = translateCyrillicToEnglishLayout(currentSerial.trim());
+            if (!finalSerials.includes(translatedSerial)) {
+                finalSerials.push(translatedSerial);
             }
         }
         
@@ -183,16 +223,19 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Контрагент</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сумма</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата</th>
+                                <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                    <span className="sr-only">Действия</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {documents.map((doc) => (
                                 <tr key={doc.id} className="hover:bg-gray-50">
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="h-4 w-4 text-gray-400" />
+                                        <a href={`/distributor/warehouse/documents/${doc.id}`} className="flex items-center gap-2 text-indigo-600 hover:text-indigo-900">
+                                            <FileText className="h-4 w-4" />
                                             {doc.documentNumber}
-                                        </div>
+                                        </a>
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                         {getDocumentTypeLabel(doc.type)}
@@ -207,6 +250,18 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{doc.counterpartyName || '-'}</td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{doc.totalAmount.toLocaleString()} ₸</td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{new Date(doc.createdAt).toLocaleDateString('ru-RU')}</td>
+                                    <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                        {doc.status === 'draft' && (
+                                            <button 
+                                                type="button"
+                                                className="text-red-600 hover:text-red-900 p-2"
+                                                onClick={() => handleDelete(doc.id)}
+                                                title="Удалить черновик"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                             {documents.length === 0 && !isLoading && (
@@ -287,7 +342,11 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                             <input
                                 type="text"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                                    setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                                }}
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 sm:text-sm sm:leading-6"
                                 placeholder="Поиск по остаткам..."
                             />
@@ -345,10 +404,13 @@ export default function DocumentFlowModule({ isWriteOffOnly = false }: { isWrite
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
+                                            ref={serialInputRef}
+                                            autoFocus
                                             value={currentSerial}
-                                            onChange={(e) => setCurrentSerial(e.target.value)}
+                                            onChange={(e) => setCurrentSerial(translateCyrillicToEnglishLayout(e.target.value))}
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
                                             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-red-600 sm:text-sm"
+                                            placeholder="Сканируйте штрихкод..."
                                         />
                                         <button onClick={handleAddSerial} className="px-3 py-1.5 bg-gray-100 border rounded hover:bg-gray-200">
                                             <Barcode className="h-4 w-4" />

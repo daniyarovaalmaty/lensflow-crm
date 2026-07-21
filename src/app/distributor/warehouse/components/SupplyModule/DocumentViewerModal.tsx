@@ -2,10 +2,11 @@ import { X, Box, Barcode } from 'lucide-react';
 
 interface DocumentViewerModalProps {
     document: any;
+    allProducts?: any[];
     onClose: () => void;
 }
 
-export default function DocumentViewerModal({ document, onClose }: DocumentViewerModalProps) {
+export default function DocumentViewerModal({ document, allProducts, onClose }: DocumentViewerModalProps) {
     if (!document) return null;
 
     return (
@@ -54,6 +55,51 @@ export default function DocumentViewerModal({ document, onClose }: DocumentViewe
                                     <p className="text-sm font-medium text-gray-500">Общая сумма</p>
                                     <p className="mt-1 text-lg font-semibold text-gray-900">{document.totalAmount.toLocaleString()} ₸</p>
                                 </div>
+                                {(() => {
+                                    let decl: any = {};
+                                    try { decl = JSON.parse(document.notes || '{}'); } catch {}
+                                    return (
+                                        <>
+                                            {decl.documentDate && (
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-500">Дата накладной</p>
+                                                    <p className="mt-1 text-sm text-gray-900">
+                                                    {(() => {
+                                                        const parts = decl.documentDate.split('-');
+                                                        if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                                        if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
+                                                        return decl.documentDate;
+                                                    })()}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {decl.declarationNumber && (
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-500">Номер декларации</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationNumber}</p>
+                                                </div>
+                                            )}
+                                            {decl.declarationDate && (
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-500">Дата декларации</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationDate}</p>
+                                                </div>
+                                            )}
+                                            {decl.userNotes && (
+                                                <div className="col-span-2">
+                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{decl.userNotes}</p>
+                                                </div>
+                                            )}
+                                            {Object.keys(decl).length === 0 && document.notes && (
+                                                <div className="col-span-2">
+                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
+                                                    <p className="mt-1 text-sm text-gray-900">{document.notes}</p>
+                                                </div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             <div className="mt-4">
@@ -70,12 +116,32 @@ export default function DocumentViewerModal({ document, onClose }: DocumentViewe
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200 bg-white">
-                                            {(document.items || []).map((item: any, idx: number) => (
+                                            {(document.items || []).map((item: any, idx: number) => {
+                                                const product = allProducts?.find(p => p.id === item.productId);
+                                                return (
                                                 <tr key={idx}>
                                                     <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                                        {item.name || item.productName || 'Неизвестный товар'}
+                                                        <div className="font-medium">{item.name || item.productName || 'Неизвестный товар'}</div>
+                                                        {product && (
+                                                            <div className="mt-1 text-xs text-gray-500">
+                                                                {product.model && <span className="mr-3">Модель: {product.model}</span>}
+                                                            </div>
+                                                        )}
+                                                        {item.batchBarcode && (
+                                                            <div className="mt-1.5 space-y-1">
+                                                                <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit block">
+                                                                    С/Н (Партия): {item.batchBarcode}
+                                                                </span>
+                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+                                                                    {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
+                                                                    {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
+                                                                    {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (
-                                                            <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap">
+                                                            <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap items-center">
+                                                                <span className="text-gray-400 mr-1">С/Н:</span>
                                                                 {item.serialNumbers.map((sn: string) => (
                                                                     <span key={sn} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100">{sn}</span>
                                                                 ))}
@@ -83,13 +149,14 @@ export default function DocumentViewerModal({ document, onClose }: DocumentViewe
                                                         )}
                                                     </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                        {item.trackSerials ? <Barcode className="h-4 w-4 text-indigo-500" /> : <Box className="h-4 w-4 text-gray-400" />}
+                                                        {item.trackSerials ? <span title="Серийный учет"><Barcode className="h-4 w-4 text-indigo-500" /></span> : <span title="Партионный учет"><Box className="h-4 w-4 text-gray-400" /></span>}
                                                     </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.qty}</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{item.price?.toLocaleString()} ₸</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">{((item.qty || 0) * (item.price || 0)).toLocaleString()} ₸</td>
                                                 </tr>
-                                            ))}
+                                                );
+                                            })}
                                             {(!document.items || document.items.length === 0) && (
                                                 <tr>
                                                     <td colSpan={5} className="py-4 text-center text-sm text-gray-500">

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { useUsbScanner } from '@/hooks/useUsbScanner';
 
 export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
     const [organizations, setOrganizations] = useState<any[]>([]);
@@ -19,6 +21,18 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
     const [qty, setQty] = useState(1);
     const [serials, setSerials] = useState<string[]>([]);
     const [currentSerial, setCurrentSerial] = useState('');
+    const serialInputRef = useRef<HTMLInputElement>(null);
+
+    // USB scanner for auto-scanning batch barcodes during transfers
+    const handleUsbScan = useCallback((rawCode: string) => {
+        if (!selectedProduct?.trackSerials) return;
+        const code = translateCyrillicToEnglishLayout(rawCode.trim());
+        if (!code) return;
+        setCurrentSerial(code);
+        toast.success(`Партия выбрана: ${code}`);
+    }, [selectedProduct]);
+
+    useUsbScanner(handleUsbScan, !!selectedProduct?.trackSerials);
 
     useEffect(() => {
         fetchOrganizations();
@@ -61,27 +75,29 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
         }
     };
 
-    const handleAddSerial = () => {
-        if (!currentSerial.trim()) return;
-        if (serials.includes(currentSerial)) {
-            toast.error('Этот серийный номер уже добавлен');
-            return;
-        }
-        setSerials([...serials, currentSerial]);
-        setQty(serials.length + 1);
-        setCurrentSerial('');
-    };
+    // (Removed handleAddSerial)
 
     const handleAddItem = () => {
         if (!selectedProduct) return;
         
+        if (selectedProduct.trackSerials && !currentSerial) {
+            toast.error('Выберите или сканируйте партию');
+            return;
+        }
+
+        const batchInfo = selectedProduct.trackSerials ? selectedProduct.stockItems?.find((b: any) => b.serialNumber === currentSerial) : null;
+        if (selectedProduct.trackSerials && batchInfo && qty > batchInfo.quantity) {
+            toast.error('Недостаточно товара в выбранной партии');
+            return;
+        }
+
         const newItem = {
             productId: selectedProduct.id,
             name: selectedProduct.name,
-            qty: selectedProduct.trackSerials ? serials.length : qty,
-            price: selectedProduct.purchasePrice || 0, // usually transfers move at cost
+            qty: qty,
+            price: selectedProduct.purchasePrice || 0,
             trackSerials: selectedProduct.trackSerials,
-            serialNumbers: selectedProduct.trackSerials ? serials : [],
+            batchBarcode: selectedProduct.trackSerials ? currentSerial : undefined,
         };
         
         if (newItem.qty <= 0) {
@@ -95,7 +111,7 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
         setSelectedProduct(null);
         setSearchQuery('');
         setQty(1);
-        setSerials([]);
+        setCurrentSerial('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -199,7 +215,11 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
                             <input
                                 type="text"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const hasCyrillic = /[\u0400-\u04FF]/.test(val);
+                                    setSearchQuery(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
+                                }}
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="Поиск по остаткам..."
                             />
@@ -255,30 +275,37 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
                         
                         <div className="flex gap-4 items-end">
                             {selectedProduct.trackSerials ? (
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Сканировать серийный номер / штрихкод ед.</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
+                                <div className="flex gap-4 w-full">
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Партия (выберите или сканируйте)</label>
+                                        <select
                                             value={currentSerial}
-                                            onChange={(e) => setCurrentSerial(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleAddSerial()}
+                                            onChange={(e) => {
+                                                setCurrentSerial(e.target.value);
+                                                // Reset qty when batch changes
+                                                setQty(1);
+                                            }}
                                             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                            placeholder="Сканируйте штрихкод..."
-                                        />
-                                        <button onClick={handleAddSerial} className="px-3 py-1.5 bg-gray-100 border rounded hover:bg-gray-200">
-                                            <Barcode className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                    {serials.length > 0 && (
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            {serials.map(sn => (
-                                                <span key={sn} className="inline-flex items-center rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                                    {sn}
-                                                </span>
+                                        >
+                                            <option value="">-- Выберите партию --</option>
+                                            {selectedProduct.stockItems?.map((batch: any) => (
+                                                <option key={batch.id} value={batch.serialNumber}>
+                                                    Штрихкод: {batch.serialNumber} (Остаток: {batch.quantity})
+                                                </option>
                                             ))}
-                                        </div>
-                                    )}
+                                        </select>
+                                    </div>
+                                    <div className="w-32">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Количество</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={selectedProduct.stockItems?.find((b: any) => b.serialNumber === currentSerial)?.quantity || 1}
+                                            value={qty}
+                                            onChange={(e) => setQty(Number(e.target.value))}
+                                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        />
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="w-32">
@@ -321,11 +348,9 @@ export default function SendTransfer({ onSuccess }: { onSuccess: () => void }) {
                             <tr key={idx}>
                                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                     {item.name}
-                                    {item.trackSerials && (
-                                        <div className="mt-1 text-xs text-gray-500 flex gap-1 flex-wrap">
-                                            {item.serialNumbers.map((sn: string) => (
-                                                <span key={sn} className="px-1 bg-gray-100 rounded">{sn}</span>
-                                            ))}
+                                    {item.trackSerials && item.batchBarcode && (
+                                        <div className="mt-1 text-xs text-gray-500">
+                                            Партия: <span className="px-1 bg-gray-100 rounded">{item.batchBarcode}</span>
                                         </div>
                                     )}
                                 </td>

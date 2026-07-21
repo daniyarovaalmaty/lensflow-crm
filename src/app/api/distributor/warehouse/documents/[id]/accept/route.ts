@@ -42,18 +42,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             
             // 2. Add products to the receiving organization (current session org)
             for (const item of items) {
-                let product = await tx.opticProduct.findUnique({ 
-                    where: { organizationId_sku: { organizationId, sku: item.sku || '' } } 
-                });
+                // Try finding product by SKU first, then by name
+                let product = item.sku 
+                    ? await tx.opticProduct.findUnique({ 
+                        where: { organizationId_sku: { organizationId, sku: item.sku } } 
+                    })
+                    : null;
                 
-                // If product doesn't exist in target org, we might need to create it (simplified here)
-                // For a robust system, products should be synced across branches.
+                if (!product) {
+                    // Fallback: find by name
+                    product = await tx.opticProduct.findFirst({
+                        where: { organizationId, name: item.name }
+                    });
+                }
+                
+                // If product doesn't exist in target org, create it
                 if (!product) {
                     product = await tx.opticProduct.create({
                         data: {
                             organizationId,
                             name: item.name,
-                            sku: item.sku || `SKU-${Date.now()}`,
+                            sku: item.sku || `TR-${Date.now().toString().slice(-8)}`,
                             category: 'product',
                             trackSerials: item.trackSerials,
                             purchasePrice: item.price,
@@ -113,7 +122,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         await tx.stockItem.updateMany({
                             where: {
                                 organizationId: doc.organizationId,
-                                serialNumber: { in: item.serialNumbers },
+                                barcode: { in: item.serialNumbers },
                                 status: 'in_stock'
                             },
                             data: { status: 'sold' } // or transferred

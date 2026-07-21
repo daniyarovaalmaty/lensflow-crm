@@ -37,6 +37,12 @@ export async function POST(req: NextRequest) {
             // Fetch all products in stock to start an inventory
             const products = await prisma.opticProduct.findMany({
                 where: { organizationId: session.user.organizationId },
+                include: {
+                    stockItems: {
+                        where: { status: 'in_stock' },
+                        select: { barcode: true }
+                    }
+                }
             });
 
             const initialItems = products.map(p => ({
@@ -48,7 +54,10 @@ export async function POST(req: NextRequest) {
                 systemQty: p.currentStock,
                 actualQty: p.currentStock, // default to system qty
                 diff: 0,
-                note: ''
+                note: '',
+                stockItemBarcodes: p.stockItems
+                    ?.map((si: any) => si.barcode)
+                    .filter(Boolean) || [],
             }));
 
             const inventoryNumber = `ИНВ-${Date.now().toString().slice(-6)}`;
@@ -98,9 +107,69 @@ export async function POST(req: NextRequest) {
                 updateData.status = 'completed';
                 updateData.completedAt = new Date();
                 
-                // When completing an inventory, we might generate adjustments. 
-                // For simplicity in this iteration, we just mark it complete. 
-                // A full implementation would adjust stock via StockMovement.
+                // Adjust stock based on inventory results
+                if (items && Array.isArray(items)) {
+                    const adjustments = items.filter((item: any) => item.diff !== 0);
+                    
+                    for (const item of adjustments) {
+                        // Update product stock to match actual count
+                        await prisma.opticProduct.update({
+                            where: { id: item.productId },
+                            data: { currentStock: item.actualQty }
+                        });
+                        
+                        if (item.trackSerials) {
+                            const expected = item.stockItemBarcodes || [];
+                            const scanned = item.scannedSerials || [];
+                            const shortages = expected.filter((b: string) => !scanned.includes(b));
+                            const surpluses = scanned.filter((b: string) => !expected.includes(b));
+                            
+                            if (shortages.length > 0) {
+                                await prisma.stockItem.updateMany({
+                                    where: { 
+                                        productId: item.productId,
+                                        barcode: { in: shortages },
+                                        status: 'in_stock'
+                                    },
+                                    data: { status: 'written_off' }
+                                });
+                            }
+                            
+                            if (surpluses.length > 0) {
+                                const productData = await prisma.opticProduct.findUnique({ where: { id: item.productId }, select: { purchasePrice: true } });
+                                const price = productData?.purchasePrice || 0;
+                                
+                                for (const barcode of surpluses) {
+                                    await prisma.stockItem.create({
+                                        data: {
+                                            organizationId: session.user.organizationId,
+                                            productId: item.productId,
+                                            barcode: barcode,
+                                            status: 'in_stock',
+                                            purchasePrice: price
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        
+                        // Create stock movement record for the adjustment
+                        await prisma.stockMovement.create({
+                            data: {
+                                productId: item.productId,
+                                organizationId: session.user.organizationId,
+                                type: 'adjustment',
+                                quantity: Math.abs(item.diff),
+                                reason: item.diff > 0 
+                                    ? `Ревизия: излишек +${item.diff}` 
+                                    : `Ревизия: недостача ${item.diff}`,
+                                documentNumber: inventoryId,
+                                performedById: session.user.id,
+                                performedByName: session.user.name || 'Система',
+                            }
+                        });
+                    }
+                }
             }
 
             const inventory = await prisma.inventory.update({

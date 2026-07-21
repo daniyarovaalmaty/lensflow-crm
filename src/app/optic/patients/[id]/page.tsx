@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import {
     ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag, Award
 } from 'lucide-react';
 import Link from 'next/link';
 import MedicalTextarea from '@/components/ui/MedicalTextarea';
@@ -53,6 +53,7 @@ interface Prescription {
     refraction: string | null; cycloplegia: string | null; complaints: string | null;
     medicalHistory: string | null; diseaseHistory: string | null; biomicroscopy: string | null; pzo: string | null;
     type: string; notes: string | null; prescribedAt: string;
+    source?: string;
 }
 
 interface Consultation {
@@ -127,6 +128,7 @@ function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete
     const typeLabels: Record<string, string> = {
         glasses: '👓 Очки', contacts: '🔵 Контактные линзы', 'ortho-k': '🌙 Орто-К'
     };
+    const isItigris = rx.source === 'itigris' || (rx.id && String(rx.id).startsWith('ITG-'));
 
     return (
         <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
@@ -139,7 +141,10 @@ function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete
                         <Eye className="w-5 h-5 text-primary-600" />
                     </div>
                     <div>
-                        <p className="font-medium text-gray-900">{typeLabels[rx.type] || rx.type}</p>
+                        <p className="font-medium text-gray-900 flex items-center gap-2">
+                            {typeLabels[rx.type] || rx.type}
+                            {isItigris && <span className="text-[10px] bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded-full font-semibold uppercase">ITIGRIS</span>}
+                        </p>
                         <p className="text-xs text-gray-500">
                             {new Date(rx.prescribedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
@@ -213,12 +218,16 @@ function PrescriptionCard({ rx, onDelete, onEdit }: { rx: Prescription; onDelete
                         <Link href={`/optic/patients/${rx.patientId}/prescriptions/${rx.id}/print`} target="_blank" className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm flex items-center gap-1 text-gray-600 px-3 py-1.5 rounded-lg transition-colors">
                             <Printer className="w-4 h-4" /> Печать
                         </Link>
-                        <button onClick={onEdit} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm flex items-center gap-1 text-gray-700 px-3 py-1.5 rounded-lg transition-colors">
-                            <Edit2 className="w-4 h-4" /> Редактировать
-                        </button>
-                        <button onClick={onDelete} className="btn bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 shadow-sm text-sm text-red-600 flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors">
-                            <Trash2 className="w-4 h-4" /> Удалить
-                        </button>
+                        {!isItigris && (
+                            <>
+                                <button onClick={onEdit} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm flex items-center gap-1 text-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+                                    <Edit2 className="w-4 h-4" /> Редактировать
+                                </button>
+                                <button onClick={onDelete} className="btn bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 shadow-sm text-sm text-red-600 flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors">
+                                    <Trash2 className="w-4 h-4" /> Удалить
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -916,6 +925,7 @@ export default function PatientDetailPage() {
                                 { id: 'prescriptions', icon: Eye, label: 'Рецепты', count: patient.prescriptions.length },
                                 { id: 'orders', icon: ClipboardList, label: 'Заказы', count: patient.orders.length },
                                 { id: 'sales', icon: ShoppingBag, label: 'Покупки', count: patient.sales?.length || 0 },
+                                { id: 'itigris', icon: Award, label: 'ITIGRIS', count: (patient as any).metadata?.itigris?.bonuses != null ? 1 : 0 },
                                 { id: 'files', icon: Paperclip, label: 'Снимки', count: patient.attachments?.length || 0 }
                             ].map(tab => (
                                 <button
@@ -1053,6 +1063,66 @@ export default function PatientDetailPage() {
                                         )}
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Данные ITIGRIS */}
+                            <div id="itigris" className="scroll-mt-24">
+                            {(() => {
+                                const itg = (patient as any).metadata?.itigris;
+                                if (!itg) return (
+                                    <div className="bg-white rounded-3xl border border-gray-100 p-8 text-center shadow-sm">
+                                        <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                        <h3 className="text-gray-900 font-bold mb-1">Нет данных ITIGRIS</h3>
+                                        <p className="text-gray-500 text-sm">Пациент не связан с профилем в ITIGRIS или у него нет бонусов.</p>
+                                    </div>
+                                );
+                                const rows = ([
+                                    itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
+                                    itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
+                                    itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
+                                    itg.city ? { label: 'Город', value: itg.city } : null,
+                                    itg.address ? { label: 'Адрес', value: itg.address } : null,
+                                    itg.profession ? { label: 'Профессия', value: itg.profession } : null,
+                                    itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
+                                    itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
+                                ].filter(Boolean)) as { label: string; value: string }[];
+                                
+                                const d = itg.discount;
+                                return (
+                                    <>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                <Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS
+                                            </h2>
+                                            <Link href={`/optic/sale-to-optima?clientInfo=${encodeURIComponent(patient.phone || patient.name)}&clientId=${itg?.id || itg?.clientId || ''}`} className="btn bg-orange-100 hover:bg-orange-200 text-orange-700 border-none btn-sm flex items-center gap-1">
+                                                <Plus className="w-4 h-4" /> Создать заказ ITIGRIS
+                                            </Link>
+                                        </div>
+                                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                {rows.map((r, i) => (
+                                                    <div key={i} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{r.label}</div>
+                                                        <div className="text-sm font-bold text-gray-900 break-words">{r.value}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {d && typeof d === 'object' && (
+                                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Скидка по карте</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оправы {d.glasses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">СЗ Очки {d.sunglasses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">КЛ {d.contactLenses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оч. Линзы {d.lenses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Аксессуары {d.accessories ?? 0}%</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                );
+                            })()}
                             </div>
 
                             {/* Prescriptions */}

@@ -3,18 +3,27 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect } from 'react';
-import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Package, Warehouse, ShoppingCart, Banknote, LayoutDashboard, Users, BarChart3, Link2, Building2, ChevronDown, Check, Settings, LogOut, User, PackageCheck, Truck, ArrowLeftRight, ChevronLeft, ChevronRight, ClipboardList, Newspaper, Wrench, AlertTriangle, CalendarPlus } from 'lucide-react';
 import FullscreenButton from '@/components/ui/FullscreenButton';
+import { getEffectiveClinicPermissions } from '@/types/user';
 
 const baseNavItems = [
-    { href: '/optic/dashboard', label: 'Заказы', icon: LayoutDashboard, color: 'text-gray-500' },
-    { href: '/optic/catalog', label: 'Каталог', icon: Package, color: 'text-blue-500' },
-    { href: '/optic/warehouse', label: 'Склад', icon: Warehouse, color: 'text-amber-500' },
-    { href: '/optic/pos', label: 'Касса', icon: ShoppingCart, color: 'text-green-500' },
-    { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500' },
-    { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500' },
-    { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500' },
+    { href: '/optic/dashboard', label: 'Заказы', icon: LayoutDashboard, color: 'text-gray-500', permKey: 'canViewOrders' },
+    { href: '/optic/issue', label: 'Выдать заказ', icon: PackageCheck, color: 'text-teal-500', permKey: 'canViewIssue' },
+    { href: '/optic/repairs', label: 'Ремонт', icon: Wrench, color: 'text-purple-500', permKey: 'canViewRepairs' },
+    { href: '/optic/reworks', label: 'Переделки', icon: AlertTriangle, color: 'text-orange-500', permKey: 'canViewReworks' },
+    { href: '/optic/catalog', label: 'Каталог', icon: Package, color: 'text-blue-500', permKey: 'canViewCatalog' },
+    { href: '/optic/warehouse', label: 'Склад', icon: Warehouse, color: 'text-amber-500', permKey: 'canViewWarehouse' },
+    { href: '/optic/supplier-orders', label: 'Закуп', icon: Truck, color: 'text-indigo-500', permKey: 'canViewSupplierOrders' },
+    { href: '/optic/transfers', label: 'Трансферы', icon: ArrowLeftRight, color: 'text-sky-500', permKey: 'canViewTransfers' },
+    { href: '/optic/pos', label: 'Касса', icon: ShoppingCart, color: 'text-green-500', permKey: 'canViewPos' },
+    { href: '/optic/cash-shifts', label: 'Смены', icon: Banknote, color: 'text-purple-500', permKey: 'canViewCash' },
+    { href: '/optic/patients', label: 'Пациенты', icon: Users, color: 'text-emerald-500', permKey: 'canViewPatients' },
+    { href: '/optic/booking', label: 'Запись', icon: CalendarPlus, color: 'text-teal-500', permKey: 'canViewBooking' },
+    { href: '/optic/tasks', label: 'Задания', icon: ClipboardList, color: 'text-fuchsia-500', permKey: 'canViewTasks' },
+    { href: '/optic/news', label: 'Новости', icon: Newspaper, color: 'text-rose-500', permKey: 'canViewNews' },
+    { href: '/optic/analytics', label: 'Аналитика', icon: BarChart3, color: 'text-violet-500', permKey: 'canViewAnalytics' },
 ];
 
 const procurementNavItems = [
@@ -51,6 +60,24 @@ export default function QuickNav() {
     const [branches, setBranches] = useState<Branch[]>([]);
     const [selectedBranch, setSelectedBranch] = useState<string>('all');
     const [showDropdown, setShowDropdown] = useState(false);
+    const [newsUnread, setNewsUnread] = useState(0);
+
+    // Horizontal scroll arrows for the nav (many tabs overflow on narrower screens).
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
+    const updateArrows = () => {
+        const el = scrollRef.current;
+        if (!el) { setCanLeft(false); setCanRight(false); return; }
+        setCanLeft(el.scrollLeft > 4);
+        setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    };
+    const scrollNav = (dir: number) => scrollRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' });
+    useEffect(() => {
+        const t = setTimeout(updateArrows, 150);
+        window.addEventListener('resize', updateArrows);
+        return () => { clearTimeout(t); window.removeEventListener('resize', updateArrows); };
+    }, [branches.length, isManager, isProcurement]);
 
     useEffect(() => {
         if (isManager && isHQ) {
@@ -68,6 +95,18 @@ export default function QuickNav() {
         if (saved) setSelectedBranch(saved);
     }, []);
 
+    // Unread news badge («Новости (+N)»). Refetched on navigation so it clears
+    // right after the user opens the feed (which marks everything read).
+    useEffect(() => {
+        if (role === 'distributor') return;
+        let active = true;
+        fetch('/api/optic/news/unread')
+            .then(r => (r.ok ? r.json() : { unread: 0 }))
+            .then(d => { if (active) setNewsUnread(d?.unread || 0); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [pathname, role]);
+
     if (role === 'distributor') return null;
 
     const handleBranchSelect = (branchId: string) => {
@@ -82,7 +121,20 @@ export default function QuickNav() {
         : branches.find(b => b.id === selectedBranch)?.name || 'Все';
 
     const isAigerim = userName.toLowerCase().includes('айгерим') || userName.toLowerCase().includes('шораева');
-    const allItems = isProcurement ? procurementNavItems : (isManager ? [...baseNavItems, ...managerNavItems] : [...baseNavItems]);
+
+    // Permissions-based navigation filtering
+    const clinicPerms = session?.user ? getEffectiveClinicPermissions({
+        subRole: subRole || 'optic_doctor',
+        permissions: (session.user as any).permissions,
+    }) : null;
+
+    const rawItems = isProcurement ? procurementNavItems : (isManager ? [...baseNavItems, ...managerNavItems] : [...baseNavItems]);
+    // Filter by permissions: items without permKey are always visible, items with permKey require the permission to be true
+    const allItems = rawItems.filter(item => {
+        if (!('permKey' in item) || !(item as any).permKey) return true;
+        if (!clinicPerms) return false;
+        return (clinicPerms as any)[(item as any).permKey] === true;
+    });
     
     if (isAigerim && !isProcurement) {
         allItems.push({ href: '/profile/payroll', label: 'Зарплата', icon: Banknote, color: 'text-amber-500' } as any);
@@ -92,8 +144,14 @@ export default function QuickNav() {
         <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex items-center justify-between gap-4">
-                    {/* Left: logo for procurement + nav links */}
-                    <div className="flex-1 min-w-0 flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-hide">
+                    {/* Left: nav links — horizontally scrollable with arrows */}
+                    <div className="flex-1 min-w-0 flex items-center">
+                        {canLeft && (
+                            <button onClick={() => scrollNav(-1)} aria-label="Прокрутить меню влево" className="flex-shrink-0 mr-1 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                        )}
+                        <div ref={scrollRef} onScroll={updateArrows} className="flex-1 min-w-0 flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 scrollbar-hide">
                         {isProcurement && (
                             <div className="flex items-center gap-2 mr-3 flex-shrink-0">
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
@@ -120,9 +178,18 @@ export default function QuickNav() {
                                 >
                                     <item.icon className={`w-4 h-4 ${isActive ? 'text-primary-600' : item.color}`} />
                                     {item.label}
+                                    {item.href === '/optic/news' && newsUnread > 0 && (
+                                        <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-rose-500 rounded-full">{newsUnread}</span>
+                                    )}
                                 </Link>
                             );
                         })}
+                        </div>
+                        {canRight && (
+                            <button onClick={() => scrollNav(1)} aria-label="Прокрутить меню вправо" className="flex-shrink-0 ml-1 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
 
                     {/* Right side */}

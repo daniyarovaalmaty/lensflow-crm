@@ -56,24 +56,13 @@ export async function PUT(
                         where: { id: product.id },
                         data: { 
                             currentStock: product.currentStock + item.qty,
+                            purchasePrice: item.price,
+                            ...(product.retailPrice === 0 ? { retailPrice: item.price } : {}),
                             specs: newSpecs
                         }
                     });
 
-                    // Handle serial tracking if applicable
-                    if (item.trackSerials && item.serialNumbers?.length > 0) {
-                        const stockItemsData = item.serialNumbers.map((sn: string) => ({
-                            productId: product.id,
-                            organizationId,
-                            serialNumber: sn,
-                            status: 'in_stock',
-                            purchasePrice: item.price,
-                            receiptDocId: doc.id,
-                        }));
-                        await tx.stockItem.createMany({ data: stockItemsData });
-                    }
-
-                    // Create Movement Log
+                    // Create Movement Log (serial numbers stored as metadata)
                     await tx.stockMovement.create({
                         data: {
                             organizationId,
@@ -90,7 +79,32 @@ export async function PUT(
                     });
                 }
             } else if (status === 'confirmed' && (doc.type === 'transfer_out' || doc.type === 'write_off')) {
-                // Implement other types if necessary
+                for (const item of items) {
+                    const product = await tx.opticProduct.findUnique({ where: { id: item.productId } });
+                    if (!product) continue;
+
+                    // Deduct stock
+                    await tx.opticProduct.update({
+                        where: { id: product.id },
+                        data: { currentStock: Math.max(0, product.currentStock - item.qty) }
+                    });
+
+                    // Create Movement Log (serial numbers stored as metadata)
+                    await tx.stockMovement.create({
+                        data: {
+                            organizationId,
+                            productId: product.id,
+                            type: doc.type,
+                            quantity: -item.qty,
+                            serialNumbers: item.serialNumbers || [],
+                            documentNumber,
+                            documentId: doc.id,
+                            reason: notes,
+                            performedById,
+                            performedByName,
+                        }
+                    });
+                }
             }
 
             return doc;
@@ -101,6 +115,36 @@ export async function PUT(
         if (error?.code === 'P2002') {
             return NextResponse.json({ error: 'Один или несколько из введенных серийных номеров (штрихкодов) уже числятся на складе.' }, { status: 400 });
         }
+        return NextResponse.json({ error: error.message || 'Internal server error', details: error }, { status: 500 });
+    }
+}
+
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const session = await auth();
+        if (!session?.user?.organizationId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const id = params.id;
+        const organizationId = session.user.organizationId;
+
+        const existingDoc = await prisma.stockDocument.findUnique({ where: { id } });
+        if (!existingDoc || existingDoc.organizationId !== organizationId) {
+            return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+        }
+
+        if (existingDoc.status !== 'draft') {
+            return NextResponse.json({ error: 'Only drafts can be deleted' }, { status: 400 });
+        }
+
+        await prisma.stockDocument.delete({ where: { id } });
+        
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
         return NextResponse.json({ error: error.message || 'Internal server error', details: error }, { status: 500 });
     }
 }

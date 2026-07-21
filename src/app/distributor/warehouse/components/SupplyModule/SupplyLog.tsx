@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, Edit, CheckCircle } from 'lucide-react';
+import { Eye, Edit, CheckCircle, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentViewerModal from './DocumentViewerModal';
 
@@ -10,9 +10,24 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
     const [loading, setLoading] = useState(true);
     const [selectedDocument, setSelectedDocument] = useState<any>(null);
 
+    const [allProducts, setAllProducts] = useState<any[]>([]);
+
     useEffect(() => {
         fetchDocuments();
+        fetchProducts();
     }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const res = await fetch('/api/distributor/warehouse/balances');
+            if (res.ok) {
+                const data = await res.json();
+                setAllProducts(data.products || []);
+            }
+        } catch (e) {
+            console.error('Failed to fetch products for supply log');
+        }
+    };
 
     const fetchDocuments = async () => {
         try {
@@ -25,6 +40,20 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
             toast.error('Ошибка загрузки журнала');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этот черновик?')) return;
+        try {
+            const res = await fetch(`/api/distributor/warehouse/documents/${id}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('Failed to delete');
+            toast.success('Черновик удален');
+            fetchDocuments();
+        } catch (error) {
+            toast.error('Ошибка при удалении');
         }
     };
 
@@ -54,7 +83,8 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Номер документа</th>
-                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата накладной</th>
+                                <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Дата создания</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Поставщик</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сумма</th>
                                 <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Статус</th>
@@ -67,6 +97,20 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                             {documents.map((doc) => (
                                 <tr key={doc.id}>
                                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{doc.documentNumber}</td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
+                                        {(() => {
+                                            try {
+                                                const notes = JSON.parse(doc.notes);
+                                                if (notes.documentDate) {
+                                                    const parts = notes.documentDate.split('-');
+                                                    if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                                    if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
+                                                    return notes.documentDate;
+                                                }
+                                            } catch (e) {}
+                                            return '—';
+                                        })()}
+                                    </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                         {new Date(doc.createdAt).toLocaleDateString('ru-RU')}
                                     </td>
@@ -84,9 +128,20 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
                                             type="button"
                                             className="relative z-10 p-2 cursor-pointer text-indigo-600 hover:text-indigo-900 mr-2"
                                             onClick={() => doc.status === 'confirmed' ? setSelectedDocument(doc) : (onEdit && onEdit(doc))}
+                                            title={doc.status === 'confirmed' ? "Просмотр" : "Редактировать"}
                                         >
                                             {doc.status === 'confirmed' ? <Eye className="h-5 w-5 pointer-events-none" /> : <Edit className="h-5 w-5 pointer-events-none" />}
                                         </button>
+                                        {doc.status === 'draft' && (
+                                            <button 
+                                                type="button"
+                                                className="relative z-10 p-2 cursor-pointer text-red-600 hover:text-red-900"
+                                                onClick={() => handleDelete(doc.id)}
+                                                title="Удалить черновик"
+                                            >
+                                                <Trash2 className="h-5 w-5 pointer-events-none" />
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -104,7 +159,8 @@ export default function SupplyLog({ onEdit }: { onEdit?: (doc: any) => void }) {
 
             {selectedDocument && (
                 <DocumentViewerModal 
-                    document={selectedDocument} 
+                    document={selectedDocument}
+                    allProducts={allProducts}
                     onClose={() => setSelectedDocument(null)} 
                 />
             )}

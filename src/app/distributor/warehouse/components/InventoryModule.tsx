@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { RefreshCcw, Plus, Save, FileText, CheckCircle, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { useUsbScanner } from '@/hooks/useUsbScanner';
 
 export default function InventoryModule() {
     const [inventories, setInventories] = useState<any[]>([]);
@@ -14,6 +15,54 @@ export default function InventoryModule() {
     const [currentInventory, setCurrentInventory] = useState<any>(null);
     const [barcodeInput, setBarcodeInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const barcodeRef = useRef<HTMLInputElement>(null);
+
+    const [unknownBarcode, setUnknownBarcode] = useState<string | null>(null);
+    const [selectedProductForUnknown, setSelectedProductForUnknown] = useState<string>('');
+    const [viewingSerialsItem, setViewingSerialsItem] = useState<any>(null);
+
+    const processScannedBarcode = useCallback((rawCode: string) => {
+        if (view !== 'edit') return;
+        const code = translateCyrillicToEnglishLayout(rawCode.trim());
+        if (!code) return;
+        
+        setCurrentInventory((prevInventory: any) => {
+            if (!prevInventory) return prevInventory;
+            const newItems = [...prevInventory.items];
+            
+            let idx = newItems.findIndex((item: any) => item.stockItemBarcodes?.includes(code));
+            
+            if (idx === -1) {
+                idx = newItems.findIndex((item: any) => 
+                    item.sku === code || 
+                    item.barcode === code
+                );
+            }
+
+            if (idx !== -1) {
+                const item = { ...newItems[idx] };
+                // For all products (serial and quantity): increment by 1 on scan
+                item.actualQty = (item.actualQty || 0) + 1;
+                item.diff = item.actualQty - item.systemQty;
+                newItems[idx] = item;
+                setTimeout(() => toast.success(`Добавлено: ${item.name}`), 0);
+                return { ...prevInventory, items: newItems };
+            } else {
+                setTimeout(() => {
+                    toast.error(`Штрихкод ${code} не найден. Укажите товар вручную.`);
+                    setUnknownBarcode(code);
+                }, 0);
+                return prevInventory;
+            }
+        });
+    }, [view]);
+
+    // USB barcode scanner for inventory — active only in edit mode
+    const handleUsbScanInventory = useCallback((rawCode: string) => {
+        processScannedBarcode(rawCode);
+    }, [processScannedBarcode]);
+
+    useUsbScanner(handleUsbScanInventory, view === 'edit');
 
     useEffect(() => {
         if (view === 'list') {
@@ -112,27 +161,39 @@ export default function InventoryModule() {
     };
 
     const handleBarcodeScan = () => {
-        if (!barcodeInput.trim()) return;
-        
-        // Try to find by barcode or sku or lot
-        // Note: the backend currently might not populate barcode into inventory items, 
-        // but let's check sku or name or barcode if it's there.
-        const idx = currentInventory.items.findIndex((item: any) => 
-            item.sku === barcodeInput || 
-            item.barcode === barcodeInput || 
-            item.name.includes(barcodeInput)
-        );
-
-        if (idx !== -1) {
-            const newItems = [...currentInventory.items];
-            newItems[idx].actualQty += 1;
-            newItems[idx].diff = newItems[idx].actualQty - newItems[idx].systemQty;
-            setCurrentInventory({ ...currentInventory, items: newItems });
-            toast.success(`Добавлено: ${newItems[idx].name}`);
-        } else {
-            toast.error('Товар с таким штрихкодом не найден в ревизии');
-        }
+        const val = barcodeRef.current?.value || barcodeInput;
+        if (!val.trim()) return;
+        processScannedBarcode(val);
         setBarcodeInput('');
+        if (barcodeRef.current) barcodeRef.current.value = '';
+        setTimeout(() => barcodeRef.current?.focus(), 0);
+    };
+
+    const assignUnknownBarcode = () => {
+        if (!selectedProductForUnknown || !unknownBarcode) return;
+        
+        setCurrentInventory((prevInventory: any) => {
+            if (!prevInventory) return prevInventory;
+            const newItems = [...prevInventory.items];
+            const idx = newItems.findIndex((item: any) => item.productId === selectedProductForUnknown);
+            
+            if (idx !== -1) {
+                const item = { ...newItems[idx] };
+                if (!item.scannedSerials) item.scannedSerials = [];
+                if (!item.scannedSerials.includes(unknownBarcode)) {
+                    item.scannedSerials = [...item.scannedSerials, unknownBarcode];
+                    item.actualQty = item.scannedSerials.length;
+                    item.diff = item.actualQty - item.systemQty;
+                    newItems[idx] = item;
+                    toast.success(`Излишек добавлен к: ${item.name}`);
+                }
+                return { ...prevInventory, items: newItems };
+            }
+            return prevInventory;
+        });
+        
+        setUnknownBarcode(null);
+        setSelectedProductForUnknown('');
     };
 
     if ((view === 'edit' || view === 'view') && currentInventory) {
@@ -185,12 +246,18 @@ export default function InventoryModule() {
                         <div className="mt-2 flex gap-2">
                             <input
                                 type="text"
+                                ref={barcodeRef}
+                                autoFocus
                                 value={barcodeInput}
-                                onChange={(e) => setBarcodeInput(translateCyrillicToEnglishLayout(e.target.value))}
-                                onKeyDown={(e) => e.key === 'Enter' && handleBarcodeScan()}
+                                onChange={(e) => setBarcodeInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleBarcodeScan();
+                                    }
+                                }}
                                 className="block w-64 rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="Пропикайте штрихкод товара..."
-                                autoFocus
                             />
                             <button
                                 onClick={handleBarcodeScan}
@@ -245,7 +312,17 @@ export default function InventoryModule() {
                                                 className="block w-24 mx-auto rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                             />
                                         ) : (
-                                            <span className="font-medium text-gray-900">{item.actualQty}</span>
+                                            <div className="flex flex-col items-center">
+                                                <span className="font-medium text-gray-900">{item.actualQty}</span>
+                                                {item.trackSerials && (
+                                                    <button 
+                                                        onClick={() => setViewingSerialsItem(item)}
+                                                        className="mt-1 text-xs text-indigo-600 hover:text-indigo-900 underline"
+                                                    >
+                                                        Штрихкоды
+                                                    </button>
+                                                )}
+                                            </div>
                                         )}
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-center font-medium">
@@ -272,6 +349,112 @@ export default function InventoryModule() {
                         </tbody>
                     </table>
                 </div>
+                {/* Unknown Barcode Modal */}
+                {unknownBarcode && (
+                    <div className="fixed inset-0 z-50 overflow-y-auto">
+                        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setUnknownBarcode(null)}></div>
+                            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                    <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-2">
+                                        Неизвестный штрихкод
+                                    </h3>
+                                    <div className="mt-2">
+                                        <p className="text-sm text-gray-500 mb-4">
+                                            Штрихкод <span className="font-bold">{unknownBarcode}</span> не найден в ожидаемых остатках. Выберите товар, чтобы добавить его как излишек:
+                                        </p>
+                                        <select
+                                            value={selectedProductForUnknown}
+                                            onChange={(e) => setSelectedProductForUnknown(e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                        >
+                                            <option value="">-- Выберите товар --</option>
+                                            {currentInventory?.items.filter((i: any) => i.trackSerials).map((item: any) => (
+                                                <option key={item.productId} value={item.productId}>
+                                                    {item.name} {item.specs?.lot ? `(Партия: ${item.specs.lot})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                    <button
+                                        type="button"
+                                        onClick={assignUnknownBarcode}
+                                        disabled={!selectedProductForUnknown}
+                                        className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto disabled:opacity-50"
+                                    >
+                                        Добавить
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setUnknownBarcode(null)}
+                                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                    >
+                                        Отмена
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Viewing Serials Modal */}
+                {viewingSerialsItem && (
+                    <div className="fixed inset-0 z-50 overflow-y-auto">
+                        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setViewingSerialsItem(null)}></div>
+                            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                    <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-2">
+                                        Штрихкоды единиц: {viewingSerialsItem.name}
+                                    </h3>
+                                    <div className="mt-4 space-y-4 max-h-96 overflow-y-auto pr-2">
+                                        <div>
+                                            <h4 className="text-sm font-medium text-gray-900 mb-2">Ожидаемые по базе (пока не найдены):</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {viewingSerialsItem.stockItemBarcodes?.filter((b: string) => !viewingSerialsItem.scannedSerials?.includes(b)).map((barcode: string) => (
+                                                    <span key={barcode} className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
+                                                        {barcode}
+                                                    </span>
+                                                ))}
+                                                {viewingSerialsItem.stockItemBarcodes?.filter((b: string) => !viewingSerialsItem.scannedSerials?.includes(b)).length === 0 && (
+                                                    <span className="text-sm text-gray-500">Все найдены</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <div>
+                                            <h4 className="text-sm font-medium text-gray-900 mb-2">Отсканированные:</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {viewingSerialsItem.scannedSerials?.map((barcode: string) => {
+                                                    const isSurplus = !viewingSerialsItem.stockItemBarcodes?.includes(barcode);
+                                                    return (
+                                                        <span key={barcode} className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${isSurplus ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' : 'bg-green-50 text-green-700 ring-green-600/20'}`}>
+                                                            {barcode} {isSurplus ? '(Излишек)' : ''}
+                                                        </span>
+                                                    );
+                                                })}
+                                                {(!viewingSerialsItem.scannedSerials || viewingSerialsItem.scannedSerials.length === 0) && (
+                                                    <span className="text-sm text-gray-500">Ничего не отсканировано</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewingSerialsItem(null)}
+                                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                    >
+                                        Закрыть
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -340,6 +523,7 @@ export default function InventoryModule() {
                     </tbody>
                 </table>
             </div>
+
         </div>
     );
 }

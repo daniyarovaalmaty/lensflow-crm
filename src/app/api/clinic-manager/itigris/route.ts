@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
-import { ItigrisApiClient, ItigrisSyncService } from '@/lib/itigris';
+import { ItigrisApiClient, ItigrisSyncService, ItigrisLegacyClient, ItigrisRemoteClient } from '@/lib/itigris';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +51,9 @@ export async function GET() {
         login: itigris?.login || null,
         connectedAt: itigris?.connectedAt || null,
         departmentId: itigris?.departmentId || null,
+        legacyClient: meta.itigrisLegacy?.client || null,
+        legacyConnected: !!meta.itigrisLegacy?.key,
+        remoteConnected: !!meta.itigrisRemote?.key,
         syncLogs,
         stats: { patientsCount, ordersCount },
     });
@@ -72,7 +75,7 @@ export async function POST(req: NextRequest) {
         if (!company || !login || !password) {
             return NextResponse.json({ error: 'Заполните все поля' }, { status: 400 });
         }
-        const client = new ItigrisApiClient({ company, login, password, departmentId: Number(departmentId) || 0, organizationId: orgId });
+        const client = new ItigrisApiClient({ company: company.trim(), login: login.trim(), password: password.trim(), departmentId: Number(departmentId) || 0, organizationId: orgId });
         const result = await client.testConnection();
         return NextResponse.json(result);
     }
@@ -89,7 +92,7 @@ export async function POST(req: NextRequest) {
             data: {
                 metadata: {
                     ...existingMeta,
-                    itigris: { company, login, password, departmentId: Number(departmentId) || 0, connectedAt: new Date().toISOString() },
+                    itigris: { company: company.trim(), login: login.trim(), password: password.trim(), departmentId: Number(departmentId) || 0, connectedAt: new Date().toISOString() },
                 },
             } as any,
         });
@@ -134,6 +137,67 @@ export async function POST(req: NextRequest) {
         delete existingMeta.itigris;
         await prisma.organization.update({ where: { id: orgId }, data: { metadata: existingMeta } as any });
         return NextResponse.json({ ok: true, message: 'ITIGRIS отключён' });
+    }
+
+    if (action === 'test_legacy') {
+        const { legacyClient, legacyKey } = body;
+        const client = new ItigrisLegacyClient({ client: legacyClient, key: legacyKey });
+        const result = await client.test();
+        return NextResponse.json({ ok: result.ok, message: result.ok ? 'Подключено успешно (Legacy)' : result.message });
+    }
+
+    if (action === 'save_legacy') {
+        const { legacyClient, legacyKey } = body;
+        const org = await prisma.organization.findUnique({ where: { id: orgId } });
+        const existingMeta = (org as any)?.metadata || {};
+        await prisma.organization.update({
+            where: { id: orgId },
+            data: { metadata: { ...existingMeta, itigrisLegacy: { client: legacyClient, key: legacyKey } } } as any,
+        });
+        return NextResponse.json({ ok: true, message: 'Легаси настройки сохранены' });
+    }
+
+    if (action === 'test_remote') {
+        const { remoteClient, remoteKey } = body;
+        const client = new ItigrisRemoteClient({ client: remoteClient, key: remoteKey });
+        const result = await client.test();
+        return NextResponse.json({ ok: result.ok, message: result.ok ? 'Подключено успешно (RemoteAPI)' : result.message });
+    }
+
+    if (action === 'save_remote') {
+        const { remoteClient, remoteKey } = body;
+        const org = await prisma.organization.findUnique({ where: { id: orgId } });
+        const existingMeta = (org as any)?.metadata || {};
+        await prisma.organization.update({
+            where: { id: orgId },
+            data: { metadata: { ...existingMeta, itigrisRemote: { client: remoteClient, key: remoteKey } } } as any,
+        });
+        return NextResponse.json({ ok: true, message: 'RemoteAPI настройки сохранены' });
+    }
+
+    if (action === 'sync_products') {
+        const config = await getOrgConfig(orgId);
+        if (!config) return NextResponse.json({ error: 'ITIGRIS не подключен' }, { status: 400 });
+        
+        const client = new ItigrisApiClient(config);
+        const syncService = new ItigrisSyncService(client, prisma as any, orgId);
+        const result = await syncService.syncProducts();
+        return NextResponse.json({ ok: true, results: [result], syncedAt: new Date().toISOString() });
+    }
+
+    if (action === 'sync_products_legacy') {
+        const org = await prisma.organization.findUnique({ where: { id: orgId } });
+        const meta = (org as any)?.metadata || {};
+        const remoteConf = meta.itigrisRemote;
+        
+        if (!remoteConf?.client || !remoteConf?.key) {
+            return NextResponse.json({ error: 'RemoteAPI не подключен' }, { status: 400 });
+        }
+        
+        const remoteClient = new ItigrisRemoteClient({ client: remoteConf.client, key: remoteConf.key });
+        const syncService = new ItigrisSyncService(null as any, prisma as any, orgId);
+        const result = await syncService.syncProductsLegacy(remoteClient);
+        return NextResponse.json({ ok: true, results: [result], syncedAt: new Date().toISOString() });
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

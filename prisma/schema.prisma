@@ -437,11 +437,16 @@ model Appointment {
   type         String        @default("consultation") // consultation | fitting | checkup | other
   notes        String?       @db.Text
 
+  // External integrations (ITIGRIS, etc.) — e.g. "itigris:registry:123"
+  externalId   String?
+  externalSource String?
+
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   @@index([doctorId, date])
   @@index([clinicId])
+  @@index([externalId])
   @@map("appointments")
 }
 
@@ -650,6 +655,13 @@ model OpticProduct {
   unit             String   @default("шт")
   trackSerials     Boolean  @default(false)
 
+  // Expiry / certification / shelf location (ТЗ: срок годности, сертификация мед-товаров, ячейка склада)
+  expiryDate       DateTime?               // срок годности (подсветка красным за полгода)
+  shelfLocation    String?                 // ячейка / полка на складе
+  isMedical        Boolean  @default(false) // товар медицинского назначения (нужна сертификация)
+  certNumber       String?                 // № сертификата
+  certUntil        DateTime?               // сертификат действует до
+
   isPublic         Boolean  @default(false)
   isFreePrice      Boolean  @default(false)
   isActive         Boolean  @default(true)
@@ -692,7 +704,11 @@ model StockItem {
 
   batchNumber     String?
   expiryDate      DateTime?
+  productionDate  DateTime?
+  importDate      DateTime?
+  diopters        String?
   purchasePrice   Int?
+  quantity        Int      @default(1)
 
   receiptDocId    String?
 
@@ -788,6 +804,185 @@ model Inventory {
   updatedAt       DateTime @updatedAt
 
   @@map("inventories")
+}
+
+// ==================== Supplier Order (purchase order — заказ поставщику) ====================
+// A restock order placed to a supplier/counterparty. Does NOT touch own stock
+// until received — on receipt it creates a receipt (приход) that adds stock.
+model SupplierOrder {
+  id              String   @id @default(cuid())
+  organizationId  String
+
+  number          String              // ЗП-0001
+  status          String   @default("draft")  // draft | sent | received | cancelled
+  supplierName    String?
+  supplierOrgId   String?             // counterparty Organization id (optional, no FK)
+
+  items           Json                // [{ productId, name, sku, qty, receivedQty, price }]
+  totalAmount     Int      @default(0)
+  notes           String?
+
+  createdById     String?
+  createdByName   String?
+  sentAt          DateTime?
+  receivedAt      DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("supplier_orders")
+}
+
+// ==================== Stock Transfer (between branches — трансфер) ====================
+// Moves stock from one branch to another: deduct source on send, add to
+// destination on receive. Acts as the транспортная накладная.
+model StockTransfer {
+  id              String   @id @default(cuid())
+  number          String              // ТР-0001
+  fromOrgId       String
+  toOrgId         String
+  fromName        String?
+  toName          String?
+
+  status          String   @default("draft")  // draft | sent | received | cancelled
+  items           Json                // [{ productId, name, sku, qty }]
+  totalQty        Int      @default(0)
+  notes           String?
+
+  createdById     String?
+  createdByName   String?
+  sentAt          DateTime?
+  receivedAt      DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([fromOrgId])
+  @@index([toOrgId])
+  @@map("stock_transfers")
+}
+
+// ==================== Task (Задания — Optima-style inter-employee tasks) ====================
+// Mirrors Optima's «Календарь заданий»: assign tasks between staff, track by
+// status/due date. No User FK (denormalized assignee/author names) to keep the
+// migration light — same style as SupplierOrder/StockTransfer above.
+model Task {
+  id              String    @id @default(cuid())
+  organizationId  String
+
+  title           String
+  description     String?   @db.Text
+  status          String    @default("new")     // new | in_progress | done | cancelled
+  priority        String    @default("normal")  // low | normal | high
+  dueDate         DateTime?
+
+  assignedById    String?
+  assignedByName  String?
+  assignedToId    String?
+  assignedToName  String?
+
+  // Optional link to another entity (order/patient) for context
+  relatedType     String?               // order | patient
+  relatedId       String?
+  relatedLabel    String?
+
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([assignedToId])
+  @@index([assignedById])
+  @@map("tasks")
+}
+
+// ==================== News (Новости — Optima-style org announcements) ====================
+// Org announcement feed with a per-user unread counter (the «Новости (+N)» badge).
+// Additive, no User FK — same style as Task/SupplierOrder/StockTransfer.
+model NewsPost {
+  id              String   @id @default(cuid())
+  organizationId  String
+
+  title           String
+  body            String   @db.Text
+  pinned          Boolean  @default(false)
+
+  authorId        String?
+  authorName      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("news_posts")
+}
+
+// One row per user: when they last opened the news feed. Unread = posts newer
+// than lastReadAt (excluding their own). Kept separate to avoid touching User.
+model NewsReadState {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  lastReadAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("news_read_state")
+}
+
+// ==================== Repair (Ремонт — Optima-style repair journal) ====================
+// Walk-in/registered repair intake: accept an item, describe the problem, price it,
+// track status accepted→in_progress→ready→issued. Additive, no FK — same style.
+model RepairOrder {
+  id              String    @id @default(cuid())
+  organizationId  String
+
+  number          String              // Р-0001
+  clientName      String?
+  clientPhone     String?
+
+  itemDescription String              // что сдали в ремонт
+  problem         String?   @db.Text  // описание неисправности
+  price           Int       @default(0)
+  status          String    @default("accepted") // accepted | in_progress | ready | issued | cancelled
+  masterName      String?
+  notes           String?
+
+  readyAt         DateTime?
+  issuedAt        DateTime?
+
+  createdById     String?
+  createdByName   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@map("repair_orders")
+}
+
+// ==================== Order Rework / Defect (Переделка/брак по заказу) ====================
+// Records reworks/defects tied to an order: what went wrong, who's responsible
+// (master/diagnosis/seller), cost — gives per-order history + per-employee error
+// accounting (ТЗ). Additive, no FK — same style.
+model OrderRework {
+  id              String    @id @default(cuid())
+  organizationId  String
+
+  orderNumber     String?               // linked order (e.g. ITG-123 / native number)
+  description     String    @db.Text     // что переделываем / в чём брак
+  responsibleType String    @default("master")  // master | diagnosis | seller | other
+  responsibleName String?               // на ком ошибка (для учёта по сотрудникам)
+  cost            Int       @default(0)  // стоимость переделки/брака
+  status          String    @default("open")    // open | resolved
+
+  createdById     String?
+  createdByName   String?
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([orderNumber])
+  @@map("order_reworks")
 }
 
 // ==================== Sale (POS transaction) ====================
