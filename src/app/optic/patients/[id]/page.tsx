@@ -400,7 +400,7 @@ export default function PatientDetailPage() {
             });
             if (rxRes.ok) {
                 const rx = await rxRes.json();
-                setPrescriptions((prev: any) => [rx, ...prev]);
+                setPatient(p => p ? { ...p, prescriptions: [rx, ...p.prescriptions] } : p);
             }
         }
         
