@@ -18,10 +18,10 @@ interface Doctor {
     clinicName: string;
     clinicId: string;
     hasOrg: boolean;
-    discountPercent: number | null;
     orders: number;
     revenue: number;
     unpaid: number;
+    status: string;
     lastDate: string;
 }
 
@@ -54,8 +54,8 @@ export default function CounterpartiesPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Filters
     const [search, setSearch] = useState('');
+    const [showWithoutAccount, setShowWithoutAccount] = useState(false);
     const [sortField, setSortField] = useState<SortField>('orders');
     const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -125,6 +125,15 @@ export default function CounterpartiesPage() {
     // Filtered + sorted doctors
     const filteredDoctors = useMemo(() => {
         let result = [...doctors];
+        
+        // Hide blocked doctors
+        result = result.filter(d => d.status !== 'blocked');
+        
+        // Hide without account if toggle is off
+        if (!showWithoutAccount) {
+            result = result.filter(d => d.email && d.email.trim() !== ''); // Doctor with email means real user account
+        }
+
         if (search) {
             const q = search.toLowerCase();
             result = result.filter(d =>
@@ -146,11 +155,20 @@ export default function CounterpartiesPage() {
             return sortDir === 'desc' ? -cmp : cmp;
         });
         return result;
-    }, [doctors, search, sortField, sortDir]);
+    }, [doctors, search, sortField, sortDir, showWithoutAccount]);
 
     // Filtered + sorted clinics
     const filteredClinics = useMemo(() => {
         let result = [...clinics];
+        
+        // Hide blocked clinics
+        result = result.filter(c => c.status !== 'blocked');
+
+        // Hide without account if toggle is off
+        if (!showWithoutAccount) {
+            result = result.filter(c => c.staffCount > 0);
+        }
+
         if (search) {
             const q = search.toLowerCase();
             result = result.filter(c =>
@@ -172,7 +190,7 @@ export default function CounterpartiesPage() {
             return sortDir === 'desc' ? -cmp : cmp;
         });
         return result;
-    }, [clinics, search, sortField, sortDir]);
+    }, [clinics, search, sortField, sortDir, showWithoutAccount]);
 
     if (loading) {
         return (
@@ -220,9 +238,9 @@ export default function CounterpartiesPage() {
                     </div>
                 </div>
 
-                {/* Search */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-6">
-                    <div className="p-4 flex items-center gap-3">
+                {/* Search & Filters */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col sm:flex-row gap-4 p-4">
+                    <div className="flex-1 flex items-center gap-3">
                         <Search className="w-4 h-4 text-gray-400" />
                         <input
                             type="text"
@@ -234,6 +252,20 @@ export default function CounterpartiesPage() {
                         {search && (
                             <button onClick={() => setSearch('')} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
                         )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 pl-4 border-l border-gray-200">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input 
+                                type="checkbox" 
+                                checked={showWithoutAccount} 
+                                onChange={e => setShowWithoutAccount(e.target.checked)}
+                                className="rounded text-blue-600 focus:ring-blue-500 bg-gray-100 border-gray-300"
+                            />
+                            <span className="text-sm font-medium text-gray-700">
+                                Показывать без личного кабинета
+                            </span>
+                        </label>
                     </div>
                 </div>
 

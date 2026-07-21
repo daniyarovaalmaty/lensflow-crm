@@ -16,9 +16,9 @@ const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 interface PriceList {
     lenses: {
-        probe?: Record<string, number>;
-        spherical?: Record<string, number>;
-        toric?: Record<string, number>;
+        probe?: Record<string, number | string>;
+        spherical?: Record<string, number | string>;
+        toric?: Record<string, number | string>;
     };
 }
 
@@ -47,6 +47,10 @@ export default function CounterpartyDetailPage() {
     const [editDiscount, setEditDiscount] = useState('0');
     const [editPriceList, setEditPriceList] = useState<PriceList>(DEFAULT_PRICES);
     const [isSavingPricing, setIsSavingPricing] = useState(false);
+
+    const [showEditInfoModal, setShowEditInfoModal] = useState(false);
+    const [editInfoForm, setEditInfoForm] = useState<any>({});
+    const [isSavingInfo, setIsSavingInfo] = useState(false);
 
     const fetchCounterparty = async () => {
         try {
@@ -108,6 +112,51 @@ export default function CounterpartyDetailPage() {
         }
     };
 
+    const handleSaveInfo = async () => {
+        setIsSavingInfo(true);
+        try {
+            const res = await fetch(`/api/counterparties/${id}/info`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, ...editInfoForm }),
+            });
+            if (res.ok) {
+                setShowEditInfoModal(false);
+                fetchCounterparty();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Ошибка сохранения');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSavingInfo(false);
+        }
+    };
+
+    const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+    const handleToggleStatus = async () => {
+        if (!confirm(`Вы уверены, что хотите ${data.status === 'blocked' ? 'восстановить' : 'заблокировать'} этого контрагента?`)) return;
+        setIsTogglingStatus(true);
+        try {
+            const res = await fetch(`/api/counterparties/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, status: data.status === 'blocked' ? 'active' : 'blocked' }),
+            });
+            if (res.ok) {
+                fetchCounterparty();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Ошибка изменения статуса');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsTogglingStatus(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -147,7 +196,12 @@ export default function CounterpartyDetailPage() {
                             {name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900">{name}</h1>
+                            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                {name}
+                                {data.status === 'blocked' && (
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded-md">Заблокирован</span>
+                                )}
+                            </h1>
                             <p className="text-sm text-gray-500">
                                 {isClinic ? 'Клиника' : 'Врач'}
                                 {!isClinic && data.organization?.name && (
@@ -156,6 +210,22 @@ export default function CounterpartyDetailPage() {
                             </p>
                         </div>
                     </div>
+                    
+                    {canEditPricing && (
+                        <div className="ml-auto">
+                            <button 
+                                onClick={handleToggleStatus}
+                                disabled={isTogglingStatus}
+                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                                    data.status === 'blocked' 
+                                        ? 'bg-white border-gray-200 text-emerald-600 hover:bg-gray-50' 
+                                        : 'bg-white border-red-200 text-red-600 hover:bg-red-50'
+                                }`}
+                            >
+                                {isTogglingStatus ? 'Загрузка...' : (data.status === 'blocked' ? 'Восстановить' : 'Заблокировать')}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Info cards */}
@@ -191,8 +261,11 @@ export default function CounterpartyDetailPage() {
                     <div className="space-y-4">
                         {isClinic && (
                             <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-                                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-indigo-600" /> Реквизиты
+                                <h3 className="font-semibold text-gray-900 flex items-center justify-between">
+                                    <div className="flex items-center gap-2"><Building2 className="w-4 h-4 text-indigo-600" /> Реквизиты</div>
+                                    <button onClick={() => { setEditInfoForm(data); setShowEditInfoModal(true); }} className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                        <Pencil className="w-3 h-3" /> Изменить
+                                    </button>
                                 </h3>
                                 <div className="space-y-2 text-sm">
                                     {data.inn && <div className="flex justify-between"><span className="text-gray-500">ИИН/БИН</span><span className="font-medium">{data.inn}</span></div>}
@@ -251,8 +324,11 @@ export default function CounterpartyDetailPage() {
 
                         {!isClinic && (
                             <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-                                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                                    <Stethoscope className="w-4 h-4 text-blue-600" /> Информация
+                                <h3 className="font-semibold text-gray-900 flex items-center justify-between">
+                                    <div className="flex items-center gap-2"><Stethoscope className="w-4 h-4 text-blue-600" /> Информация</div>
+                                    <button onClick={() => { setEditInfoForm(data); setShowEditInfoModal(true); }} className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                        <Pencil className="w-3 h-3" /> Изменить
+                                    </button>
                                 </h3>
                                 <div className="space-y-2 text-sm">
                                     {data.email && <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="font-medium">{data.email}</span></div>}
@@ -420,11 +496,14 @@ export default function CounterpartyDetailPage() {
                                                         <div className="relative">
                                                             <input
                                                                 type="number"
-                                                                value={editPriceList.lenses?.spherical?.[dk] || 0}
-                                                                onChange={e => setEditPriceList(prev => ({
-                                                                    ...prev,
-                                                                    lenses: { ...prev.lenses, spherical: { ...prev.lenses.spherical, [dk]: Number(e.target.value) } }
-                                                                }))}
+                                                                value={editPriceList.lenses?.spherical?.[dk] ?? ''}
+                                                                onChange={e => {
+                                                                    const val = e.target.value;
+                                                                    setEditPriceList(prev => ({
+                                                                        ...prev,
+                                                                        lenses: { ...prev.lenses, spherical: { ...(prev.lenses?.spherical || {}), [dk]: val === '' ? '' : Number(val) } }
+                                                                    }))
+                                                                }}
                                                                 className="input w-full pr-8"
                                                                 min="0"
                                                             />
@@ -445,11 +524,14 @@ export default function CounterpartyDetailPage() {
                                                         <div className="relative">
                                                             <input
                                                                 type="number"
-                                                                value={editPriceList.lenses?.toric?.[dk] || 0}
-                                                                onChange={e => setEditPriceList(prev => ({
-                                                                    ...prev,
-                                                                    lenses: { ...prev.lenses, toric: { ...prev.lenses.toric, [dk]: Number(e.target.value) } }
-                                                                }))}
+                                                                value={editPriceList.lenses?.toric?.[dk] ?? ''}
+                                                                onChange={e => {
+                                                                    const val = e.target.value;
+                                                                    setEditPriceList(prev => ({
+                                                                        ...prev,
+                                                                        lenses: { ...prev.lenses, toric: { ...(prev.lenses?.toric || {}), [dk]: val === '' ? '' : Number(val) } }
+                                                                    }))
+                                                                }}
                                                                 className="input w-full pr-8"
                                                                 min="0"
                                                             />
@@ -469,11 +551,14 @@ export default function CounterpartyDetailPage() {
                                                     <div className="relative">
                                                         <input
                                                             type="number"
-                                                            value={editPriceList.lenses?.probe?.['50'] || 0}
-                                                            onChange={e => setEditPriceList(prev => ({
-                                                                ...prev,
-                                                                lenses: { ...prev.lenses, probe: { ...prev.lenses.probe, ['50']: Number(e.target.value) } }
-                                                            }))}
+                                                            value={editPriceList.lenses?.probe?.['50'] ?? ''}
+                                                            onChange={e => {
+                                                                const val = e.target.value;
+                                                                setEditPriceList(prev => ({
+                                                                    ...prev,
+                                                                    lenses: { ...prev.lenses, probe: { ...(prev.lenses?.probe || {}), ['50']: val === '' ? '' : Number(val) } }
+                                                                }))
+                                                            }}
                                                             className="input w-full pr-8"
                                                             min="0"
                                                         />
@@ -497,6 +582,115 @@ export default function CounterpartyDetailPage() {
                                         <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Сохранение...</>
                                     ) : (
                                         <><Save className="w-4 h-4" /> Сохранить цены</>
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Edit Info Modal */}
+            <AnimatePresence>
+                {showEditInfoModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowEditInfoModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+                        >
+                            <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-shrink-0">
+                                <h2 className="text-lg font-bold text-gray-900">Редактирование {isClinic ? 'клиники' : 'врача'}</h2>
+                                <button onClick={() => setShowEditInfoModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="p-5 overflow-y-auto space-y-4">
+                                {isClinic ? (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Название</label>
+                                            <input type="text" value={editInfoForm.name || ''} onChange={e => setEditInfoForm({...editInfoForm, name: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">ИИН/БИН</label>
+                                            <input type="text" value={editInfoForm.inn || ''} onChange={e => setEditInfoForm({...editInfoForm, inn: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Телефон</label>
+                                            <input type="text" value={editInfoForm.phone || ''} onChange={e => setEditInfoForm({...editInfoForm, phone: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                                            <input type="email" value={editInfoForm.email || ''} onChange={e => setEditInfoForm({...editInfoForm, email: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Город</label>
+                                            <input type="text" value={editInfoForm.city || ''} onChange={e => setEditInfoForm({...editInfoForm, city: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Юр. адрес</label>
+                                            <input type="text" value={editInfoForm.address || ''} onChange={e => setEditInfoForm({...editInfoForm, address: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Адрес доставки</label>
+                                            <input type="text" value={editInfoForm.deliveryAddress || ''} onChange={e => setEditInfoForm({...editInfoForm, deliveryAddress: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Руководитель</label>
+                                            <input type="text" value={editInfoForm.directorName || ''} onChange={e => setEditInfoForm({...editInfoForm, directorName: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Контактное лицо</label>
+                                            <input type="text" value={editInfoForm.contactPerson || ''} onChange={e => setEditInfoForm({...editInfoForm, contactPerson: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Банк</label>
+                                            <input type="text" value={editInfoForm.bankName || ''} onChange={e => setEditInfoForm({...editInfoForm, bankName: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">IBAN</label>
+                                            <input type="text" value={editInfoForm.iban || ''} onChange={e => setEditInfoForm({...editInfoForm, iban: e.target.value})} className="input w-full" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">ФИО</label>
+                                            <input type="text" value={editInfoForm.fullName || ''} onChange={e => setEditInfoForm({...editInfoForm, fullName: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Телефон</label>
+                                            <input type="text" value={editInfoForm.phone || ''} onChange={e => setEditInfoForm({...editInfoForm, phone: e.target.value})} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                                            <input type="email" value={editInfoForm.email || ''} onChange={e => setEditInfoForm({...editInfoForm, email: e.target.value})} className="input w-full" />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end gap-3 p-5 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+                                <button onClick={() => setShowEditInfoModal(false)} className="btn btn-secondary">Отмена</button>
+                                <button
+                                    onClick={handleSaveInfo}
+                                    disabled={isSavingInfo}
+                                    className="btn btn-primary gap-2"
+                                >
+                                    {isSavingInfo ? (
+                                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Сохранение...</>
+                                    ) : (
+                                        <><Save className="w-4 h-4" /> Сохранить</>
                                     )}
                                 </button>
                             </div>
