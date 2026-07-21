@@ -26,6 +26,7 @@ const CLINIC_STAFF_ROLES: { value: SubRole; label: string }[] = [
     { value: 'optic_manager', label: 'Руководитель' },
     { value: 'optic_doctor', label: 'Врач' },
     { value: 'optic_accountant', label: 'Бухгалтер' },
+    { value: 'optic_procurement', label: 'Отдел закупа' },
     { value: 'sales_manager', label: 'Менеджер продаж' },
 ];
 
