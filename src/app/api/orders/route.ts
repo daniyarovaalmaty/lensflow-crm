@@ -496,10 +496,8 @@ export async function POST(request: NextRequest) {
         while (attempts < maxAttempts) {
             try {
                 const orderNumber = await generateOrderNumber();
-                // For procurement users: use the selected branch org; otherwise use the user's own org
-                const orderOrgId = (session.user.subRole === 'optic_procurement' && body.branchOrgId)
-                    ? body.branchOrgId
-                    : (session.user.organizationId || undefined);
+                // Use the selected branch org if provided, otherwise fallback to the user's own org
+                const orderOrgId = body.branchOrgId || session.user.organizationId || undefined;
 
                 let initialStatus = 'new_order';
                 if (orderOrgId) {
