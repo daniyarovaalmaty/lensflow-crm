@@ -37,6 +37,8 @@
     ],
     "exclude": [
         "node_modules",
-        "prisma"
+        "prisma",
+        "vitest.config.ts",
+        "src/__tests__"
     ]
 }
