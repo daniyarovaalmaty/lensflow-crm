@@ -50,6 +50,7 @@ model Organization {
   status    OrgStatus @default(active)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  requiresApproval Boolean @default(false) // Опциональное подтверждение заказов бухгалтером
 
   users    User[]
   orders   Order[]
@@ -566,6 +567,7 @@ model Contract {
 }
 
 enum OrderStatus {
+  draft           @map("draft") // Черновик (Ожидает оплаты/подтверждения)
   new_order       @map("new")
   in_production
   ready

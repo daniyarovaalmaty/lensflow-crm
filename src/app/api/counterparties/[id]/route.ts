@@ -43,6 +43,7 @@ export async function GET(
                     discountPercent: true,
                     metadata: true,
                     status: true,
+                    requiresApproval: true,
                     createdAt: true,
                     users: {
                         select: { id: true, fullName: true, email: true, subRole: true, phone: true },
