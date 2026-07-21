@@ -73,6 +73,32 @@ export async function POST(request: Request, { params }: { params: { id: string 
         }
     }
 
+    // CRM Routing for Glasses: Create a Lead in Sales Funnel
+    if ((type || 'glasses') === 'glasses' && patient?.phone) {
+        try {
+            const existingLead = await prisma.lead.findFirst({
+                where: { phone: patient.phone, funnel: 'sales' },
+                orderBy: { createdAt: 'desc' }
+            });
+            
+            if (!existingLead || existingLead.stage === 'lost') {
+                await prisma.lead.create({
+                    data: {
+                        phone: patient.phone,
+                        name: patient.name,
+                        patientId: patient.id,
+                        funnel: 'sales',
+                        stage: 'new_lead',
+                        source: 'manual',
+                        notes: `Выписан рецепт на очки. \nСфера OD: ${prescription.odSph || '-'}, OS: ${prescription.osSph || '-'}. \n${notes || ''}`,
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('[CRM] Failed to create lead for glasses prescription:', error);
+        }
+    }
+
     return NextResponse.json(prescription, { status: 201 });
 }
 

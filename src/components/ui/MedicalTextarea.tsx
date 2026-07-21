@@ -14,9 +14,10 @@ interface MedicalTextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
     category: string; // e.g., 'complaints', 'anamnesis_life'
     label?: string;
     onValueChange?: (value: string) => void;
+    quickTags?: string[];
 }
 
-export default function MedicalTextarea({ category, label, value, onValueChange, className = '', ...props }: MedicalTextareaProps) {
+export default function MedicalTextarea({ category, label, value, onValueChange, className = '', quickTags, ...props }: MedicalTextareaProps) {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -111,8 +112,21 @@ export default function MedicalTextarea({ category, label, value, onValueChange,
                     <label className="block text-xs font-semibold text-gray-500">{label}</label>
                 </div>
             )}
-            
             <div className="relative">
+                {quickTags && quickTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-1.5">
+                        {quickTags.map((tag, idx) => (
+                            <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handleApplyTemplate(tag)}
+                                className="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-[10px] rounded-full border border-indigo-100 transition-colors"
+                            >
+                                {tag}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 <textarea
                     value={value}
                     onChange={(e) => onValueChange ? onValueChange(e.target.value) : props.onChange?.(e)}
