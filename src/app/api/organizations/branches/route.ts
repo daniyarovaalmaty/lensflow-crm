@@ -43,7 +43,7 @@ export async function GET() {
         hqMetadata = hq?.metadata as any;
 
         const siblings = await prisma.organization.findMany({
-            where: { parentId: org.parentId, type: 'branch' },
+            where: { id: org.id },
             select: { id: true, name: true, inn: true, deliveryAddress: true, address: true, directorName: true, city: true },
             orderBy: { name: 'asc' },
         });
