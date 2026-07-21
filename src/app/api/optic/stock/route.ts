@@ -14,12 +14,31 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const view = searchParams.get('view'); // 'items' | 'movements' | 'documents' | default: summary
+    const targetOrgId = searchParams.get('orgId');
+
+    let fetchOrgId: any = user.organizationId;
+    if (targetOrgId && targetOrgId !== 'all') {
+        const myOrg = await prisma.organization.findUnique({ where: { id: user.organizationId }, select: { type: true } });
+        if (myOrg?.type === 'headquarters') {
+            fetchOrgId = targetOrgId;
+        }
+    } else if (targetOrgId === 'all' || !targetOrgId) {
+        // If "All branches" or no branch specified, fetch for HQ and all child branches
+        const myOrg = await prisma.organization.findUnique({ where: { id: user.organizationId }, select: { type: true } });
+        if (myOrg?.type === 'headquarters') {
+            const childOrgs = await prisma.organization.findMany({ 
+                where: { parentId: user.organizationId }, 
+                select: { id: true } 
+            });
+            fetchOrgId = { in: [user.organizationId, ...childOrgs.map((o: any) => o.id)] };
+        }
+    }
 
     // ---- Stock Items (serial-tracked units) ----
     if (view === 'items') {
         const productId = searchParams.get('productId');
         const status = searchParams.get('status');
-        const where: any = { organizationId: user.organizationId };
+        const where: any = { organizationId: fetchOrgId };
         if (productId) where.productId = productId;
         if (status) where.status = status;
 
@@ -35,7 +54,7 @@ export async function GET(req: NextRequest) {
     // ---- Movements history ----
     if (view === 'movements') {
         const movements = await prisma.stockMovement.findMany({
-            where: { organizationId: user.organizationId },
+            where: { organizationId: fetchOrgId },
             include: { product: { select: { name: true, category: true } } },
             orderBy: { createdAt: 'desc' },
             take: 200,
@@ -46,7 +65,7 @@ export async function GET(req: NextRequest) {
     // ---- Stock documents ----
     if (view === 'documents') {
         const docs = await prisma.stockDocument.findMany({
-            where: { organizationId: user.organizationId },
+            where: { organizationId: fetchOrgId },
             orderBy: { createdAt: 'desc' },
             take: 100,
         });
@@ -55,7 +74,7 @@ export async function GET(req: NextRequest) {
 
     // ---- Default: product summary with stock counts ----
     const products = await prisma.opticProduct.findMany({
-        where: { organizationId: user.organizationId, isActive: true, type: 'product' },
+        where: { organizationId: fetchOrgId, isActive: true, type: 'product' },
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         include: {
             _count: { select: { stockItems: { where: { status: 'in_stock' } } } },
