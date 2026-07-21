@@ -85,7 +85,7 @@ export default function DoctorCalendar() {
                     .then(res => res.json())
                     .then(data => {
                         if (Array.isArray(data)) {
-                            setDoctors(data.filter((u: any) => u.subRole === 'optic_doctor'));
+                            setDoctors(data.filter((u: any) => ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(u.subRole)));
                         }
                     })
                     .catch(console.error);

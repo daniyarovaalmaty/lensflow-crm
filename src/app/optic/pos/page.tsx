@@ -249,7 +249,7 @@ export default function POSPage() {
             if (res.ok) {
                 const data = await res.json();
                 // Filter to only show doctors in the POS dropdown
-                setDoctors(data.filter((u: any) => u.subRole === 'optic_doctor'));
+                setDoctors(data.filter((u: any) => ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(u.subRole)));
             }
         } catch(e) {}
     };

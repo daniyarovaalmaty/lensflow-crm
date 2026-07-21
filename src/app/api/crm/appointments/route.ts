@@ -103,7 +103,7 @@ export async function GET(req: Request) {
         const doctors = await prisma.user.findMany({
             where: { 
                 organizationId: { in: allowedOrgIds },
-                subRole: { in: ['optic_doctor', 'doctor'] }
+                subRole: { in: ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'doctor'] }
             },
             select: { id: true, fullName: true }
         });

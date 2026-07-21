@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         // Strip prices only for clinic doctors (optic_doctor)
         const subRole = session.user.subRole;
 
-        if (subRole === 'optic_doctor') {
+        if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole)) {
             const stripped = products.map(({ price, name1c, code, ...rest }: any) => rest);
             return NextResponse.json(stripped);
         }
