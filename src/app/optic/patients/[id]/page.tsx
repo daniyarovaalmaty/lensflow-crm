@@ -75,7 +75,6 @@ interface Consultation {
     refractionOS: string | null;
     biomicroscopy: string | null;
     notes: string | null;
-    notes: string | null;
     doctor: { fullName: string } | null;
 }
 
