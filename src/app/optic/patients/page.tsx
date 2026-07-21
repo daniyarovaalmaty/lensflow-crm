@@ -256,6 +256,32 @@ export default function PatientsPage() {
                     </div>
                 ) : (
                     <div className="space-y-2">
+                        {pages > 1 && (
+                            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm mb-4">
+                                <div className="text-sm text-gray-500 font-medium">
+                                    Показано {(page - 1) * 30 + 1} – {Math.min(page * 30, total)} из {total}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handlePrevPage}
+                                        disabled={page === 1 || isLoadingMore}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <span className="text-sm font-bold text-gray-700 px-3">
+                                        {page} из {pages}
+                                    </span>
+                                    <button
+                                        onClick={handleNextPage}
+                                        disabled={page === pages || isLoadingMore}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         {patients.map(p => {
                             const lastRx = p.prescriptions[0];
                             const initials = p.name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
@@ -301,7 +327,7 @@ export default function PatientsPage() {
                         })}
                         
                         {pages > 1 && (
-                            <div className="pt-4 pb-2 flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm mt-4">
+                            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm mt-4">
                                 <div className="text-sm text-gray-500 font-medium">
                                     Показано {(page - 1) * 30 + 1} – {Math.min(page * 30, total)} из {total}
                                 </div>
