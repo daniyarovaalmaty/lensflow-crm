@@ -11,10 +11,13 @@ export async function GET(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
+    const orgIdParam = req.nextUrl.searchParams.get('orgId');
+    const targetOrgId = (orgIdParam && orgIdParam !== 'all') ? orgIdParam : user.organizationId;
+
     // Find closed shifts in this organization
     const closedShifts = await prisma.cashShift.findMany({
         where: {
-            cashRegister: { organizationId: user.organizationId },
+            cashRegister: { organizationId: targetOrgId },
             status: 'closed',
         },
         include: {
