@@ -74,7 +74,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const [distributors, setDistributors] = useState<{ id: string; name: string; city?: string }[]>([]);
     const [selectedDistributorId, setSelectedDistributorId] = useState<string>('');
     const [recipientType, setRecipientType] = useState<'laboratory' | 'distributor'>('laboratory');
-    const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string; inn?: string | null; deliveryAddress?: string | null; address?: string | null; directorName?: string | null }[]>([]);
+    const [branches, setBranches] = useState<{ id: string; name: string; recipientType?: string; recipientOrgId?: string | null; recipientLabel?: string; inn?: string | null; deliveryAddress?: string | null; address?: string | null; directorName?: string | null; city?: string | null }[]>([]);
     const [selectedBranchId, setSelectedBranchId] = useState<string>('');
     const [confirmData, setConfirmData] = useState<any>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -203,6 +203,19 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             }
         }
     }, [selectedBranchId, branches, contracts, setValue, session?.user?.organizationId]);
+
+    // Auto-select user's branch
+    useEffect(() => {
+        if (branches.length > 0 && !selectedBranchId) {
+            const userOrgId = session?.user?.organizationId;
+            const myBranch = branches.find(b => b.id === userOrgId);
+            if (myBranch) {
+                setSelectedBranchId(myBranch.id);
+            } else if (branches.length === 1) {
+                setSelectedBranchId(branches[0].id);
+            }
+        }
+    }, [branches, selectedBranchId, session?.user?.organizationId]);
 
     // Fetch organization profile for auto-fill
     useEffect(() => {
@@ -929,7 +942,14 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                                 <div className="flex-1 min-w-0">
                                                     <div className={`text-sm font-bold truncate ${
                                                         isSelected ? 'text-violet-800' : 'text-gray-700'
-                                                    }`}>{branch.name}</div>
+                                                    }`}>
+                                                        {branch.name}
+                                                    </div>
+                                                    {branch.city && (
+                                                        <div className={`text-xs mt-0.5 font-medium ${isSelected ? 'text-violet-600' : 'text-gray-500'}`}>
+                                                            г. {branch.city}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 {isSelected && (
                                                     <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center flex-shrink-0">
