@@ -398,14 +398,23 @@ export default function ClinicManagerItigrisPage() {
                             <div className="mb-5 space-y-2">
                                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Результат</div>
                                 {syncResults.map((r, i) => (
-                                    <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
-                                        <span className="text-sm font-medium text-gray-900">{entityLabels[r.entity] || r.entity}</span>
-                                        <div className="flex gap-3 text-xs font-medium">
-                                            {r.created > 0 && <span className="text-emerald-600">+{r.created}</span>}
-                                            {r.updated > 0 && <span className="text-indigo-600">↻ {r.updated}</span>}
-                                            {r.errors > 0 && <span className="text-red-600">⚠ {r.errors}</span>}
-                                            {r.created === 0 && r.updated === 0 && r.errors === 0 && <span className="text-gray-400">Без изменений</span>}
+                                    <div key={i} className="bg-gray-50 rounded-xl p-3 flex flex-col gap-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium text-gray-900">{entityLabels[r.entity] || r.entity}</span>
+                                            <div className="flex gap-3 text-xs font-medium">
+                                                {r.created > 0 && <span className="text-emerald-600">+{r.created}</span>}
+                                                {r.updated > 0 && <span className="text-indigo-600">↻ {r.updated}</span>}
+                                                {r.errors > 0 && <span className="text-red-600">⚠ {r.errors}</span>}
+                                                {r.created === 0 && r.updated === 0 && r.errors === 0 && <span className="text-gray-400">Без изменений</span>}
+                                            </div>
                                         </div>
+                                        {r.details && r.details.length > 0 && (
+                                            <div className="text-xs text-red-600 mt-1 bg-red-50 p-2 rounded-lg border border-red-100">
+                                                {r.details.map((d, j) => (
+                                                    <div key={j}>{d}</div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>

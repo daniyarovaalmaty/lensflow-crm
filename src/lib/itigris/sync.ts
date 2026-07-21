@@ -761,7 +761,12 @@ export class ItigrisSyncService {
                 result.details.push(`${rp}: строк ${catRows}`);
             } catch (err: any) {
                 const s = err.response?.status;
-                result.details.push(`${rp}: ${s === 401 ? '401 — проверьте RemoteAPI-ключ' : 'ошибка ' + (s || err.message)}`);
+                result.errors++;
+                if (s === 403) {
+                    result.details.push(`${rp}: доступ к остаткам запрещен (403)`);
+                } else {
+                    result.details.push(`${rp}: ${s === 401 ? '401 — проверьте RemoteAPI-ключ' : 'ошибка ' + (s || err.message)}`);
+                }
             }
         }
 
