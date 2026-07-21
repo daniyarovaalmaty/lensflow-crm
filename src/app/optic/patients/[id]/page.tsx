@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
-    ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
+    ArrowLeft, User, Users, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
     Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag, Award
 } from 'lucide-react';
@@ -299,11 +299,67 @@ export default function PatientDetailPage() {
     const [savingInvoice, setSavingInvoice] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
-    useEffect(() => {
+    // Family Linking
+    const [showFamilyModal, setShowFamilyModal] = useState(false);
+    const [familySearch, setFamilySearch] = useState('');
+    const [familyResults, setFamilyResults] = useState<any[]>([]);
+    const [searchingFamily, setSearchingFamily] = useState(false);
+
+    const handleSearchFamily = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSearchingFamily(true);
+        try {
+            const res = await fetch(`/api/patients?q=${encodeURIComponent(familySearch)}&noSync=1`);
+            if (res.ok) {
+                const data = await res.json();
+                setFamilyResults((data.patients || []).filter((p: any) => p.id !== id));
+            }
+        } finally {
+            setSearchingFamily(false);
+        }
+    };
+
+    const handleLinkParent = async (parentId: string | null) => {
+        try {
+            const res = await fetch(`/api/patients/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parentId }),
+            });
+            if (res.ok) {
+                loadPatient();
+                setShowFamilyModal(false);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleLinkChild = async (childId: string) => {
+        try {
+            const res = await fetch(`/api/patients/${childId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parentId: id }),
+            });
+            if (res.ok) {
+                loadPatient();
+                setShowFamilyModal(false);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const loadPatient = () => {
         fetch(`/api/patients/${id}`)
             .then(r => r.json())
             .then(data => { setPatient(data); setEditForm(data); })
             .finally(() => setIsLoading(false));
+    };
+
+    useEffect(() => {
+        loadPatient();
 
         fetch(`/api/patients/${id}/consultations`)
             .then(r => r.ok ? r.json() : [])
@@ -982,7 +1038,10 @@ export default function PatientDetailPage() {
                                 </div>
                                 {patient.parent && (
                                     <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Связанный профиль (Родитель)</label>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Связанный профиль (Родитель)</label>
+                                            <button onClick={() => handleLinkParent(null)} className="text-[10px] text-red-500 hover:text-red-600 font-medium">Отвязать</button>
+                                        </div>
                                         <Link href={`/optic/patients/${patient.parent.id}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors bg-primary-50 p-2 rounded-lg border border-primary-100">
                                             <User className="w-4 h-4" /> {patient.parent.name}
                                         </Link>
@@ -993,11 +1052,19 @@ export default function PatientDetailPage() {
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дети</label>
                                         <div className="space-y-2">
                                             {patient.children.map((child: any) => (
-                                                <Link key={child.id} href={`/optic/patients/${child.id}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors bg-primary-50 p-2 rounded-lg border border-primary-100">
+                                                <Link key={child.id} href={`/optic/patients/${child.id}`} className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors bg-emerald-50 p-2 rounded-lg border border-emerald-100">
                                                     <User className="w-4 h-4" /> {child.name}
                                                 </Link>
                                             ))}
                                         </div>
+                                    </div>
+                                )}
+                                
+                                {!isEditing && (
+                                    <div className="pt-2">
+                                        <button onClick={() => { setFamilySearch(''); setFamilyResults([]); setShowFamilyModal(true); }} className="w-full btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm text-gray-700 py-2 flex items-center justify-center gap-2">
+                                            <Users className="w-4 h-4" /> Управление семьей
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -1487,8 +1554,8 @@ export default function PatientDetailPage() {
                         </button>
                     </div>
 
-                    {/* New Consultation Form */}
-                    {showConsultForm && (
+                    {/* Consult Modal */}
+            {showConsultForm && (
                         <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-semibold text-gray-900">{editingConsultId ? 'Редактирование записи' : 'Новая запись консультации'}</h3>
@@ -1908,6 +1975,68 @@ export default function PatientDetailPage() {
                             </div>
                         </div>
 
+                    </div>
+                </div>
+            )}
+
+            {/* Family Modal */}
+            {showFamilyModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh]">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
+                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                <Users className="w-5 h-5 text-primary-500" /> Управление семьей
+                            </h3>
+                            <button onClick={() => setShowFamilyModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-5 overflow-y-auto">
+                            <form onSubmit={handleSearchFamily} className="mb-4">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Найти родственника</label>
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input 
+                                            type="text" 
+                                            value={familySearch} 
+                                            onChange={e => setFamilySearch(e.target.value)} 
+                                            placeholder="Имя или номер телефона..." 
+                                            className="input w-full pl-9" 
+                                        />
+                                    </div>
+                                    <button type="submit" disabled={searchingFamily || !familySearch} className="btn btn-primary whitespace-nowrap">
+                                        {searchingFamily ? 'Поиск...' : 'Найти'}
+                                    </button>
+                                </div>
+                            </form>
+
+                            {familyResults.length > 0 ? (
+                                <div className="space-y-2 mt-4">
+                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Результаты поиска:</p>
+                                    {familyResults.map(p => (
+                                        <div key={p.id} className="p-3 border border-gray-100 rounded-xl bg-gray-50 flex items-center justify-between">
+                                            <div>
+                                                <p className="font-semibold text-sm text-gray-900">{p.name}</p>
+                                                <p className="text-xs text-gray-500">{p.phone}</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => handleLinkParent(p.id)} className="px-3 py-1.5 bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 rounded-lg text-xs font-medium transition-colors">
+                                                    Сделать родителем
+                                                </button>
+                                                <button onClick={() => handleLinkChild(p.id)} className="px-3 py-1.5 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-medium transition-colors">
+                                                    Сделать ребенком
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                familySearch && !searchingFamily && (
+                                    <p className="text-sm text-gray-500 text-center py-4">Ничего не найдено. Попробуйте другой номер телефона.</p>
+                                )
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
