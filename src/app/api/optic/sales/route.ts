@@ -14,8 +14,10 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const statusParam = searchParams.get('status');
+    const orgIdParam = searchParams.get('orgId');
+    const targetOrgId = (orgIdParam && orgIdParam !== 'all') ? orgIdParam : user.organizationId;
 
-    const whereClause: any = { organizationId: user.organizationId };
+    const whereClause: any = { organizationId: targetOrgId };
     if (statusParam) {
         whereClause.paymentStatus = statusParam;
     }
@@ -39,12 +41,12 @@ export async function POST(req: NextRequest) {
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
     const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, explicitDiscountAmount, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData, doctorId, draftSaleId } = body;
+    const { items, customerName, customerPhone, discountPercent, explicitDiscountAmount, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData, doctorId, draftSaleId, orgId: reqOrgId } = body;
     // items: [{ productId, quantity, unitPrice }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
 
     // Generate sale number (globally unique to avoid @unique constraint violations)
     let saleCount = await prisma.sale.count({ where: { organizationId: orgId } });

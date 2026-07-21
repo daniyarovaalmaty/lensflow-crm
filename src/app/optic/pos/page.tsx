@@ -206,15 +206,17 @@ export default function POSPage() {
         const handleBranchChange = (e: any) => {
             if (e.detail?.branchId) {
                 loadProducts(e.detail.branchId);
+                loadPendingSales(e.detail.branchId);
             }
         };
         window.addEventListener('branchChanged', handleBranchChange);
         return () => window.removeEventListener('branchChanged', handleBranchChange);
     }, []);
 
-    const loadPendingSales = async () => {
+    const loadPendingSales = async (branchId?: string) => {
         try {
-            const res = await fetch('/api/optic/sales/pending');
+            const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+            const res = await fetch(`/api/optic/sales/pending?orgId=${orgId}`);
             if (res.ok) {
                 setPendingSales(await res.json());
             }
@@ -265,13 +267,15 @@ export default function POSPage() {
         } finally { setLoading(false); }
     };
 
-    const loadSales = async () => {
-        const res = await fetch('/api/optic/sales');
+    const loadSales = async (branchId?: string) => {
+        const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+        const res = await fetch(`/api/optic/sales?orgId=${orgId}`);
         if (res.ok) setSales(await res.json());
     };
 
-    const loadDebts = async () => {
-        const res = await fetch('/api/optic/sales?status=partial');
+    const loadDebts = async (branchId?: string) => {
+        const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+        const res = await fetch(`/api/optic/sales?status=partial&orgId=${orgId}`);
         if (res.ok) setDebts(await res.json());
     };
 
@@ -421,6 +425,7 @@ export default function POSPage() {
                     leadId: leadId || undefined,
                     draftSaleId: draftSaleId || undefined,
                     doctorId: selectedDoctorId || undefined,
+                    orgId: localStorage.getItem('lf_selected_branch') || 'all',
                 }),
             });
             if (res.ok) {
