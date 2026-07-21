@@ -33,7 +33,17 @@ export async function GET() {
             select: { id: true, name: true, inn: true, deliveryAddress: true, address: true, directorName: true, city: true },
             orderBy: { name: 'asc' },
         });
-        branches = children;
+        
+        if (session.user.subRole === 'optic_doctor') {
+            const userBranches = await prisma.userBranch.findMany({
+                where: { userId: session.user.id },
+                select: { branchId: true }
+            });
+            const assignedIds = userBranches.map(ub => ub.branchId);
+            branches = children.filter(b => assignedIds.includes(b.id));
+        } else {
+            branches = children;
+        }
     } else if (org.type === 'branch' && org.parentId) {
         // Load HQ for routing config
         const hq = await prisma.organization.findUnique({
