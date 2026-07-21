@@ -24,7 +24,9 @@ interface StaffMember {
 
 const CLINIC_STAFF_ROLES: { value: SubRole; label: string }[] = [
     { value: 'optic_manager', label: 'Руководитель' },
-    { value: 'optic_doctor', label: 'Врач' },
+    { value: 'optic_doctor', label: 'Врач оптометрист' },
+    { value: 'optic_ophthalmologist', label: 'Врач офтальмолог' },
+    { value: 'optic_orthokeratologist', label: 'Врач ортокератолог' },
     { value: 'optic_accountant', label: 'Бухгалтер' },
     { value: 'optic_procurement', label: 'Отдел закупа' },
     { value: 'sales_manager', label: 'Менеджер продаж' },

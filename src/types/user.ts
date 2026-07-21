@@ -23,7 +23,9 @@ export const SubRoleEnum = z.enum([
 
     // Optic (Clinic) sub-roles
     'optic_manager',    // Руководитель
-    'optic_doctor',     // Врач клиники
+    'optic_doctor',     // Врач оптометрист
+    'optic_ophthalmologist', // Врач офтальмолог
+    'optic_orthokeratologist', // Врач ортокератолог
     'optic_accountant', // Бухгалтер клиники
     'optic_procurement', // Отдел закупа
 
@@ -49,7 +51,9 @@ export const SubRoleLabels: Record<SubRole, string> = {
     lab_admin: 'Администратор',
     lab_accountant: 'Бухгалтер',
     optic_manager: 'Руководитель',
-    optic_doctor: 'Врач',
+    optic_doctor: 'Врач оптометрист',
+    optic_ophthalmologist: 'Врач офтальмолог',
+    optic_orthokeratologist: 'Врач ортокератолог',
     optic_accountant: 'Бухгалтер',
     optic_procurement: 'Отдел закупа',
     doctor: 'Врач',
@@ -63,7 +67,7 @@ export const SubRoleLabels: Record<SubRole, string> = {
 // Which sub-roles belong to which top-level role
 export const SubRolesByRole: Record<UserRole, SubRole[]> = {
     laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_head', 'lab_admin', 'lab_accountant', 'sales_manager'],
-    optic: ['optic_manager', 'optic_doctor', 'optic_accountant', 'optic_procurement'],
+    optic: ['optic_manager', 'optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'optic_accountant', 'optic_procurement'],
     doctor: ['doctor'],
     distributor: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'],
 };
@@ -224,6 +228,42 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canProcessDocs: false,
     },
     optic_doctor: {
+        canViewKanban: false,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: false,
+        canAddDefects: false,
+        canViewPayments: false,
+        canChangePayments: false,
+        canShip: false,
+        canPrint: true,
+        canCreateOrders: true,
+        canViewOrders: true,
+        canViewAllOrders: false,
+        canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
+    },
+    optic_ophthalmologist: {
+        canViewKanban: false,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: false,
+        canAddDefects: false,
+        canViewPayments: false,
+        canChangePayments: false,
+        canShip: false,
+        canPrint: true,
+        canCreateOrders: true,
+        canViewOrders: true,
+        canViewAllOrders: false,
+        canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
+    },
+    optic_orthokeratologist: {
         canViewKanban: false,
         canChangeStatus: false,
         canMarkReady: false,

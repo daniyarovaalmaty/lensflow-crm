@@ -224,6 +224,8 @@ enum SubRole {
   lab_accountant
   optic_manager
   optic_doctor
+  optic_ophthalmologist
+  optic_orthokeratologist
   optic_accountant
   optic_procurement
   doctor
