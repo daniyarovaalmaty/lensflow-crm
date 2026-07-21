@@ -559,7 +559,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'receive', items, supplier, notes: receiveNotes }),
+                body: JSON.stringify({ action: 'receive', items, supplier, notes: receiveNotes, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
 
             if (res.ok) {
@@ -585,6 +585,7 @@ export default function WarehousePage() {
                     action: 'write_off',
                     items: [{ productId: woProduct, quantity: Number(woQty) || 1 }],
                     reason: woReason,
+                    orgId: localStorage.getItem('lf_selected_branch') || 'all'
                 }),
             });
             if (res.ok) {
@@ -602,7 +603,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'recalculate' }),
+                body: JSON.stringify({ action: 'recalculate', orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
             const result = await res.json();
             if (res.ok) {
@@ -634,7 +635,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/inventory', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'create' }),
+                body: JSON.stringify({ action: 'create', orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
             const result = await res.json();
             if (res.ok) {
@@ -661,6 +662,7 @@ export default function WarehousePage() {
                 productId,
                 actualQty,
                 note,
+                orgId: localStorage.getItem('lf_selected_branch') || 'all'
             }),
         });
         if (res.ok) {
@@ -694,7 +696,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/inventory', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'complete', inventoryId: activeInventory.id }),
+                body: JSON.stringify({ action: 'complete', inventoryId: activeInventory.id, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
             const result = await res.json();
             if (res.ok) {
@@ -714,7 +716,7 @@ export default function WarehousePage() {
         const res = await fetch('/api/optic/inventory', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'cancel', inventoryId: activeInventory.id }),
+            body: JSON.stringify({ action: 'cancel', inventoryId: activeInventory.id, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
         });
         if (res.ok) {
             setActiveInventory(null);
@@ -734,7 +736,8 @@ export default function WarehousePage() {
                     documentNumber: editDocNum,
                     counterpartyName: editSupplier,
                     notes: editNotes,
-                    items: editItems
+                    items: editItems,
+                    orgId: localStorage.getItem('lf_selected_branch') || 'all'
                 })
             });
             if (res.ok) {
@@ -1262,7 +1265,7 @@ export default function WarehousePage() {
                                                     const res = await fetch('/api/optic/stock', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ action: 'delete_document', documentNumber: doc.documentNumber }),
+                                                        body: JSON.stringify({ action: 'delete_document', documentNumber: doc.documentNumber, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
                                                     });
                                                     if (res.ok) {
                                                         alert(`✅ Документ ${doc.documentNumber} удалён`);

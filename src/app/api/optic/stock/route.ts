@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     } else if (action === 'sale') {
         return handleSale(body, user);
     } else if (action === 'recalculate') {
-        return handleRecalculate(user);
+        return handleRecalculate(user, body);
     } else if (action === 'delete_document') {
         return handleDeleteDocument(body, user);
     } else {
@@ -112,12 +112,12 @@ export async function POST(req: NextRequest) {
 
 // ==================== RECEIVE — Приход товара ====================
 async function handleReceive(body: any, user: any) {
-    const { items, supplier, documentNumber, notes } = body;
+    const { items, supplier, documentNumber, notes, orgId: reqOrgId } = body;
     // items: [{ productId, quantity, serialNumbers?: string[], purchasePrice?, color?, size?, batchNumber?, expiryDate? }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
 
     // Generate document number if not provided
     const docCount = await prisma.stockDocument.count({ where: { organizationId: orgId, type: 'receipt' } });
@@ -245,12 +245,12 @@ async function handleReceive(body: any, user: any) {
 
 // ==================== WRITE OFF — Списание ====================
 async function handleWriteOff(body: any, user: any) {
-    const { items, reason, notes } = body;
+    const { items, reason, notes, orgId: reqOrgId } = body;
     // items: [{ productId, quantity, serialNumbers?: string[] }]
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
     const docCount = await prisma.stockDocument.count({ where: { organizationId: orgId, type: 'write_off' } });
     const docNum = `АС-${String(docCount + 1).padStart(4, '0')}`;
 
@@ -330,10 +330,10 @@ async function handleWriteOff(body: any, user: any) {
 
 // ==================== DELETE DOCUMENT — Remove a stock document and reverse its effects ====================
 async function handleDeleteDocument(body: any, user: any) {
-    const { documentNumber } = body;
+    const { documentNumber, orgId: reqOrgId } = body;
     if (!documentNumber) return NextResponse.json({ error: 'Missing documentNumber' }, { status: 400 });
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
 
     const doc = await prisma.stockDocument.findFirst({
         where: { organizationId: orgId, documentNumber }
@@ -399,11 +399,11 @@ async function handleDeleteDocument(body: any, user: any) {
 
 // ==================== SALE — Реализация (Продажа со склада) ====================
 async function handleSale(body: any, user: any) {
-    const { items, customerId, customerName, notes } = body;
+    const { items, customerId, customerName, notes, orgId: reqOrgId } = body;
 
     if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
     const docCount = await prisma.stockDocument.count({ where: { organizationId: orgId, type: 'sale' } });
     const docNum = `РН-${String(docCount + 1).padStart(4, '0')}`;
 
@@ -482,8 +482,9 @@ async function handleSale(body: any, user: any) {
 }
 
 // ==================== RECALCULATE — Fix all stock counters from document history ====================
-async function handleRecalculate(user: any) {
-    const orgId = user.organizationId;
+async function handleRecalculate(user: any, body?: any) {
+    const reqOrgId = body?.orgId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
 
     // Get all confirmed documents (receipts and write-offs)
     const documents = await prisma.stockDocument.findMany({
@@ -624,17 +625,18 @@ export async function PUT(req: NextRequest) {
 
 
     const body = await req.json();
-    const { id, documentNumber, counterpartyName, notes, items } = body;
+    const { id, documentNumber, counterpartyName, notes, items, orgId: reqOrgId } = body;
     // items: [{ productId, name, qty, price }]
 
     if (!id) return NextResponse.json({ error: 'Missing document ID' }, { status: 400 });
 
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
+
     const doc = await prisma.stockDocument.findFirst({
-        where: { id, organizationId: user.organizationId }
+        where: { id, organizationId: orgId }
     });
     if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 });
 
-    const orgId = user.organizationId;
     const oldItems = doc.items as any[]; // [{ productId, name, qty, price, serialNumbers }]
     const oldDocNum = doc.documentNumber;
 

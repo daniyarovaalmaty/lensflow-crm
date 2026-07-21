@@ -70,7 +70,7 @@ export default function TransfersPage() {
     const submit = async () => {
         if (!toOrgId || cart.length === 0) return;
         setSaving(true);
-        const res = await fetch('/api/optic/transfers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromOrgId, toOrgId, notes, items: cart }) });
+        const res = await fetch('/api/optic/transfers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fromOrgId, toOrgId, notes, items: cart, orgId: localStorage.getItem('lf_selected_branch') || 'all' }) });
         if (res.ok) { setShowForm(false); setCart([]); setToOrgId(''); setNotes(''); flash(true, 'Трансфер создан'); load(); }
         else { const d = await res.json().catch(() => ({})); flash(false, d.error || 'Ошибка'); }
         setSaving(false);
@@ -78,7 +78,7 @@ export default function TransfersPage() {
 
     const act = async (id: string, action: string) => {
         setBusy(id);
-        const res = await fetch(`/api/optic/transfers/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) });
+        const res = await fetch(`/api/optic/transfers/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, orgId: localStorage.getItem('lf_selected_branch') || 'all' }) });
         if (res.ok) { flash(true, action === 'send' ? 'Отправлен (списано у источника)' : action === 'receive' ? 'Получен (добавлено назначению)' : 'Готово'); load(); }
         else { const d = await res.json().catch(() => ({})); flash(false, d.error || 'Ошибка'); }
         setBusy(null);
