@@ -5,15 +5,5 @@
     "src/app/api/**/*.ts": {
       "maxDuration": 30
     }
-  },
-  "crons": [
-    {
-      "path": "/api/cron/itigris-sync-clients",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/itigris-sync-products",
-      "schedule": "*/15 * * * *"
-    }
-  ]
+  }
 }
