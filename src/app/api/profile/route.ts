@@ -93,7 +93,7 @@ export async function PUT(req: NextRequest) {
     });
 
     // Update organization fields (only for optic_manager, lab_head, dist_head)
-    if (organization && user.organizationId && ['optic_manager', 'lab_head', 'dist_head'].includes(session.user.subRole)) {
+    if (organization && user.organizationId && ['optic_manager', 'lab_head', 'dist_head'].includes(session.user.subRole as string)) {
         const orgData: any = {};
         const orgFields = [
             'name', 'inn', 'phone', 'email', 'address', 'city',
