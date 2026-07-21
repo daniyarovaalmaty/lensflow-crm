@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil, ClipboardCheck } from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil, ClipboardCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
@@ -179,6 +179,13 @@ export default function WarehousePage() {
     const [documents, setDocuments] = useState<StockDoc[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 50;
+
+    // Reset pagination when search or tab changes
+    useEffect(() => {
+        setPage(1);
+    }, [search, tab]);
 
     // Receive form
     const [receiveItems, setReceiveItems] = useState<Array<{
@@ -749,8 +756,15 @@ export default function WarehousePage() {
     const filteredProducts = useMemo(() => {
         if (!search) return products;
         const s = search.toLowerCase();
-        return products.filter(p => p.name.toLowerCase().includes(s) || p.sku?.toLowerCase().includes(s));
+        return products.filter(p => p.name.toLowerCase().includes(s) || p.sku?.toLowerCase().includes(s) || p.barcode?.toLowerCase().includes(s) || p.brand?.toLowerCase().includes(s));
     }, [products, search]);
+
+    const paginatedProducts = useMemo(() => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredProducts, page]);
+
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
     const lowStockProducts = useMemo(() => {
         return products.filter(p => p.minStock > 0 && p.currentStock <= p.minStock);
@@ -925,7 +939,7 @@ export default function WarehousePage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredProducts.map(p => {
+                                        {paginatedProducts.map(p => {
                                             const stock = p.currentStock;
                                             const isLow = p.minStock > 0 && stock <= p.minStock;
                                             return (
@@ -973,6 +987,33 @@ export default function WarehousePage() {
                                         })}
                                     </tbody>
                                 </table>
+                            </div>
+                        )}
+
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between mt-6 px-4 pb-4">
+                                <div className="text-sm text-gray-500">
+                                    Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <span className="text-sm font-medium px-4">
+                                        Страница {page} из {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

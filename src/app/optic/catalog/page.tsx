@@ -8,7 +8,7 @@ import {
     Package, Plus, Search, X, Eye, Edit2, Trash2,
     Tag, ShoppingBag, Droplets, Glasses, Wrench, Star,
     Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon, ArrowLeft,
-    Sparkles, Send, Bot, Loader2, MessageSquare, Printer, Upload
+    Sparkles, Send, Bot, Loader2, MessageSquare, Printer, Upload, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
@@ -80,6 +80,8 @@ export default function OpticCatalogPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 24;
     const [showForm, setShowForm] = useState(false);
     const [editProduct, setEditProduct] = useState<OpticProduct | null>(null);
     const [detailProduct, setDetailProduct] = useState<OpticProduct | null>(null);
@@ -128,6 +130,11 @@ export default function OpticCatalogPage() {
         { role: 'assistant', text: 'Привет! Я помогу добавить товары в каталог. Напишите список товаров с ценами в свободной форме, и я добавлю их автоматически.\n\nНапример:\n«Добавь оправу Ray-Ban RB5228, закуп 15000, розница 25000. Проверка зрения — 3000 тенге»' },
     ]);
     const aiChatRef = useRef<HTMLDivElement>(null);
+
+    // Reset pagination when search or filter changes
+    useEffect(() => {
+        setPage(1);
+    }, [search, categoryFilter]);
 
     useEffect(() => {
         const loadInitial = () => {
@@ -863,6 +870,13 @@ export default function OpticCatalogPage() {
         return result;
     }, [products, categoryFilter, search]);
 
+    const paginatedProducts = useMemo(() => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredProducts, page]);
+
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
     const openCreateForm = () => {
         setEditProduct(null);
         setForm({
@@ -1374,7 +1388,7 @@ export default function OpticCatalogPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredProducts.map(product => {
+                        {paginatedProducts.map(product => {
                             const cat = CATEGORIES[product.category];
                             const CatIcon = cat?.icon || Package;
                             const stock = product.currentStock;
@@ -1476,6 +1490,33 @@ export default function OpticCatalogPage() {
                                 </motion.div>
                             );
                         })}
+                    </div>
+                )}
+
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-6 px-4">
+                        <div className="text-sm text-gray-500">
+                            Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <span className="text-sm font-medium px-4">
+                                Страница {page} из {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
