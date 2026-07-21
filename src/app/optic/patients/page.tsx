@@ -63,7 +63,7 @@ export default function PatientsPage() {
     const [showModal, setShowModal] = useState(false);
     const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', parentId: '' as string });
+    const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', profession: '', parentId: '' as string });
     const [saving, setSaving] = useState(false);
     const [dedupMsg, setDedupMsg] = useState('');
 

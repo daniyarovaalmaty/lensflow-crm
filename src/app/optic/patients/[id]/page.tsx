@@ -109,6 +109,8 @@ interface PatientDetail {
         totalPrice: number | null; isUrgent: boolean; source?: string | null;
     }>;
     sales?: any[];
+    parent?: { id: string; name: string; phone: string } | null;
+    children?: Array<{ id: string; name: string; phone: string }>;
 }
 
 const fmt = (v: number | null, plus = true) => {
