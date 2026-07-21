@@ -67,12 +67,14 @@ interface Consultation {
     intraocularPressureOS: number | null;
     visualAcuityOD: number | null;
     visualAcuityOS: number | null;
-    k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null;
-    k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null;
+    k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null; r1OD: number | null; r2OD: number | null;
+    k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null; r1OS: number | null; r2OS: number | null;
     lensFittingOD: string | null;
     lensFittingOS: string | null;
     refractionOD: string | null;
     refractionOS: string | null;
+    biomicroscopy: string | null;
+    notes: string | null;
     notes: string | null;
     doctor: { fullName: string } | null;
 }
@@ -275,13 +277,17 @@ export default function PatientDetailPage() {
         visitDate: new Date().toISOString().split('T')[0],
         type: 'exam', diagnosis: '', treatment: '', nextVisit: '',
         intraocularPressureOD: '', intraocularPressureOS: '',
-        visualAcuityOD: '', visualAcuityOS: '', notes: '',
-        k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
-        k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+        visualAcuityOD: '', visualAcuityOS: '', notes: '', biomicroscopy: '',
+        k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '', r1OD: '', r2OD: '',
+        k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: '', r1OS: '', r2OS: '',
+        createRx: false, rxType: 'glasses',
+        odSph: '', odCyl: '', odAx: '', odAdd: '', odPd: '',
+        osSph: '', osCyl: '', osAx: '', osAdd: '', osPd: ''
     });
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
     const [editingConsultId, setEditingConsultId] = useState<string | null>(null);
+    const [isUploadingOCR, setIsUploadingOCR] = useState(false);
 
     // Invoice Form (Send to Cashier)
     const [showInvoiceForm, setShowInvoiceForm] = useState(false);
@@ -380,6 +386,24 @@ export default function PatientDetailPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(consultForm),
         });
+
+        // Also create a prescription if checked
+        if (res.ok && !editingConsultId && consultForm.createRx) {
+            const rxPayload = {
+                type: consultForm.rxType,
+                odSph: consultForm.odSph, odCyl: consultForm.odCyl, odAx: consultForm.odAx, odAdd: consultForm.odAdd, odPd: consultForm.odPd,
+                osSph: consultForm.osSph, osCyl: consultForm.osCyl, osAx: consultForm.osAx, osAdd: consultForm.osAdd, osPd: consultForm.osPd,
+            };
+            const rxRes = await fetch(`/api/patients/${id}/prescriptions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rxPayload),
+            });
+            if (rxRes.ok) {
+                const rx = await rxRes.json();
+                setPrescriptions((prev: any) => [rx, ...prev]);
+            }
+        }
         
         if (res.ok) {
             const c = await res.json();
@@ -392,12 +416,56 @@ export default function PatientDetailPage() {
             setEditingConsultId(null);
             setConsultForm({ 
                 visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
-                intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
-                k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
-                k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+                intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '', biomicroscopy: '',
+                k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '', r1OD: '', r2OD: '',
+                k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: '', r1OS: '', r2OS: ''
             });
         }
         setSavingConsult(false);
+    };
+
+    const handleUploadReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingOCR(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const res = await fetch('/api/ocr/refraction', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                setConsultForm((f: any) => ({
+                    ...f,
+                    odSph: data.od?.sph ?? f.odSph,
+                    odCyl: data.od?.cyl ?? f.odCyl,
+                    odAx: data.od?.ax ?? f.odAx,
+                    r1OD: data.od?.r1 ?? f.r1OD,
+                    r2OD: data.od?.r2 ?? f.r2OD,
+                    osSph: data.os?.sph ?? f.osSph,
+                    osCyl: data.os?.cyl ?? f.osCyl,
+                    osAx: data.os?.ax ?? f.osAx,
+                    r1OS: data.os?.r1 ?? f.r1OS,
+                    r2OS: data.os?.r2 ?? f.r2OS,
+                    odPd: data.pdTotal ?? f.odPd,
+                    osPd: data.pdTotal ?? f.osPd,
+                }));
+            } else {
+                alert('Ошибка при распознавании чека');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Ошибка сервера при распознавании чека');
+        } finally {
+            setIsUploadingOCR(false);
+            // Reset input so it can be triggered again with the same file
+            e.target.value = '';
+        }
     };
 
     const handleEditConsultClick = (c: Consultation) => {
@@ -410,11 +478,12 @@ export default function PatientDetailPage() {
             nextVisit: c.nextVisit ? new Date(c.nextVisit).toISOString().split('T')[0] : '',
             intraocularPressureOD: c.intraocularPressureOD ?? '',
             intraocularPressureOS: c.intraocularPressureOS ?? '',
-            visualAcuityOD: c.visualAcuityOD ?? '',
-            visualAcuityOS: c.visualAcuityOS ?? '',
-            notes: c.notes || '',
-            k1OD: c.k1OD ?? '', k2OD: c.k2OD ?? '', axisOD: c.axisOD ?? '', astigmatismOD: c.astigmatismOD ?? '', pachymetryOD: c.pachymetryOD ?? '', eccentricityOD: c.eccentricityOD ?? '',
-            k1OS: c.k1OS ?? '', k2OS: c.k2OS ?? '', axisOS: c.axisOS ?? '', astigmatismOS: c.astigmatismOS ?? '', pachymetryOS: c.pachymetryOS ?? '', eccentricityOS: c.eccentricityOS ?? '',
+            visualAcuityOD: c.visualAcuityOD || '', 
+            visualAcuityOS: c.visualAcuityOS || '', 
+            notes: c.notes || '', 
+            biomicroscopy: c.biomicroscopy || '',
+            k1OD: c.k1OD ?? '', k2OD: c.k2OD ?? '', axisOD: c.axisOD ?? '', astigmatismOD: c.astigmatismOD ?? '', pachymetryOD: c.pachymetryOD ?? '', eccentricityOD: c.eccentricityOD ?? '', r1OD: c.r1OD ?? '', r2OD: c.r2OD ?? '',
+            k1OS: c.k1OS ?? '', k2OS: c.k2OS ?? '', axisOS: c.axisOS ?? '', astigmatismOS: c.astigmatismOS ?? '', pachymetryOS: c.pachymetryOS ?? '', eccentricityOS: c.eccentricityOS ?? '', r1OS: c.r1OS ?? '', r2OS: c.r2OS ?? '',
             lensFittingOD: c.lensFittingOD || '', lensFittingOS: c.lensFittingOS || '',
             refractionOD: c.refractionOD || '', refractionOS: c.refractionOS || ''
         });
@@ -632,16 +701,16 @@ export default function PatientDetailPage() {
         <div className="min-h-screen bg-surface">
             
             {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, видна при печати) --- */}
-            <div className="hidden print:block p-8 bg-white text-gray-800 font-sans w-full" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+            <div className="hidden print:block print:p-4 p-8 bg-white text-gray-800 font-sans w-full" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                 {/* Header: Логотип и контакты клиники */}
-                <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 p-6 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md">
-                            <Stethoscope className="w-6 h-6" />
+                <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 print:p-3 p-6 print:mb-4 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
+                    <div className="flex items-center print:gap-2 gap-4">
+                        <div className="print:w-8 print:h-8 w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md">
+                            <Stethoscope className="print:w-4 print:h-4 w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
-                            <p className="text-primary-600 font-medium mt-1">Офтальмологический центр LensFlow</p>
+                            <h1 className="print:text-lg text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
+                            <p className="text-primary-600 font-medium print:text-[10px] mt-1">Офтальмологический центр LensFlow</p>
                         </div>
                     </div>
                     <div className="text-right text-sm text-gray-500 space-y-1">
@@ -652,14 +721,14 @@ export default function PatientDetailPage() {
                 </div>
 
                 {/* Данные пациента */}
-                <div className="mb-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
-                        <User className="w-5 h-5 text-primary-500" />
-                        <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
+                <div className="print:mb-4 mb-8 bg-gray-50 rounded-2xl print:p-3 p-6 border border-gray-100">
+                    <div className="flex items-center gap-2 print:mb-2 mb-4 print:pb-1 pb-2 border-b border-gray-200">
+                        <User className="print:w-4 print:h-4 w-5 h-5 text-primary-500" />
+                        <h2 className="print:text-sm text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
                     </div>
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">ФИО</span> <strong className="text-lg text-gray-900">{patient.name}</strong></div>
-                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Дата рождения</span> <strong className="text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
+                    <div className="grid grid-cols-2 print:gap-y-2 gap-y-4 gap-x-8 print:text-xs text-sm">
+                        <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">ФИО</span> <strong className="print:text-sm text-lg text-gray-900">{patient.name}</strong></div>
+                        <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">Дата рождения</span> <strong className="print:text-xs text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
                         {session?.user?.role !== 'doctor' && !['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) && (
                             <>
                                 <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
@@ -693,21 +762,21 @@ export default function PatientDetailPage() {
                                     </div>
                                     
                                     {(c.visualAcuityOD || c.visualAcuityOS || c.intraocularPressureOD || c.intraocularPressureOS) && (
-                                        <div className="rounded-xl overflow-hidden border border-gray-200 mb-6">
-                                            <table className="w-full text-center">
+                                        <div className="rounded-xl overflow-hidden border border-gray-200 print:mb-3 mb-6">
+                                            <table className="w-full text-center print:text-xs">
                                                 <thead>
                                                     <tr className="bg-gray-50 border-b border-gray-200">
-                                                        <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Показатель</th>
-                                                        <th className="py-3 px-4 font-bold text-primary-600 uppercase text-xs tracking-wider bg-primary-50/50">OD (Правый)</th>
-                                                        <th className="py-3 px-4 font-bold text-teal-600 uppercase text-xs tracking-wider bg-teal-50/50">OS (Левый)</th>
+                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-500 uppercase print:text-[9px] text-xs tracking-wider">Показатель</th>
+                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-primary-600 uppercase print:text-[9px] text-xs tracking-wider bg-primary-50/50">OD (Правый)</th>
+                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-teal-600 uppercase print:text-[9px] text-xs tracking-wider bg-teal-50/50">OS (Левый)</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
                                                     {(c.visualAcuityOD || c.visualAcuityOS) && (
                                                         <tr>
-                                                            <td className="py-3 px-4 font-medium text-gray-600 text-left">Острота зрения (Visus)</td>
-                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.visualAcuityOD || '—'}</td>
-                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.visualAcuityOS || '—'}</td>
+                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-medium text-gray-600 text-left">Острота зрения (Visus)</td>
+                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.visualAcuityOD || '—'}</td>
+                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.visualAcuityOS || '—'}</td>
                                                         </tr>
                                                     )}
                                                     {(c.intraocularPressureOD || c.intraocularPressureOS) && (
@@ -910,6 +979,26 @@ export default function PatientDetailPage() {
                                         <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.birthDate ? <><Calendar className="w-4 h-4 text-primary-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
                                     )}
                                 </div>
+                                {patient.parent && (
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Связанный профиль (Родитель)</label>
+                                        <Link href={`/optic/patients/${patient.parent.id}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors bg-primary-50 p-2 rounded-lg border border-primary-100">
+                                            <User className="w-4 h-4" /> {patient.parent.name}
+                                        </Link>
+                                    </div>
+                                )}
+                                {patient.children && patient.children.length > 0 && (
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дети</label>
+                                        <div className="space-y-2">
+                                            {patient.children.map((child: any) => (
+                                                <Link key={child.id} href={`/optic/patients/${child.id}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors bg-primary-50 p-2 rounded-lg border border-primary-100">
+                                                    <User className="w-4 h-4" /> {child.name}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1490,21 +1579,48 @@ export default function PatientDetailPage() {
                                         </div>
                                     </div>
                                     <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                        <h4 className="text-xs font-bold text-purple-800 uppercase mb-2">Рефрактометрия (ROL)</h4>
-                                        <div className="space-y-2">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h4 className="text-xs font-bold text-purple-800 uppercase">Рефрактометрия (ROL) / Кератометрия</h4>
                                             <div>
-                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
-                                                <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                                <label className={`btn ${isUploadingOCR ? 'btn-secondary opacity-50 cursor-not-allowed' : 'btn-primary'} py-1 px-3 text-[10px] flex items-center gap-1 cursor-pointer`}>
+                                                    {isUploadingOCR ? <Activity className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
+                                                    {isUploadingOCR ? 'Распознавание...' : 'Загрузить чек'}
+                                                    <input type="file" accept="image/*" className="hidden" onChange={handleUploadReceipt} disabled={isUploadingOCR} />
+                                                </label>
                                             </div>
-                                            <div>
-                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
-                                                <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
+                                                    <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
+                                                    <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-2 pt-2 border-t border-purple-100">
+                                                <div><label className="text-[10px] text-purple-500">R1 OD</label><input type="number" step="0.01" value={consultForm.r1OD} onChange={e => setConsultForm((f: any) => ({ ...f, r1OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-purple-500">R2 OD</label><input type="number" step="0.01" value={consultForm.r2OD} onChange={e => setConsultForm((f: any) => ({ ...f, r2OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-purple-500">R1 OS</label><input type="number" step="0.01" value={consultForm.r1OS} onChange={e => setConsultForm((f: any) => ({ ...f, r1OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-purple-500">R2 OS</label><input type="number" step="0.01" value={consultForm.r2OS} onChange={e => setConsultForm((f: any) => ({ ...f, r2OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3 mb-4">
+                                    <MedicalTextarea 
+                                        category="biomicroscopy" 
+                                        label="Биомикроскопия" 
+                                        value={consultForm.biomicroscopy || ''} 
+                                        onValueChange={(val) => setConsultForm((f: any) => ({ ...f, biomicroscopy: val }))} 
+                                        className="input text-sm" 
+                                        rows={2} 
+                                        placeholder="Описание состояния переднего отрезка глаза..." 
+                                        quickTags={['Роговица прозрачная', 'Влага передней камеры прозрачная', 'Зрачок круглый', 'Хрусталик прозрачный', 'Глазное дно в норме', 'ДЗН бледно-розовый', 'Сосуды сетчатки без особенностей', 'Макулярная зона без патологии']}
+                                    />
                                     <MedicalTextarea category="diagnosis" label="Диагноз / Клинические данные" value={consultForm.diagnosis || ''} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, diagnosis: val }))} className="input text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
                                     <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
                                     <div className="grid grid-cols-2 gap-3">

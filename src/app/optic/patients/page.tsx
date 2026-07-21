@@ -63,7 +63,7 @@ export default function PatientsPage() {
     const [showModal, setShowModal] = useState(false);
     const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '' });
+    const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', parentId: '' as string });
     const [saving, setSaving] = useState(false);
     const [dedupMsg, setDedupMsg] = useState('');
 
@@ -139,7 +139,7 @@ export default function PatientsPage() {
             if (res.ok) {
                 const patient = await res.json();
                 setShowModal(false);
-                setForm({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '' });
+                setForm({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', profession: '', parentId: '' });
                 router.push(`/optic/patients/${patient.id}`);
             }
         } finally {
@@ -404,6 +404,16 @@ export default function PatientsPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Заметки / Анамнез</label>
                                 <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                                     className="input w-full resize-none" rows={2} placeholder="Аллергии, особенности..." />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Родитель / Опекун</label>
+                                <select value={form.parentId} onChange={e => setForm(f => ({ ...f, parentId: e.target.value }))} className="input w-full">
+                                    <option value="">Нет (Самостоятельный пациент)</option>
+                                    {patients.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
+                                    ))}
+                                </select>
+                                <p className="text-[10px] text-gray-500 mt-1">Привяжите карту к родителю, если это ребенок.</p>
                             </div>
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary flex-1">Отмена</button>
