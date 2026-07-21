@@ -25,7 +25,7 @@ export async function GET() {
                 inn: true,
                 discountPercent: true,
                 status: true,
-                _count: { select: { orders: true, users: true } },
+                _count: { select: { orders: true, users: true, userBranches: true } },
             },
             orderBy: { name: 'asc' },
         });
@@ -129,7 +129,7 @@ export async function GET() {
                 revenue: orderData.revenue,
                 unpaid: orderData.unpaid,
                 lastDate: orderData.lastDate,
-                staffCount: org._count.users,
+                staffCount: (org._count.users || 0) + (org._count.userBranches || 0),
             };
         });
 
