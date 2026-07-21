@@ -1,15 +1,23 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { loadEnvConfig } from '@next/env';
+loadEnvConfig(process.cwd());
 
-async function main() {
-    const orgs = await prisma.organization.findMany({
-        select: {
-            name: true,
-            _count: { select: { users: true } }
-        },
-        take: 10
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
+
+const connectionString = process.env.DATABASE_URL || "postgresql://postgres.hxftfrjhkrybnazlmnol:Arnela645249@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true";
+const pool = new pg.Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+async function run() {
+    const total = await prisma.patient.count();
+    const byOrg = await prisma.patient.groupBy({
+        by: ['organizationId'],
+        _count: true
     });
-    console.log(orgs);
+    console.log('Total Patients:', total);
+    console.log('By Org:', byOrg);
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+run().catch(console.error).finally(() => prisma.$disconnect());
