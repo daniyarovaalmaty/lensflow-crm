@@ -660,7 +660,7 @@ export default function PatientDetailPage() {
                     <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
                         <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">ФИО</span> <strong className="text-lg text-gray-900">{patient.name}</strong></div>
                         <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Дата рождения</span> <strong className="text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
-                        {session?.user?.role !== 'doctor' && !['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole) && (
+                        {session?.user?.role !== 'doctor' && !['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) && (
                             <>
                                 <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
                                 <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
@@ -874,7 +874,7 @@ export default function PatientDetailPage() {
                             </div>
 
                             <div className="mt-6 space-y-4 relative z-10 text-left">
-                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole)) && (
+                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string)) && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
                                         {isEditing ? (
@@ -892,7 +892,7 @@ export default function PatientDetailPage() {
                                         <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.address ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.address}</> : '—'}</p>
                                     )}
                                 </div>
-                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole)) && (
+                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string)) && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
                                         {isEditing ? (
@@ -1610,16 +1610,16 @@ export default function PatientDetailPage() {
                                                         </div>
                                                     </div>
                                                 )}
-                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole) ? 'doctor' : session?.user?.role) && (
+                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role) && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole) ? 'doctor' : session?.user?.role)}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role)}</p>
                                                     </div>
                                                 )}
-                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole) ? 'doctor' : session?.user?.role) && (
+                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role) && (
                                                     <div>
                                                         <p className="text-xs font-semibold text-gray-500 mb-1">Рекомендации</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole) ? 'doctor' : session?.user?.role)}</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role)}</p>
                                                     </div>
                                                 )}
                                                 {c.nextVisit && (
@@ -1628,7 +1628,7 @@ export default function PatientDetailPage() {
                                                         Следующий визит: <strong>{new Date(c.nextVisit).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
                                                     </div>
                                                 )}
-                                                {c.notes && <p className="text-xs text-gray-500 italic">{filterMedicalText(c.notes, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole) ? 'doctor' : session?.user?.role)}</p>}
+                                                {c.notes && <p className="text-xs text-gray-500 italic">{filterMedicalText(c.notes, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role)}</p>}
                                                 <div className="flex justify-end gap-3">
                                                     <Link target="_blank" href={`/optic/patients/${id}/consultations/${c.id}/print`} className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors">
                                                         <FileText className="w-3.5 h-3.5" /> Печать

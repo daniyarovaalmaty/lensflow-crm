@@ -34,7 +34,7 @@ export async function GET() {
             orderBy: { name: 'asc' },
         });
         
-        if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session.user.subRole)) {
+        if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session.user.subRole as string)) {
             const userBranches = await prisma.userBranch.findMany({
                 where: { userId: session.user.id },
                 select: { branchId: true }
