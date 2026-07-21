@@ -577,6 +577,34 @@ export default function POSPage() {
                             </div>
                         </div>
 
+                        {/* Pagination Controls */}
+                        {categoryFilter !== 'pending' && filteredProducts.length > ITEMS_PER_PAGE && (
+                            <div className="flex items-center justify-between mb-4 px-3 py-2 bg-white rounded-2xl border border-gray-200 shadow-sm flex-shrink-0">
+                                <div className="text-sm text-gray-500 font-medium">
+                                    Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </button>
+                                    <span className="text-sm font-bold text-gray-700 px-2">
+                                        {page} из {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
+                                    </span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(Math.ceil(filteredProducts.length / ITEMS_PER_PAGE), p + 1))}
+                                        disabled={page === Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Products grid - scrollable */}
                         <div className="flex-1 overflow-y-auto pr-1">
                             {loading ? (
@@ -693,33 +721,6 @@ export default function POSPage() {
                             )}
                         </div>
 
-                        {/* Pagination Controls */}
-                        {categoryFilter !== 'pending' && filteredProducts.length > ITEMS_PER_PAGE && (
-                            <div className="flex items-center justify-between mt-4 px-2 mb-2 flex-shrink-0">
-                                <div className="text-sm text-gray-500 font-medium">
-                                    Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </button>
-                                    <span className="text-sm font-bold text-gray-700 px-3">
-                                        {page} из {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
-                                    </span>
-                                    <button
-                                        onClick={() => setPage(p => Math.min(Math.ceil(filteredProducts.length / ITEMS_PER_PAGE), p + 1))}
-                                        disabled={page === Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
-                                        className="p-2 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
-                                    >
-                                        <ChevronRight className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* RIGHT: Cart - fixed split viewport */}
