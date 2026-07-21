@@ -129,7 +129,24 @@ export default function OpticCatalogPage() {
     ]);
     const aiChatRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => { loadProducts(); }, []);
+    useEffect(() => {
+        const loadInitial = () => {
+            const savedOrgId = localStorage.getItem('lf_selected_branch') || 'all';
+            loadProducts(savedOrgId);
+        };
+        
+        loadInitial();
+
+        const handleBranchChange = (e: any) => {
+            if (e.detail?.branchId) {
+                setLoading(true);
+                loadProducts(e.detail.branchId);
+            }
+        };
+
+        window.addEventListener('branch-changed', handleBranchChange);
+        return () => window.removeEventListener('branch-changed', handleBranchChange);
+    }, []);
 
     // WebUSB printer auto-reconnect
     useEffect(() => {
@@ -165,10 +182,19 @@ export default function OpticCatalogPage() {
         }
     }, []);
 
-    const loadProducts = async () => {
+    const loadProducts = async (orgId?: string) => {
         try {
-            const res = await fetch('/api/optic/products?t=' + Date.now(), { cache: 'no-store' });
+            const url = new URL('/api/optic/products', window.location.origin);
+            url.searchParams.set('t', Date.now().toString());
+            if (orgId && orgId !== 'all') {
+                url.searchParams.set('orgId', orgId);
+            } else if (orgId === 'all') {
+                url.searchParams.set('orgId', 'all');
+            }
+            const res = await fetch(url.toString(), { cache: 'no-store' });
             if (res.ok) setProducts(await res.json());
+        } catch (e) {
+            console.error('Failed to load products', e);
         } finally {
             setLoading(false);
         }

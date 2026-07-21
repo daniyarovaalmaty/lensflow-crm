@@ -447,25 +447,57 @@ export default function WarehousePage() {
         }, 8000);
     };
 
-    useEffect(() => { loadData(); }, [tab]);
+    useEffect(() => {
+        const loadInitial = () => {
+            const savedOrgId = localStorage.getItem('lf_selected_branch') || 'all';
+            loadData(savedOrgId);
+        };
+        
+        loadInitial();
 
-    const loadData = async () => {
+        const handleBranchChange = (e: any) => {
+            if (e.detail?.branchId) {
+                setLoading(true);
+                loadData(e.detail.branchId);
+            }
+        };
+
+        window.addEventListener('branch-changed', handleBranchChange);
+        return () => window.removeEventListener('branch-changed', handleBranchChange);
+    }, [tab]);
+
+    const loadData = async (orgId?: string) => {
         setLoading(true);
         try {
+            const baseUrl = (path: string) => {
+                const url = new URL(path, window.location.origin);
+                url.searchParams.set('t', Date.now().toString());
+                if (orgId && orgId !== 'all') {
+                    url.searchParams.set('orgId', orgId);
+                } else if (orgId === 'all') {
+                    url.searchParams.set('orgId', 'all');
+                }
+                return url.toString();
+            };
+
             if (tab === 'stock' || tab === 'receive') {
-                const res = await fetch('/api/optic/stock?t=' + Date.now());
+                const res = await fetch(baseUrl('/api/optic/stock'));
                 if (res.ok) setProducts(await res.json());
             }
             if (tab === 'movements') {
-                const res = await fetch('/api/optic/stock?view=movements&t=' + Date.now());
+                const url = new URL(baseUrl('/api/optic/stock'));
+                url.searchParams.set('view', 'movements');
+                const res = await fetch(url.toString());
                 if (res.ok) setMovements(await res.json());
             }
             if (tab === 'documents') {
-                const res = await fetch('/api/optic/stock?view=documents&t=' + Date.now());
+                const url = new URL(baseUrl('/api/optic/stock'));
+                url.searchParams.set('view', 'documents');
+                const res = await fetch(url.toString());
                 if (res.ok) setDocuments(await res.json());
             }
             if (tab === 'inventory') {
-                const res = await fetch('/api/optic/inventory?t=' + Date.now());
+                const res = await fetch(baseUrl('/api/optic/inventory'));
                 if (res.ok) {
                     const data = await res.json();
                     setInventories(data);
