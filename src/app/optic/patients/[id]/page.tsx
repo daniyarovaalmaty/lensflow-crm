@@ -788,13 +788,11 @@ export default function PatientDetailPage() {
                         </div>
                         <div>
                             <h1 className="print:text-lg text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
-                            <p className="text-primary-600 font-medium print:text-[10px] mt-1">Офтальмологический центр LensFlow</p>
+                            <p className="text-primary-600 font-medium print:text-[10px] mt-1">{session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Офтальмологический центр New Eye'}</p>
                         </div>
                     </div>
                     <div className="text-right text-sm text-gray-500 space-y-1">
-                        <p className="flex items-center justify-end gap-2"><MapPin className="w-3.5 h-3.5 text-primary-400" /> г. Алматы, ул. Абая 1</p>
-                        <p className="flex items-center justify-end gap-2"><Phone className="w-3.5 h-3.5 text-primary-400" /> +7 (777) 123-45-67</p>
-                        <p className="flex items-center justify-end gap-2"><Globe className="w-3.5 h-3.5 text-primary-400" /> www.lensflow.kz</p>
+                        <p className="flex items-center justify-end gap-2"><MapPin className="w-3.5 h-3.5 text-primary-400" /> г. Алматы, Райымбека 217</p>
                     </div>
                 </div>
 
