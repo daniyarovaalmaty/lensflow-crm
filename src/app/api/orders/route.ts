@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
             where.distributorOrgId = session.user.organizationId;
             where.status = { not: 'draft' };
         } else if (session.user.role === 'optic') {
-            if (session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager') {
-                // Procurement and Managers see orders for ALL branches of their parent org
+            if (session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager' || session.user.subRole === 'optic_accountant') {
+                // Procurement, Managers and Accountants see orders for ALL branches of their parent org
                 const orgId = session.user.organizationId;
                 // Find the headquarters (parent) and all its branches
                 const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
