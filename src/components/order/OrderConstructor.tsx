@@ -95,7 +95,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         resolver: zodResolver(CreateOrderSchema),
         defaultValues: {
             optic_id: opticId,
-            doctor: session?.user?.profile?.fullName || '',
+            doctor: ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole) ? (session?.user?.profile?.fullName || '') : '',
             is_urgent: false,
             patient: {
                 name: '',
@@ -1188,15 +1188,18 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
                     <div>
                         <label htmlFor="doctor" className="block text-sm font-medium text-gray-700 mb-1.5">
-                            Врач
+                            Врач *
                         </label>
                         <input
                             id="doctor"
                             type="text"
                             {...register('doctor')}
                             className="input"
-                            placeholder={session?.user?.profile?.fullName || 'Имя врача'}
+                            placeholder="ФИО врача"
                         />
+                        {errors.doctor && (
+                            <p className="mt-1 text-sm text-red-600">{errors.doctor.message}</p>
+                        )}
                     </div>
 
                     <div>
