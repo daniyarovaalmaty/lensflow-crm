@@ -136,7 +136,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { 
-        name, phone, email, birthDate, gender, notes, doctorId,
+        name, phone, email, birthDate, gender, notes, doctorId, parentId,
         iin, address, profession, complaints, anamnesisDisease, anamnesisLife,
         allergies, heredity, medications, dispensary, surgeries, lastCorrection
     } = body;
@@ -196,6 +196,7 @@ export async function POST(request: Request) {
             notes: notes || null,
             organizationId: session.user.organizationId || null,
             doctorId: doctorId || session.user.id || null,
+            parentId: parentId || null,
             iin: iin || null,
             address: address || null,
             profession: profession || null,

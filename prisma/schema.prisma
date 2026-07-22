@@ -226,6 +226,8 @@ enum SubRole {
   lab_accountant
   optic_manager
   optic_doctor
+  optic_ophthalmologist
+  optic_orthokeratologist
   optic_accountant
   optic_procurement
   doctor
@@ -257,6 +259,10 @@ model Patient {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   doctorId       String?
   doctor         User?    @relation("DoctorPatients", fields: [doctorId], references: [id])
+  // Family relations
+  parentId       String?
+  parent         Patient?   @relation("Family", fields: [parentId], references: [id])
+  children       Patient[]  @relation("Family")
 
   // External integrations (ITIGRIS, etc.)
   externalId     String?  // e.g. "itigris:12345"
@@ -366,6 +372,8 @@ model Consultation {
   // Topography / Keratometry OD
   k1OD             Float?
   k2OD             Float?
+  r1OD             Float?
+  r2OD             Float?
   axisOD           Float?
   astigmatismOD    Float?
   pachymetryOD     Float?
@@ -374,6 +382,8 @@ model Consultation {
   // Topography / Keratometry OS
   k1OS             Float?
   k2OS             Float?
+  r1OS             Float?
+  r2OS             Float?
   axisOS           Float?
   astigmatismOS    Float?
   pachymetryOS     Float?

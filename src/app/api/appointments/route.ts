@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
             clinicId: session.user.organizationId,
         };
 
-        if (session.user.role === 'doctor' || session.user.subRole === 'optic_doctor') {
+        if (session.user.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session.user.subRole as string)) {
             // "для руководителя расписание коллен, для тек доктора только свое расписание"
             // If the user is an optic_doctor, they only see their own appointments, 
             // BUT wait, optic_manager or optic_admin can see everyone's.
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         let doctorId = body.doctorId || session.user.id; // manager can specify doctorId, doctor uses their own
 
         // validate that doctor can only create for themselves unless manager
-        if (session.user.role === 'doctor' || session.user.subRole === 'optic_doctor') {
+        if (session.user.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session.user.subRole as string)) {
             doctorId = session.user.id;
         }
 

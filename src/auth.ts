@@ -20,6 +20,7 @@ function buildUserReturn(user: any, org: any | null) {
         role: user.role,
         subRole: user.subRole,
         organizationId: user.organizationId,
+        branches: user.branches ? user.branches.map((b: any) => b.branchId) : [],
         orgType: org?.type || 'standalone',   // may be undefined in older DB — defaults to standalone
         parentOrgId: org?.parentId || null,   // may be undefined in older DB — defaults to null
         permissions: user.permissions,
@@ -61,7 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                                 { phone: `+${normalizedPhone}` },
                             ],
                         },
-                        include: { organization: true },
+                        include: { organization: true, branches: true },
                     });
 
                     // Fallback: Search in memory for users with formatted phones (e.g. "+7 (777) 123-45-67")
@@ -69,7 +70,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     if (!localUser) {
                         const allUsers = await prisma.user.findMany({
                             where: { phone: { not: null } },
-                            include: { organization: true },
+                            include: { organization: true, branches: true },
                         });
                         
                         const match = allUsers.find(u => {
@@ -127,7 +128,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     const isValidPassword = await verifyPassword(user, password);
                     if (isValidPassword) {
                         const userWithOrg = await findUserWithOrg(user.id);
-                        return buildUserReturn(user, userWithOrg?.organization);
+                        return buildUserReturn(userWithOrg, userWithOrg?.organization);
                     }
                 }
 
@@ -147,7 +148,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                             { phone: mmProfile.phone },
                         ],
                     },
-                    include: { organization: true },
+                    include: { organization: true, branches: true },
                 });
 
                 if (existingLinked && existingLinked.status === 'active') {
@@ -249,7 +250,7 @@ async function jitProvisionUser(mmProfile: any, _source: string) {
                 { phone: mmProfile.phone },
             ],
         },
-        include: { organization: true },
+        include: { organization: true, branches: true },
     });
 
     if (existingLinked && existingLinked.status === 'active') {

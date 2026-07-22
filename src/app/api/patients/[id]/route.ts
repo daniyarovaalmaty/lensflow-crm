@@ -16,6 +16,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
         where: { id: params.id },
         include: {
             prescriptions: { orderBy: { prescribedAt: 'desc' } },
+            sales: { orderBy: { createdAt: 'desc' }, include: { items: true, doctor: true } },
             orders: {
                 orderBy: { createdAt: 'desc' },
                 take: 20,
@@ -30,6 +31,8 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                 },
             },
             doctor: { select: { id: true, fullName: true } },
+            parent: true,
+            children: true,
         },
     });
 
@@ -43,7 +46,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { name, phone, email, birthDate, gender, notes, doctorId, attachments } = body;
+    const { name, phone, email, birthDate, gender, notes, doctorId, attachments, parentId } = body;
 
     const updateData: any = {
         name: name?.trim(),
@@ -53,6 +56,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         gender: gender || null,
         notes: notes || null,
         doctorId: doctorId || null,
+        parentId: parentId || null,
     };
 
     if (attachments !== undefined) {

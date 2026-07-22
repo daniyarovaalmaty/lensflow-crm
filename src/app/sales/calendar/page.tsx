@@ -492,7 +492,7 @@ export default function CalendarPage() {
                                             className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                         />
                                         {patientSearchQuery.length > 0 && !selectedPatient && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                            <div className="w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-sm max-h-60 overflow-y-auto">
                                                 {isSearchingPatient ? (
                                                     <div className="p-3 text-sm text-center text-gray-500">Поиск...</div>
                                                 ) : patientSearchResults.length > 0 ? (

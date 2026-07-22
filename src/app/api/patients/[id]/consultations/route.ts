@@ -26,8 +26,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
         visitDate, type, diagnosis, treatment,
         nextVisit, intraocularPressureOD, intraocularPressureOS,
         visualAcuityOD, visualAcuityOS, notes,
-        k1OD, k2OD, axisOD, astigmatismOD, pachymetryOD, eccentricityOD,
-        k1OS, k2OS, axisOS, astigmatismOS, pachymetryOS, eccentricityOS,
+        k1OD, k2OD, axisOD, astigmatismOD, pachymetryOD, eccentricityOD, r1OD, r2OD,
+        k1OS, k2OS, axisOS, astigmatismOS, pachymetryOS, eccentricityOS, r1OS, r2OS,
         lensFittingOD, lensFittingOS, refractionOD, refractionOS
     } = body;
 
@@ -46,16 +46,40 @@ export async function POST(request: Request, { params }: { params: { id: string 
             intraocularPressureOS: parseNum(intraocularPressureOS),
             visualAcuityOD: parseNum(visualAcuityOD),
             visualAcuityOS: parseNum(visualAcuityOS),
-            k1OD: parseNum(k1OD), k2OD: parseNum(k2OD), axisOD: parseNum(axisOD), astigmatismOD: parseNum(astigmatismOD), pachymetryOD: parseNum(pachymetryOD), eccentricityOD: parseNum(eccentricityOD),
-            k1OS: parseNum(k1OS), k2OS: parseNum(k2OS), axisOS: parseNum(axisOS), astigmatismOS: parseNum(astigmatismOS), pachymetryOS: parseNum(pachymetryOS), eccentricityOS: parseNum(eccentricityOS),
+            k1OD: parseNum(k1OD), k2OD: parseNum(k2OD), axisOD: parseNum(axisOD), astigmatismOD: parseNum(astigmatismOD), pachymetryOD: parseNum(pachymetryOD), eccentricityOD: parseNum(eccentricityOD), r1OD: parseNum(r1OD), r2OD: parseNum(r2OD),
+            k1OS: parseNum(k1OS), k2OS: parseNum(k2OS), axisOS: parseNum(axisOS), astigmatismOS: parseNum(astigmatismOS), pachymetryOS: parseNum(pachymetryOS), eccentricityOS: parseNum(eccentricityOS), r1OS: parseNum(r1OS), r2OS: parseNum(r2OS),
             lensFittingOD: lensFittingOD || null,
             lensFittingOS: lensFittingOS || null,
             refractionOD: refractionOD || null,
             refractionOS: refractionOS || null,
+            biomicroscopy: body.biomicroscopy || null,
             notes: notes || null,
         },
         include: { doctor: { select: { fullName: true } } },
     });
+
+    if (nextVisit) {
+        try {
+            const patient = await prisma.patient.findUnique({ where: { id: params.id } });
+            if (patient) {
+                await prisma.appointment.create({
+                    data: {
+                        patientId: params.id,
+                        patientName: patient.name,
+                        patientPhone: patient.phone,
+                        doctorId: session.user.id,
+                        date: new Date(nextVisit),
+                        duration: 30,
+                        type: 'follow_up',
+                        status: 'scheduled',
+                        notes: 'Автоматически создано из приема (Следующий визит)'
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Failed to create appointment for nextVisit", e);
+        }
+    }
 
     return NextResponse.json(consultation, { status: 201 });
 }

@@ -23,7 +23,9 @@ export const SubRoleEnum = z.enum([
 
     // Optic (Clinic) sub-roles
     'optic_manager',    // Руководитель
-    'optic_doctor',     // Врач клиники
+    'optic_doctor',     // Врач оптометрист
+    'optic_ophthalmologist', // Врач офтальмолог
+    'optic_orthokeratologist', // Врач ортокератолог
     'optic_accountant', // Бухгалтер клиники
     'optic_procurement', // Отдел закупа
 
@@ -49,7 +51,9 @@ export const SubRoleLabels: Record<SubRole, string> = {
     lab_admin: 'Администратор',
     lab_accountant: 'Бухгалтер',
     optic_manager: 'Руководитель',
-    optic_doctor: 'Врач',
+    optic_doctor: 'Врач оптометрист',
+    optic_ophthalmologist: 'Врач офтальмолог',
+    optic_orthokeratologist: 'Врач ортокератолог',
     optic_accountant: 'Бухгалтер',
     optic_procurement: 'Отдел закупа',
     doctor: 'Врач',
@@ -63,7 +67,7 @@ export const SubRoleLabels: Record<SubRole, string> = {
 // Which sub-roles belong to which top-level role
 export const SubRolesByRole: Record<UserRole, SubRole[]> = {
     laboratory: ['lab_engineer', 'lab_quality', 'lab_logistics', 'lab_head', 'lab_admin', 'lab_accountant', 'sales_manager'],
-    optic: ['optic_manager', 'optic_doctor', 'optic_accountant', 'optic_procurement'],
+    optic: ['optic_manager', 'optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'optic_accountant', 'optic_procurement'],
     doctor: ['doctor'],
     distributor: ['dist_head', 'dist_admin', 'dist_manager', 'dist_accountant'],
 };
@@ -241,6 +245,42 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
         canSendToAccountant: false,
         canProcessDocs: false,
     },
+    optic_ophthalmologist: {
+        canViewKanban: false,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: false,
+        canAddDefects: false,
+        canViewPayments: false,
+        canChangePayments: false,
+        canShip: false,
+        canPrint: true,
+        canCreateOrders: true,
+        canViewOrders: true,
+        canViewAllOrders: false,
+        canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
+    },
+    optic_orthokeratologist: {
+        canViewKanban: false,
+        canChangeStatus: false,
+        canMarkReady: false,
+        canMarkRework: false,
+        canDeliver: false,
+        canAddDefects: false,
+        canViewPayments: false,
+        canChangePayments: false,
+        canShip: false,
+        canPrint: true,
+        canCreateOrders: true,
+        canViewOrders: true,
+        canViewAllOrders: false,
+        canViewStats: false,
+        canSendToAccountant: false,
+        canProcessDocs: false,
+    },
     optic_accountant: {
         canViewKanban: false,
         canChangeStatus: false,
@@ -386,6 +426,44 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
         canViewSupplierOrders: true,
     },
     optic_doctor: {
+        canViewPos: true,
+        canViewWarehouse: false,
+        canViewCatalog: true,
+        canViewCash: true,
+        canViewPatients: true,
+        canViewFinance: false,
+        canViewOrders: true,
+        canViewCrm: false,
+        canViewTransfers: false,
+        canViewNews: false,
+        canViewBooking: false,
+        canViewTasks: false,
+        canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
+    },
+    optic_ophthalmologist: {
+        canViewPos: true,
+        canViewWarehouse: false,
+        canViewCatalog: true,
+        canViewCash: true,
+        canViewPatients: true,
+        canViewFinance: false,
+        canViewOrders: true,
+        canViewCrm: false,
+        canViewTransfers: false,
+        canViewNews: false,
+        canViewBooking: false,
+        canViewTasks: false,
+        canViewAnalytics: false,
+        canViewIssue: false,
+        canViewRepairs: false,
+        canViewReworks: false,
+        canViewSupplierOrders: false,
+    },
+    optic_orthokeratologist: {
         canViewPos: true,
         canViewWarehouse: false,
         canViewCatalog: true,
@@ -595,7 +673,7 @@ export type PublicUser = Omit<User, 'password'>;
 
 // ==================== Auth ====================
 export const LoginSchema = z.object({
-    email: z.string().email('Неверный формат email'),
+    email: z.string().trim().email('Неверный формат email'),
     password: z.string().min(1, 'Введите пароль'),
 });
 

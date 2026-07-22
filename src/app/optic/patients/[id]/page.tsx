@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
-    ArrowLeft, User, Phone, Mail, Calendar, FileText, Edit2, Save, X,
+    ArrowLeft, User, Users, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
     Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag, Award
 } from 'lucide-react';
 import Link from 'next/link';
 import MedicalTextarea from '@/components/ui/MedicalTextarea';
+import TagsInput from '@/components/ui/TagsInput';
+import CheckboxAnamnesisField from '@/components/ui/CheckboxAnamnesisField';
 
 // Helper to remove payment-related text (kaspi, ckk, terminals, etc) for doctors
 const filterMedicalText = (text: string | null | undefined, userRole?: string) => {
@@ -67,12 +69,13 @@ interface Consultation {
     intraocularPressureOS: number | null;
     visualAcuityOD: number | null;
     visualAcuityOS: number | null;
-    k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null;
-    k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null;
+    k1OD: number | null; k2OD: number | null; axisOD: number | null; astigmatismOD: number | null; pachymetryOD: number | null; eccentricityOD: number | null; r1OD: number | null; r2OD: number | null;
+    k1OS: number | null; k2OS: number | null; axisOS: number | null; astigmatismOS: number | null; pachymetryOS: number | null; eccentricityOS: number | null; r1OS: number | null; r2OS: number | null;
     lensFittingOD: string | null;
     lensFittingOS: string | null;
     refractionOD: string | null;
     refractionOS: string | null;
+    biomicroscopy: string | null;
     notes: string | null;
     doctor: { fullName: string } | null;
 }
@@ -108,6 +111,8 @@ interface PatientDetail {
         totalPrice: number | null; isUrgent: boolean; source?: string | null;
     }>;
     sales?: any[];
+    parent?: { id: string; name: string; phone: string } | null;
+    children?: Array<{ id: string; name: string; phone: string }>;
 }
 
 const fmt = (v: number | null, plus = true) => {
@@ -252,6 +257,25 @@ const RxField = ({ label, field, rxForm, setRxForm }: { label: string; field: st
     </div>
 );
 
+const TABS = ['info', 'docs', 'finances', 'tasks', 'messages'];
+
+const renderTags = (text: string | null) => {
+    if (!text) return null;
+    try {
+        if (text.trim().startsWith('[')) {
+            const arr = JSON.parse(text);
+            if (Array.isArray(arr) && arr.length > 0) {
+                return (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                        {arr.map((tag: string, i: number) => <span key={i} className="px-2 py-1 bg-white border border-black/5 rounded-md text-sm shadow-sm">{tag}</span>)}
+                    </div>
+                );
+            }
+        }
+    } catch {}
+    return <p className="text-gray-800 text-sm leading-relaxed mt-1">{text}</p>;
+};
+
 export default function PatientDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -275,13 +299,17 @@ export default function PatientDetailPage() {
         visitDate: new Date().toISOString().split('T')[0],
         type: 'exam', diagnosis: '', treatment: '', nextVisit: '',
         intraocularPressureOD: '', intraocularPressureOS: '',
-        visualAcuityOD: '', visualAcuityOS: '', notes: '',
-        k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
-        k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+        visualAcuityOD: '', visualAcuityOS: '', notes: '', biomicroscopy: '',
+        k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '', r1OD: '', r2OD: '',
+        k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: '', r1OS: '', r2OS: '',
+        createRx: false, rxType: 'glasses',
+        odSph: '', odCyl: '', odAx: '', odAdd: '', odPd: '',
+        osSph: '', osCyl: '', osAx: '', osAdd: '', osPd: ''
     });
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
     const [editingConsultId, setEditingConsultId] = useState<string | null>(null);
+    const [isUploadingOCR, setIsUploadingOCR] = useState(false);
 
     // Invoice Form (Send to Cashier)
     const [showInvoiceForm, setShowInvoiceForm] = useState(false);
@@ -292,11 +320,67 @@ export default function PatientDetailPage() {
     const [savingInvoice, setSavingInvoice] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
-    useEffect(() => {
+    // Family Linking
+    const [showFamilyModal, setShowFamilyModal] = useState(false);
+    const [familySearch, setFamilySearch] = useState('');
+    const [familyResults, setFamilyResults] = useState<any[]>([]);
+    const [searchingFamily, setSearchingFamily] = useState(false);
+
+    const handleSearchFamily = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSearchingFamily(true);
+        try {
+            const res = await fetch(`/api/patients?q=${encodeURIComponent(familySearch)}&noSync=1`);
+            if (res.ok) {
+                const data = await res.json();
+                setFamilyResults((data.patients || []).filter((p: any) => p.id !== id));
+            }
+        } finally {
+            setSearchingFamily(false);
+        }
+    };
+
+    const handleLinkParent = async (parentId: string | null) => {
+        try {
+            const res = await fetch(`/api/patients/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parentId }),
+            });
+            if (res.ok) {
+                loadPatient();
+                setShowFamilyModal(false);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleLinkChild = async (childId: string) => {
+        try {
+            const res = await fetch(`/api/patients/${childId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parentId: id }),
+            });
+            if (res.ok) {
+                loadPatient();
+                setShowFamilyModal(false);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const loadPatient = () => {
         fetch(`/api/patients/${id}`)
             .then(r => r.json())
             .then(data => { setPatient(data); setEditForm(data); })
             .finally(() => setIsLoading(false));
+    };
+
+    useEffect(() => {
+        loadPatient();
 
         fetch(`/api/patients/${id}/consultations`)
             .then(r => r.ok ? r.json() : [])
@@ -380,6 +464,24 @@ export default function PatientDetailPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(consultForm),
         });
+
+        // Also create a prescription if checked
+        if (res.ok && !editingConsultId && consultForm.createRx) {
+            const rxPayload = {
+                type: consultForm.rxType,
+                odSph: consultForm.odSph, odCyl: consultForm.odCyl, odAx: consultForm.odAx, odAdd: consultForm.odAdd, odPd: consultForm.odPd,
+                osSph: consultForm.osSph, osCyl: consultForm.osCyl, osAx: consultForm.osAx, osAdd: consultForm.osAdd, osPd: consultForm.osPd,
+            };
+            const rxRes = await fetch(`/api/patients/${id}/prescriptions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rxPayload),
+            });
+            if (rxRes.ok) {
+                const rx = await rxRes.json();
+                setPatient(p => p ? { ...p, prescriptions: [rx, ...p.prescriptions] } : p);
+            }
+        }
         
         if (res.ok) {
             const c = await res.json();
@@ -392,12 +494,56 @@ export default function PatientDetailPage() {
             setEditingConsultId(null);
             setConsultForm({ 
                 visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
-                intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
-                k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
-                k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+                intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '', biomicroscopy: '',
+                k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '', r1OD: '', r2OD: '',
+                k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: '', r1OS: '', r2OS: ''
             });
         }
         setSavingConsult(false);
+    };
+
+    const handleUploadReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingOCR(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const res = await fetch('/api/ocr/refraction', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                setConsultForm((f: any) => ({
+                    ...f,
+                    odSph: data.od?.sph ?? f.odSph,
+                    odCyl: data.od?.cyl ?? f.odCyl,
+                    odAx: data.od?.ax ?? f.odAx,
+                    r1OD: data.od?.r1 ?? f.r1OD,
+                    r2OD: data.od?.r2 ?? f.r2OD,
+                    osSph: data.os?.sph ?? f.osSph,
+                    osCyl: data.os?.cyl ?? f.osCyl,
+                    osAx: data.os?.ax ?? f.osAx,
+                    r1OS: data.os?.r1 ?? f.r1OS,
+                    r2OS: data.os?.r2 ?? f.r2OS,
+                    odPd: data.pdTotal ?? f.odPd,
+                    osPd: data.pdTotal ?? f.osPd,
+                }));
+            } else {
+                alert('Ошибка при распознавании чека');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Ошибка сервера при распознавании чека');
+        } finally {
+            setIsUploadingOCR(false);
+            // Reset input so it can be triggered again with the same file
+            e.target.value = '';
+        }
     };
 
     const handleEditConsultClick = (c: Consultation) => {
@@ -410,11 +556,12 @@ export default function PatientDetailPage() {
             nextVisit: c.nextVisit ? new Date(c.nextVisit).toISOString().split('T')[0] : '',
             intraocularPressureOD: c.intraocularPressureOD ?? '',
             intraocularPressureOS: c.intraocularPressureOS ?? '',
-            visualAcuityOD: c.visualAcuityOD ?? '',
-            visualAcuityOS: c.visualAcuityOS ?? '',
-            notes: c.notes || '',
-            k1OD: c.k1OD ?? '', k2OD: c.k2OD ?? '', axisOD: c.axisOD ?? '', astigmatismOD: c.astigmatismOD ?? '', pachymetryOD: c.pachymetryOD ?? '', eccentricityOD: c.eccentricityOD ?? '',
-            k1OS: c.k1OS ?? '', k2OS: c.k2OS ?? '', axisOS: c.axisOS ?? '', astigmatismOS: c.astigmatismOS ?? '', pachymetryOS: c.pachymetryOS ?? '', eccentricityOS: c.eccentricityOS ?? '',
+            visualAcuityOD: c.visualAcuityOD || '', 
+            visualAcuityOS: c.visualAcuityOS || '', 
+            notes: c.notes || '', 
+            biomicroscopy: c.biomicroscopy || '',
+            k1OD: c.k1OD ?? '', k2OD: c.k2OD ?? '', axisOD: c.axisOD ?? '', astigmatismOD: c.astigmatismOD ?? '', pachymetryOD: c.pachymetryOD ?? '', eccentricityOD: c.eccentricityOD ?? '', r1OD: c.r1OD ?? '', r2OD: c.r2OD ?? '',
+            k1OS: c.k1OS ?? '', k2OS: c.k2OS ?? '', axisOS: c.axisOS ?? '', astigmatismOS: c.astigmatismOS ?? '', pachymetryOS: c.pachymetryOS ?? '', eccentricityOS: c.eccentricityOS ?? '', r1OS: c.r1OS ?? '', r2OS: c.r2OS ?? '',
             lensFittingOD: c.lensFittingOD || '', lensFittingOS: c.lensFittingOS || '',
             refractionOD: c.refractionOD || '', refractionOS: c.refractionOS || ''
         });
@@ -632,16 +779,16 @@ export default function PatientDetailPage() {
         <div className="min-h-screen bg-surface">
             
             {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, видна при печати) --- */}
-            <div className="hidden print:block p-8 bg-white text-gray-800 font-sans w-full" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+            <div className="hidden print:block print:p-4 p-8 bg-white text-gray-800 font-sans w-full" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                 {/* Header: Логотип и контакты клиники */}
-                <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 p-6 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md">
-                            <Stethoscope className="w-6 h-6" />
+                <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 print:p-3 p-6 print:mb-4 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
+                    <div className="flex items-center print:gap-2 gap-4">
+                        <div className="print:w-8 print:h-8 w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md">
+                            <Stethoscope className="print:w-4 print:h-4 w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
-                            <p className="text-primary-600 font-medium mt-1">Офтальмологический центр LensFlow</p>
+                            <h1 className="print:text-lg text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
+                            <p className="text-primary-600 font-medium print:text-[10px] mt-1">Офтальмологический центр LensFlow</p>
                         </div>
                     </div>
                     <div className="text-right text-sm text-gray-500 space-y-1">
@@ -652,15 +799,15 @@ export default function PatientDetailPage() {
                 </div>
 
                 {/* Данные пациента */}
-                <div className="mb-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
-                        <User className="w-5 h-5 text-primary-500" />
-                        <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
+                <div className="print:mb-4 mb-8 bg-gray-50 rounded-2xl print:p-3 p-6 border border-gray-100">
+                    <div className="flex items-center gap-2 print:mb-2 mb-4 print:pb-1 pb-2 border-b border-gray-200">
+                        <User className="print:w-4 print:h-4 w-5 h-5 text-primary-500" />
+                        <h2 className="print:text-sm text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
                     </div>
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">ФИО</span> <strong className="text-lg text-gray-900">{patient.name}</strong></div>
-                        <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Дата рождения</span> <strong className="text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
-                        {session?.user?.role !== 'doctor' && session?.user?.subRole !== 'optic_doctor' && (
+                    <div className="grid grid-cols-2 print:gap-y-2 gap-y-4 gap-x-8 print:text-xs text-sm">
+                        <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">ФИО</span> <strong className="print:text-sm text-lg text-gray-900">{patient.name}</strong></div>
+                        <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">Дата рождения</span> <strong className="print:text-xs text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
+                        {session?.user?.role !== 'doctor' && !['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) && (
                             <>
                                 <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
                                 <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
@@ -693,21 +840,21 @@ export default function PatientDetailPage() {
                                     </div>
                                     
                                     {(c.visualAcuityOD || c.visualAcuityOS || c.intraocularPressureOD || c.intraocularPressureOS) && (
-                                        <div className="rounded-xl overflow-hidden border border-gray-200 mb-6">
-                                            <table className="w-full text-center">
+                                        <div className="rounded-xl overflow-hidden border border-gray-200 print:mb-3 mb-6">
+                                            <table className="w-full text-center print:text-xs">
                                                 <thead>
                                                     <tr className="bg-gray-50 border-b border-gray-200">
-                                                        <th className="py-3 px-4 font-bold text-gray-500 uppercase text-xs tracking-wider">Показатель</th>
-                                                        <th className="py-3 px-4 font-bold text-primary-600 uppercase text-xs tracking-wider bg-primary-50/50">OD (Правый)</th>
-                                                        <th className="py-3 px-4 font-bold text-teal-600 uppercase text-xs tracking-wider bg-teal-50/50">OS (Левый)</th>
+                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-500 uppercase print:text-[9px] text-xs tracking-wider">Показатель</th>
+                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-primary-600 uppercase print:text-[9px] text-xs tracking-wider bg-primary-50/50">OD (Правый)</th>
+                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-teal-600 uppercase print:text-[9px] text-xs tracking-wider bg-teal-50/50">OS (Левый)</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
                                                     {(c.visualAcuityOD || c.visualAcuityOS) && (
                                                         <tr>
-                                                            <td className="py-3 px-4 font-medium text-gray-600 text-left">Острота зрения (Visus)</td>
-                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.visualAcuityOD || '—'}</td>
-                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.visualAcuityOS || '—'}</td>
+                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-medium text-gray-600 text-left">Острота зрения (Visus)</td>
+                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.visualAcuityOD || '—'}</td>
+                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.visualAcuityOS || '—'}</td>
                                                         </tr>
                                                     )}
                                                     {(c.intraocularPressureOD || c.intraocularPressureOS) && (
@@ -874,7 +1021,7 @@ export default function PatientDetailPage() {
                             </div>
 
                             <div className="mt-6 space-y-4 relative z-10 text-left">
-                                {!(session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor') && (
+                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string)) && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
                                         {isEditing ? (
@@ -892,7 +1039,7 @@ export default function PatientDetailPage() {
                                         <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.address ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.address}</> : '—'}</p>
                                     )}
                                 </div>
-                                {!(session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor') && (
+                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string)) && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
                                         {isEditing ? (
@@ -910,6 +1057,37 @@ export default function PatientDetailPage() {
                                         <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.birthDate ? <><Calendar className="w-4 h-4 text-primary-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
                                     )}
                                 </div>
+                                {patient.parent && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Связанный профиль (Родитель)</label>
+                                            <button onClick={() => handleLinkParent(null)} className="text-[10px] text-red-500 hover:text-red-600 font-medium">Отвязать</button>
+                                        </div>
+                                        <Link href={`/optic/patients/${patient.parent.id}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors bg-primary-50 p-2 rounded-lg border border-primary-100">
+                                            <User className="w-4 h-4" /> {patient.parent.name}
+                                        </Link>
+                                    </div>
+                                )}
+                                {patient.children && patient.children.length > 0 && (
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дети</label>
+                                        <div className="space-y-2">
+                                            {patient.children.map((child: any) => (
+                                                <Link key={child.id} href={`/optic/patients/${child.id}`} className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                                                    <User className="w-4 h-4" /> {child.name}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {!isEditing && (
+                                    <div className="pt-2">
+                                        <button onClick={() => { setFamilySearch(''); setFamilyResults([]); setShowFamilyModal(true); }} className="w-full btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm text-gray-700 py-2 flex items-center justify-center gap-2">
+                                            <Users className="w-4 h-4" /> Управление семьей
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1011,18 +1189,22 @@ export default function PatientDetailPage() {
                                                 </div>
 
                                                 <div className="pt-4 border-t border-gray-100 space-y-4">
-                                                        <MedicalTextarea category="complaints" label="Жалобы" value={editForm.complaints || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                                        <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания (Anamnesis morbi)" value={editForm.anamnesisDisease || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, anamnesisDisease: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            <MedicalTextarea category="allergies" label="Аллергоанамнез" value={editForm.allergies || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, allergies: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Лекарственная, пищевая аллергия" />
-                                                            <MedicalTextarea category="heredity" label="Наследственность" value={editForm.heredity || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, heredity: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Глаукома, СД..." />
+                                                    <TagsInput category="complaints" label="Жалобы" value={editForm.complaints || ''} onChange={(val) => setEditForm((f: any) => ({ ...f, complaints: val }))} />
+                                                    <TagsInput category="anamnesis_disease" label="Анамнез заболевания (Anamnesis morbi)" value={editForm.anamnesisDisease || ''} onChange={(val) => setEditForm((f: any) => ({ ...f, anamnesisDisease: val }))} />
+                                                    
+                                                    <div className="bg-white border border-gray-100 rounded-xl p-4 mt-4">
+                                                        <h4 className="text-sm font-bold text-gray-800 mb-2 border-b border-gray-100 pb-2">Анамнез жизни</h4>
+                                                        <div className="space-y-1">
+                                                            <CheckboxAnamnesisField label="Аллергоанамнез" value={editForm.allergies} onChange={val => setEditForm((f: any) => ({ ...f, allergies: val }))} negativeLabel="не отягощен" positiveLabel="отягощен:" negativePrefix="не отягощен" positivePrefix="отягощен:" />
+                                                            <CheckboxAnamnesisField label="Наследственность" value={editForm.heredity} onChange={val => setEditForm((f: any) => ({ ...f, heredity: val }))} negativeLabel="не отягощена" positiveLabel="отягощена:" negativePrefix="не отягощена" positivePrefix="отягощена:" />
+                                                            <CheckboxAnamnesisField label="Прием медикаментов" value={editForm.medications} onChange={val => setEditForm((f: any) => ({ ...f, medications: val }))} negativeLabel="не принимает" positiveLabel="принимает:" negativePrefix="не принимает" positivePrefix="принимает:" />
+                                                            <CheckboxAnamnesisField label="Диспансерный учет" value={editForm.dispensary} onChange={val => setEditForm((f: any) => ({ ...f, dispensary: val }))} negativeLabel="нет" positiveLabel="да:" negativePrefix="нет" positivePrefix="да:" />
+                                                            <CheckboxAnamnesisField label="Операции" value={editForm.surgeries} onChange={val => setEditForm((f: any) => ({ ...f, surgeries: val }))} negativeLabel="не было" positiveLabel="да:" negativePrefix="не было" positivePrefix="да:" />
+                                                        </div>
                                                     </div>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            <MedicalTextarea category="surgeries" label="Перенесенные операции" value={editForm.surgeries || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, surgeries: val }))} className="input text-sm min-h-[40px]" rows={1} />
-                                                            <MedicalTextarea category="medications" label="Постоянный прием медикаментов" value={editForm.medications || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, medications: val }))} className="input text-sm min-h-[40px]" rows={1} />
-                                                    </div>
-                                                        <MedicalTextarea category="last_correction" label="Последняя коррекция" value={editForm.lastCorrection || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, lastCorrection: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Очки, МКЛ (дата)" />
-                                                        <MedicalTextarea category="notes" label="Прочие заметки" value={editForm.notes || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[60px]" rows={2} />
+
+                                                    <MedicalTextarea category="last_correction" label="Последняя коррекция" value={editForm.lastCorrection || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, lastCorrection: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Очки, МКЛ (дата)" />
+                                                    <MedicalTextarea category="notes" label="Прочие заметки" value={editForm.notes || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[60px]" rows={2} />
                                                 </div>
                                             </div>
                                         ) : (
@@ -1034,25 +1216,29 @@ export default function PatientDetailPage() {
                                                     </div>
                                                 )}
                                                 
-                                                {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-4 rounded-xl border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
-                                                {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-4 rounded-xl border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
+                                                {patient.complaints && <div className="bg-red-50 p-4 rounded-xl border border-red-100/50"><p className="text-[10px] font-bold text-red-500 uppercase">Жалобы</p>{renderTags(patient.complaints)}</div>}
+                                                {patient.anamnesisDisease && <div className="bg-orange-50 p-4 rounded-xl border border-orange-100/50"><p className="text-[10px] font-bold text-orange-500 uppercase">Анамнез заболевания</p>{renderTags(patient.anamnesisDisease)}</div>}
                                                 
-                                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                                                     <div className="bg-rose-50 p-3 rounded-xl border border-rose-100">
                                                         <p className="text-[10px] font-bold text-rose-500 uppercase mb-1">Аллергоанамнез</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.allergies ? `отягощен/да: ${patient.allergies}` : 'не отягощен/нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.allergies || '—'}</p>
                                                     </div>
                                                     <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
                                                         <p className="text-[10px] font-bold text-indigo-500 uppercase mb-1">Наследственность</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.heredity ? `отягощен/да: ${patient.heredity}` : 'не отягощен/нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.heredity || '—'}</p>
                                                     </div>
                                                     <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
                                                         <p className="text-[10px] font-bold text-sky-500 uppercase mb-1">Прием медикаментов</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.medications ? `да: ${patient.medications}` : 'нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.medications || '—'}</p>
+                                                    </div>
+                                                    <div className="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                                                        <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Диспансерный учет</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.dispensary || '—'}</p>
                                                     </div>
                                                     <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
                                                         <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Операции</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.surgeries ? `да: ${patient.surgeries}` : 'нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.surgeries || '—'}</p>
                                                     </div>
                                                 </div>
                                                 
@@ -1065,65 +1251,309 @@ export default function PatientDetailPage() {
                                 )}
                             </div>
 
-                            {/* Данные ITIGRIS */}
-                            <div id="itigris" className="scroll-mt-24">
-                            {(() => {
-                                const itg = (patient as any).metadata?.itigris;
-                                if (!itg) return (
-                                    <div className="bg-white rounded-3xl border border-gray-100 p-8 text-center shadow-sm">
-                                        <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                        <h3 className="text-gray-900 font-bold mb-1">Нет данных ITIGRIS</h3>
-                                        <p className="text-gray-500 text-sm">Пациент не связан с профилем в ITIGRIS или у него нет бонусов.</p>
+                    {/* Consultations */}
+                    <div id="consultations" className="scroll-mt-24">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-teal-600" /> История консультаций
+                            {consultations.length > 0 && (
+                                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{consultations.length}</span>
+                            )}
+                        </h2>
+                        <button onClick={() => {
+                            setShowConsultForm(!showConsultForm);
+                            if (showConsultForm) {
+                                setEditingConsultId(null);
+                                setConsultForm({ 
+                                    visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
+                                    intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
+                                    k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
+                                    k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
+                                });
+                            }
+                        }} className="btn btn-secondary btn-sm flex items-center gap-1">
+                            <Plus className="w-4 h-4" /> {showConsultForm && !editingConsultId ? 'Отменить' : (editingConsultId ? 'Отменить ред.' : 'Добавить визит')}
+                        </button>
+                    </div>
+
+                    {/* Consult Modal */}
+            {showConsultForm && (
+                        <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold text-gray-900">{editingConsultId ? 'Редактирование записи' : 'Новая запись консультации'}</h3>
+                                <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
+                                    <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
+                                    {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'consultation')} disabled={parsingAi} />
+                                </label>
+                            </div>
+                            <form onSubmit={handleAddConsult}>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Дата визита</label>
+                                        <input type="date" value={consultForm.visitDate} onChange={e => setConsultForm((f: any) => ({ ...f, visitDate: e.target.value }))} className="input w-full text-sm h-9" required />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Тип приёма</label>
+                                        <select value={consultForm.type} onChange={e => setConsultForm((f: any) => ({ ...f, type: e.target.value }))} className="input w-full text-sm h-9">
+                                            <option value="exam">🔍 Первичный осмотр</option>
+                                            <option value="follow_up">🔄 Повторный приём</option>
+                                            <option value="fitting">👁 Подбор линз</option>
+                                            <option value="other">📋 Другое</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Visual metrics */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OD</label>
+                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOD} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OS</label>
+                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOS} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OD (мм рт.)</label>
+                                        <input type="number" step="0.5" placeholder="15.0" value={consultForm.intraocularPressureOD} onChange={e => setConsultForm((f: any) => ({ ...f, intraocularPressureOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OS (мм рт.)</label>
+                                        <input type="number" step="0.5" placeholder="15.0" value={consultForm.intraocularPressureOS} onChange={e => setConsultForm((f: any) => ({ ...f, intraocularPressureOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
+                                    </div>
+                                </div>
+
+                                {/* Topography metrics */}
+                                <div className="mb-4">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Топография / Кератометрия</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <p className="text-xs font-bold text-gray-600 mb-2">OD — Правый</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OD} onChange={e => setConsultForm((f: any) => ({ ...f, k1OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OD} onChange={e => setConsultForm((f: any) => ({ ...f, k2OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOD} onChange={e => setConsultForm((f: any) => ({ ...f, axisOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOD} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOD} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOD} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <p className="text-xs font-bold text-gray-600 mb-2">OS — Левый</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OS} onChange={e => setConsultForm((f: any) => ({ ...f, k1OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OS} onChange={e => setConsultForm((f: any) => ({ ...f, k2OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOS} onChange={e => setConsultForm((f: any) => ({ ...f, axisOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOS} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOS} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOS} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Lens Fitting and Refraction (Free Text) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                        <h4 className="text-xs font-bold text-blue-800 uppercase mb-2">Подбор линз (Параметры)</h4>
+                                        <div className="space-y-2">
+                                            <div>
+                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OD — Правый</label>
+                                                <input type="text" value={consultForm.lensFittingOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA, Paragon 10.5..." />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OS — Левый</label>
+                                                <input type="text" value={consultForm.lensFittingOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA..." />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h4 className="text-xs font-bold text-purple-800 uppercase">Рефрактометрия (ROL) / Кератометрия</h4>
+                                            <div>
+                                                <label className={`btn ${isUploadingOCR ? 'btn-secondary opacity-50 cursor-not-allowed' : 'btn-primary'} py-1 px-3 text-[10px] flex items-center gap-1 cursor-pointer`}>
+                                                    {isUploadingOCR ? <Activity className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
+                                                    {isUploadingOCR ? 'Распознавание...' : 'Загрузить чек'}
+                                                    <input type="file" accept="image/*" className="hidden" onChange={handleUploadReceipt} disabled={isUploadingOCR} />
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
+                                                    <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
+                                                    <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 gap-2 pt-2 border-t border-purple-100">
+                                                <div><label className="text-[10px] text-purple-500">R1 OD</label><input type="number" step="0.01" value={consultForm.r1OD} onChange={e => setConsultForm((f: any) => ({ ...f, r1OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-purple-500">R2 OD</label><input type="number" step="0.01" value={consultForm.r2OD} onChange={e => setConsultForm((f: any) => ({ ...f, r2OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-purple-500">R1 OS</label><input type="number" step="0.01" value={consultForm.r1OS} onChange={e => setConsultForm((f: any) => ({ ...f, r1OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                                <div><label className="text-[10px] text-purple-500">R2 OS</label><input type="number" step="0.01" value={consultForm.r2OS} onChange={e => setConsultForm((f: any) => ({ ...f, r2OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 mb-4">
+                                    <MedicalTextarea 
+                                        category="biomicroscopy" 
+                                        label="Биомикроскопия" 
+                                        value={consultForm.biomicroscopy || ''} 
+                                        onValueChange={(val) => setConsultForm((f: any) => ({ ...f, biomicroscopy: val }))} 
+                                        className="input text-sm" 
+                                        rows={2} 
+                                        placeholder="Описание состояния переднего отрезка глаза..." 
+                                        quickTags={['Роговица прозрачная', 'Влага передней камеры прозрачная', 'Зрачок круглый', 'Хрусталик прозрачный', 'Глазное дно в норме', 'ДЗН бледно-розовый', 'Сосуды сетчатки без особенностей', 'Макулярная зона без патологии']}
+                                    />
+                                    <MedicalTextarea category="diagnosis" label="Диагноз / Клинические данные" value={consultForm.diagnosis || ''} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, diagnosis: val }))} className="input text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
+                                    <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит (в календарь)</label>
+                                            <input type="datetime-local" value={consultForm.nextVisit} onChange={e => setConsultForm((f: any) => ({ ...f, nextVisit: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                            <MedicalTextarea category="notes" label="Заметки" value={consultForm.notes} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Дополнительно..." />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => setShowConsultForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>
+                                    <button type="submit" disabled={savingConsult} className="btn btn-primary flex-1 text-sm">
+                                        {savingConsult ? 'Сохранение...' : 'Сохранить запись'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {consultations.length === 0 && !showConsultForm ? (
+                        <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                            <Activity className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">Записей консультаций пока нет</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {consultations.map(c => {
+                                const typeLabels: Record<string, string> = {
+                                    exam: '🔍 Первичный осмотр',
+                                    follow_up: '🔄 Повторный приём',
+                                    fitting: '👁 Подбор линз',
+                                    other: '📋 Другое',
+                                };
+                                const isExpanded = expandedConsult === c.id;
+                                return (
+                                    <div key={c.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                        <div
+                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                                            onClick={() => setExpandedConsult(isExpanded ? null : c.id)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                                                    <Activity className="w-5 h-5 text-teal-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-900">{typeLabels[c.type] || c.type}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {new Date(c.visitDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                        {c.doctor && <span className="ml-2">· {c.doctor.fullName}</span>}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                {(c.visualAcuityOD || c.visualAcuityOS) && (
+                                                    <div className="hidden sm:block text-right text-xs font-mono text-gray-600">
+                                                        <p>OD: {c.visualAcuityOD ?? '—'}</p>
+                                                        <p>OS: {c.visualAcuityOS ?? '—'}</p>
+                                                    </div>
+                                                )}
+                                                {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                            </div>
+                                        </div>
+
+                                        {isExpanded && (
+                                            <div className="border-t border-gray-100 p-4 bg-gray-50/50 space-y-3">
+                                                {(c.visualAcuityOD != null || c.visualAcuityOS != null || c.intraocularPressureOD != null) && (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">Острота OD</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.visualAcuityOD ?? '—'}</p>
+                                                        </div>
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">Острота OS</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.visualAcuityOS ?? '—'}</p>
+                                                        </div>
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">ВГД OD</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.intraocularPressureOD != null ? `${c.intraocularPressureOD} мм` : '—'}</p>
+                                                        </div>
+                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
+                                                            <p className="text-xs text-gray-400 mb-0.5">ВГД OS</p>
+                                                            <p className="font-mono font-bold text-gray-900">{c.intraocularPressureOS != null ? `${c.intraocularPressureOS} мм` : '—'}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {(c.lensFittingOD || c.lensFittingOS) && (
+                                                    <div className="bg-blue-50/50 rounded-lg p-3 border border-blue-100">
+                                                        <p className="text-xs font-semibold text-blue-700 mb-2">Подбор линз</p>
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div><span className="text-blue-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.lensFittingOD || '—'}</span></div>
+                                                            <div><span className="text-blue-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.lensFittingOS || '—'}</span></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {(c.refractionOD || c.refractionOS) && (
+                                                    <div className="bg-purple-50/50 rounded-lg p-3 border border-purple-100">
+                                                        <p className="text-xs font-semibold text-purple-700 mb-2">Рефрактометрия</p>
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div><span className="text-purple-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.refractionOD || '—'}</span></div>
+                                                            <div><span className="text-purple-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.refractionOS || '—'}</span></div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role) && (
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role)}</p>
+                                                    </div>
+                                                )}
+                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role) && (
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-gray-500 mb-1">Рекомендации</p>
+                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role)}</p>
+                                                    </div>
+                                                )}
+                                                {c.nextVisit && (
+                                                    <div className="flex items-center gap-2 text-sm text-teal-700 bg-teal-50 rounded-lg p-3">
+                                                        <Clock className="w-4 h-4" />
+                                                        Следующий визит: <strong>{new Date(c.nextVisit).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                                                    </div>
+                                                )}
+                                                {c.notes && <p className="text-xs text-gray-500 italic">{filterMedicalText(c.notes, session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) ? 'doctor' : session?.user?.role)}</p>}
+                                                <div className="flex justify-end gap-3">
+                                                    <Link target="_blank" href={`/optic/patients/${id}/consultations/${c.id}/print`} className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors">
+                                                        <FileText className="w-3.5 h-3.5" /> Печать
+                                                    </Link>
+                                                    <button onClick={() => handleEditConsultClick(c)} className="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors">
+                                                        <Plus className="w-3.5 h-3.5" /> Редактировать
+                                                    </button>
+                                                    <button onClick={() => handleDeleteConsult(c.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors">
+                                                        <Trash2 className="w-3.5 h-3.5" /> Удалить запись
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
-                                const rows = ([
-                                    itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
-                                    itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
-                                    itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
-                                    itg.city ? { label: 'Город', value: itg.city } : null,
-                                    itg.address ? { label: 'Адрес', value: itg.address } : null,
-                                    itg.profession ? { label: 'Профессия', value: itg.profession } : null,
-                                    itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
-                                    itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
-                                ].filter(Boolean)) as { label: string; value: string }[];
-                                
-                                const d = itg.discount;
-                                return (
-                                    <>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS
-                                            </h2>
-                                            <Link href={`/optic/sale-to-optima?clientInfo=${encodeURIComponent(patient.phone || patient.name)}&clientId=${itg?.id || itg?.clientId || ''}`} className="btn bg-orange-100 hover:bg-orange-200 text-orange-700 border-none btn-sm flex items-center gap-1">
-                                                <Plus className="w-4 h-4" /> Создать заказ ITIGRIS
-                                            </Link>
-                                        </div>
-                                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                                                {rows.map((r, i) => (
-                                                    <div key={i} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{r.label}</div>
-                                                        <div className="text-sm font-bold text-gray-900 break-words">{r.value}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {d && typeof d === 'object' && (
-                                                <div className="mt-4 pt-4 border-t border-gray-100">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Скидка по карте</p>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оправы {d.glasses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">СЗ Очки {d.sunglasses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">КЛ {d.contactLenses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оч. Линзы {d.lenses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Аксессуары {d.accessories ?? 0}%</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
-                                );
-                            })()}
-                            </div>
+                            })}
+                        </div>
+                    )}
+                </div>
 
                             {/* Prescriptions */}
                             <div id="prescriptions" className="scroll-mt-24">
@@ -1265,6 +1695,61 @@ export default function PatientDetailPage() {
                         )}
                     </div>
 
+                {/* Attachments Section */}
+                <div id="files" className="scroll-mt-24">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <Paperclip className="w-5 h-5 text-indigo-600" /> Показатели и Снимки
+                            {patient.attachments && patient.attachments.length > 0 && (
+                                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{patient.attachments.length}</span>
+                            )}
+                        </h2>
+                        <label className="btn btn-secondary btn-sm flex items-center gap-1 cursor-pointer">
+                            <UploadCloud className="w-4 h-4" /> 
+                            {uploadingFile ? 'Загрузка...' : 'Добавить файл'}
+                            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploadingFile} accept="image/*,application/pdf" />
+                        </label>
+                    </div>
+
+                    {!patient.attachments || patient.attachments.length === 0 ? (
+                        <div className="text-center py-10 bg-white rounded-xl border border-gray-200 border-dashed">
+                            <UploadCloud className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                            <p className="text-gray-500 text-sm">Снимки с топографа, авторефрактора и другие файлы</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            {patient.attachments.map(att => (
+                                <div key={att.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 transition-colors group relative flex flex-col">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600">
+                                            {att.type.startsWith('image/') ? <Eye className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 truncate" title={att.name}>{att.name}</p>
+                                            <p className="text-xs text-gray-500">{(att.size / 1024).toFixed(1)} KB • {new Date(att.uploadedAt).toLocaleDateString('ru-RU')}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {att.type.startsWith('image/') && (
+                                        <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden mb-3 border border-gray-200">
+                                            <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+
+                                    <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100">
+                                        <a href={att.url} download={att.name} className="text-xs text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
+                                            <Download className="w-3.5 h-3.5" /> Скачать
+                                        </a>
+                                        <button onClick={() => handleDeleteAttachment(att.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                     {/* Orders */}
                     <div id="orders" className="scroll-mt-24">
                         <div className="flex items-center justify-between mb-3">
@@ -1372,337 +1857,66 @@ export default function PatientDetailPage() {
                         )}
                     </div>
 
-                    {/* Consultations */}
-                    <div id="consultations" className="scroll-mt-24">
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-teal-600" /> История консультаций
-                            {consultations.length > 0 && (
-                                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{consultations.length}</span>
-                            )}
-                        </h2>
-                        <button onClick={() => {
-                            setShowConsultForm(!showConsultForm);
-                            if (showConsultForm) {
-                                setEditingConsultId(null);
-                                setConsultForm({ 
-                                    visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
-                                    intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '',
-                                    k1OD: '', k2OD: '', axisOD: '', astigmatismOD: '', pachymetryOD: '', eccentricityOD: '',
-                                    k1OS: '', k2OS: '', axisOS: '', astigmatismOS: '', pachymetryOS: '', eccentricityOS: ''
-                                });
-                            }
-                        }} className="btn btn-secondary btn-sm flex items-center gap-1">
-                            <Plus className="w-4 h-4" /> {showConsultForm && !editingConsultId ? 'Отменить' : (editingConsultId ? 'Отменить ред.' : 'Добавить визит')}
-                        </button>
-                    </div>
-
-                    {/* New Consultation Form */}
-                    {showConsultForm && (
-                        <div className="bg-white rounded-xl border border-teal-200 p-5 mb-4 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-semibold text-gray-900">{editingConsultId ? 'Редактирование записи' : 'Новая запись консультации'}</h3>
-                                <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
-                                    <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
-                                    {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
-                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'consultation')} disabled={parsingAi} />
-                                </label>
-                            </div>
-                            <form onSubmit={handleAddConsult}>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Дата визита</label>
-                                        <input type="date" value={consultForm.visitDate} onChange={e => setConsultForm((f: any) => ({ ...f, visitDate: e.target.value }))} className="input w-full text-sm h-9" required />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Тип приёма</label>
-                                        <select value={consultForm.type} onChange={e => setConsultForm((f: any) => ({ ...f, type: e.target.value }))} className="input w-full text-sm h-9">
-                                            <option value="exam">🔍 Первичный осмотр</option>
-                                            <option value="follow_up">🔄 Повторный приём</option>
-                                            <option value="fitting">👁 Подбор линз</option>
-                                            <option value="other">📋 Другое</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* Visual metrics */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OD</label>
-                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOD} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">Острота OS</label>
-                                        <input type="number" step="any" min="0" max="2" placeholder="1.0" value={consultForm.visualAcuityOS} onChange={e => setConsultForm((f: any) => ({ ...f, visualAcuityOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OD (мм рт.)</label>
-                                        <input type="number" step="0.5" placeholder="15.0" value={consultForm.intraocularPressureOD} onChange={e => setConsultForm((f: any) => ({ ...f, intraocularPressureOD: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-500 mb-1">ВГД OS (мм рт.)</label>
-                                        <input type="number" step="0.5" placeholder="15.0" value={consultForm.intraocularPressureOS} onChange={e => setConsultForm((f: any) => ({ ...f, intraocularPressureOS: e.target.value }))} className="input w-full text-sm h-9 font-mono" />
-                                    </div>
-                                </div>
-
-                                {/* Topography metrics */}
-                                <div className="mb-4">
-                                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Топография / Кератометрия</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                            <p className="text-xs font-bold text-gray-600 mb-2">OD — Правый</p>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OD} onChange={e => setConsultForm((f: any) => ({ ...f, k1OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OD} onChange={e => setConsultForm((f: any) => ({ ...f, k2OD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOD} onChange={e => setConsultForm((f: any) => ({ ...f, axisOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOD} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOD} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOD} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOD: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                            </div>
-                                        </div>
-                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                            <p className="text-xs font-bold text-gray-600 mb-2">OS — Левый</p>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div><label className="text-[10px] text-gray-500">K1</label><input type="number" step="0.01" value={consultForm.k1OS} onChange={e => setConsultForm((f: any) => ({ ...f, k1OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">K2</label><input type="number" step="0.01" value={consultForm.k2OS} onChange={e => setConsultForm((f: any) => ({ ...f, k2OS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">Axis</label><input type="number" step="1" value={consultForm.axisOS} onChange={e => setConsultForm((f: any) => ({ ...f, axisOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">Astig</label><input type="number" step="0.01" value={consultForm.astigmatismOS} onChange={e => setConsultForm((f: any) => ({ ...f, astigmatismOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">Pachy</label><input type="number" step="1" value={consultForm.pachymetryOS} onChange={e => setConsultForm((f: any) => ({ ...f, pachymetryOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                                <div><label className="text-[10px] text-gray-500">e-value</label><input type="number" step="0.01" value={consultForm.eccentricityOS} onChange={e => setConsultForm((f: any) => ({ ...f, eccentricityOS: e.target.value }))} className="input w-full text-sm h-7 font-mono" /></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Lens Fitting and Refraction (Free Text) */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                                        <h4 className="text-xs font-bold text-blue-800 uppercase mb-2">Подбор линз (Параметры)</h4>
-                                        <div className="space-y-2">
-                                            <div>
-                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OD — Правый</label>
-                                                <input type="text" value={consultForm.lensFittingOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA, Paragon 10.5..." />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-blue-600 font-semibold block mb-0.5">OS — Левый</label>
-                                                <input type="text" value={consultForm.lensFittingOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, lensFittingOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="BC, RZD, LZA..." />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
-                                        <h4 className="text-xs font-bold text-purple-800 uppercase mb-2">Рефрактометрия (ROL)</h4>
-                                        <div className="space-y-2">
-                                            <div>
-                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
-                                                <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
-                                                <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3 mb-4">
-                                    <MedicalTextarea category="diagnosis" label="Диагноз / Клинические данные" value={consultForm.diagnosis || ''} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, diagnosis: val }))} className="input text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
-                                    <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит</label>
-                                            <input type="date" value={consultForm.nextVisit} onChange={e => setConsultForm((f: any) => ({ ...f, nextVisit: e.target.value }))} className="input w-full text-sm h-9" />
-                                        </div>
-                                            <MedicalTextarea category="notes" label="Заметки" value={consultForm.notes} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Дополнительно..." />
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2">
-                                    <button type="button" onClick={() => setShowConsultForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>
-                                    <button type="submit" disabled={savingConsult} className="btn btn-primary flex-1 text-sm">
-                                        {savingConsult ? 'Сохранение...' : 'Сохранить запись'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
-
-                    {consultations.length === 0 && !showConsultForm ? (
-                        <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                            <Activity className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                            <p className="text-gray-500 text-sm">Записей консультаций пока нет</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {consultations.map(c => {
-                                const typeLabels: Record<string, string> = {
-                                    exam: '🔍 Первичный осмотр',
-                                    follow_up: '🔄 Повторный приём',
-                                    fitting: '👁 Подбор линз',
-                                    other: '📋 Другое',
-                                };
-                                const isExpanded = expandedConsult === c.id;
-                                return (
-                                    <div key={c.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                                        <div
-                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                                            onClick={() => setExpandedConsult(isExpanded ? null : c.id)}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                                                    <Activity className="w-5 h-5 text-teal-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{typeLabels[c.type] || c.type}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {new Date(c.visitDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                                        {c.doctor && <span className="ml-2">· {c.doctor.fullName}</span>}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                {(c.visualAcuityOD || c.visualAcuityOS) && (
-                                                    <div className="hidden sm:block text-right text-xs font-mono text-gray-600">
-                                                        <p>OD: {c.visualAcuityOD ?? '—'}</p>
-                                                        <p>OS: {c.visualAcuityOS ?? '—'}</p>
-                                                    </div>
-                                                )}
-                                                {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                                            </div>
-                                        </div>
-
-                                        {isExpanded && (
-                                            <div className="border-t border-gray-100 p-4 bg-gray-50/50 space-y-3">
-                                                {(c.visualAcuityOD != null || c.visualAcuityOS != null || c.intraocularPressureOD != null) && (
-                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
-                                                            <p className="text-xs text-gray-400 mb-0.5">Острота OD</p>
-                                                            <p className="font-mono font-bold text-gray-900">{c.visualAcuityOD ?? '—'}</p>
-                                                        </div>
-                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
-                                                            <p className="text-xs text-gray-400 mb-0.5">Острота OS</p>
-                                                            <p className="font-mono font-bold text-gray-900">{c.visualAcuityOS ?? '—'}</p>
-                                                        </div>
-                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
-                                                            <p className="text-xs text-gray-400 mb-0.5">ВГД OD</p>
-                                                            <p className="font-mono font-bold text-gray-900">{c.intraocularPressureOD != null ? `${c.intraocularPressureOD} мм` : '—'}</p>
-                                                        </div>
-                                                        <div className="bg-white rounded-lg p-3 border border-gray-100 text-center">
-                                                            <p className="text-xs text-gray-400 mb-0.5">ВГД OS</p>
-                                                            <p className="font-mono font-bold text-gray-900">{c.intraocularPressureOS != null ? `${c.intraocularPressureOS} мм` : '—'}</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {(c.lensFittingOD || c.lensFittingOS) && (
-                                                    <div className="bg-blue-50/50 rounded-lg p-3 border border-blue-100">
-                                                        <p className="text-xs font-semibold text-blue-700 mb-2">Подбор линз</p>
-                                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                                            <div><span className="text-blue-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.lensFittingOD || '—'}</span></div>
-                                                            <div><span className="text-blue-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.lensFittingOS || '—'}</span></div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {(c.refractionOD || c.refractionOS) && (
-                                                    <div className="bg-purple-50/50 rounded-lg p-3 border border-purple-100">
-                                                        <p className="text-xs font-semibold text-purple-700 mb-2">Рефрактометрия</p>
-                                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                                            <div><span className="text-purple-500 font-medium text-xs">OD:</span> <span className="text-gray-800">{c.refractionOD || '—'}</span></div>
-                                                            <div><span className="text-purple-500 font-medium text-xs">OS:</span> <span className="text-gray-800">{c.refractionOS || '—'}</span></div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {c.diagnosis && filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role) && (
-                                                    <div>
-                                                        <p className="text-xs font-semibold text-gray-500 mb-1">Диагноз</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.diagnosis, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>
-                                                    </div>
-                                                )}
-                                                {c.treatment && filterMedicalText(c.treatment, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role) && (
-                                                    <div>
-                                                        <p className="text-xs font-semibold text-gray-500 mb-1">Рекомендации</p>
-                                                        <p className="text-sm text-gray-800 bg-white rounded-lg p-3 border border-gray-100">{filterMedicalText(c.treatment, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>
-                                                    </div>
-                                                )}
-                                                {c.nextVisit && (
-                                                    <div className="flex items-center gap-2 text-sm text-teal-700 bg-teal-50 rounded-lg p-3">
-                                                        <Clock className="w-4 h-4" />
-                                                        Следующий визит: <strong>{new Date(c.nextVisit).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-                                                    </div>
-                                                )}
-                                                {c.notes && <p className="text-xs text-gray-500 italic">{filterMedicalText(c.notes, session?.user?.role === 'doctor' || session?.user?.subRole === 'optic_doctor' ? 'doctor' : session?.user?.role)}</p>}
-                                                <div className="flex justify-end gap-3">
-                                                    <Link target="_blank" href={`/optic/patients/${id}/consultations/${c.id}/print`} className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors">
-                                                        <FileText className="w-3.5 h-3.5" /> Печать
-                                                    </Link>
-                                                    <button onClick={() => handleEditConsultClick(c)} className="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors">
-                                                        <Plus className="w-3.5 h-3.5" /> Редактировать
-                                                    </button>
-                                                    <button onClick={() => handleDeleteConsult(c.id)} className="text-xs text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors">
-                                                        <Trash2 className="w-3.5 h-3.5" /> Удалить запись
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
+                            {/* Данные ITIGRIS */}
+                            <div id="itigris" className="scroll-mt-24">
+                            {(() => {
+                                const itg = (patient as any).metadata?.itigris;
+                                if (!itg) return (
+                                    <div className="bg-white rounded-3xl border border-gray-100 p-8 text-center shadow-sm">
+                                        <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                        <h3 className="text-gray-900 font-bold mb-1">Нет данных ITIGRIS</h3>
+                                        <p className="text-gray-500 text-sm">Пациент не связан с профилем в ITIGRIS или у него нет бонусов.</p>
                                     </div>
                                 );
-                            })}
-                        </div>
-                    )}
-                </div>
-
-                {/* Attachments Section */}
-                <div id="files" className="scroll-mt-24">
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <Paperclip className="w-5 h-5 text-indigo-600" /> Показатели и Снимки
-                            {patient.attachments && patient.attachments.length > 0 && (
-                                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{patient.attachments.length}</span>
-                            )}
-                        </h2>
-                        <label className="btn btn-secondary btn-sm flex items-center gap-1 cursor-pointer">
-                            <UploadCloud className="w-4 h-4" /> 
-                            {uploadingFile ? 'Загрузка...' : 'Добавить файл'}
-                            <input type="file" className="hidden" onChange={handleFileUpload} disabled={uploadingFile} accept="image/*,application/pdf" />
-                        </label>
-                    </div>
-
-                    {!patient.attachments || patient.attachments.length === 0 ? (
-                        <div className="text-center py-10 bg-white rounded-xl border border-gray-200 border-dashed">
-                            <UploadCloud className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                            <p className="text-gray-500 text-sm">Снимки с топографа, авторефрактора и другие файлы</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            {patient.attachments.map(att => (
-                                <div key={att.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 transition-colors group relative flex flex-col">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600">
-                                            {att.type.startsWith('image/') ? <Eye className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                                const rows = ([
+                                    itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
+                                    itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
+                                    itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
+                                    itg.city ? { label: 'Город', value: itg.city } : null,
+                                    itg.address ? { label: 'Адрес', value: itg.address } : null,
+                                    itg.profession ? { label: 'Профессия', value: itg.profession } : null,
+                                    itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
+                                    itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
+                                ].filter(Boolean)) as { label: string; value: string }[];
+                                
+                                const d = itg.discount;
+                                return (
+                                    <>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                <Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS
+                                            </h2>
+                                            <Link href={`/optic/sale-to-optima?clientInfo=${encodeURIComponent(patient.phone || patient.name)}&clientId=${itg?.id || itg?.clientId || ''}`} className="btn bg-orange-100 hover:bg-orange-200 text-orange-700 border-none btn-sm flex items-center gap-1">
+                                                <Plus className="w-4 h-4" /> Создать заказ ITIGRIS
+                                            </Link>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 truncate" title={att.name}>{att.name}</p>
-                                            <p className="text-xs text-gray-500">{(att.size / 1024).toFixed(1)} KB • {new Date(att.uploadedAt).toLocaleDateString('ru-RU')}</p>
+                                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                {rows.map((r, i) => (
+                                                    <div key={i} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{r.label}</div>
+                                                        <div className="text-sm font-bold text-gray-900 break-words">{r.value}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {d && typeof d === 'object' && (
+                                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Скидка по карте</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оправы {d.glasses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">СЗ Очки {d.sunglasses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">КЛ {d.contactLenses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оч. Линзы {d.lenses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Аксессуары {d.accessories ?? 0}%</span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                    
-                                    {att.type.startsWith('image/') && (
-                                        <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden mb-3 border border-gray-200">
-                                            <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
-                                        </div>
-                                    )}
+                                    </>
+                                );
+                            })()}
+                            </div>
 
-                                    <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100">
-                                        <a href={att.url} download={att.name} className="text-xs text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800">
-                                            <Download className="w-3.5 h-3.5" /> Скачать
-                                        </a>
-                                        <button onClick={() => handleDeleteAttachment(att.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
                 </div>
 
                     </div>
@@ -1791,6 +2005,68 @@ export default function PatientDetailPage() {
                             </div>
                         </div>
 
+                    </div>
+                </div>
+            )}
+
+            {/* Family Modal */}
+            {showFamilyModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh]">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
+                            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                <Users className="w-5 h-5 text-primary-500" /> Управление семьей
+                            </h3>
+                            <button onClick={() => setShowFamilyModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-5 overflow-y-auto">
+                            <form onSubmit={handleSearchFamily} className="mb-4">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Найти родственника</label>
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input 
+                                            type="text" 
+                                            value={familySearch} 
+                                            onChange={e => setFamilySearch(e.target.value)} 
+                                            placeholder="Имя или номер телефона..." 
+                                            className="input w-full pl-9" 
+                                        />
+                                    </div>
+                                    <button type="submit" disabled={searchingFamily || !familySearch} className="btn btn-primary whitespace-nowrap">
+                                        {searchingFamily ? 'Поиск...' : 'Найти'}
+                                    </button>
+                                </div>
+                            </form>
+
+                            {familyResults.length > 0 ? (
+                                <div className="space-y-2 mt-4">
+                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Результаты поиска:</p>
+                                    {familyResults.map(p => (
+                                        <div key={p.id} className="p-3 border border-gray-100 rounded-xl bg-gray-50 flex items-center justify-between">
+                                            <div>
+                                                <p className="font-semibold text-sm text-gray-900">{p.name}</p>
+                                                <p className="text-xs text-gray-500">{p.phone}</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => handleLinkParent(p.id)} className="px-3 py-1.5 bg-white border border-primary-200 text-primary-700 hover:bg-primary-50 rounded-lg text-xs font-medium transition-colors">
+                                                    Сделать родителем
+                                                </button>
+                                                <button onClick={() => handleLinkChild(p.id)} className="px-3 py-1.5 bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-medium transition-colors">
+                                                    Сделать ребенком
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                familySearch && !searchingFamily && (
+                                    <p className="text-sm text-gray-500 text-center py-4">Ничего не найдено. Попробуйте другой номер телефона.</p>
+                                )
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

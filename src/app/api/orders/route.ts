@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
             const orgId = session.user.organizationId;
             const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
 
-            if (session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager' || org?.type === 'headquarters') {
-                // Procurement and Managers see orders for ALL branches of their parent org
+            if (session.user.subRole === 'optic_manager' || session.user.subRole === 'optic_procurement' || org?.type === 'headquarters') {
+                // Network-wide visibility for Managers, Procurement, and anyone attached to HQ
                 let relatedOrgIds: string[] = orgId ? [orgId] : [];
                 if (org?.type === 'headquarters') {
                     const branches = await prisma.organization.findMany({ where: { parentId: orgId }, select: { id: true } });
@@ -47,16 +47,33 @@ export async function GET(request: NextRequest) {
                     const siblings = await prisma.organization.findMany({ where: { parentId: org.parentId }, select: { id: true } });
                     relatedOrgIds = [org.parentId, ...siblings.map((b: any) => b.id)];
                 }
-                where.organizationId = { in: relatedOrgIds };
+                
+                const allowedOrgIds = [...relatedOrgIds, ...(session.user.branches || [])].filter(Boolean) as string[];
+                const uniqueOrgIds = [...new Set(allowedOrgIds)];
+                
+                where.OR = [
+                    { organizationId: { in: uniqueOrgIds } },
+                    { createdById: session.user.id }
+                ];
             } else {
-                // Regular clinic user sees only its org orders
-                where.organizationId = session.user.organizationId;
+                // All other clinic roles (doctors, accountants, etc.) see orders for the branches 
+                // they are explicitly attached to, or their primary organizationId, OR orders they created themselves.
+                const allowedOrgIds = [session.user.organizationId, ...(session.user.branches || [])].filter(Boolean) as string[];
+                const uniqueOrgIds = [...new Set(allowedOrgIds)];
+                
+                where.OR = [
+                    { organizationId: { in: uniqueOrgIds } },
+                    { createdById: session.user.id }
+                ];
             }
         } else if (session.user.role === 'doctor') {
             // Doctor sees only their orders
             where.createdById = session.user.id;
         }
 
+        console.log('[DEBUG GET ORDERS] User:', session.user.email, session.user.role, session.user.subRole);
+        console.log('[DEBUG GET ORDERS] Branches:', session.user.branches);
+        console.log('[DEBUG GET ORDERS] Where query:', JSON.stringify(where, null, 2));
 
         if (status) {
             // Map status string to enum value
@@ -512,6 +529,12 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
+                // Заказ падает в статус черновика (ожидает подтверждения оплаты/бухгалтером)
+                const subRole = session.user.subRole;
+                if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'optic_manager', 'optic_admin'].includes(subRole as string)) {
+                    initialStatus = 'draft';
+                }
+
                 order = await prisma.order.create({
                     data: {
                         orderNumber,
@@ -584,7 +607,7 @@ export async function POST(request: NextRequest) {
                 notes: order.patient.notes || undefined,
             } : validatedData.patient,
             config: order.lensConfig,
-            status: 'new',
+            status: order.status === 'new_order' ? 'new' : (order.status as any),
             is_urgent: order.isUrgent,
             edit_deadline: order.editDeadline?.toISOString(),
             notes: order.notes || undefined,

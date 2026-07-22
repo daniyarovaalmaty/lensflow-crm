@@ -29,7 +29,7 @@ export async function GET(
                         status: 'active',
                         OR: [
                             { role: 'doctor' },
-                            { subRole: 'optic_doctor' },
+                            { subRole: { in: ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'] } },
                         ],
                     },
                     select: {

@@ -34,7 +34,7 @@ export default async function StorefrontPage({ params }: { params: { id: string 
                     status: 'active',
                     OR: [
                         { role: 'doctor' },
-                        { subRole: 'optic_doctor' }
+                        { subRole: { in: ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'] } }
                     ]
                 },
                 select: { id: true, fullName: true, avatar: true, subRole: true }

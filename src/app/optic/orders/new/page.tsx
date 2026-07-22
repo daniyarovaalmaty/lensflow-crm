@@ -197,7 +197,7 @@ export default function NewOrderPage() {
     const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
     const subRole = session?.user?.subRole || '';
-    const isDoctor = subRole === 'optic_doctor' || session?.user?.role === 'doctor';
+    const isDoctor = ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole) || session?.user?.role === 'doctor';
     const isProcurement = subRole === 'optic_procurement';
     const dashboardUrl = isProcurement ? '/optic/procurement' : '/optic/dashboard';
 
