@@ -627,7 +627,7 @@ export type PublicUser = Omit<User, 'password'>;
 
 // ==================== Auth ====================
 export const LoginSchema = z.object({
-    email: z.string().email('Неверный формат email'),
+    email: z.string().trim().email('Неверный формат email'),
     password: z.string().min(1, 'Введите пароль'),
 });
 
