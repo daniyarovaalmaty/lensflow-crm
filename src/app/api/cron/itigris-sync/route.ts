@@ -15,28 +15,27 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        // Find the specific organization for synchronization.
-        // As a simple start, we can sync the first organization that has an Itigris configuration.
-        // We look for any Itigris config. If there are multiple optics, we would loop through them.
-        const opticsConfigs = await prisma.itigrisConfig.findMany({
-            include: {
-                organization: true
-            }
+        const organizations = await prisma.organization.findMany();
+        const configuredOrgs = organizations.filter(org => {
+            if (!org.metadata) return false;
+            const meta = typeof org.metadata === 'string' ? JSON.parse(org.metadata) : org.metadata;
+            return !!meta?.itigris?.company;
         });
 
-        if (opticsConfigs.length === 0) {
+        if (configuredOrgs.length === 0) {
             return NextResponse.json({ message: 'No Itigris configs found' });
         }
 
         const results = [];
-        for (const config of opticsConfigs) {
-            if (!config.organization) continue;
+        for (const org of configuredOrgs) {
+            const meta = typeof org.metadata === 'string' ? JSON.parse(org.metadata) : org.metadata;
+            const config = meta.itigris;
             
-            const syncService = new ItigrisSyncService(config.organizationId);
+            const syncService = new ItigrisSyncService(org.id);
             const since = new Date();
             since.setDate(since.getDate() - 1);
             
-            console.log(`[CRON] Starting sync for organization ${config.organization.name}`);
+            console.log(`[CRON] Starting sync for organization ${org.name}`);
             
             // 1. Sync Patients
             console.log(`[CRON] Syncing Patients...`);
@@ -51,8 +50,8 @@ export async function GET(request: NextRequest) {
             const ordersResult = await syncService.syncOrders({ skipExisting: false });
             
             results.push({
-                organizationId: config.organizationId,
-                name: config.organization.name,
+                organizationId: org.id,
+                name: org.name,
                 patients: patientsResult,
                 products: productsResult,
                 orders: ordersResult
