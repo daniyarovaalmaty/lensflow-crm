@@ -3,7 +3,21 @@
   "framework": "nextjs",
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/itigris-sync",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/itigris-sync-clients",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/itigris-sync-products",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

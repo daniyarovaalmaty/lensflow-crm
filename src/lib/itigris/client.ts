@@ -672,6 +672,12 @@ export class ItigrisApiClient {
         return Array.isArray(d) ? d : (d?.content || []);
     }
 
+    /** Create a new registry record (appointment) */
+    async createRegistryRecord(data: any): Promise<any> {
+        const resp = await this.http.post('/registry-records', data);
+        return resp.data;
+    }
+
     // ----- Stock / Remains -----
 
     /**

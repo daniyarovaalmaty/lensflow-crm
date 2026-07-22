@@ -273,11 +273,22 @@ export class ItigrisSyncService {
                     // Get all orders from this department (paginated)
                     let page = 0;
                     let hasMore = true;
-                    while (hasMore) {
+                    
+                    // Stop fetching if we go older than 6 months
+                    const limitDate = new Date();
+                    limitDate.setMonth(limitDate.getMonth() - 6);
+                    let reachedLimit = false;
+
+                    while (hasMore && !reachedLimit) {
                         const { content, totalElements } = await this.api.getDepartmentOrders(page, 50);
                         if (content.length === 0) break;
 
                         for (const order of content) {
+                            const orderDate = new Date(order.createdAt || Date.now());
+                            if (orderDate < limitDate) {
+                                reachedLimit = true;
+                                break; // Stop processing this page, we hit the 6-month limit
+                            }
                             try {
                                 if (opts?.skipExisting) {
                                     const orderNumber = `ITG-${order.id}`;
@@ -482,15 +493,10 @@ export class ItigrisSyncService {
 
         let lensflowStatus = forceStatus || this.mapOrderStatus(order.status || fullOrder?.status || '');
         
-        // Safety check: if the order is older than 3 days, force it to 'delivered' so it doesn't clutter production
-        const orderDateStr = (order as any).date || (fullOrder as any)?.date || (order as any).registrationDate;
-        if (orderDateStr && !forceStatus) {
-            const orderDate = new Date(orderDateStr);
-            const threeDaysAgo = new Date();
-            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-            if (orderDate < threeDaysAgo) {
-                lensflowStatus = 'delivered';
-            }
+        // Force ALL Itigris orders to 'delivered' so they don't clutter production, 
+        // as they are already managed in Itigris or just imported for history.
+        if (!forceStatus) {
+            lensflowStatus = 'delivered';
         }
         const totalPrice = Math.round(order.sum || order.totalAmount || fullOrder?.sum || 0);
         const lensConfig: any = this.buildLensConfig(fullOrder);
