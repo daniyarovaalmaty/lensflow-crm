@@ -908,26 +908,33 @@ export default function OpticDashboard() {
                                             if (order.status === 'draft') {
                                                 return (
                                                     <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={async (e) => {
-                                                                e.stopPropagation();
-                                                                if (!confirm('Подтвердить заказ и отправить в лабораторию?')) return;
-                                                                try {
-                                                                    await fetch(`/api/orders/${order.order_id}/status`, {
-                                                                        method: 'PATCH',
-                                                                        headers: { 'Content-Type': 'application/json' },
-                                                                        body: JSON.stringify({ status: 'new' }),
-                                                                    });
-                                                                    loadOrders();
-                                                                } catch (error) {
-                                                                    console.error('Failed to approve order:', error);
-                                                                }
-                                                            }}
-                                                            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                                        >
-                                                            <Check className="w-3.5 h-3.5" />
-                                                            Подтвердить заказ
-                                                        </button>
+                                                        {clinicPerms.canViewFinance ? (
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation();
+                                                                    if (!confirm('Подтвердить заказ и отправить в лабораторию?')) return;
+                                                                    try {
+                                                                        await fetch(`/api/orders/${order.order_id}/status`, {
+                                                                            method: 'PATCH',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ status: 'new' }),
+                                                                        });
+                                                                        loadOrders();
+                                                                    } catch (error) {
+                                                                        console.error('Failed to approve order:', error);
+                                                                    }
+                                                                }}
+                                                                className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                                            >
+                                                                <Check className="w-3.5 h-3.5" />
+                                                                Подтвердить заказ
+                                                            </button>
+                                                        ) : (
+                                                            <span className="flex items-center gap-1 text-xs text-amber-500 font-medium bg-amber-50 px-2 py-1 rounded-md">
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                Ожидает бухгалтера
+                                                            </span>
+                                                        )}
                                                         <Link
                                                             href={`/optic/orders/${order.order_id}/edit`}
                                                             className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"

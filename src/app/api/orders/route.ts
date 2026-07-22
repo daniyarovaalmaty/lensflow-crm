@@ -512,6 +512,12 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
+                // Врач делает заказ -> он падает в статус черновика (ожидает подтверждения бухгалтером)
+                const subRole = session.user.subRole;
+                if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole as string)) {
+                    initialStatus = 'draft';
+                }
+
                 order = await prisma.order.create({
                     data: {
                         orderNumber,
