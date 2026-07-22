@@ -110,7 +110,7 @@ async function migrate() {
                 }
 
                 if (!res || !res.ok) {
-                    console.error(`Failed to fetch letter ${letter} page ${page}:`, res.statusText);
+                    console.error(`Failed to fetch letter ${letter} page ${page}:`, res?.statusText || 'No response');
                     break;
                 }
 
