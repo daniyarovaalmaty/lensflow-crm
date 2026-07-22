@@ -18,34 +18,26 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status');
         const opticId = searchParams.get('optic_id');
-        const pageParam = searchParams.get('page');
-        const limitParam = searchParams.get('limit');
-        const search = searchParams.get('search');
-        const dateFrom = searchParams.get('dateFrom');
-        const dateTo = searchParams.get('dateTo');
-        const paymentStatus = searchParams.get('paymentStatus');
 
         // Build where clause based on role
         const where: any = {};
-        const permissionOr: any[] = [];
 
         if (session.user.role === 'laboratory') {
             // Lab sees: direct orders (no distributor) OR orders forwarded to this lab by a distributor
-            permissionOr.push(
+            where.OR = [
                 { distributorOrgId: null },
-                { labOrgId: session.user.organizationId }
-            );
+                { labOrgId: session.user.organizationId },
+            ];
             where.status = { not: 'draft' };
         } else if (session.user.role === 'distributor') {
             // Distributor sees only orders assigned to them
             where.distributorOrgId = session.user.organizationId;
             where.status = { not: 'draft' };
         } else if (session.user.role === 'optic') {
-            const orgId = session.user.organizationId;
-            const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
-
-            if (session.user.subRole === 'optic_manager' || session.user.subRole === 'optic_procurement' || org?.type === 'headquarters') {
-                // Network-wide visibility for Managers, Procurement, and anyone attached to HQ
+            if (session.user.subRole === 'optic_manager' || session.user.subRole === 'optic_procurement') {
+                // Network-wide visibility for Managers and Procurement
+                const orgId = session.user.organizationId;
+                const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
                 let relatedOrgIds: string[] = orgId ? [orgId] : [];
                 if (org?.type === 'headquarters') {
                     const branches = await prisma.organization.findMany({ where: { parentId: orgId }, select: { id: true } });
@@ -58,29 +50,29 @@ export async function GET(request: NextRequest) {
                 const allowedOrgIds = [...relatedOrgIds, ...(session.user.branches || [])].filter(Boolean) as string[];
                 const uniqueOrgIds = [...new Set(allowedOrgIds)];
                 
-                permissionOr.push(
+                where.OR = [
                     { organizationId: { in: uniqueOrgIds } },
                     { createdById: session.user.id }
-                );
+                ];
             } else {
                 // All other clinic roles (doctors, accountants, etc.) see orders for the branches 
                 // they are explicitly attached to, or their primary organizationId, OR orders they created themselves.
                 const allowedOrgIds = [session.user.organizationId, ...(session.user.branches || [])].filter(Boolean) as string[];
                 const uniqueOrgIds = [...new Set(allowedOrgIds)];
                 
-                permissionOr.push(
+                where.OR = [
                     { organizationId: { in: uniqueOrgIds } },
                     { createdById: session.user.id }
-                );
+                ];
             }
         } else if (session.user.role === 'doctor') {
             // Doctor sees only their orders
             where.createdById = session.user.id;
         }
 
-        if (permissionOr.length > 0) {
-            where.OR = permissionOr;
-        }
+        console.log('[DEBUG GET ORDERS] User:', session.user.email, session.user.role, session.user.subRole);
+        console.log('[DEBUG GET ORDERS] Branches:', session.user.branches);
+        console.log('[DEBUG GET ORDERS] Where query:', JSON.stringify(where, null, 2));
 
         if (status) {
             // Map status string to enum value
@@ -105,61 +97,8 @@ export async function GET(request: NextRequest) {
             where.organizationId = opticId;
         }
 
-        if (paymentStatus === 'unpaid') {
-            where.paymentStatus = { not: 'paid' };
-        } else if (paymentStatus) {
-            where.paymentStatus = paymentStatus;
-        }
-
-        if (dateFrom || dateTo) {
-            where.createdAt = {};
-            if (dateFrom) where.createdAt.gte = new Date(dateFrom);
-            if (dateTo) {
-                const to = new Date(dateTo);
-                to.setHours(23, 59, 59, 999);
-                where.createdAt.lte = to;
-            }
-        }
-
-        if (search) {
-            const searchOr = [
-                { orderNumber: { contains: search, mode: 'insensitive' } },
-                { patient: { name: { contains: search, mode: 'insensitive' } } },
-                { doctorName: { contains: search, mode: 'insensitive' } },
-                { company: { contains: search, mode: 'insensitive' } },
-            ];
-            if (where.OR) {
-                where.AND = [
-                    { OR: where.OR },
-                    { OR: searchOr }
-                ];
-                delete where.OR;
-            } else {
-                where.OR = searchOr;
-            }
-        }
-
-        // Pagination
-        const isPaginated = pageParam !== null;
-        const page = parseInt(pageParam || '1') || 1;
-        const take = isPaginated ? (parseInt(limitParam || '50') || 50) : undefined;
-        const skip = isPaginated ? (page - 1) * take! : undefined;
-
-        let total = 0;
-        if (isPaginated) {
-            total = await prisma.order.count({ where });
-        }
-
-        const sortBy = searchParams.get('sortBy');
-
-        let orderBy: any = { createdAt: 'desc' };
-        if (sortBy === 'oldest') {
-            orderBy = { createdAt: 'asc' };
-        } else if (sortBy === 'patient_az') {
-            orderBy = { patient: { name: 'asc' } };
-        } else if (sortBy === 'patient_za') {
-            orderBy = { patient: { name: 'desc' } };
-        }
+        // Fetch all orders regardless of how old they are
+        // (Removed 30-day exclusion for delivered orders)
 
         const orders = await prisma.order.findMany({
             where,
@@ -179,9 +118,7 @@ export async function GET(request: NextRequest) {
                     }
                 }
             },
-            orderBy,
-            take,
-            skip,
+            orderBy: { createdAt: 'desc' },
         });
 
         // Pre-fetch missing contracts for orgs
@@ -310,15 +247,6 @@ export async function GET(request: NextRequest) {
                 } : undefined,
             };
         });
-
-        if (isPaginated) {
-            return NextResponse.json({
-                data: transformed,
-                total,
-                page,
-                totalPages: Math.ceil(total / take!)
-            });
-        }
 
         return NextResponse.json(transformed);
     } catch (error) {
@@ -600,11 +528,6 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
-                // Заказ падает в статус черновика (ожидает подтверждения оплаты/бухгалтером)
-                const subRole = session.user.subRole;
-                if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'optic_manager', 'optic_admin'].includes(subRole as string)) {
-                    initialStatus = 'draft';
-                }
 
                 order = await prisma.order.create({
                     data: {
