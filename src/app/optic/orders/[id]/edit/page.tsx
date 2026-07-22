@@ -24,6 +24,7 @@ interface OrderData {
     is_urgent: boolean;
     edit_deadline?: string;
     notes?: string;
+    source?: string;
 }
 
 export default function EditOrderPage() {
@@ -73,7 +74,9 @@ export default function EditOrderPage() {
                 } as any);
 
                 // Check editability
-                if (data.status !== 'new') {
+                if (data.source === 'itigris') {
+                    setError('Заказы из ITIGRIS нельзя редактировать в LensFlow');
+                } else if (data.status !== 'new') {
                     setError('Заказ уже нельзя редактировать — он в обработке');
                 }
                 if (data.is_urgent && data.edit_deadline && new Date() >= new Date(data.edit_deadline)) {
@@ -150,7 +153,7 @@ export default function EditOrderPage() {
 
     // Non-urgent orders: always editable while status is 'new'
     // Urgent orders: editable only within the edit deadline
-    const isEditable = order.status === 'new' && (
+    const isEditable = order.source !== 'itigris' && order.status === 'new' && (
         !order.is_urgent || !order.edit_deadline || new Date() < new Date(order.edit_deadline)
     );
 

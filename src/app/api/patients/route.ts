@@ -212,6 +212,32 @@ export async function POST(request: Request) {
         },
     });
 
+    // Push to Itigris if configured
+    if (session.user.organizationId) {
+        try {
+            const itigrisConfig = await prisma.itigrisConfig.findFirst({
+                where: { organizationId: session.user.organizationId }
+            });
+            if (itigrisConfig) {
+                const { ItigrisApiClient } = await import('@/lib/itigris/client');
+                const { ItigrisSyncService } = await import('@/lib/itigris/sync');
+                
+                const itigrisApi = new ItigrisApiClient({
+                    company: itigrisConfig.company,
+                    login: itigrisConfig.login,
+                    password: itigrisConfig.password,
+                    departmentId: itigrisConfig.departmentId,
+                    organizationId: session.user.organizationId
+                });
+                
+                const syncService = new ItigrisSyncService(itigrisApi, prisma as any, session.user.organizationId);
+                await syncService.pushPatient(patient.id, { createIfMissing: true });
+            }
+        } catch (e) {
+            console.warn('[PatientSync] Could not push to Itigris:', e);
+        }
+    }
+
     return NextResponse.json(patient, { status: 201 });
 }
 
