@@ -34,15 +34,37 @@ export async function GET(request: NextRequest) {
             where.distributorOrgId = session.user.organizationId;
             where.status = { not: 'draft' };
         } else if (session.user.role === 'optic') {
-            // All clinic roles see orders for the branches they are explicitly attached to,
-            // or their primary organizationId, OR orders they created themselves.
-            const allowedOrgIds = [session.user.organizationId, ...(session.user.branches || [])].filter(Boolean) as string[];
-            const uniqueOrgIds = [...new Set(allowedOrgIds)];
-            
-            where.OR = [
-                { organizationId: { in: uniqueOrgIds } },
-                { createdById: session.user.id }
-            ];
+            if (session.user.subRole === 'optic_manager' || session.user.subRole === 'optic_procurement') {
+                // Network-wide visibility for Managers and Procurement
+                const orgId = session.user.organizationId;
+                const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
+                let relatedOrgIds: string[] = orgId ? [orgId] : [];
+                if (org?.type === 'headquarters') {
+                    const branches = await prisma.organization.findMany({ where: { parentId: orgId }, select: { id: true } });
+                    relatedOrgIds = [orgId, ...branches.map((b: any) => b.id)];
+                } else if (org?.parentId) {
+                    const siblings = await prisma.organization.findMany({ where: { parentId: org.parentId }, select: { id: true } });
+                    relatedOrgIds = [org.parentId, ...siblings.map((b: any) => b.id)];
+                }
+                
+                const allowedOrgIds = [...relatedOrgIds, ...(session.user.branches || [])].filter(Boolean) as string[];
+                const uniqueOrgIds = [...new Set(allowedOrgIds)];
+                
+                where.OR = [
+                    { organizationId: { in: uniqueOrgIds } },
+                    { createdById: session.user.id }
+                ];
+            } else {
+                // All other clinic roles (doctors, accountants, etc.) see orders for the branches 
+                // they are explicitly attached to, or their primary organizationId, OR orders they created themselves.
+                const allowedOrgIds = [session.user.organizationId, ...(session.user.branches || [])].filter(Boolean) as string[];
+                const uniqueOrgIds = [...new Set(allowedOrgIds)];
+                
+                where.OR = [
+                    { organizationId: { in: uniqueOrgIds } },
+                    { createdById: session.user.id }
+                ];
+            }
         } else if (session.user.role === 'doctor') {
             // Doctor sees only their orders
             where.createdById = session.user.id;
