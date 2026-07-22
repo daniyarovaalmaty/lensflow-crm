@@ -58,5 +58,28 @@ export async function POST(request: Request, { params }: { params: { id: string 
         include: { doctor: { select: { fullName: true } } },
     });
 
+    if (nextVisit) {
+        try {
+            const patient = await prisma.patient.findUnique({ where: { id: params.id } });
+            if (patient) {
+                await prisma.appointment.create({
+                    data: {
+                        patientId: params.id,
+                        patientName: patient.name,
+                        patientPhone: patient.phone,
+                        doctorId: session.user.id,
+                        date: new Date(nextVisit),
+                        duration: 30,
+                        type: 'follow_up',
+                        status: 'scheduled',
+                        notes: 'Автоматически создано из приема (Следующий визит)'
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Failed to create appointment for nextVisit", e);
+        }
+    }
+
     return NextResponse.json(consultation, { status: 201 });
 }

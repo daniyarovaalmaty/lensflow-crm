@@ -1415,8 +1415,8 @@ export default function PatientDetailPage() {
                                     <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит</label>
-                                            <input type="date" value={consultForm.nextVisit} onChange={e => setConsultForm((f: any) => ({ ...f, nextVisit: e.target.value }))} className="input w-full text-sm h-9" />
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит (в календарь)</label>
+                                            <input type="datetime-local" value={consultForm.nextVisit} onChange={e => setConsultForm((f: any) => ({ ...f, nextVisit: e.target.value }))} className="input w-full text-sm h-9" />
                                         </div>
                                             <MedicalTextarea category="notes" label="Заметки" value={consultForm.notes} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Дополнительно..." />
                                     </div>
