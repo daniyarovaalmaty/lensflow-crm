@@ -31,7 +31,15 @@ export async function GET(request: NextRequest) {
             const meta = typeof org.metadata === 'string' ? JSON.parse(org.metadata) : org.metadata;
             const config = meta.itigris;
             
-            const syncService = new ItigrisSyncService(org.id);
+            const { ItigrisApiClient } = await import('@/lib/itigris/client');
+            const itigrisApi = new ItigrisApiClient({
+                company: config.company,
+                login: config.login,
+                password: config.password,
+                departmentId: config.departmentId,
+                organizationId: org.id
+            });
+            const syncService = new ItigrisSyncService(itigrisApi, prisma as any, org.id);
             const since = new Date();
             since.setDate(since.getDate() - 1);
             

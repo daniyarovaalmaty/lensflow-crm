@@ -1268,6 +1268,27 @@ export default function OpticDashboard() {
                         })}
                     </div>
                 )}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-6 pb-6">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1 || isLoading}
+                            className="px-4 py-2 border rounded-xl hover:bg-gray-50 disabled:opacity-50 text-sm font-medium"
+                        >
+                            Назад
+                        </button>
+                        <span className="text-sm text-gray-600 font-medium px-4">
+                            Страница {page} из {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages || isLoading}
+                            className="px-4 py-2 border rounded-xl hover:bg-gray-50 disabled:opacity-50 text-sm font-medium"
+                        >
+                            Вперед
+                        </button>
+                    </div>
+                )}
             {/* Expedite Order Modal */}
             <AnimatePresence>
                 {expediteOrderId && (

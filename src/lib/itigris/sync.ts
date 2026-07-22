@@ -483,7 +483,7 @@ export class ItigrisSyncService {
         let lensflowStatus = forceStatus || this.mapOrderStatus(order.status || fullOrder?.status || '');
         
         // Safety check: if the order is older than 3 days, force it to 'delivered' so it doesn't clutter production
-        const orderDateStr = order.date || fullOrder?.date;
+        const orderDateStr = (order as any).date || (fullOrder as any)?.date || (order as any).registrationDate;
         if (orderDateStr && !forceStatus) {
             const orderDate = new Date(orderDateStr);
             const threeDaysAgo = new Date();

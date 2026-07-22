@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         // Step 4: Sync Itigris Appointments on-the-fly
         let itigrisAppointments: any[] = [];
         try {
+            if (!session?.user?.organizationId) return NextResponse.json({ error: 'No org ID' }, { status: 400 });
             const org = await prisma.organization.findUnique({
                 where: { id: session.user.organizationId },
             });
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
 
         // Try pushing to Itigris
         try {
+            if (!session?.user?.organizationId) return NextResponse.json(appointment);
             const org = await prisma.organization.findUnique({ where: { id: session.user.organizationId } });
             const itg = (org as any)?.metadata?.itigris;
             if (itg && itg.company && itg.login && itg.password) {
@@ -173,7 +175,7 @@ export async function POST(request: NextRequest) {
                     if (itigrisClientId) {
                         // Find doctor by name
                         const doctors = await remote.getDoctors(itg.departmentId);
-                        const doctorMatch = doctors.find(d => d.name === appointment.doctor.fullName);
+                        const doctorMatch = doctors.find(d => d.name === appointment.doctor?.fullName);
                         
                         if (doctorMatch) {
                             const timeStr = appointment.date.toISOString().slice(0, 19); // YYYY-MM-DDTHH:mm:ss
@@ -185,7 +187,7 @@ export async function POST(request: NextRequest) {
                             });
                             console.log(`[APPOINTMENTS_POST] Successfully pushed to Itigris for client ${itigrisClientId}`);
                         } else {
-                            console.warn(`[APPOINTMENTS_POST] Doctor ${appointment.doctor.fullName} not found in Itigris`);
+                            console.warn(`[APPOINTMENTS_POST] Doctor ${appointment.doctor?.fullName} not found in Itigris`);
                         }
                     }
                 }

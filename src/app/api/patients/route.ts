@@ -215,18 +215,19 @@ export async function POST(request: Request) {
     // Push to Itigris if configured
     if (session.user.organizationId) {
         try {
-            const itigrisConfig = await prisma.itigrisConfig.findFirst({
-                where: { organizationId: session.user.organizationId }
+            const org = await prisma.organization.findUnique({
+                where: { id: session.user.organizationId }
             });
-            if (itigrisConfig) {
+            const meta = org?.metadata as any;
+            if (meta?.itigris?.company) {
                 const { ItigrisApiClient } = await import('@/lib/itigris/client');
                 const { ItigrisSyncService } = await import('@/lib/itigris/sync');
                 
                 const itigrisApi = new ItigrisApiClient({
-                    company: itigrisConfig.company,
-                    login: itigrisConfig.login,
-                    password: itigrisConfig.password,
-                    departmentId: itigrisConfig.departmentId,
+                    company: meta.itigris.company,
+                    login: meta.itigris.login,
+                    password: meta.itigris.password,
+                    departmentId: meta.itigris.departmentId,
                     organizationId: session.user.organizationId
                 });
                 
