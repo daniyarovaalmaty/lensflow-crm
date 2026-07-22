@@ -70,6 +70,9 @@ export async function GET(request: NextRequest) {
             where.createdById = session.user.id;
         }
 
+        console.log('[DEBUG GET ORDERS] User:', session.user.email, session.user.role, session.user.subRole);
+        console.log('[DEBUG GET ORDERS] Branches:', session.user.branches);
+        console.log('[DEBUG GET ORDERS] Where query:', JSON.stringify(where, null, 2));
 
         if (status) {
             // Map status string to enum value
