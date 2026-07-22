@@ -22,13 +22,25 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
         return val.toString();
     };
 
+    const opticName = session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Оптика';
+    const doctorName = consultation.doctor?.fullName || session?.user?.profile?.fullName || 'Врач не указан';
+
     return (
-        <div className="bg-white p-8 max-w-4xl mx-auto min-h-screen text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <div className="bg-white p-4 sm:p-8 max-w-4xl mx-auto min-h-screen text-black print:p-0 print:m-0 print:max-w-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+            <style>{`
+                @media print {
+                    @page { margin: 1cm; }
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+                }
+            `}</style>
             {/* Header */}
             <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold uppercase tracking-wider">Медицинская выписка</h1>
-                    <p className="text-sm text-gray-500 mt-1">Консультация оптометриста/офтальмолога</p>
+                    <h1 className="text-2xl font-bold uppercase tracking-wider mb-2">Медицинская выписка</h1>
+                    <p className="font-medium text-lg">{opticName}</p>
+                    <p className="text-sm text-gray-500">Консультация оптометриста/офтальмолога</p>
+                    <p className="text-sm text-gray-500 mt-1">Врач: <span className="font-medium text-black">{doctorName}</span></p>
                 </div>
                 <div className="text-right">
                     <p className="font-semibold text-lg">{patient.name}</p>
@@ -54,14 +66,14 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
                 </div>
                 <div>
                     <p className="text-sm text-gray-600">Врач/Оптометрист:</p>
-                    <p className="font-medium">{consultation.doctor?.fullName || '—'}</p>
+                    <p className="font-medium">{doctorName}</p>
                 </div>
             </div>
 
             {/* Metrics */}
             <div className="space-y-6">
                 {(consultation.visualAcuityOD != null || consultation.visualAcuityOS != null || consultation.intraocularPressureOD != null) && (
-                    <div>
+                    <div className="avoid-break">
                         <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Основные показатели</h2>
                         <table className="w-full text-left border-collapse">
                             <thead>
@@ -89,7 +101,7 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
 
                 {/* Topography */}
                 {(consultation.k1OD != null || consultation.k1OS != null) && (
-                    <div>
+                    <div className="avoid-break">
                         <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Кератометрия / Топография</h2>
                         <table className="w-full text-sm border border-gray-200">
                             <thead className="bg-gray-50">
@@ -128,7 +140,7 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
                 )}
 
                 {(consultation.refractionOD || consultation.refractionOS) && (
-                    <div>
+                    <div className="avoid-break">
                         <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Рефрактометрия</h2>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -144,7 +156,7 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
                 )}
 
                 {(consultation.lensFittingOD || consultation.lensFittingOS) && (
-                    <div>
+                    <div className="avoid-break">
                         <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Подбор линз</h2>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -160,14 +172,14 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
                 )}
 
                 {consultation.diagnosis && (
-                    <div>
+                    <div className="avoid-break">
                         <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-2">Диагноз</h2>
                         <p className="whitespace-pre-wrap">{consultation.diagnosis}</p>
                     </div>
                 )}
 
                 {consultation.treatment && (
-                    <div>
+                    <div className="avoid-break">
                         <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-2">Рекомендации / План лечения</h2>
                         <p className="whitespace-pre-wrap">{consultation.treatment}</p>
                     </div>
@@ -175,7 +187,7 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
             </div>
 
             {/* Footer */}
-            <div className="mt-16 pt-8 border-t border-gray-200 flex justify-between">
+            <div className="mt-16 pt-8 border-t border-gray-200 flex justify-between avoid-break">
                 <div>
                     {consultation.nextVisit && (
                         <p className="text-sm">
@@ -186,7 +198,7 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
                 </div>
                 <div className="text-center w-64">
                     <div className="border-b border-black mb-2 h-8"></div>
-                    <p className="text-sm text-gray-500">Подпись врача</p>
+                    <p className="text-sm text-gray-500">Подпись врача ({doctorName})</p>
                 </div>
             </div>
 
