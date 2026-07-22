@@ -590,7 +590,7 @@ export async function POST(request: NextRequest) {
                 notes: order.patient.notes || undefined,
             } : validatedData.patient,
             config: order.lensConfig,
-            status: 'new',
+            status: order.status === 'new_order' ? 'new' : (order.status as any),
             is_urgent: order.isUrgent,
             edit_deadline: order.editDeadline?.toISOString(),
             notes: order.notes || undefined,
