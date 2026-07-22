@@ -1194,11 +1194,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="doctor"
                             type="text"
                             {...register('doctor')}
-                            className="input bg-gray-50"
-                            placeholder={session?.user?.profile?.fullName || 'Войдите в систему'}
-                            value={session?.user?.profile?.fullName || ''}
-                            readOnly
-                            disabled
+                            className="input"
+                            placeholder={session?.user?.profile?.fullName || 'Имя врача'}
                         />
                     </div>
 
