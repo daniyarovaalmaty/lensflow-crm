@@ -82,7 +82,9 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const userRole = session?.user?.role || '';
     const isProcurement = subRole === 'optic_procurement';
     const isDistributor = userRole === 'distributor';
-    const canSeePrices = !['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole);
+    const canSeePrices = userRole === 'optic'
+        ? ['optic_manager', 'optic_accountant'].includes(subRole)
+        : true;
 
     const {
         register,
