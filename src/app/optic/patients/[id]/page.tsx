@@ -1748,6 +1748,8 @@ export default function PatientDetailPage() {
                             ))}
                         </div>
                     )}
+                </div>
+
                     {/* Orders */}
                     <div id="orders" className="scroll-mt-24">
                         <div className="flex items-center justify-between mb-3">
@@ -1915,7 +1917,6 @@ export default function PatientDetailPage() {
                             })()}
                             </div>
 
-                </div>
                 </div>
 
                     </div>
