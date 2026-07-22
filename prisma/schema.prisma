@@ -197,6 +197,18 @@ model User {
   @@map("users")
 }
 
+// ==================== OTP Code ====================
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  code      String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("otp_codes")
+}
+
 // ==================== User ↔ Branch (M2M) ====================
 model UserBranch {
   id        String   @id @default(cuid())
