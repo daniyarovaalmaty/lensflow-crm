@@ -20,6 +20,7 @@ function buildUserReturn(user: any, org: any | null) {
         role: user.role,
         subRole: user.subRole,
         organizationId: user.organizationId,
+        branches: user.branches ? user.branches.map((b: any) => b.branchId) : [],
         orgType: org?.type || 'standalone',   // may be undefined in older DB — defaults to standalone
         parentOrgId: org?.parentId || null,   // may be undefined in older DB — defaults to null
         permissions: user.permissions,
@@ -147,7 +148,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                             { phone: mmProfile.phone },
                         ],
                     },
-                    include: { organization: true },
+                    include: { organization: true, branches: true },
                 });
 
                 if (existingLinked && existingLinked.status === 'active') {
@@ -249,7 +250,7 @@ async function jitProvisionUser(mmProfile: any, _source: string) {
                 { phone: mmProfile.phone },
             ],
         },
-        include: { organization: true },
+        include: { organization: true, branches: true },
     });
 
     if (existingLinked && existingLinked.status === 'active') {
