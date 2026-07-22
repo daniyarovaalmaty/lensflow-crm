@@ -34,27 +34,15 @@ export async function GET(request: NextRequest) {
             where.distributorOrgId = session.user.organizationId;
             where.status = { not: 'draft' };
         } else if (session.user.role === 'optic') {
-            if (session.user.subRole === 'optic_procurement' || session.user.subRole === 'optic_manager' || session.user.subRole === 'optic_accountant') {
-                // Procurement, Managers and Accountants see orders for ALL branches of their parent org
-                const orgId = session.user.organizationId;
-                // Find the headquarters (parent) and all its branches
-                const org = orgId ? await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true, type: true, parentId: true } }) : null;
-                let relatedOrgIds: string[] = orgId ? [orgId] : [];
-                if (org?.type === 'headquarters') {
-                    const branches = await prisma.organization.findMany({ where: { parentId: orgId }, select: { id: true } });
-                    relatedOrgIds = [orgId, ...branches.map((b: any) => b.id)];
-                } else if (org?.parentId) {
-                    const siblings = await prisma.organization.findMany({ where: { parentId: org.parentId }, select: { id: true } });
-                    relatedOrgIds = [org.parentId, ...siblings.map((b: any) => b.id)];
-                }
-                where.organizationId = { in: relatedOrgIds };
-            } else {
-                // Regular clinic user sees only its org orders OR orders they created themselves
-                where.OR = [
-                    { organizationId: session.user.organizationId },
-                    { createdById: session.user.id }
-                ];
-            }
+            // All clinic roles see orders for the branches they are explicitly attached to,
+            // or their primary organizationId, OR orders they created themselves.
+            const allowedOrgIds = [session.user.organizationId, ...(session.user.branches || [])].filter(Boolean) as string[];
+            const uniqueOrgIds = [...new Set(allowedOrgIds)];
+            
+            where.OR = [
+                { organizationId: { in: uniqueOrgIds } },
+                { createdById: session.user.id }
+            ];
         } else if (session.user.role === 'doctor') {
             // Doctor sees only their orders
             where.createdById = session.user.id;

@@ -52,7 +52,7 @@ export async function findUserById(id: string): Promise<PrismaUser | null> {
 export async function findUserWithOrg(id: string) {
     return prisma.user.findUnique({
         where: { id },
-        include: { organization: true },
+        include: { organization: true, branches: true },
     });
 }
 

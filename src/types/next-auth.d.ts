@@ -7,6 +7,7 @@ declare module 'next-auth' {
         role: 'doctor' | 'optic' | 'laboratory' | 'distributor';
         subRole: string;
         organizationId?: string | null;
+        branches?: string[];
         orgType?: 'standalone' | 'headquarters' | 'branch' | 'distributor';
         parentOrgId?: string | null;
         permissions?: any;
@@ -25,6 +26,7 @@ declare module 'next-auth' {
             role: 'doctor' | 'optic' | 'laboratory' | 'distributor';
             subRole: string;
             organizationId?: string | null;
+            branches?: string[];
             orgType?: 'standalone' | 'headquarters' | 'branch' | 'distributor';
             parentOrgId?: string | null;
             permissions?: any;
