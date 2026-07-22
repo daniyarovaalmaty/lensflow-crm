@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import MedicalTextarea from '@/components/ui/MedicalTextarea';
+import TagsInput from '@/components/ui/TagsInput';
+import CheckboxAnamnesisField from '@/components/ui/CheckboxAnamnesisField';
 
 // Helper to remove payment-related text (kaspi, ckk, terminals, etc) for doctors
 const filterMedicalText = (text: string | null | undefined, userRole?: string) => {
@@ -254,6 +256,25 @@ const RxField = ({ label, field, rxForm, setRxForm }: { label: string; field: st
         />
     </div>
 );
+
+const TABS = ['info', 'docs', 'finances', 'tasks', 'messages'];
+
+const renderTags = (text: string | null) => {
+    if (!text) return null;
+    try {
+        if (text.trim().startsWith('[')) {
+            const arr = JSON.parse(text);
+            if (Array.isArray(arr) && arr.length > 0) {
+                return (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                        {arr.map((tag: string, i: number) => <span key={i} className="px-2 py-1 bg-white border border-black/5 rounded-md text-sm shadow-sm">{tag}</span>)}
+                    </div>
+                );
+            }
+        }
+    } catch {}
+    return <p className="text-gray-800 text-sm leading-relaxed mt-1">{text}</p>;
+};
 
 export default function PatientDetailPage() {
     const params = useParams();
@@ -1168,18 +1189,22 @@ export default function PatientDetailPage() {
                                                 </div>
 
                                                 <div className="pt-4 border-t border-gray-100 space-y-4">
-                                                        <MedicalTextarea category="complaints" label="Жалобы" value={editForm.complaints || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                                        <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания (Anamnesis morbi)" value={editForm.anamnesisDisease || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, anamnesisDisease: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            <MedicalTextarea category="allergies" label="Аллергоанамнез" value={editForm.allergies || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, allergies: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Лекарственная, пищевая аллергия" />
-                                                            <MedicalTextarea category="heredity" label="Наследственность" value={editForm.heredity || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, heredity: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Глаукома, СД..." />
+                                                    <TagsInput category="complaints" label="Жалобы" value={editForm.complaints || ''} onChange={(val) => setEditForm((f: any) => ({ ...f, complaints: val }))} />
+                                                    <TagsInput category="anamnesis_disease" label="Анамнез заболевания (Anamnesis morbi)" value={editForm.anamnesisDisease || ''} onChange={(val) => setEditForm((f: any) => ({ ...f, anamnesisDisease: val }))} />
+                                                    
+                                                    <div className="bg-white border border-gray-100 rounded-xl p-4 mt-4">
+                                                        <h4 className="text-sm font-bold text-gray-800 mb-2 border-b border-gray-100 pb-2">Анамнез жизни</h4>
+                                                        <div className="space-y-1">
+                                                            <CheckboxAnamnesisField label="Аллергоанамнез" value={editForm.allergies} onChange={val => setEditForm((f: any) => ({ ...f, allergies: val }))} negativeLabel="не отягощен" positiveLabel="отягощен:" negativePrefix="не отягощен" positivePrefix="отягощен:" />
+                                                            <CheckboxAnamnesisField label="Наследственность" value={editForm.heredity} onChange={val => setEditForm((f: any) => ({ ...f, heredity: val }))} negativeLabel="не отягощена" positiveLabel="отягощена:" negativePrefix="не отягощена" positivePrefix="отягощена:" />
+                                                            <CheckboxAnamnesisField label="Прием медикаментов" value={editForm.medications} onChange={val => setEditForm((f: any) => ({ ...f, medications: val }))} negativeLabel="не принимает" positiveLabel="принимает:" negativePrefix="не принимает" positivePrefix="принимает:" />
+                                                            <CheckboxAnamnesisField label="Диспансерный учет" value={editForm.dispensary} onChange={val => setEditForm((f: any) => ({ ...f, dispensary: val }))} negativeLabel="нет" positiveLabel="да:" negativePrefix="нет" positivePrefix="да:" />
+                                                            <CheckboxAnamnesisField label="Операции" value={editForm.surgeries} onChange={val => setEditForm((f: any) => ({ ...f, surgeries: val }))} negativeLabel="не было" positiveLabel="да:" negativePrefix="не было" positivePrefix="да:" />
+                                                        </div>
                                                     </div>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                            <MedicalTextarea category="surgeries" label="Перенесенные операции" value={editForm.surgeries || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, surgeries: val }))} className="input text-sm min-h-[40px]" rows={1} />
-                                                            <MedicalTextarea category="medications" label="Постоянный прием медикаментов" value={editForm.medications || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, medications: val }))} className="input text-sm min-h-[40px]" rows={1} />
-                                                    </div>
-                                                        <MedicalTextarea category="last_correction" label="Последняя коррекция" value={editForm.lastCorrection || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, lastCorrection: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Очки, МКЛ (дата)" />
-                                                        <MedicalTextarea category="notes" label="Прочие заметки" value={editForm.notes || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[60px]" rows={2} />
+
+                                                    <MedicalTextarea category="last_correction" label="Последняя коррекция" value={editForm.lastCorrection || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, lastCorrection: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Очки, МКЛ (дата)" />
+                                                    <MedicalTextarea category="notes" label="Прочие заметки" value={editForm.notes || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[60px]" rows={2} />
                                                 </div>
                                             </div>
                                         ) : (
@@ -1191,25 +1216,29 @@ export default function PatientDetailPage() {
                                                     </div>
                                                 )}
                                                 
-                                                {patient.complaints && <div><p className="text-[10px] font-bold text-red-500 uppercase mb-1">Жалобы</p><p className="text-gray-800 text-sm bg-red-50 p-4 rounded-xl border border-red-100/50 leading-relaxed">{patient.complaints}</p></div>}
-                                                {patient.anamnesisDisease && <div><p className="text-[10px] font-bold text-orange-500 uppercase mb-1">Анамнез заболевания</p><p className="text-gray-800 text-sm bg-orange-50 p-4 rounded-xl border border-orange-100/50 leading-relaxed">{patient.anamnesisDisease}</p></div>}
+                                                {patient.complaints && <div className="bg-red-50 p-4 rounded-xl border border-red-100/50"><p className="text-[10px] font-bold text-red-500 uppercase">Жалобы</p>{renderTags(patient.complaints)}</div>}
+                                                {patient.anamnesisDisease && <div className="bg-orange-50 p-4 rounded-xl border border-orange-100/50"><p className="text-[10px] font-bold text-orange-500 uppercase">Анамнез заболевания</p>{renderTags(patient.anamnesisDisease)}</div>}
                                                 
-                                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                                                     <div className="bg-rose-50 p-3 rounded-xl border border-rose-100">
                                                         <p className="text-[10px] font-bold text-rose-500 uppercase mb-1">Аллергоанамнез</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.allergies ? `отягощен/да: ${patient.allergies}` : 'не отягощен/нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.allergies || '—'}</p>
                                                     </div>
                                                     <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
                                                         <p className="text-[10px] font-bold text-indigo-500 uppercase mb-1">Наследственность</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.heredity ? `отягощен/да: ${patient.heredity}` : 'не отягощен/нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.heredity || '—'}</p>
                                                     </div>
                                                     <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
                                                         <p className="text-[10px] font-bold text-sky-500 uppercase mb-1">Прием медикаментов</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.medications ? `да: ${patient.medications}` : 'нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.medications || '—'}</p>
+                                                    </div>
+                                                    <div className="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                                                        <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Диспансерный учет</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.dispensary || '—'}</p>
                                                     </div>
                                                     <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
                                                         <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Операции</p>
-                                                        <p className="text-sm font-medium text-gray-800">{patient.surgeries ? `да: ${patient.surgeries}` : 'нет'}</p>
+                                                        <p className="text-sm font-medium text-gray-800">{patient.surgeries || '—'}</p>
                                                     </div>
                                                 </div>
                                                 
