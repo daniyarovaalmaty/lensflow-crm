@@ -779,7 +779,12 @@ export default function PatientDetailPage() {
         <div className="min-h-screen bg-surface">
             
             {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, видна при печати) --- */}
-            <div className="hidden print:block print:p-4 p-8 bg-white text-gray-800 font-sans w-full" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+            <div className="hidden print:block print:p-8 p-8 bg-white text-gray-800 font-sans w-full min-h-screen" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                <style>{`
+                    @media print {
+                        @page { margin: 0; size: auto; }
+                    }
+                `}</style>
                 {/* Header: Логотип и контакты клиники */}
                 <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 print:p-3 p-6 print:mb-4 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
                     <div className="flex items-center print:gap-2 gap-4">
@@ -805,12 +810,7 @@ export default function PatientDetailPage() {
                     <div className="grid grid-cols-2 print:gap-y-2 gap-y-4 gap-x-8 print:text-xs text-sm">
                         <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">ФИО</span> <strong className="print:text-sm text-lg text-gray-900">{patient.name}</strong></div>
                         <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">Дата рождения</span> <strong className="print:text-xs text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
-                        {session?.user?.role !== 'doctor' && !['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string) && (
-                            <>
-                                <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Телефон</span> <strong className="text-base text-gray-900">{patient.phone}</strong></div>
-                                <div className="flex flex-col"><span className="text-xs font-bold text-gray-400 uppercase mb-1">Email</span> <strong className="text-base text-gray-900">{patient.email || '—'}</strong></div>
-                            </>
-                        )}
+
                         {patient.notes && (
                             <div className="col-span-2 mt-2 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
                                 <span className="text-xs font-bold text-orange-400 uppercase mb-1 block">Анамнез / Заметки</span>
