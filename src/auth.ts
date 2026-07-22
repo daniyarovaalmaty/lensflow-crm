@@ -62,7 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                                 { phone: `+${normalizedPhone}` },
                             ],
                         },
-                        include: { organization: true },
+                        include: { organization: true, branches: true },
                     });
 
                     // Fallback: Search in memory for users with formatted phones (e.g. "+7 (777) 123-45-67")
@@ -70,7 +70,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     if (!localUser) {
                         const allUsers = await prisma.user.findMany({
                             where: { phone: { not: null } },
-                            include: { organization: true },
+                            include: { organization: true, branches: true },
                         });
                         
                         const match = allUsers.find(u => {
@@ -128,7 +128,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     const isValidPassword = await verifyPassword(user, password);
                     if (isValidPassword) {
                         const userWithOrg = await findUserWithOrg(user.id);
-                        return buildUserReturn(user, userWithOrg?.organization);
+                        return buildUserReturn(userWithOrg, userWithOrg?.organization);
                     }
                 }
 
