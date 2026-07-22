@@ -49,8 +49,11 @@ export async function GET(request: NextRequest) {
                 }
                 where.organizationId = { in: relatedOrgIds };
             } else {
-                // Regular clinic user sees only its org orders
-                where.organizationId = session.user.organizationId;
+                // Regular clinic user sees only its org orders OR orders they created themselves
+                where.OR = [
+                    { organizationId: session.user.organizationId },
+                    { createdById: session.user.id }
+                ];
             }
         } else if (session.user.role === 'doctor') {
             // Doctor sees only their orders
