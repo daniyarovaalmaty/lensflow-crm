@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
     if (authError) return authError;
 
     try {
-        const { searchParams } = new URL(request.url);
+        const searchParams = request.nextUrl.searchParams;
         const clinicName = searchParams.get('clinic_name');
         const status = searchParams.get('status');
         const externalId = searchParams.get('medmundus_order_id');

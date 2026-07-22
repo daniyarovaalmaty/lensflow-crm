@@ -18,7 +18,7 @@ export async function GET(
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        const { searchParams } = new URL(request.url);
+        const searchParams = request.nextUrl.searchParams;
         const type = searchParams.get('type') || 'clinic';
 
         if (type === 'clinic') {

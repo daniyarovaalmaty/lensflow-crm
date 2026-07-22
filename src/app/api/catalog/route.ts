@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        const { searchParams } = new URL(request.url);
+        const searchParams = request.nextUrl.searchParams;
         const category = searchParams.get('category');
         const includeInactive = searchParams.get('include_inactive') === 'true';
 
