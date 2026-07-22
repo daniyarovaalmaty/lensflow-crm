@@ -9,7 +9,7 @@
   "crons": [
     {
       "path": "/api/cron/itigris-sync",
-      "schedule": "0 * * * *"
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/cron/itigris-sync-clients",
