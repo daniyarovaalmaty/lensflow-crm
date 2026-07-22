@@ -33,18 +33,29 @@ export async function GET(request: NextRequest) {
             if (!config.organization) continue;
             
             const syncService = new ItigrisSyncService(config.organizationId);
-            
-            // Sync orders created/updated recently (e.g. last 1 days)
             const since = new Date();
             since.setDate(since.getDate() - 1);
             
             console.log(`[CRON] Starting sync for organization ${config.organization.name}`);
-            const result = await syncService.syncOrders(since);
+            
+            // 1. Sync Patients
+            console.log(`[CRON] Syncing Patients...`);
+            const patientsResult = await syncService.syncPatients(since);
+            
+            // 2. Sync Products
+            console.log(`[CRON] Syncing Products...`);
+            const productsResult = await syncService.syncProducts();
+            
+            // 3. Sync Orders
+            console.log(`[CRON] Syncing Orders...`);
+            const ordersResult = await syncService.syncOrders({ skipExisting: false });
             
             results.push({
                 organizationId: config.organizationId,
                 name: config.organization.name,
-                result
+                patients: patientsResult,
+                products: productsResult,
+                orders: ordersResult
             });
         }
 

@@ -200,9 +200,50 @@ export class ItigrisSyncService {
         }
     }
 
+    // ----- Sync Patients (Standalone) -----
+
+    /**
+     * Incrementally sync patients modified since a given date.
+     * Use this in a cron to keep the LensFlow patient database updated 
+     * even for clients without recent orders.
+     */
+    async syncPatients(since: Date): Promise<ItigrisSyncResult> {
+        const result: ItigrisSyncResult = {
+            entity: 'clients',
+            created: 0,
+            updated: 0,
+            errors: 0,
+            details: [],
+        };
+
+        try {
+            // The API returns summaries (id, name, phone). 
+            // We need to fetch the full client to get address, email, gender, etc.
+            const sinceIso = since.toISOString().slice(0, 19) + 'Z';
+            const changes = await this.api.getClientChanges(sinceIso);
+            
+            result.details.push(`Найдено измененных клиентов: ${changes.length}`);
+
+            for (const summary of changes) {
+                try {
+                    const fullClient = await this.api.getClient(summary.id);
+                    await this.upsertPatient(fullClient, result);
+                } catch (err: any) {
+                    result.errors++;
+                    result.details.push(`Ошибка загрузки клиента ${summary.id}: ${err.message}`);
+                }
+            }
+        } catch (err: any) {
+            result.errors++;
+            result.details.push(`Ошибка получения изменений клиентов: ${err.message}`);
+        }
+
+        return result;
+    }
+
     // ----- Sync Orders -----
 
-    async syncOrders(opts?: { forceStatus?: string, skipExisting?: boolean }): Promise<ItigrisSyncResult> {
+    async syncOrders(opts?: { forceStatus?: string, skipExisting?: boolean, departmentId?: number }): Promise<ItigrisSyncResult> {
         const result: ItigrisSyncResult = {
             entity: 'orders',
             created: 0,
@@ -213,7 +254,10 @@ export class ItigrisSyncService {
 
         try {
             // 1. Get all available departments
-            const departments = await this.api.getDepartments();
+            let departments = await this.api.getDepartments();
+            if (opts?.departmentId) {
+                departments = departments.filter(d => d.id === opts.departmentId);
+            }
             const storeDepts = departments.filter(d => d.type === 'STORE' || d.type === 'OFFICE');
             result.details.push(`Найдено ${storeDepts.length} филиалов для синхронизации заказов`);
 
@@ -436,7 +480,18 @@ export class ItigrisSyncService {
             });
         }
 
-        const lensflowStatus = forceStatus || this.mapOrderStatus(order.status || fullOrder?.status || '');
+        let lensflowStatus = forceStatus || this.mapOrderStatus(order.status || fullOrder?.status || '');
+        
+        // Safety check: if the order is older than 3 days, force it to 'delivered' so it doesn't clutter production
+        const orderDateStr = order.date || fullOrder?.date;
+        if (orderDateStr && !forceStatus) {
+            const orderDate = new Date(orderDateStr);
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+            if (orderDate < threeDaysAgo) {
+                lensflowStatus = 'delivered';
+            }
+        }
         const totalPrice = Math.round(order.sum || order.totalAmount || fullOrder?.sum || 0);
         const lensConfig: any = this.buildLensConfig(fullOrder);
         const orderNumber = `ITG-${order.id}`;

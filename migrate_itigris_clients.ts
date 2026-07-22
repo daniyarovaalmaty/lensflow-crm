@@ -42,7 +42,7 @@ async function migrate() {
 
     for (const org of configured) {
         console.log(`\n--- Syncing org: ${org.name} ---`);
-        const cfg = typeof org.metadata === 'string' ? JSON.parse(org.metadata).itigris : org.metadata.itigris;
+        const cfg = typeof org.metadata === 'string' ? JSON.parse(org.metadata).itigris : (org.metadata as any)?.itigris;
         
         // Auth
         const authRes = await fetch(`https://optima.itigris.ru/${cfg.company}/api/v2/sign/in`, {

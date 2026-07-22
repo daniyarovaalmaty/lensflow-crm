@@ -154,10 +154,48 @@ export default function ClinicManagerOrdersPage() {
 
                 {/* Pagination */}
                 {pages > 1 && (
-                    <div className="flex justify-center gap-1.5 mt-6">
-                        {Array.from({ length: Math.min(pages, 10) }, (_, i) => i + 1).map(p => (
-                            <button key={p} onClick={() => setPage(p)} className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${page === p ? 'bg-violet-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{p}</button>
-                        ))}
+                    <div className="flex justify-center items-center gap-1.5 mt-6">
+                        <button 
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className="px-3 py-2 rounded-xl text-sm font-medium transition-colors bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Назад
+                        </button>
+                        
+                        {(() => {
+                            let start = Math.max(1, page - 2);
+                            let end = Math.min(pages, page + 2);
+                            if (start === 1) end = Math.min(pages, 5);
+                            if (end === pages) start = Math.max(1, pages - 4);
+                            
+                            const btns = [];
+                            if (start > 1) {
+                                btns.push(<button key={1} onClick={() => setPage(1)} className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors bg-white border border-gray-200 text-gray-600 hover:bg-gray-50`}>1</button>);
+                                if (start > 2) btns.push(<span key="dots-1" className="text-gray-400 px-1">...</span>);
+                            }
+                            
+                            for (let p = start; p <= end; p++) {
+                                btns.push(
+                                    <button key={p} onClick={() => setPage(p)} className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${page === p ? 'bg-violet-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{p}</button>
+                                );
+                            }
+                            
+                            if (end < pages) {
+                                if (end < pages - 1) btns.push(<span key="dots-2" className="text-gray-400 px-1">...</span>);
+                                btns.push(<button key={pages} onClick={() => setPage(pages)} className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors bg-white border border-gray-200 text-gray-600 hover:bg-gray-50`}>{pages}</button>);
+                            }
+                            
+                            return btns;
+                        })()}
+
+                        <button 
+                            disabled={page === pages}
+                            onClick={() => setPage(p => Math.min(pages, p + 1))}
+                            className="px-3 py-2 rounded-xl text-sm font-medium transition-colors bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Вперед
+                        </button>
                     </div>
                 )}
             </div>
