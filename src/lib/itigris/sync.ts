@@ -587,20 +587,20 @@ export class ItigrisSyncService {
         if (rawDate) { const d = new Date(rawDate); if (!isNaN(d.getTime())) prescribedAt = d; }
 
         const typeMap: Record<string, string> = { CONTACT_LENS: 'contacts', GLASSES: 'glasses' };
-        const externalId = `itigris:order:${order.id}`;
+        const orderIdentifier = `[ITIGRIS_ORDER:${order.id}]`;
         const data: any = {
             patientId,
             odSph: rx.sphOd ?? null, odCyl: rx.cylOd ?? null, odAx: rx.axOd ?? null, odAdd: rx.addOd ?? null, odPd: rx.dppOd ?? null,
             osSph: rx.sphOs ?? null, osCyl: rx.cylOs ?? null, osAx: rx.axOs ?? null, osAdd: rx.addOs ?? null, osPd: rx.dppOs ?? null,
             pdTotal: rx.dpp ?? null,
             type: typeMap[fullOrder.type] || 'glasses',
-            notes: [rx.purpose, rx.comments, rx.doctor?.fullName ? `Врач: ${rx.doctor.fullName}` : null].filter(Boolean).join(' · ') || null,
+            notes: [rx.purpose, rx.comments, rx.doctor?.fullName ? `Врач: ${rx.doctor.fullName}` : null, orderIdentifier].filter(Boolean).join(' · ') || null,
             prescribedAt,
-            externalId,
-            externalSource: 'itigris',
         };
 
-        const existing = await (this.prisma as any).prescription.findFirst({ where: { externalId, patientId } });
+        const existing = await (this.prisma as any).prescription.findFirst({ 
+            where: { patientId, notes: { contains: orderIdentifier } } 
+        });
         if (existing) {
             await (this.prisma as any).prescription.update({ where: { id: existing.id }, data });
         } else {
