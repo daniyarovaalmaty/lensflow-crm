@@ -512,9 +512,9 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
-                // Врач делает заказ -> он падает в статус черновика (ожидает подтверждения бухгалтером)
+                // Заказ падает в статус черновика (ожидает подтверждения оплаты/бухгалтером)
                 const subRole = session.user.subRole;
-                if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole as string)) {
+                if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'optic_manager', 'optic_admin'].includes(subRole as string)) {
                     initialStatus = 'draft';
                 }
 
