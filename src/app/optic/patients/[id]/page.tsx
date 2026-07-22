@@ -1251,313 +1251,6 @@ export default function PatientDetailPage() {
                                 )}
                             </div>
 
-                            {/* Данные ITIGRIS */}
-                            <div id="itigris" className="scroll-mt-24">
-                            {(() => {
-                                const itg = (patient as any).metadata?.itigris;
-                                if (!itg) return (
-                                    <div className="bg-white rounded-3xl border border-gray-100 p-8 text-center shadow-sm">
-                                        <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                        <h3 className="text-gray-900 font-bold mb-1">Нет данных ITIGRIS</h3>
-                                        <p className="text-gray-500 text-sm">Пациент не связан с профилем в ITIGRIS или у него нет бонусов.</p>
-                                    </div>
-                                );
-                                const rows = ([
-                                    itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
-                                    itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
-                                    itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
-                                    itg.city ? { label: 'Город', value: itg.city } : null,
-                                    itg.address ? { label: 'Адрес', value: itg.address } : null,
-                                    itg.profession ? { label: 'Профессия', value: itg.profession } : null,
-                                    itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
-                                    itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
-                                ].filter(Boolean)) as { label: string; value: string }[];
-                                
-                                const d = itg.discount;
-                                return (
-                                    <>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS
-                                            </h2>
-                                            <Link href={`/optic/sale-to-optima?clientInfo=${encodeURIComponent(patient.phone || patient.name)}&clientId=${itg?.id || itg?.clientId || ''}`} className="btn bg-orange-100 hover:bg-orange-200 text-orange-700 border-none btn-sm flex items-center gap-1">
-                                                <Plus className="w-4 h-4" /> Создать заказ ITIGRIS
-                                            </Link>
-                                        </div>
-                                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                                                {rows.map((r, i) => (
-                                                    <div key={i} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{r.label}</div>
-                                                        <div className="text-sm font-bold text-gray-900 break-words">{r.value}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {d && typeof d === 'object' && (
-                                                <div className="mt-4 pt-4 border-t border-gray-100">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Скидка по карте</p>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оправы {d.glasses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">СЗ Очки {d.sunglasses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">КЛ {d.contactLenses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оч. Линзы {d.lenses ?? 0}%</span>
-                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Аксессуары {d.accessories ?? 0}%</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </>
-                                );
-                            })()}
-                            </div>
-
-                            {/* Prescriptions */}
-                            <div id="prescriptions" className="scroll-mt-24">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <Stethoscope className="w-5 h-5 text-primary-600" /> Рецепты на зрение
-                            </h2>
-                            <button onClick={() => setShowRxForm(!showRxForm)} className="btn btn-primary btn-sm flex items-center gap-1">
-                                <Plus className="w-4 h-4" /> Добавить
-                            </button>
-                        </div>
-
-                        {/* Rx Form */}
-                        {showRxForm && (
-                            <div className="bg-white rounded-xl border border-primary-200 p-4 mb-4 shadow-sm">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-semibold text-gray-900">Новый рецепт</h3>
-                                    <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
-                                        <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
-                                        {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
-                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'prescription')} disabled={parsingAi} />
-                                    </label>
-                                </div>
-                                <form id="rx-form" onSubmit={handleAddRx}>
-                                    <div className="grid grid-cols-2 gap-3 mb-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Тип</label>
-                                            <select value={rxForm.type} onChange={e => setRxForm((f: any) => ({ ...f, type: e.target.value }))} className="input text-sm h-9 w-full">
-                                                <option value="glasses">Очки</option>
-                                                <option value="contacts">Контактные линзы</option>
-                                                <option value="ortho-k">Орто-К</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Дата рецепта</label>
-                                            <input type="date" value={rxForm.prescribedAt || ''} onChange={e => setRxForm((f: any) => ({ ...f, prescribedAt: e.target.value }))} className="input text-sm h-9 w-full" />
-                                        </div>
-                                    </div>
-                                    {/* OD / OS grid */}
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OD — Правый</p>
-                                            <div className="space-y-2">
-                                                <RxField label="Sph" field="odSph" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Cyl" field="odCyl" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Ax" field="odAx" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Add" field="odAdd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                {rxForm.type !== 'contacts' && rxForm.type !== 'ortho-k' && (
-                                                    <>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            <RxField label="PD Даль" field="odPd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                            <RxField label="PD Близь" field="odPdNear" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        </div>
-                                                        <RxField label="Призма" field="odPrism" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </>
-                                                )}
-                                                {(rxForm.type === 'contacts' || rxForm.type === 'ortho-k') && (
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <RxField label="BC (Кривизна)" field="odBc" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        <RxField label="DIA (Диаметр)" field="odDia" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </div>
-                                                )}
-                                                <RxField label="Острота (с корр.)" field="visualAcuityODAfter" rxForm={rxForm} setRxForm={setRxForm} />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OS — Левый</p>
-                                            <div className="space-y-2">
-                                                <RxField label="Sph" field="osSph" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Cyl" field="osCyl" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Ax" field="osAx" rxForm={rxForm} setRxForm={setRxForm} />
-                                                <RxField label="Add" field="osAdd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                {rxForm.type !== 'contacts' && rxForm.type !== 'ortho-k' && (
-                                                    <>
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            <RxField label="PD Даль" field="osPd" rxForm={rxForm} setRxForm={setRxForm} />
-                                                            <RxField label="PD Близь" field="osPdNear" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        </div>
-                                                        <RxField label="Призма" field="osPrism" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </>
-                                                )}
-                                                {(rxForm.type === 'contacts' || rxForm.type === 'ortho-k') && (
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <RxField label="BC (Кривизна)" field="osBc" rxForm={rxForm} setRxForm={setRxForm} />
-                                                        <RxField label="DIA (Диаметр)" field="osDia" rxForm={rxForm} setRxForm={setRxForm} />
-                                                    </div>
-                                                )}
-                                                <RxField label="Острота (с корр.)" field="visualAcuityOSAfter" rxForm={rxForm} setRxForm={setRxForm} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 space-y-3">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Рефракция</label>
-                                            <input type="text" value={rxForm.refraction || ''} onChange={e => setRxForm((f: any) => ({ ...f, refraction: e.target.value }))} className="input w-full text-sm h-9" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Циклоплегия</label>
-                                            <input type="text" value={rxForm.cycloplegia || ''} onChange={e => setRxForm((f: any) => ({ ...f, cycloplegia: e.target.value }))} className="input w-full text-sm h-9" />
-                                        </div>
-                                        <MedicalTextarea category="complaints" label="Жалобы" value={rxForm.complaints || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm" rows={2} />
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <MedicalTextarea category="anamnesis_life" label="Анамнез жизни" value={rxForm.medicalHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, medicalHistory: val }))} className="input text-sm" rows={2} />
-                                            <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания" value={rxForm.diseaseHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, diseaseHistory: val }))} className="input text-sm" rows={2} />
-                                        </div>
-                                        <MedicalTextarea category="biomicroscopy" label="Биомикроскопия" value={rxForm.biomicroscopy || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, biomicroscopy: val }))} className="input text-sm" rows={2} />
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1">ПЗО</label>
-                                            <input type="text" value={rxForm.pzo || ''} onChange={e => setRxForm((f: any) => ({ ...f, pzo: e.target.value }))} className="input w-full text-sm h-9" />
-                                        </div>
-                                        <MedicalTextarea category="notes" label="Заметки к рецепту" value={rxForm.notes || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, notes: val }))} className="input text-sm" rows={2} />
-                                    </div>
-                                    <div className="flex gap-2 mt-4">
-                                        <button type="button" onClick={() => setShowRxForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>
-                                        <button type="submit" disabled={savingRx} className="btn btn-primary flex-1 text-sm">
-                                            {savingRx ? 'Сохранение...' : 'Сохранить рецепт'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
-
-                        {patient.prescriptions.length === 0 ? (
-                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                                <Eye className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500 text-sm">Рецептов пока нет</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {patient.prescriptions.map(rx => (
-                                    <PrescriptionCard 
-                                        key={rx.id} 
-                                        rx={rx} 
-                                        onDelete={() => handleDeleteRx(rx.id)} 
-                                        onEdit={() => handleEditRxClick(rx)}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Orders */}
-                    <div id="orders" className="scroll-mt-24">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <ClipboardList className="w-5 h-5 text-primary-600" /> История заказов
-                            </h2>
-                            <Link href={`/optic/orders/new?patientId=${patient.id}&patientName=${encodeURIComponent(patient.name)}`} className="btn btn-secondary btn-sm flex items-center gap-1">
-                                <Plus className="w-4 h-4" /> Новый заказ
-                            </Link>
-                        </div>
-                        {patient.orders.length === 0 ? (
-                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500 text-sm">Заказов пока нет</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {patient.orders.map(order => {
-                                    const s = STATUS_LABELS[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-700' };
-                                    const isItigris = order.source === 'itigris' || (order.orderNumber || '').startsWith('ITG-');
-                                    const inner = (
-                                        <>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-semibold text-gray-900">{order.orderNumber || order.id}</span>
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
-                                                    {isItigris && <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded-full font-semibold">ITIGRIS</span>}
-                                                    {order.isUrgent && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">СРОЧНО</span>}
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-0.5">
-                                                    {new Date(order.createdAt).toLocaleDateString('ru-RU')}
-                                                    {order.totalPrice ? ` · ${order.totalPrice.toLocaleString('ru-RU')} ₸` : ''}
-                                                </p>
-                                            </div>
-                                            {!isItigris && <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary-500 transition-colors" />}
-                                        </>
-                                    );
-                                    return isItigris ? (
-                                        <Link key={order.id} href={`/optic/orders/itigris/${order.orderNumber || order.id}`}
-                                            className="flex items-center gap-3 bg-orange-50/40 rounded-xl border border-orange-100 p-4 hover:border-orange-300 hover:shadow-sm transition-all group cursor-pointer">
-                                            {inner}
-                                            <ChevronDown className="w-4 h-4 text-orange-300 -rotate-90 group-hover:text-orange-500 transition-colors" />
-                                        </Link>
-                                    ) : (
-                                        <Link key={order.id} href={`/optic/orders/${order.id}`}
-                                            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all group">
-                                            {inner}
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-
-                    <div id="sales" className="scroll-mt-24 mt-8">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <ShoppingBag className="w-5 h-5 text-indigo-500" /> История покупок (Касса)
-                            </h2>
-                        </div>
-
-                        {(!patient.sales || patient.sales.length === 0) ? (
-                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
-                                <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500 text-sm">Пациент еще ничего не покупал на кассе</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {patient.sales.map((sale: any) => (
-                                    <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-all">
-                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-semibold text-gray-900">Чек #{sale.saleNumber}</span>
-                                                    <span className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">ОПЛАЧЕНО</span>
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {new Date(sale.createdAt).toLocaleDateString('ru-RU')}
-                                                    {sale.doctor && <span className="ml-2 font-medium text-indigo-600">· 🩺 {sale.doctor.fullName}</span>}
-                                                </p>
-                                            </div>
-                                            <div className="text-right w-full sm:w-auto">
-                                                <div className="text-sm font-bold text-gray-900">{fmt(sale.total)} ₸</div>
-                                                <div className="text-xs text-gray-500">
-                                                    {sale.paymentMethod === 'card' ? 'Карта' : sale.paymentMethod === 'transfer' ? 'Перевод' : sale.paymentMethod === 'mixed' ? 'Смешанная' : 'Наличные'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {sale.items && sale.items.length > 0 && (
-                                            <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
-                                                {sale.items.map((item: any, i: number) => (
-                                                    <div key={i} className="flex justify-between items-center text-xs">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-medium text-gray-700">{item.name}</span>
-                                                            <span className="text-gray-400">x{item.quantity}</span>
-                                                        </div>
-                                                        <span className="font-semibold text-gray-600">{fmt(item.total)} ₸</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
                     {/* Consultations */}
                     <div id="consultations" className="scroll-mt-24">
                     <div className="flex items-center justify-between mb-3">
@@ -1862,6 +1555,146 @@ export default function PatientDetailPage() {
                     )}
                 </div>
 
+                            {/* Prescriptions */}
+                            <div id="prescriptions" className="scroll-mt-24">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <Stethoscope className="w-5 h-5 text-primary-600" /> Рецепты на зрение
+                            </h2>
+                            <button onClick={() => setShowRxForm(!showRxForm)} className="btn btn-primary btn-sm flex items-center gap-1">
+                                <Plus className="w-4 h-4" /> Добавить
+                            </button>
+                        </div>
+
+                        {/* Rx Form */}
+                        {showRxForm && (
+                            <div className="bg-white rounded-xl border border-primary-200 p-4 mb-4 shadow-sm">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-semibold text-gray-900">Новый рецепт</h3>
+                                    <label className={`btn btn-sm ${parsingAi ? 'bg-indigo-100 text-indigo-400' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'} flex items-center gap-1 cursor-pointer border-0`}>
+                                        <Wand2 className={`w-4 h-4 ${parsingAi && 'animate-spin'}`} />
+                                        {parsingAi ? 'ИИ читает...' : 'Считать с фото'}
+                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleAiParse(e, 'prescription')} disabled={parsingAi} />
+                                    </label>
+                                </div>
+                                <form id="rx-form" onSubmit={handleAddRx}>
+                                    <div className="grid grid-cols-2 gap-3 mb-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Тип</label>
+                                            <select value={rxForm.type} onChange={e => setRxForm((f: any) => ({ ...f, type: e.target.value }))} className="input text-sm h-9 w-full">
+                                                <option value="glasses">Очки</option>
+                                                <option value="contacts">Контактные линзы</option>
+                                                <option value="ortho-k">Орто-К</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Дата рецепта</label>
+                                            <input type="date" value={rxForm.prescribedAt || ''} onChange={e => setRxForm((f: any) => ({ ...f, prescribedAt: e.target.value }))} className="input text-sm h-9 w-full" />
+                                        </div>
+                                    </div>
+                                    {/* OD / OS grid */}
+                                    <div className="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OD — Правый</p>
+                                            <div className="space-y-2">
+                                                <RxField label="Sph" field="odSph" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Cyl" field="odCyl" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Ax" field="odAx" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Add" field="odAdd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                {rxForm.type !== 'contacts' && rxForm.type !== 'ortho-k' && (
+                                                    <>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <RxField label="PD Даль" field="odPd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                            <RxField label="PD Близь" field="odPdNear" rxForm={rxForm} setRxForm={setRxForm} />
+                                                        </div>
+                                                        <RxField label="Призма" field="odPrism" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    </>
+                                                )}
+                                                {(rxForm.type === 'contacts' || rxForm.type === 'ortho-k') && (
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <RxField label="BC (Кривизна)" field="odBc" rxForm={rxForm} setRxForm={setRxForm} />
+                                                        <RxField label="DIA (Диаметр)" field="odDia" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    </div>
+                                                )}
+                                                <RxField label="Острота (с корр.)" field="visualAcuityODAfter" rxForm={rxForm} setRxForm={setRxForm} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-600 mb-2 bg-gray-100 rounded px-2 py-1">OS — Левый</p>
+                                            <div className="space-y-2">
+                                                <RxField label="Sph" field="osSph" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Cyl" field="osCyl" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Ax" field="osAx" rxForm={rxForm} setRxForm={setRxForm} />
+                                                <RxField label="Add" field="osAdd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                {rxForm.type !== 'contacts' && rxForm.type !== 'ortho-k' && (
+                                                    <>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <RxField label="PD Даль" field="osPd" rxForm={rxForm} setRxForm={setRxForm} />
+                                                            <RxField label="PD Близь" field="osPdNear" rxForm={rxForm} setRxForm={setRxForm} />
+                                                        </div>
+                                                        <RxField label="Призма" field="osPrism" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    </>
+                                                )}
+                                                {(rxForm.type === 'contacts' || rxForm.type === 'ortho-k') && (
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <RxField label="BC (Кривизна)" field="osBc" rxForm={rxForm} setRxForm={setRxForm} />
+                                                        <RxField label="DIA (Диаметр)" field="osDia" rxForm={rxForm} setRxForm={setRxForm} />
+                                                    </div>
+                                                )}
+                                                <RxField label="Острота (с корр.)" field="visualAcuityOSAfter" rxForm={rxForm} setRxForm={setRxForm} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 space-y-3">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Рефракция</label>
+                                            <input type="text" value={rxForm.refraction || ''} onChange={e => setRxForm((f: any) => ({ ...f, refraction: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">Циклоплегия</label>
+                                            <input type="text" value={rxForm.cycloplegia || ''} onChange={e => setRxForm((f: any) => ({ ...f, cycloplegia: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                        <MedicalTextarea category="complaints" label="Жалобы" value={rxForm.complaints || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, complaints: val }))} className="input text-sm" rows={2} />
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <MedicalTextarea category="anamnesis_life" label="Анамнез жизни" value={rxForm.medicalHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, medicalHistory: val }))} className="input text-sm" rows={2} />
+                                            <MedicalTextarea category="anamnesis_disease" label="Анамнез заболевания" value={rxForm.diseaseHistory || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, diseaseHistory: val }))} className="input text-sm" rows={2} />
+                                        </div>
+                                        <MedicalTextarea category="biomicroscopy" label="Биомикроскопия" value={rxForm.biomicroscopy || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, biomicroscopy: val }))} className="input text-sm" rows={2} />
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 mb-1">ПЗО</label>
+                                            <input type="text" value={rxForm.pzo || ''} onChange={e => setRxForm((f: any) => ({ ...f, pzo: e.target.value }))} className="input w-full text-sm h-9" />
+                                        </div>
+                                        <MedicalTextarea category="notes" label="Заметки к рецепту" value={rxForm.notes || ''} onValueChange={(val) => setRxForm((f: any) => ({ ...f, notes: val }))} className="input text-sm" rows={2} />
+                                    </div>
+                                    <div className="flex gap-2 mt-4">
+                                        <button type="button" onClick={() => setShowRxForm(false)} className="btn btn-secondary flex-1 text-sm">Отмена</button>
+                                        <button type="submit" disabled={savingRx} className="btn btn-primary flex-1 text-sm">
+                                            {savingRx ? 'Сохранение...' : 'Сохранить рецепт'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {patient.prescriptions.length === 0 ? (
+                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                                <Eye className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm">Рецептов пока нет</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {patient.prescriptions.map(rx => (
+                                    <PrescriptionCard 
+                                        key={rx.id} 
+                                        rx={rx} 
+                                        onDelete={() => handleDeleteRx(rx.id)} 
+                                        onEdit={() => handleEditRxClick(rx)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                 {/* Attachments Section */}
                 <div id="files" className="scroll-mt-24">
                     <div className="flex items-center justify-between mb-3">
@@ -1915,6 +1748,173 @@ export default function PatientDetailPage() {
                             ))}
                         </div>
                     )}
+                    {/* Orders */}
+                    <div id="orders" className="scroll-mt-24">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <ClipboardList className="w-5 h-5 text-primary-600" /> История заказов
+                            </h2>
+                            <Link href={`/optic/orders/new?patientId=${patient.id}&patientName=${encodeURIComponent(patient.name)}`} className="btn btn-secondary btn-sm flex items-center gap-1">
+                                <Plus className="w-4 h-4" /> Новый заказ
+                            </Link>
+                        </div>
+                        {patient.orders.length === 0 ? (
+                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm">Заказов пока нет</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {patient.orders.map(order => {
+                                    const s = STATUS_LABELS[order.status] || { label: order.status, color: 'bg-gray-100 text-gray-700' };
+                                    const isItigris = order.source === 'itigris' || (order.orderNumber || '').startsWith('ITG-');
+                                    const inner = (
+                                        <>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-semibold text-gray-900">{order.orderNumber || order.id}</span>
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${s.color}`}>{s.label}</span>
+                                                    {isItigris && <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded-full font-semibold">ITIGRIS</span>}
+                                                    {order.isUrgent && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">СРОЧНО</span>}
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                    {new Date(order.createdAt).toLocaleDateString('ru-RU')}
+                                                    {order.totalPrice ? ` · ${order.totalPrice.toLocaleString('ru-RU')} ₸` : ''}
+                                                </p>
+                                            </div>
+                                            {!isItigris && <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary-500 transition-colors" />}
+                                        </>
+                                    );
+                                    return isItigris ? (
+                                        <Link key={order.id} href={`/optic/orders/itigris/${order.orderNumber || order.id}`}
+                                            className="flex items-center gap-3 bg-orange-50/40 rounded-xl border border-orange-100 p-4 hover:border-orange-300 hover:shadow-sm transition-all group cursor-pointer">
+                                            {inner}
+                                            <ChevronDown className="w-4 h-4 text-orange-300 -rotate-90 group-hover:text-orange-500 transition-colors" />
+                                        </Link>
+                                    ) : (
+                                        <Link key={order.id} href={`/optic/orders/${order.id}`}
+                                            className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all group">
+                                            {inner}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    <div id="sales" className="scroll-mt-24 mt-8">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <ShoppingBag className="w-5 h-5 text-indigo-500" /> История покупок (Касса)
+                            </h2>
+                        </div>
+
+                        {(!patient.sales || patient.sales.length === 0) ? (
+                            <div className="text-center py-10 bg-white rounded-xl border border-gray-200">
+                                <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm">Пациент еще ничего не покупал на кассе</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {patient.sales.map((sale: any) => (
+                                    <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-indigo-300 hover:shadow-sm transition-all">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-semibold text-gray-900">Чек #{sale.saleNumber}</span>
+                                                    <span className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">ОПЛАЧЕНО</span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {new Date(sale.createdAt).toLocaleDateString('ru-RU')}
+                                                    {sale.doctor && <span className="ml-2 font-medium text-indigo-600">· 🩺 {sale.doctor.fullName}</span>}
+                                                </p>
+                                            </div>
+                                            <div className="text-right w-full sm:w-auto">
+                                                <div className="text-sm font-bold text-gray-900">{fmt(sale.total)} ₸</div>
+                                                <div className="text-xs text-gray-500">
+                                                    {sale.paymentMethod === 'card' ? 'Карта' : sale.paymentMethod === 'transfer' ? 'Перевод' : sale.paymentMethod === 'mixed' ? 'Смешанная' : 'Наличные'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {sale.items && sale.items.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
+                                                {sale.items.map((item: any, i: number) => (
+                                                    <div key={i} className="flex justify-between items-center text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-gray-700">{item.name}</span>
+                                                            <span className="text-gray-400">x{item.quantity}</span>
+                                                        </div>
+                                                        <span className="font-semibold text-gray-600">{fmt(item.total)} ₸</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                            {/* Данные ITIGRIS */}
+                            <div id="itigris" className="scroll-mt-24">
+                            {(() => {
+                                const itg = (patient as any).metadata?.itigris;
+                                if (!itg) return (
+                                    <div className="bg-white rounded-3xl border border-gray-100 p-8 text-center shadow-sm">
+                                        <Award className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                        <h3 className="text-gray-900 font-bold mb-1">Нет данных ITIGRIS</h3>
+                                        <p className="text-gray-500 text-sm">Пациент не связан с профилем в ITIGRIS или у него нет бонусов.</p>
+                                    </div>
+                                );
+                                const rows = ([
+                                    itg.bonuses != null ? { label: 'Бонусы', value: String(itg.bonuses) } : null,
+                                    itg.cardId != null ? { label: 'Карта', value: String(itg.cardId) } : null,
+                                    itg.ordersSum != null ? { label: 'Сумма заказов', value: `${Number(itg.ordersSum).toLocaleString('ru-RU')} ₸` } : null,
+                                    itg.city ? { label: 'Город', value: itg.city } : null,
+                                    itg.address ? { label: 'Адрес', value: itg.address } : null,
+                                    itg.profession ? { label: 'Профессия', value: itg.profession } : null,
+                                    itg.tel2 ? { label: 'Доп. телефон', value: itg.tel2 } : null,
+                                    itg.informationSource ? { label: 'Источник', value: itg.informationSource } : null,
+                                ].filter(Boolean)) as { label: string; value: string }[];
+                                
+                                const d = itg.discount;
+                                return (
+                                    <>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                <Award className="w-5 h-5 text-orange-500" /> Данные ITIGRIS
+                                            </h2>
+                                            <Link href={`/optic/sale-to-optima?clientInfo=${encodeURIComponent(patient.phone || patient.name)}&clientId=${itg?.id || itg?.clientId || ''}`} className="btn bg-orange-100 hover:bg-orange-200 text-orange-700 border-none btn-sm flex items-center gap-1">
+                                                <Plus className="w-4 h-4" /> Создать заказ ITIGRIS
+                                            </Link>
+                                        </div>
+                                        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                {rows.map((r, i) => (
+                                                    <div key={i} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{r.label}</div>
+                                                        <div className="text-sm font-bold text-gray-900 break-words">{r.value}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {d && typeof d === 'object' && (
+                                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Скидка по карте</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оправы {d.glasses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">СЗ Очки {d.sunglasses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">КЛ {d.contactLenses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Оч. Линзы {d.lenses ?? 0}%</span>
+                                                        <span className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-lg font-medium border border-orange-100">Аксессуары {d.accessories ?? 0}%</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                            </div>
+
                 </div>
                 </div>
 
