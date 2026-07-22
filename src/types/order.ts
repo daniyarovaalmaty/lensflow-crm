@@ -288,7 +288,7 @@ export const CreateOrderSchema = OrderSchema.omit({
     contract: true,
 }).extend({
     optic_id: z.string(),
-    doctor: z.string().optional(),
+    doctor: z.string().min(1, 'Укажите врача'),
     is_urgent: z.boolean().default(false),
 });
 
