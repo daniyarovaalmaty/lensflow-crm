@@ -202,7 +202,7 @@ export class ItigrisSyncService {
 
     // ----- Sync Orders -----
 
-    async syncOrders(): Promise<ItigrisSyncResult> {
+    async syncOrders(opts?: { forceStatus?: string, skipExisting?: boolean }): Promise<ItigrisSyncResult> {
         const result: ItigrisSyncResult = {
             entity: 'orders',
             created: 0,
@@ -235,12 +235,24 @@ export class ItigrisSyncService {
 
                         for (const order of content) {
                             try {
+                                if (opts?.skipExisting) {
+                                    const orderNumber = `ITG-${order.id}`;
+                                    const existing = await (this.prisma as any).order.findUnique({ where: { orderNumber } });
+                                    if (existing) {
+                                        continue; // skip full fetch to save API requests and time
+                                    }
+                                }
+
                                 // Get full details (prescription, lens, frame)
                                 const fullOrder = await this.api.getOrderFull(order.id);
-                                await this.upsertOrderFull(order, fullOrder, dept.id, result);
+                                await this.upsertOrderFull(order, fullOrder, dept.id, result, opts?.forceStatus);
                             } catch (err: any) {
                                 result.errors++;
                                 result.details.push(`Ошибка заказа ${order.id}: ${err.message}`);
+                                // Optional: pause briefly on network errors to avoid hammering
+                                if (err.message?.includes('ENOTFOUND') || err.message?.includes('ECONNREFUSED')) {
+                                    await new Promise(r => setTimeout(r, 1000));
+                                }
                             }
                         }
 
@@ -279,7 +291,7 @@ export class ItigrisSyncService {
                         where: { organizationId: this.orgId, externalId: `itigris:${order.id}` },
                     });
                     if (!existing) {
-                        await this.upsertOrderFull(order, null, undefined, result);
+                        await this.upsertOrderFull(order, null, undefined, result, opts?.forceStatus);
                     }
                 } catch (err: any) {
                     result.errors++;
@@ -412,7 +424,8 @@ export class ItigrisSyncService {
         order: ItigrisOrder,
         fullOrder: any | null,
         deptId: number | undefined,
-        result: ItigrisSyncResult
+        result: ItigrisSyncResult,
+        forceStatus?: string
     ): Promise<void> {
         // Find patient linked to this order
         let patient: any = null;
@@ -423,7 +436,7 @@ export class ItigrisSyncService {
             });
         }
 
-        const lensflowStatus = this.mapOrderStatus(order.status || fullOrder?.status || '');
+        const lensflowStatus = forceStatus || this.mapOrderStatus(order.status || fullOrder?.status || '');
         const totalPrice = Math.round(order.sum || order.totalAmount || fullOrder?.sum || 0);
         const lensConfig: any = this.buildLensConfig(fullOrder);
         const orderNumber = `ITG-${order.id}`;

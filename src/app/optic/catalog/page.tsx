@@ -1423,6 +1423,7 @@ export default function OpticCatalogPage() {
                             const marginPct = product.purchasePrice > 0 ? Math.round((margin / product.purchasePrice) * 100) : 0;
                             const mainImage = (product.images as string[] | null)?.[0];
 
+                            const isItigris = product.specs?.source === 'itigris' || product.sku?.startsWith('ITG-');
                             return (
                                 <motion.div
                                     key={product.id}
@@ -1462,7 +1463,14 @@ export default function OpticCatalogPage() {
                                         {product.brand && (
                                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{product.brand}</p>
                                         )}
-                                        <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{product.name}</h3>
+                                        <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2 mb-1 flex items-center flex-wrap gap-1">
+                                            {product.name}
+                                            {isItigris && (
+                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-100 text-orange-600 uppercase tracking-wider">
+                                                    ITIGRIS
+                                                </span>
+                                            )}
+                                        </h3>
                                         {product.shortDescription && (
                                             <p className="text-xs text-gray-500 mt-1 line-clamp-1">{product.shortDescription}</p>
                                         )}
@@ -1500,18 +1508,22 @@ export default function OpticCatalogPage() {
                                                 <Printer className="w-3.5 h-3.5" /> Печать
                                             </button>
                                         )}
-                                        <button
-                                            onClick={e => { e.stopPropagation(); openEditForm(product); }}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                                        >
-                                            <Edit2 className="w-3.5 h-3.5" /> Изменить
-                                        </button>
-                                        <button
-                                            onClick={e => { e.stopPropagation(); handleDelete(product.id); }}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" /> Удалить
-                                        </button>
+                                        {!isItigris && (
+                                            <>
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); openEditForm(product); }}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5" /> Изменить
+                                                </button>
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); handleDelete(product.id); }}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" /> Удалить
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </motion.div>
                             );
@@ -1835,18 +1847,22 @@ export default function OpticCatalogPage() {
                                             <Printer className="w-4 h-4" /> Печать этикетки
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => { setDetailProduct(null); openEditForm(detailProduct); }}
-                                        className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <Edit2 className="w-4 h-4" /> Редактировать
-                                    </button>
-                                    <button
-                                        onClick={() => { handleDelete(detailProduct.id); setDetailProduct(null); }}
-                                        className="py-2.5 px-4 border border-red-200 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    {detailProduct.specs?.source !== 'itigris' && !detailProduct.sku?.startsWith('ITG-') && (
+                                        <>
+                                            <button
+                                                onClick={() => { setDetailProduct(null); openEditForm(detailProduct); }}
+                                                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Edit2 className="w-4 h-4" /> Редактировать
+                                            </button>
+                                            <button
+                                                onClick={() => { handleDelete(detailProduct.id); setDetailProduct(null); }}
+                                                className="py-2.5 px-4 border border-red-200 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
