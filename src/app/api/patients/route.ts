@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = (request as any).nextUrl.searchParams;
     const q = searchParams.get('q') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const noSync = searchParams.get('noSync') === '1'; // skip sync for subsequent pages

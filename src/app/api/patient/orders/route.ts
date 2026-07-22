@@ -22,7 +22,7 @@ export async function OPTIONS() {
  */
 export async function GET(request: NextRequest) {
     try {
-        const searchParams = request.nextUrl.searchParams;
+        const searchParams = (request as any).nextUrl.searchParams;
         const phone = searchParams.get('phone');
 
         if (!phone || phone.length < 10) {
