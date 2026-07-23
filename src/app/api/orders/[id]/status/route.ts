@@ -115,7 +115,7 @@ export async function PATCH(
                 sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
             } else if (newStatus === 'shipped' && order.status !== 'shipped' && order.createdById) {
                 const doctorUser = await prisma.user.findUnique({ where: { id: order.createdById } });
-                const doctorPhone = doctorUser?.profile?.phone;
+                const doctorPhone = doctorUser?.phone;
                 if (doctorPhone) {
                     // Remove non-digits
                     const cleanPhone = String(doctorPhone).replace(/\D/g, '');
