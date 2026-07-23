@@ -373,7 +373,12 @@ export async function POST(request: NextRequest) {
         const generateOrderNumber = async (): Promise<string> => {
             // Fetch ALL non-LX order numbers to find the true maximum
             const allOrders = await prisma.order.findMany({
-                where: { orderNumber: { not: { startsWith: 'LX-' } } },
+                where: { 
+                    NOT: [
+                        { orderNumber: { startsWith: 'LX-' } },
+                        { orderNumber: { startsWith: 'ITG-' } }
+                    ]
+                },
                 select: { orderNumber: true },
             });
             
