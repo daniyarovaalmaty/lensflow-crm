@@ -401,7 +401,7 @@ export default function AccountantPage() {
     const completedDocs = useMemo(() => orders.filter(o => o.status === 'docs_ready'), [orders]);
 
     const filtered = useMemo(() => {
-        let r = [...orders];
+        let r = [...orders].filter(o => !(o.order_id || '').startsWith('ITG-'));
         if (docFilter === 'accountant_review') r = r.filter(o => o.status === 'accountant_review');
         else if (docFilter === 'docs_ready') r = r.filter(o => o.status === 'docs_ready');
         if (payFilter !== 'all') r = r.filter(o => (o.payment_status ?? 'unpaid') === payFilter);
