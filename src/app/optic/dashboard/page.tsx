@@ -81,6 +81,8 @@ export default function OpticDashboard() {
     const [requestReason, setRequestReason] = useState('');
     const [expediteOrderId, setExpediteOrderId] = useState<string | null>(null);
     const [isExpediting, setIsExpediting] = useState(false);
+    const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+    const [isGeneratingBulkInvoice, setIsGeneratingBulkInvoice] = useState(false);
     // tick every 30s to refresh countdown displays
     const [, setTick] = useState(0);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 30_000); return () => clearInterval(t); }, []);
@@ -209,6 +211,34 @@ export default function OpticDashboard() {
     };
 
     const hasActiveFilters = searchQuery || filter !== 'all' || dateFrom || dateTo || sortBy !== 'newest';
+
+    const handlePrintBulkInvoice = () => {
+        if (selectedOrders.size === 0) return;
+        setIsGeneratingBulkInvoice(true);
+        const ordersToPrint = filteredOrders.filter(o => selectedOrders.has(o.order_id));
+        import('@/lib/generateBulkInvoicePdf').then(({ generateBulkInvoicePdf }) => {
+            generateBulkInvoicePdf(ordersToPrint.map(order => ({
+                order_id: order.order_id,
+                patient: order.patient,
+                meta: order.meta,
+                company: order.company,
+                config: order.config,
+                is_urgent: order.is_urgent,
+                total_price: order.total_price,
+                discount_percent: (order as any).discount_percent,
+                document_name_od: (order as any).document_name_od,
+                document_name_os: (order as any).document_name_os,
+                price_od: (order as any).price_od,
+                price_os: (order as any).price_os,
+                products: (order as any).products,
+                contract: (order as any).contract,
+                optic_inn: (order as any).optic_inn,
+                optic_address: (order as any).optic_address,
+                lab_org: (order as any).lab_org,
+                distributor_org: (order as any).distributor_org,
+            }))).finally(() => setIsGeneratingBulkInvoice(false));
+        });
+    };
 
     const handlePrintInvoice = (order: Order) => {
         import('@/lib/generateInvoicePdf').then(({ generateInvoicePdf }) => {
@@ -650,12 +680,40 @@ export default function OpticDashboard() {
                     </button>
                 </div>
 
-                {/* Results count */}
-                <div className="flex items-center gap-4 mb-4">
-                    <p className="text-sm text-gray-500">
-                        Найдено: {totalOrders} {totalOrders === 1 ? 'заказ' : totalOrders < 5 ? 'заказа' : 'заказов'}
-                        <span className="ml-2 text-[10px] text-gray-300">v2-filtered</span>
-                    </p>
+                {/* Results count & Bulk Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4 cursor-pointer"
+                                checked={filteredOrders.filter(o => !(o.order_id || '').startsWith('ITG-')).length > 0 && selectedOrders.size === filteredOrders.filter(o => !(o.order_id || '').startsWith('ITG-')).length}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        const allIds = filteredOrders.filter(o => !(o.order_id || '').startsWith('ITG-')).map(o => o.order_id);
+                                        setSelectedOrders(new Set(allIds));
+                                    } else {
+                                        setSelectedOrders(new Set());
+                                    }
+                                }}
+                            />
+                            <span className="text-sm font-medium text-gray-700">Выбрать все</span>
+                        </label>
+                        <p className="text-sm text-gray-500 border-l pl-4">
+                            Найдено: {totalOrders} {totalOrders === 1 ? 'заказ' : totalOrders < 5 ? 'заказа' : 'заказов'}
+                            <span className="ml-2 text-[10px] text-gray-300">v2-filtered</span>
+                        </p>
+                    </div>
+                    {selectedOrders.size > 0 && (
+                        <button 
+                            onClick={handlePrintBulkInvoice}
+                            disabled={isGeneratingBulkInvoice}
+                            className="btn btn-primary text-sm whitespace-nowrap"
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            {isGeneratingBulkInvoice ? 'Генерация...' : `Скачать общий счет (${selectedOrders.size})`}
+                        </button>
+                    )}
                 </div>
 
                 {/* Orders List */}
@@ -712,8 +770,21 @@ export default function OpticDashboard() {
                                     className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow p-4 sm:p-5"
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                                            <input 
+                                                type="checkbox" 
+                                                className="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4 cursor-pointer flex-shrink-0"
+                                                checked={selectedOrders.has(order.order_id)}
+                                                onChange={(e) => {
+                                                    const next = new Set(selectedOrders);
+                                                    if (e.target.checked) next.add(order.order_id);
+                                                    else next.delete(order.order_id);
+                                                    setSelectedOrders(next);
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2 mb-2">
                                                 <h3 className="text-base sm:text-lg font-semibold text-gray-900">{order.order_id}</h3>
                                                 {/* Hide internal 'rework' status from optic — show as "В производстве" */}
                                                 {(() => {
@@ -786,6 +857,7 @@ export default function OpticDashboard() {
                                                     </>
                                                 )}
                                             </div>
+                                        </div>
                                         </div>
                                         <div className="text-left sm:text-right text-sm text-gray-500 sm:ml-4 flex-shrink-0 flex sm:block items-center gap-3">
                                             <p>{formatDate(order.meta.created_at)}</p>
