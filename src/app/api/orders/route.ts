@@ -448,7 +448,7 @@ export async function POST(request: NextRequest) {
             create: { id: 'default' },
             update: {},
         });
-        const URGENT_SURCHARGE_PCT = labSettings.urgentSurchargePercent;
+        const URGENT_SURCHARGE_PCT = 0; 
         const URGENT_DISCOUNT_PCT = labSettings.urgentDiscountPercent;
         const config = validatedData.config as any;
         let odChar = config?.eyes?.od?.characteristic || '';

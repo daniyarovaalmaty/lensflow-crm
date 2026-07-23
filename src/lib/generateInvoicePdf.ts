@@ -77,7 +77,7 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
     const additionalProducts = order.products || [];
     const discountPct = order.discount_percent ?? 0;
     const isUrgent = order.is_urgent || false;
-    const URGENT_PCT = 25;
+    const URGENT_PCT = 0; // previously 25
     const orderDate = new Date(order.meta.created_at);
     
     const formatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });

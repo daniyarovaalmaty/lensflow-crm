@@ -285,7 +285,7 @@ export async function generateBulkInvoicePdf(orders: InvoiceOrder[]): Promise<vo
             const isUrgent = order.is_urgent || false;
             const discountAmt = Math.round(orderSubtotal * discountPct / 100);
             const afterDiscount = orderSubtotal - discountAmt;
-            const urgentAmt = isUrgent ? Math.round(afterDiscount * 25 / 100) : 0;
+            const urgentAmt = 0; // isUrgent ? Math.round(afterDiscount * 25 / 100) : 0;
             
             totalDiscountAmt += discountAmt;
             totalUrgentAmt += urgentAmt;
