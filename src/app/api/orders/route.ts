@@ -443,8 +443,7 @@ export async function POST(request: NextRequest) {
         const config = validatedData.config as any;
         let odChar = config?.eyes?.od?.characteristic || '';
         let osChar = config?.eyes?.os?.characteristic || '';
-        if (config?.eyes?.od?.isRgp) odChar = 'rgp';
-        if (config?.eyes?.os?.isRgp) osChar = 'rgp';
+        // Note: isRgp does not override characteristic anymore; RGP lenses use the same toric/spherical pricing.
         const odQty = Number(config?.eyes?.od?.qty) || 0;
         const osQty = Number(config?.eyes?.os?.qty) || 0;
         const odDk = config?.eyes?.od?.dk || '';

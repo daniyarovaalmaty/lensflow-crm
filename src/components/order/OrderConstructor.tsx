@@ -604,13 +604,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     // Uses priceByDk when available (matches backend calculation)
     // RGP lenses have custom pricing (set by accountant), so price = 0
     // If it's a trial lens (DK 50), the effective product is 'probe'
-    const effectiveOdCharacteristic = isRgpOD ? 'rgp' : (isTrialOD ? 'probe' : (odCharacteristic || ''));
-    const effectiveOsCharacteristic = isRgpOS ? 'rgp' : (isTrialOS ? 'probe' : (osCharacteristic || ''));
+    const effectiveOdCharacteristic = isTrialOD ? 'probe' : (odCharacteristic || '');
+    const effectiveOsCharacteristic = isTrialOS ? 'probe' : (osCharacteristic || '');
     
-    const odLensProduct = getLensProduct(effectiveOdCharacteristic);
-    const osLensProduct = getLensProduct(effectiveOsCharacteristic);
-    const odUnitPrice = isRgpOD ? 0 : getLensPrice(odLensProduct, odDk);
-    const osUnitPrice = isRgpOS ? 0 : getLensPrice(osLensProduct, osDk);
+    const odLensProduct = getLensProduct(effectiveOdCharacteristic, odDk);
+    const osLensProduct = getLensProduct(effectiveOsCharacteristic, osDk);
+    const odUnitPrice = getLensPrice(odLensProduct, odDk);
+    const osUnitPrice = getLensPrice(osLensProduct, osDk);
     const odLensPrice = odUnitPrice * odQty;
     const osLensPrice = osUnitPrice * osQty;
     const lensTotal = odLensPrice + osLensPrice;
@@ -1360,8 +1360,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             >
                                 <p className="font-semibold text-sm text-gray-900">{product.name}</p>
                                 {canSeePrices && (
-                                    <p className={`text-xs mt-1 ${isRgp ? 'text-amber-600 font-medium' : 'text-gray-500'}`}>
-                                        {isRgp ? 'Цена индивидуальная' : `${cardPrice.toLocaleString('ru-RU')} ₸/${product.unit}`}
+                                    <p className="text-xs mt-1 text-gray-500">
+                                        {`${cardPrice.toLocaleString('ru-RU')} ₸/${product.unit}`}
                                     </p>
                                 )}
                                 {isSelected && (
@@ -1511,12 +1511,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                 <span className="font-medium text-gray-900">{osLensPrice.toLocaleString('ru-RU')} ₸</span>
                             </div>
                         )}
-                        {(isRgpOD || isRgpOS) && (
-                            <div className="flex justify-between items-center text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                                <span>RGP — цена индивидуальная</span>
-                                <span className="font-medium">по запросу</span>
-                            </div>
-                        )}
+
 
                         {/* Additional products */}
                         {selectedProducts.map(sp => (
