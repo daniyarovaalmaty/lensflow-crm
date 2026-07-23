@@ -137,7 +137,7 @@ export default function ProductionHubPage() {
 
     const loadOrders = async () => {
         try {
-            const response = await fetch('/api/orders');
+            const response = await fetch('/api/orders?hideItigrisDelivered=true');
             if (!response.ok) throw new Error('Failed to fetch orders');
             
             // Calculate offset between local computer time and server time

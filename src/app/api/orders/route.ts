@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
 
         const searchParams = (request as any).nextUrl.searchParams;
         const status = searchParams.get('status');
+        const hideItigrisDelivered = searchParams.get('hideItigrisDelivered') === 'true';
         const opticId = searchParams.get('optic_id');
         const pageParam = searchParams.get('page');
         const limitParam = searchParams.get('limit');
@@ -137,6 +138,14 @@ export async function GET(request: NextRequest) {
             } else {
                 where.OR = searchOr;
             }
+        }
+
+        // Hide huge iTigris history from production hub if requested
+        if (hideItigrisDelivered) {
+            where.NOT = {
+                status: 'delivered',
+                orderNumber: { startsWith: 'ITG-' }
+            };
         }
 
         // Pagination

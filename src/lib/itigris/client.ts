@@ -280,7 +280,7 @@ export class ItigrisApiClient {
         this.http = axios.create({
             baseURL,
             timeout: 30_000,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/114.0.0.0 Safari/537.36' },
         });
 
         // Interceptor: auto-attach Bearer token and handle token refresh
@@ -442,6 +442,12 @@ export class ItigrisApiClient {
                 page,
                 size,
             },
+            headers: {
+                'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/114.0.0.0 Safari/537.36',
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
+            timeout: 15000 
         });
         // API returns paginated: { content: [...], totalElements, ... }
         if (resp.data?.content) return resp.data.content;

@@ -243,7 +243,7 @@ export class ItigrisSyncService {
 
     // ----- Sync Orders -----
 
-    async syncOrders(opts?: { forceStatus?: string, skipExisting?: boolean, departmentId?: number }): Promise<ItigrisSyncResult> {
+    async syncOrders(opts?: { forceStatus?: string, skipExisting?: boolean, departmentId?: number, limitMonths?: number }): Promise<ItigrisSyncResult> {
         const result: ItigrisSyncResult = {
             entity: 'orders',
             created: 0,
@@ -265,7 +265,7 @@ export class ItigrisSyncService {
             for (const dept of storeDepts) {
                 try {
                     const ok = await this.api.signInToDepartment(dept.id);
-                    if (!ok) {
+                    if (ok === false || (typeof ok === 'object' && !(ok as any).ok)) {
                         result.details.push(`Нет доступа к филиалу: ${dept.name}`);
                         continue;
                     }
@@ -274,12 +274,13 @@ export class ItigrisSyncService {
                     let page = 0;
                     let hasMore = true;
                     
-                    // Stop fetching if we go older than 6 months
+                    // Stop fetching if we go older than limit
                     const limitDate = new Date();
-                    limitDate.setMonth(limitDate.getMonth() - 6);
+                    limitDate.setMonth(limitDate.getMonth() - (opts?.limitMonths || 6));
                     let reachedLimit = false;
 
                     while (hasMore && !reachedLimit) {
+                        console.log(`Dept ${dept.id}: Fetching page ${page}...`);
                         const { content, totalElements } = await this.api.getDepartmentOrders(page, 50);
                         if (content.length === 0) break;
 
@@ -287,7 +288,7 @@ export class ItigrisSyncService {
                             const orderDate = new Date(order.createdAt || Date.now());
                             if (orderDate < limitDate) {
                                 reachedLimit = true;
-                                break; // Stop processing this page, we hit the 6-month limit
+                                break; // Stop processing this page, we hit the limit
                             }
                             try {
                                 if (opts?.skipExisting) {
@@ -301,18 +302,23 @@ export class ItigrisSyncService {
                                 // Get full details (prescription, lens, frame)
                                 const fullOrder = await this.api.getOrderFull(order.id);
                                 await this.upsertOrderFull(order, fullOrder, dept.id, result, opts?.forceStatus);
+                                
+                                // Pause between requests to avoid ban
+                                await new Promise(r => setTimeout(r, 300));
                             } catch (err: any) {
                                 result.errors++;
                                 result.details.push(`Ошибка заказа ${order.id}: ${err.message}`);
-                                // Optional: pause briefly on network errors to avoid hammering
-                                if (err.message?.includes('ENOTFOUND') || err.message?.includes('ECONNREFUSED')) {
-                                    await new Promise(r => setTimeout(r, 1000));
+                                if (err.message?.includes('ENOTFOUND') || err.message?.includes('ECONNREFUSED') || err.message?.includes('timeout')) {
+                                    await new Promise(r => setTimeout(r, 2000));
                                 }
                             }
                         }
 
                         page++;
                         hasMore = (page * 50) < totalElements;
+                        
+                        // Pause between pages to avoid ban
+                        await new Promise(r => setTimeout(r, 500));
                     }
 
                     result.details.push(`Филиал ${dept.name}: обработано`);
