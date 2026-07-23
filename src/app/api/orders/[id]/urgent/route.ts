@@ -28,9 +28,23 @@ export async function POST(
 
         // Verify access - must be the creator, their organization, or distributor handling it.
         // Only Optic or Distributor should be able to make it urgent
-        if (session.user.role === 'optic' && order.organizationId !== session.user.organizationId) {
-            // Also allow if procurement
-            if (session.user.subRole !== 'optic_procurement') {
+        if (session.user.role === 'optic') {
+            const orgId = session.user.organizationId;
+            let allowedOrgIds: string[] = orgId ? [orgId] : [];
+            
+            if (orgId) {
+                const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { type: true, parentId: true } });
+                if (org?.type === 'headquarters') {
+                    const branches = await prisma.organization.findMany({ where: { parentId: orgId }, select: { id: true } });
+                    allowedOrgIds = [orgId, ...branches.map((b: any) => b.id)];
+                } else if (org?.parentId) {
+                    const siblings = await prisma.organization.findMany({ where: { parentId: org.parentId }, select: { id: true } });
+                    allowedOrgIds = [org.parentId, ...siblings.map((b: any) => b.id)];
+                }
+            }
+            const allAllowed = [...allowedOrgIds, ...(session.user.branches || [])].filter(Boolean) as string[];
+            
+            if (!order.organizationId || !allAllowed.includes(order.organizationId)) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
         }
