@@ -152,21 +152,10 @@ export async function GET(request: NextRequest) {
 
         const hideItigris = searchParams.get('hideItigris') === 'true';
         if (hideItigris) {
-            const itigrisNot = {
-                NOT: {
-                    OR: [
-                        { orderNumber: { startsWith: 'ITG-' } },
-                        { company: { contains: 'itigris', mode: 'insensitive' } },
-                        { organizationId: 'org-itigris' }
-                    ]
-                }
-            };
-            
-            if (where.AND) {
-                where.AND.push(itigrisNot);
-            } else {
-                where.AND = [itigrisNot];
-            }
+            if (!where.AND) where.AND = [];
+            where.AND.push({ orderNumber: { not: { startsWith: 'ITG-' } } });
+            where.AND.push({ organizationId: { not: 'org-itigris' } });
+            // Remove company filter as it might be causing null evaluation issues in Prisma
         }
 
         // Pagination
