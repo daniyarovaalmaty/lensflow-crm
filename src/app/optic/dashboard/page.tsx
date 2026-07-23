@@ -651,9 +651,12 @@ export default function OpticDashboard() {
                 </div>
 
                 {/* Results count */}
-                <p className="text-sm text-gray-500 mb-4">
-                    Найдено: {totalOrders} {totalOrders === 1 ? 'заказ' : totalOrders < 5 ? 'заказа' : 'заказов'}
-                </p>
+                <div className="flex items-center gap-4 mb-4">
+                    <p className="text-sm text-gray-500">
+                        Найдено: {totalOrders} {totalOrders === 1 ? 'заказ' : totalOrders < 5 ? 'заказа' : 'заказов'}
+                        <span className="ml-2 text-[10px] text-gray-300">v2-filtered</span>
+                    </p>
+                </div>
 
                 {/* Orders List */}
                 {isLoading ? (
@@ -664,7 +667,7 @@ export default function OpticDashboard() {
                             </div>
                         ))}
                     </div>
-                ) : filteredOrders.length === 0 ? (
+                ) : filteredOrders.filter(o => !(o.order_id || '').startsWith('ITG-')).length === 0 ? (
                     <div className="text-center py-16">
                         <Package className="w-14 h-14 text-gray-300 mx-auto mb-4" />
                         <p className="text-lg text-gray-600 mb-2">Заказов не найдено</p>
@@ -676,7 +679,7 @@ export default function OpticDashboard() {
                     </div>
                 ) : (
                     <div className="grid gap-4">
-                        {filteredOrders.map((order) => {
+                        {filteredOrders.filter(o => !(o.order_id || '').startsWith('ITG-')).map((order) => {
                             const isExpanded = expandedOrders.has(order.order_id);
                             const od = (order.config?.eyes?.od || { km: "-", dia: "-", dk: "-", qty: 0 });
                             const os = (order.config?.eyes?.os || { km: "-", dia: "-", dk: "-", qty: 0 });
