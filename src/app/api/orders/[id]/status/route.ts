@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { UpdateOrderStatusSchema } from '@/types/order';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
+import { sendWhatsAppMessage } from '@/lib/greenApi';
 
 /**
  * PATCH /api/orders/[id]/status - Update order status
@@ -106,6 +107,28 @@ export async function PATCH(
         }
 
         // Transform to frontend format
+        
+        // Send WhatsApp notifications
+        try {
+            if (newStatus === 'new_order' && order.status === 'draft') {
+                const message = `🚨 Новый заказ №${orderNumber} от врача ${order.doctorName || 'Неизвестно'}! Ожидает проверки!`;
+                sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
+            } else if (newStatus === 'shipped' && order.status !== 'shipped') {
+                const doctorUser = await prisma.user.findUnique({ where: { id: order.createdById } });
+                const doctorPhone = doctorUser?.profile?.phone;
+                if (doctorPhone) {
+                    // Remove non-digits
+                    const cleanPhone = String(doctorPhone).replace(/\D/g, '');
+                    if (cleanPhone.length >= 10) {
+                        const message = `✅ Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) готов и передан в доставку!`;
+                        sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Failed to send WA notification', e);
+        }
+
         const reverseStatusMap: Record<string, string> = {
             'draft': 'draft', 'new_order': 'new', 'in_production': 'in_production', 'ready': 'ready',
             'rework': 'rework', 'docs_prep': 'docs_prep', 'accountant_review': 'accountant_review',

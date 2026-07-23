@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CreateOrderSchema } from '@/types/order';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
+import { sendWhatsAppMessage } from '@/lib/greenApi';
 
 /**
  * GET /api/orders - Get orders
@@ -646,6 +647,16 @@ export async function POST(request: NextRequest) {
                         organization: { select: { name: true } },
                     },
                 });
+                
+                // Send WhatsApp notification to accountant if order is new
+                if (order.status === 'new_order') {
+                    try {
+                        const message = `🚨 Новый заказ №${orderNumber} от врача ${validatedData.doctor || session.user.profile?.fullName || 'Неизвестно'}! Сумма: ${totalPrice.toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
+                        // Send async so it doesn't block
+                        sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
+                    } catch (e) {}
+                }
+
                 break; // Success
             } catch (error: any) {
                 // Detect unique constraint violation - Prisma P2002 OR PostgreSQL 23505 via DriverAdapter
