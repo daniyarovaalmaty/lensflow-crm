@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Save, Trash2, Box, Barcode, CheckCircle, Search, Tag, Edit2, Wifi, WifiOff, CloudOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { parseGS1Barcode, formatGS1Barcode } from '@/lib/utils/gs1Parser';
 
 const LOCAL_DRAFT_KEY = 'lensflow_supply_draft';
 
@@ -13,11 +14,20 @@ interface NewSupplyFormProps {
 }
 
 function FlexibleDateInput({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
-    const [mode, setMode] = useState<'month' | 'date'>(value.length > 7 ? 'date' : 'month');
+    const [mode, setMode] = useState<'month' | 'date'>((value && value.length > 7) ? 'date' : 'month');
+
+    useEffect(() => {
+        if (value && value.length > 7 && mode === 'month') {
+            setMode('date');
+        } else if (value && value.length <= 7 && value.length > 0 && mode === 'date') {
+            setMode('month');
+        }
+    }, [value, mode]);
+
     return (
         <div>
             <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-medium text-gray-700">{label}</label>
+                <label className="block text-sm font-medium leading-6 text-gray-900">{label}</label>
                 <button 
                     type="button" 
                     onClick={(e) => {
@@ -48,6 +58,46 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const draft = initialDraft || savedDraft;
 
     const [counterpartyName, setCounterpartyName] = useState(draft?.counterpartyName || '');
+    const [supplierId, setSupplierId] = useState(draft?.supplierId || '');
+    const [suppliers, setSuppliers] = useState<any[]>([]);
+    const [showAddSupplier, setShowAddSupplier] = useState(false);
+    const [newSupplierName, setNewSupplierName] = useState('');
+
+    const fetchSuppliers = () => {
+        fetch('/api/distributor/suppliers')
+            .then(res => res.json())
+            .then(data => setSuppliers(data))
+            .catch(console.error);
+    };
+
+    useEffect(() => {
+        fetchSuppliers();
+    }, []);
+
+    const handleAddSupplier = async () => {
+        if (!newSupplierName.trim()) return;
+        try {
+            const res = await fetch('/api/distributor/suppliers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newSupplierName })
+            });
+            if (res.ok) {
+                const s = await res.json();
+                setSuppliers(prev => [...prev, s].sort((a: any,b: any) => a.name.localeCompare(b.name)));
+                setSupplierId(s.id);
+                setCounterpartyName(s.name);
+                setShowAddSupplier(false);
+                setNewSupplierName('');
+                toast.success('Поставщик добавлен');
+            } else {
+                toast.error('Ошибка добавления');
+            }
+        } catch {
+            toast.error('Ошибка сети');
+        }
+    };
+
     const [documentNumber, setDocumentNumber] = useState(draft?.documentNumber || '');
     const [documentDate, setDocumentDate] = useState(draft?.documentDate || '');
     const [declarationNumber, setDeclarationNumber] = useState(draft?.declarationNumber || '');
@@ -57,11 +107,11 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
     const [lastSavedAt, setLastSavedAt] = useState<string | null>(savedDraft ? 'восстановлено' : null);
     
-    // Search state
     const [nameSearch, setNameSearch] = useState('');
     const [barcodeSearch, setBarcodeSearch] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [qty, setQty] = useState(1);
@@ -78,19 +128,16 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
     const [newProductName, setNewProductName] = useState('');
     const [newProductModel, setNewProductModel] = useState('');
     const [newProductBarcode, setNewProductBarcode] = useState('');
+    const [newProductCategory, setNewProductCategory] = useState('spectacle_lens');
 
     // Batch details state (for row addition)
     const [batchBarcode, setBatchBarcode] = useState('');
     const [batchDiopters, setBatchDiopters] = useState('');
+    const [batchSize, setBatchSize] = useState('');
     const [batchExpiration, setBatchExpiration] = useState('');
-    const [batchProduction, setBatchProduction] = useState('');
+    const [batchSerial, setBatchSerial] = useState('');
 
     useEffect(() => {
-        if (!nameSearch.trim() && !barcodeSearch.trim()) {
-            setSearchResults([]);
-            return;
-        }
-
         const delayDebounceFn = setTimeout(async () => {
             setIsSearching(true);
             try {
@@ -115,9 +162,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
     // Auto-save draft to localStorage (debounced)
     useEffect(() => {
-        const draftData = { counterpartyName, documentNumber, documentDate, declarationNumber, declarationDate, items };
+        const draftData = { counterpartyName, supplierId, documentNumber, documentDate, declarationNumber, declarationDate, items };
         // Only save if there's meaningful data
-        const hasData = counterpartyName || documentNumber || documentDate || declarationNumber || declarationDate || items.length > 0;
+        const hasData = counterpartyName || supplierId || documentNumber || documentDate || declarationNumber || declarationDate || items.length > 0;
         if (!hasData) return;
 
         const timeout = setTimeout(() => {
@@ -131,7 +178,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         }, 2000);
 
         return () => clearTimeout(timeout);
-    }, [counterpartyName, documentNumber, declarationNumber, declarationDate, items]);
+    }, [counterpartyName, supplierId, documentNumber, declarationNumber, declarationDate, items]);
 
     // Online/offline listener
     useEffect(() => {
@@ -172,7 +219,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     name: newProductName,
                     barcode: newProductBarcode,
                     model: newProductModel,
-                    trackSerials: true // All products are now batch-tracked
+                    trackSerials: true,
+                    category: newProductCategory
                 })
             });
 
@@ -187,6 +235,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
             setNewProductName('');
             setNewProductBarcode('');
             setNewProductModel('');
+            setNewProductCategory('spectacle_lens');
         } catch (error) {
             toast.error('Ошибка создания товара');
         }
@@ -198,12 +247,14 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
         const newItem = {
             productId: selectedProduct.id,
             name: selectedProduct.name,
+            model: selectedProduct.model,
             qty: qty,
             price: Number(price) || 0,
             batchBarcode: batchBarcode.trim(),
-            batchDiopters,
+            batchDiopters: (!selectedProduct.category || ['spectacle_lens', 'contact_lens', 'iol', 'diagnostic_lens'].includes(selectedProduct.category)) ? batchDiopters : null,
+            batchSize: ['rings', 'corneal_ring'].includes(selectedProduct.category || '') ? batchSize : null,
             batchExpiration,
-            batchProduction,
+            batchSerial,
         };
         
         if (newItem.qty <= 0) {
@@ -217,16 +268,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
         setItems([...items, newItem]);
         
-        // Reset form
-        setSelectedProduct(null);
-        setNameSearch('');
-        setBarcodeSearch('');
-        setQty(1);
-        setPrice('');
+        // Reset only barcode and serial for continuous scanning
         setBatchBarcode('');
-        setBatchDiopters('');
-        setBatchExpiration('');
-        setBatchProduction('');
+        setBatchSerial('');
     };
 
     const handleSave = async (status: 'draft' | 'confirmed') => {
@@ -257,6 +301,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     documentNumber,
                     documentDate,
                     counterpartyName,
+                    supplierId,
                     declarationNumber,
                     declarationDate,
                     items,
@@ -269,7 +314,7 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                 throw new Error(errorData?.error || 'Failed to save document');
             }
             
-            toast.success(status === 'draft' ? 'Черновик сохранен' : 'Поставка проведена успешно!');
+            toast.success(status === 'draft' ? 'Черновик сохранен' : (initialDraft?.status === 'confirmed' ? 'Изменения сохранены!' : 'Поставка проведена успешно!'));
             clearLocalDraft();
             onSuccess();
         } catch (error: any) {
@@ -302,19 +347,21 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                     </div>
                 </div>
                 <div className="space-x-3">
-                    <button 
-                        onClick={() => handleSave('draft')}
-                        className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                    >
-                        <Save className="h-4 w-4 mr-2 text-gray-500" />
-                        Сохранить черновик
-                    </button>
+                    {(!initialDraft || initialDraft.status !== 'confirmed') && (
+                        <button 
+                            onClick={() => handleSave('draft')}
+                            className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                        >
+                            <Save className="h-4 w-4 mr-2 text-gray-500" />
+                            Сохранить черновик
+                        </button>
+                    )}
                     <button 
                         onClick={() => handleSave('confirmed')}
                         className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
                     >
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        Провести накладную
+                        {initialDraft?.status === 'confirmed' ? 'Сохранить изменения' : 'Провести накладную'}
                     </button>
                 </div>
             </div>
@@ -337,15 +384,68 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-6 mb-8 border-b pb-8">
                 <div className="sm:col-span-6">
-                    <label className="block text-sm font-medium leading-6 text-gray-900">Поставщик / Контрагент</label>
-                    <div className="mt-2">
-                        <input
-                            type="text"
-                            value={counterpartyName}
-                            onChange={(e) => setCounterpartyName(e.target.value)}
-                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                            placeholder="Название поставщика"
-                        />
+                    <label className="block text-sm font-medium leading-6 text-gray-900">Поставщик</label>
+                    <div className="mt-2 flex gap-2 items-center">
+                        {!showAddSupplier ? (
+                            <>
+                                <select
+                                    value={supplierId}
+                                    onChange={(e) => {
+                                        setSupplierId(e.target.value);
+                                        const s = suppliers.find((x: any) => x.id === e.target.value);
+                                        if (s) setCounterpartyName(s.name);
+                                        else setCounterpartyName('');
+                                    }}
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                >
+                                    <option value="">Выберите поставщика...</option>
+                                    {suppliers.map((s: any) => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
+                                <button type="button" onClick={() => setShowAddSupplier(true)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium shrink-0">
+                                    <Plus className="w-4 h-4 inline mr-1"/> Новый
+                                </button>
+                                {supplierId && (
+                                    <button 
+                                        type="button" 
+                                        onClick={async () => {
+                                            if (!confirm('Удалить этого поставщика навсегда?')) return;
+                                            try {
+                                                const res = await fetch(`/api/distributor/suppliers/${supplierId}`, { method: 'DELETE' });
+                                                if (res.ok) {
+                                                    setSupplierId('');
+                                                    setCounterpartyName('');
+                                                    fetchSuppliers();
+                                                }
+                                            } catch (e) {
+                                                console.error(e);
+                                            }
+                                        }}
+                                        className="px-2 py-1.5 bg-red-100 text-red-700 rounded-md hover:bg-red-200 shrink-0"
+                                        title="Удалить поставщика"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <input
+                                    type="text"
+                                    value={newSupplierName}
+                                    onChange={(e) => setNewSupplierName(e.target.value)}
+                                    placeholder="Название нового поставщика"
+                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                />
+                                <button type="button" onClick={handleAddSupplier} className="px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 text-sm font-medium shrink-0">
+                                    Сохранить
+                                </button>
+                                <button type="button" onClick={() => setShowAddSupplier(false)} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium shrink-0">
+                                    Отмена
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className="sm:col-span-3">
@@ -404,6 +504,8 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                         type="text"
                                         value={nameSearch}
                                         onChange={(e) => setNameSearch(e.target.value)}
+                                        onFocus={() => setIsDropdownOpen(true)}
+                                        onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                                         className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         placeholder="Поиск по названию..."
                                     />
@@ -420,25 +522,17 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                             const hasCyrillic = /[\u0400-\u04FF]/.test(val);
                                             setBarcodeSearch(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
                                         }}
+                                        onFocus={() => setIsDropdownOpen(true)}
+                                        onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                                         className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                         placeholder="Поиск по штрихкоду..."
                                     />
                                 </div>
-                                <button 
-                                    onClick={() => {
-                                        setNewProductName(nameSearch || '');
-                                        setIsCreatingProduct(true);
-                                    }}
-                                    className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-300 hover:bg-indigo-50 whitespace-nowrap"
-                                >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Создать новый
-                                </button>
                             </div>
                         </div>
                         
                         {/* Search Results Dropdown */}
-                        {(nameSearch.trim() || barcodeSearch.trim()) && (
+                        {isDropdownOpen && (
                             <div className="absolute z-10 mt-1 w-full flex-1 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                                 {isSearching ? (
                                     <div className="p-4 text-sm text-gray-500 text-center">Загрузка...</div>
@@ -456,7 +550,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                             >
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <span className="block truncate font-medium">{product.name}</span>
+                                                        <span className="block truncate font-medium">
+                                                            {product.name} {product.model && <span className="text-gray-500 font-normal ml-1">/ {product.model}</span>}
+                                                        </span>
                                                     </div>
                                                     <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
                                                         {product.trackSerials ? 'Серийный' : 'Количественный'}
@@ -467,81 +563,22 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     </ul>
                                 ) : (
                                     <div className="p-4 text-sm text-gray-500 text-center">
-                                        Товар не найден. Вы можете <button onClick={() => {setNewProductName(nameSearch || ''); setIsCreatingProduct(true);}} className="text-indigo-600 underline">создать его</button>.
+                                        Товар не найден. Сначала добавьте его в <a href="/distributor/catalog" className="text-indigo-600 underline font-medium" target="_blank">Каталог</a>.
                                     </div>
                                 )}
                             </div>
                         )}
                     </div>
-                ) : isCreatingProduct ? (
-                    <div className="space-y-4 bg-white p-4 rounded-md ring-1 ring-gray-200">
-                        <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium text-gray-900">{selectedProduct ? 'Редактирование товара' : 'Создание нового товара'}</h4>
-                            <button onClick={() => setIsCreatingProduct(false)} className="text-sm text-gray-500 hover:text-gray-700">Отмена</button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Название товара *</label>
-                                <input
-                                    type="text"
-                                    value={newProductName}
-                                    onChange={(e) => setNewProductName(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Штрихкод товара</label>
-                                <input
-                                    type="text"
-                                    value={newProductBarcode}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        const hasCyrillic = /[\u0400-\u04FF]/.test(val);
-                                        setNewProductBarcode(hasCyrillic ? translateCyrillicToEnglishLayout(val) : val);
-                                    }}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    placeholder="Сканируйте общий штрихкод..."
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Модель</label>
-                                <input
-                                    type="text"
-                                    value={newProductModel}
-                                    onChange={(e) => setNewProductModel(e.target.value)}
-                                    className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                />
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleCreateProduct}
-                            className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 w-full sm:w-auto"
-                        >
-                            Сохранить и выбрать
-                        </button>
-                    </div>
                 ) : (
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                            <div className="text-sm font-medium text-gray-900">
-                                {selectedProduct.name} 
+                            <div className="text-sm font-medium text-gray-900 flex items-center">
+                                <span>{selectedProduct.name} {selectedProduct.model && <span className="text-gray-500 font-normal ml-1">/ {selectedProduct.model}</span>}</span>
                                 <span className="ml-2 inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                                     {selectedProduct.trackSerials ? 'Серийный учет' : 'Количественный учет'}
                                 </span>
                             </div>
                             <div className="flex items-center gap-4">
-                                <button onClick={() => {
-                                    setNewProductName(selectedProduct.name || '');
-                                    setNewProductBarcode(selectedProduct.barcode || '');
-                                    setNewProductModel(selectedProduct.model || '');
-                                    setIsCreatingProduct(true);
-                                }} className="text-sm text-indigo-600 hover:text-indigo-500 flex items-center gap-1">
-                                    <Edit2 className="h-4 w-4" />
-                                    Редактировать
-                                </button>
                                 <button onClick={() => setSelectedProduct(null)} className="text-sm text-red-600 hover:text-red-500">Выбрать другой</button>
                             </div>
                         </div>
@@ -554,25 +591,79 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                     <input
                                         type="text"
                                         value={batchBarcode}
-                                        onChange={(e) => setBatchBarcode(e.target.value)}
+                                        onChange={(e) => {
+                                            const rawVal = e.target.value;
+                                            const hasCyrillic = /[\u0400-\u04FF]/.test(rawVal);
+                                            const val = hasCyrillic ? translateCyrillicToEnglishLayout(rawVal) : rawVal;
+                                            
+                                            setBatchBarcode(val);
+                                            const parsed = parseGS1Barcode(val);
+                                            if (parsed.expirationDate) {
+                                                const d = parsed.expirationDate;
+                                                const yyyy = d.getFullYear();
+                                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                                const dd = String(d.getDate()).padStart(2, '0');
+                                                setBatchExpiration(`${yyyy}-${mm}-${dd}`);
+                                            }
+                                            if (parsed.serialNumber) {
+                                                setBatchSerial(parsed.serialNumber);
+                                            } else if (parsed.batchNumber) {
+                                                setBatchSerial(parsed.batchNumber);
+                                            }
+                                        }}
                                         className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
                                         placeholder="Уникальный код"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleAddItem();
+                                            }
+                                        }}
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
-                                    <input
-                                        type="text"
-                                        value={batchDiopters}
-                                        onChange={(e) => setBatchDiopters(e.target.value)}
-                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
-                                    />
-                                </div>
+                                {(!selectedProduct?.category || ['spectacle_lens', 'contact_lens', 'iol', 'diagnostic_lens'].includes(selectedProduct.category)) && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Диоптрийность</label>
+                                        <input
+                                            type="text"
+                                            value={batchDiopters}
+                                            onChange={(e) => setBatchDiopters(e.target.value)}
+                                            onBlur={() => {
+                                                const val = batchDiopters.trim().replace(',', '.');
+                                                if (val) {
+                                                    const parsed = parseFloat(val);
+                                                    if (!isNaN(parsed)) {
+                                                        const formatted = parsed.toFixed(2);
+                                                        setBatchDiopters(val.startsWith('+') ? '+' + formatted : formatted);
+                                                    }
+                                                }
+                                            }}
+                                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        />
+                                    </div>
+                                )}
+                                {['rings', 'corneal_ring'].includes(selectedProduct?.category || '') && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Размер</label>
+                                        <input
+                                            type="text"
+                                            value={batchSize}
+                                            onChange={(e) => setBatchSize(e.target.value)}
+                                            className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                        />
+                                    </div>
+                                )}
                                 <div>
                                     <FlexibleDateInput label="Срок годности" value={batchExpiration} onChange={setBatchExpiration} />
                                 </div>
                                 <div>
-                                    <FlexibleDateInput label="Дата производства" value={batchProduction} onChange={setBatchProduction} />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Серийный номер</label>
+                                    <input
+                                        type="text"
+                                        value={batchSerial}
+                                        onChange={(e) => setBatchSerial(e.target.value)}
+                                        className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
+                                    />
                                 </div>
                             </div>
 
@@ -632,13 +723,22 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                         {items.map((item, idx) => (
                             <tr key={idx}>
                                 <td className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                    {item.name}
+                                    {item.name} {item.model && <span className="text-gray-500 font-normal ml-1">/ {item.model}</span>}
                                     {item.batchBarcode && (
                                         <div className="mt-1 text-xs text-gray-500 flex flex-col gap-1">
-                                            <div><span className="text-gray-400">Штрихкод партии:</span> <span className="font-medium text-indigo-600">{item.batchBarcode}</span></div>
-                                            {(item.batchExpiration || item.batchProduction) && (
-                                                <div className="flex gap-2">
-                                                    {item.batchProduction && <span>Произв: {item.batchProduction}</span>}
+                                            <div>
+                                                <span className="text-gray-400">Штрихкод партии:</span> 
+                                                <div className="font-medium text-indigo-600 mt-1">
+                                                    {formatGS1Barcode(item.batchBarcode).map((block, idx) => (
+                                                        <div key={idx}>{block}</div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {(item.batchDiopters || item.batchSize || item.batchSerial || item.batchExpiration) && (
+                                                <div className="flex gap-2 flex-wrap">
+                                                    {item.batchDiopters && <span>Диопт: {item.batchDiopters}</span>}
+                                                    {item.batchSize && <span>Размер: {item.batchSize}</span>}
+                                                    {item.batchSerial && <span>С/Н: {item.batchSerial}</span>}
                                                     {item.batchExpiration && <span>Годен до: {item.batchExpiration}</span>}
                                                 </div>
                                             )}
@@ -683,8 +783,9 @@ export default function NewSupplyForm({ onSuccess, initialDraft }: NewSupplyForm
                                                 setPrice(item.price);
                                                 setBatchBarcode(item.batchBarcode || '');
                                                 setBatchDiopters(item.batchDiopters || '');
+                                                setBatchSize(item.batchSize || '');
                                                 setBatchExpiration(item.batchExpiration || '');
-                                                setBatchProduction(item.batchProduction || '');
+                                                setBatchSerial(item.batchSerial || item.batchProduction || '');
                                                 // Remove from items list
                                                 setItems(items.filter((_, i) => i !== idx));
                                             }}

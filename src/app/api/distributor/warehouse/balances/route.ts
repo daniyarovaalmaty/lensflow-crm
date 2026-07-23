@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
             select: {
                 id: true,
                 name: true,
+                category: true,
                 sku: true,
                 trackSerials: true,
                 currentStock: true,

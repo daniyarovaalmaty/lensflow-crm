@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     try {
-        const { searchParams } = new URL(request.url);
+        const searchParams = (request as any).nextUrl.searchParams;
         const status = searchParams.get('status');
 
         const orgId = session.user.organizationId;

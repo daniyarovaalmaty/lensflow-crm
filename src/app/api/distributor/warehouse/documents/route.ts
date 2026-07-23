@@ -45,11 +45,24 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { type, status, documentNumber, documentDate, counterpartyName, declarationNumber, declarationDate, items, totalAmount, targetOrganizationId, notes } = body;
+        const { type, status, documentNumber, documentDate, counterpartyName, supplierId, declarationNumber, declarationDate, items, totalAmount, targetOrganizationId, notes } = body;
 
         const organizationId = session.user.organizationId;
         const performedById = session.user.id;
         const performedByName = session.user.name || 'System';
+
+        if (type === 'receipt') {
+            const existing = await prisma.stockDocument.findFirst({
+                where: {
+                    organizationId,
+                    type: 'receipt',
+                    documentNumber
+                }
+            });
+            if (existing) {
+                return NextResponse.json({ error: 'Документ с таким номером уже существует' }, { status: 400 });
+            }
+        }
 
         // Use a transaction if we are confirming, to ensure data consistency
         const document = await prisma.$transaction(async (tx) => {
@@ -61,6 +74,7 @@ export async function POST(req: NextRequest) {
                     type,
                     status,
                     counterpartyName,
+                    supplierId,
                     notes: JSON.stringify({ declarationNumber: declarationNumber || '', declarationDate: declarationDate || '', documentDate: documentDate || '', userNotes: notes || '' }),
                     totalAmount,
                     items,
@@ -106,7 +120,8 @@ export async function POST(req: NextRequest) {
                                 purchasePrice: item.price,
                                 expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : existingBatch.expiryDate,
                                 productionDate: item.batchProduction ? new Date(item.batchProduction) : existingBatch.productionDate,
-                                diopters: item.batchDiopters || existingBatch.diopters
+                                diopters: item.batchDiopters || existingBatch.diopters,
+                                size: item.batchSize || existingBatch.size
                             }
                         });
                         stockItemId = existingBatch.id;
@@ -121,6 +136,7 @@ export async function POST(req: NextRequest) {
                                 expiryDate: item.batchExpiration ? new Date(item.batchExpiration) : null,
                                 productionDate: item.batchProduction ? new Date(item.batchProduction) : null,
                                 diopters: item.batchDiopters || null,
+                                size: item.batchSize || null,
                                 receiptDocId: doc.id
                             }
                         });
@@ -201,6 +217,9 @@ export async function POST(req: NextRequest) {
             }
 
             return doc;
+        }, {
+            maxWait: 10000,
+            timeout: 30000
         });
 
         return NextResponse.json({ success: true, document });
@@ -208,6 +227,6 @@ export async function POST(req: NextRequest) {
         if (error?.code === 'P2002') {
             return NextResponse.json({ error: 'Один или несколько из введенных серийных номеров (штрихкодов) уже числятся на складе.' }, { status: 400 });
         }
-        return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal server error', details: error }, { status: 500 });
+        return NextResponse.json({ error: error?.message || 'Internal server error', details: String(error) }, { status: 500 });
     }
 }

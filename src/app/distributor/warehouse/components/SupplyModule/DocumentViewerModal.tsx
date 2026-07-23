@@ -1,13 +1,58 @@
-import { X, Box, Barcode } from 'lucide-react';
+import { X, Box, Barcode, Edit2, Check, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { formatGS1Barcode, parseGS1Barcode } from '@/lib/utils/gs1Parser';
+import ExpiryDateBadge from '../ExpiryDateBadge';
 
 interface DocumentViewerModalProps {
     document: any;
     allProducts?: any[];
     onClose: () => void;
+    onUpdated?: () => void;
+    onEditFull?: () => void;
 }
 
-export default function DocumentViewerModal({ document, allProducts, onClose }: DocumentViewerModalProps) {
+export default function DocumentViewerModal({ document, allProducts, onClose, onUpdated, onEditFull }: DocumentViewerModalProps) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    
+    const [counterpartyName, setCounterpartyName] = useState(document?.counterpartyName || '');
+    const [documentNumber, setDocumentNumber] = useState(document?.documentNumber || '');
+    const [decl, setDecl] = useState<any>(() => {
+        try { return JSON.parse(document?.notes || '{}'); } catch { return {}; }
+    });
+
     if (!document) return null;
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/distributor/warehouse/documents/${document.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...document, // existing document fields
+                    counterpartyName,
+                    documentNumber,
+                    notes: JSON.stringify(decl),
+                })
+            });
+            
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update');
+            }
+            
+            toast.success('Реквизиты обновлены');
+            setIsEditing(false);
+            if (onUpdated) onUpdated();
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Ошибка при сохранении');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -28,14 +73,74 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
 
                     <div>
                         <div className="mt-3 text-center sm:mt-0 sm:text-left">
-                            <h3 className="text-xl font-semibold leading-6 text-gray-900 mb-6">
-                                Детали поставки №{document.documentNumber}
-                            </h3>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-semibold leading-6 text-gray-900 flex items-center">
+                                    Детали поставки №
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={documentNumber}
+                                            onChange={(e) => setDocumentNumber(e.target.value)}
+                                            className="ml-2 block w-48 rounded-md border-gray-300 py-1 text-lg font-semibold shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        documentNumber || document.documentNumber
+                                    )}
+                                </h3>
+                                {document.status === 'confirmed' && (
+                                    isEditing ? (
+                                        <div className="flex space-x-2 pr-6">
+                                            <button
+                                                onClick={() => setIsEditing(false)}
+                                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                                            >
+                                                Отмена
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                disabled={isSaving}
+                                                className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none disabled:opacity-50"
+                                            >
+                                                {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+                                                Сохранить
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex space-x-2 mr-6">
+                                            {onEditFull && document.type === 'receipt' && (
+                                                <button
+                                                    onClick={onEditFull}
+                                                    className="inline-flex items-center px-3 py-1.5 border border-indigo-300 shadow-sm text-sm font-medium rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none"
+                                                >
+                                                    <Box className="w-4 h-4 mr-1" />
+                                                    Редактировать товары
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => setIsEditing(true)}
+                                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                                            >
+                                                <Edit2 className="w-4 h-4 mr-1" />
+                                                Изменить реквизиты
+                                            </button>
+                                        </div>
+                                    )
+                                )}
+                            </div>
                             
                             <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Поставщик</p>
-                                    <p className="mt-1 text-sm text-gray-900">{document.counterpartyName || 'Не указан'}</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={counterpartyName}
+                                            onChange={(e) => setCounterpartyName(e.target.value)}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">{counterpartyName || 'Не указан'}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Дата создания</p>
@@ -55,51 +160,56 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                     <p className="text-sm font-medium text-gray-500">Общая сумма</p>
                                     <p className="mt-1 text-lg font-semibold text-gray-900">{document.totalAmount.toLocaleString()} ₸</p>
                                 </div>
-                                {(() => {
-                                    let decl: any = {};
-                                    try { decl = JSON.parse(document.notes || '{}'); } catch {}
-                                    return (
-                                        <>
-                                            {decl.documentDate && (
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-500">Дата накладной</p>
-                                                    <p className="mt-1 text-sm text-gray-900">
-                                                    {(() => {
-                                                        const parts = decl.documentDate.split('-');
-                                                        if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
-                                                        if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
-                                                        return decl.documentDate;
-                                                    })()}
-                                                    </p>
-                                                </div>
-                                            )}
-                                            {decl.declarationNumber && (
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-500">Номер декларации</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationNumber}</p>
-                                                </div>
-                                            )}
-                                            {decl.declarationDate && (
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-500">Дата декларации</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{decl.declarationDate}</p>
-                                                </div>
-                                            )}
-                                            {decl.userNotes && (
-                                                <div className="col-span-2">
-                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{decl.userNotes}</p>
-                                                </div>
-                                            )}
-                                            {Object.keys(decl).length === 0 && document.notes && (
-                                                <div className="col-span-2">
-                                                    <p className="text-sm font-medium text-gray-500">Примечание</p>
-                                                    <p className="mt-1 text-sm text-gray-900">{document.notes}</p>
-                                                </div>
-                                            )}
-                                        </>
-                                    );
-                                })()}
+                                
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Дата накладной</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            value={decl.documentDate || ''}
+                                            onChange={(e) => setDecl({ ...decl, documentDate: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">
+                                            {decl.documentDate ? (() => {
+                                                const parts = decl.documentDate.split('-');
+                                                if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                                                if (parts.length === 2) return `${parts[1]}.${parts[0]}`;
+                                                return decl.documentDate;
+                                            })() : '—'}
+                                        </p>
+                                    )}
+                                </div>
+                                
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Номер декларации</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={decl.declarationNumber || ''}
+                                            onChange={(e) => setDecl({ ...decl, declarationNumber: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            placeholder="Например, 10502010/120524/1234567"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">{decl.declarationNumber || '—'}</p>
+                                    )}
+                                </div>
+                                
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Дата декларации</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            value={decl.declarationDate || ''}
+                                            onChange={(e) => setDecl({ ...decl, declarationDate: e.target.value })}
+                                            className="mt-1 block w-full rounded-md border-gray-300 py-1.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                    ) : (
+                                        <p className="mt-1 text-sm text-gray-900">{decl.declarationDate || '—'}</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="mt-4">
@@ -128,12 +238,33 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                             </div>
                                                         )}
                                                         {item.batchBarcode && (
-                                                            <div className="mt-1.5 space-y-1">
-                                                                <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit block">
-                                                                    С/Н (Партия): {item.batchBarcode}
-                                                                </span>
-                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
-                                                                    {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
+                                                            <div className="mt-1.5 space-y-2">
+                                                                <div className="flex flex-wrap gap-4">
+                                                                    <div className="inline-flex flex-col items-start rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit">
+                                                                        <span className="text-indigo-400 mb-0.5">Штрихкод партии:</span>
+                                                                        {formatGS1Barcode(item.batchBarcode).map((block, i) => (
+                                                                            <span key={i} className="block">{block}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                    {(() => {
+                                                                        const parsed = parseGS1Barcode(item.batchBarcode);
+                                                                        const extracted = parsed.serialNumber || parsed.batchNumber;
+                                                                        if (!extracted) return null;
+                                                                        return (
+                                                                            <div className="inline-flex flex-col items-start rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 mb-1 w-fit h-fit">
+                                                                                <span className="text-blue-400 mb-0.5">Серийный номер:</span>
+                                                                                <span className="font-semibold">{extracted}</span>
+                                                                            </div>
+                                                                        );
+                                                                    })()}
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500 items-center">
+                                                                    {item.batchExpiration && (
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span>Срок:</span>
+                                                                            <ExpiryDateBadge date={item.batchExpiration} />
+                                                                        </div>
+                                                                    )}
                                                                     {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
                                                                     {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
                                                                 </div>
@@ -142,9 +273,27 @@ export default function DocumentViewerModal({ document, allProducts, onClose }: 
                                                         {item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0 && (
                                                             <div className="mt-2 text-xs text-gray-500 flex gap-1 flex-wrap items-center">
                                                                 <span className="text-gray-400 mr-1">С/Н:</span>
-                                                                {item.serialNumbers.map((sn: string) => (
-                                                                    <span key={sn} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-100">{sn}</span>
-                                                                ))}
+                                                                {item.serialNumbers.map((sn: string, idx: number) => {
+                                                                    const parsed = parseGS1Barcode(sn);
+                                                                    const extracted = parsed.serialNumber || parsed.batchNumber;
+                                                                    return (
+                                                                    <div key={idx} className="px-1.5 py-1 bg-indigo-50 text-indigo-700 rounded border border-indigo-100 flex flex-col items-center text-center">
+                                                                        {extracted ? (
+                                                                            <>
+                                                                                <span className="font-semibold text-sm mb-0.5">{extracted}</span>
+                                                                                <div className="text-[10px] text-indigo-400 flex flex-col items-center leading-tight">
+                                                                                    {formatGS1Barcode(sn).map((block, i) => (
+                                                                                        <span key={i}>{block}</span>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </>
+                                                                        ) : (
+                                                                            formatGS1Barcode(sn).map((block, i) => (
+                                                                                <span key={i}>{block}</span>
+                                                                            ))
+                                                                        )}
+                                                                    </div>
+                                                                )})}
                                                             </div>
                                                         )}
                                                     </td>

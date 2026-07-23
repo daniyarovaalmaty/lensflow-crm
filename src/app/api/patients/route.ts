@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = (request as any).nextUrl.searchParams;
     const q = searchParams.get('q') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const noSync = searchParams.get('noSync') === '1'; // skip sync for subsequent pages
@@ -211,6 +211,33 @@ export async function POST(request: Request) {
             lastCorrection: lastCorrection || null,
         },
     });
+
+    // Push to Itigris if configured
+    if (session.user.organizationId) {
+        try {
+            const org = await prisma.organization.findUnique({
+                where: { id: session.user.organizationId }
+            });
+            const meta = org?.metadata as any;
+            if (meta?.itigris?.company) {
+                const { ItigrisApiClient } = await import('@/lib/itigris/client');
+                const { ItigrisSyncService } = await import('@/lib/itigris/sync');
+                
+                const itigrisApi = new ItigrisApiClient({
+                    company: meta.itigris.company,
+                    login: meta.itigris.login,
+                    password: meta.itigris.password,
+                    departmentId: meta.itigris.departmentId,
+                    organizationId: session.user.organizationId
+                });
+                
+                const syncService = new ItigrisSyncService(itigrisApi, prisma as any, session.user.organizationId);
+                await syncService.pushPatient(patient.id, { createIfMissing: true });
+            }
+        } catch (e) {
+            console.warn('[PatientSync] Could not push to Itigris:', e);
+        }
+    }
 
     return NextResponse.json(patient, { status: 201 });
 }

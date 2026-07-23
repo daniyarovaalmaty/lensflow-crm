@@ -249,7 +249,11 @@ export default function InventoryModule() {
                                 ref={barcodeRef}
                                 autoFocus
                                 value={barcodeInput}
-                                onChange={(e) => setBarcodeInput(e.target.value)}
+                                onChange={(e) => {
+                                    const rawVal = e.target.value;
+                                    const hasCyrillic = /[\u0400-\u04FF]/.test(rawVal);
+                                    setBarcodeInput(hasCyrillic ? translateCyrillicToEnglishLayout(rawVal) : rawVal);
+                                }}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         e.preventDefault();

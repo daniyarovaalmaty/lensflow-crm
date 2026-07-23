@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Banknote, CreditCard, ArrowLeftRight, CheckCircle2, AlertTriangle, 
     ArrowLeft, Lock, Unlock, ArrowDownToLine, ArrowUpFromLine, Clock, 
-    FileText, User, Info, Smartphone, RefreshCw, X, Check, HelpCircle
+    FileText, User, Info, Smartphone, RefreshCw, X, Check, HelpCircle,
+    ChevronLeft, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
@@ -104,31 +105,41 @@ export default function CashShiftsPage() {
     const [kaspiStatus, setKaspiStatus] = useState<'idle' | 'triggering' | 'pending' | 'success' | 'failed'>('idle');
     const [kaspiTxId, setKaspiTxId] = useState('');
 
-    const loadRegistersAndShifts = useCallback(async () => {
+    const ITEMS_PER_PAGE = 20;
+    const [txPage, setTxPage] = useState(1);
+    const [histPage, setHistPage] = useState(1);
+
+    const loadRegistersAndShifts = useCallback(async (branchId?: string) => {
         setLoading(true);
         try {
+            const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+            
             // Load cash registers
-            const regRes = await fetch('/api/optic/cash-registers');
+            const regRes = await fetch(`/api/optic/cash-registers?orgId=${orgId}`);
             if (regRes.ok) {
                 const regData = await regRes.json();
                 setRegisters(regData);
                 if (regData.length > 0) {
                     setSelectedRegister(regData[0].id);
+                } else {
+                    setSelectedRegister('');
                 }
             }
 
             // Load active shift
-            const shiftRes = await fetch('/api/optic/cash-shifts');
+            const shiftRes = await fetch(`/api/optic/cash-shifts?orgId=${orgId}`);
             if (shiftRes.ok) {
                 const shiftData = await shiftRes.json();
                 setActiveShift(shiftData);
+                setTxPage(1);
             }
 
             // Load shift history
-            const histRes = await fetch('/api/optic/cash-shifts/history');
+            const histRes = await fetch(`/api/optic/cash-shifts/history?orgId=${orgId}`);
             if (histRes.ok) {
                 const histData = await histRes.json();
                 setHistoryShifts(histData);
+                setHistPage(1);
             }
         } catch (err) {
             setError('Ошибка при загрузке кассовых данных');
@@ -139,6 +150,14 @@ export default function CashShiftsPage() {
 
     useEffect(() => {
         loadRegistersAndShifts();
+        
+        const handleBranchChange = (e: any) => {
+            if (e.detail?.branchId) {
+                loadRegistersAndShifts(e.detail.branchId);
+            }
+        };
+        window.addEventListener('branchChanged', handleBranchChange);
+        return () => window.removeEventListener('branchChanged', handleBranchChange);
     }, [loadRegistersAndShifts]);
 
     const handleOpenShift = async () => {
@@ -475,7 +494,9 @@ export default function CashShiftsPage() {
                                                 </td>
                                             </tr>
                                         ) : (
-                                            activeShift.transactions.map((tx) => (
+                                            activeShift.transactions
+                                            .slice((txPage - 1) * ITEMS_PER_PAGE, txPage * ITEMS_PER_PAGE)
+                                            .map((tx) => (
                                                 <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors">
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
@@ -526,6 +547,34 @@ export default function CashShiftsPage() {
                                 </table>
                             </div>
                         </div>
+
+                        {/* Pagination for Transactions */}
+                        {activeShift.transactions && activeShift.transactions.length > ITEMS_PER_PAGE && (
+                            <div className="flex items-center justify-between mt-4 px-1">
+                                <div className="text-sm text-gray-500">
+                                    Показано {((txPage - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(txPage * ITEMS_PER_PAGE, activeShift.transactions.length)} из {activeShift.transactions.length}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setTxPage(p => Math.max(1, p - 1))}
+                                        disabled={txPage === 1}
+                                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </button>
+                                    <span className="text-sm font-medium px-4">
+                                        Страница {txPage} из {Math.ceil(activeShift.transactions.length / ITEMS_PER_PAGE)}
+                                    </span>
+                                    <button
+                                        onClick={() => setTxPage(p => Math.min(Math.ceil(activeShift.transactions!.length / ITEMS_PER_PAGE), p + 1))}
+                                        disabled={txPage === Math.ceil(activeShift.transactions.length / ITEMS_PER_PAGE)}
+                                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -556,7 +605,9 @@ export default function CashShiftsPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {historyShifts.map((hShift) => (
+                                        {historyShifts
+                                        .slice((histPage - 1) * ITEMS_PER_PAGE, histPage * ITEMS_PER_PAGE)
+                                        .map((hShift) => (
                                             <tr 
                                                 key={hShift.id} 
                                                 className="hover:bg-gray-50/50 transition-colors cursor-pointer"
@@ -598,6 +649,33 @@ export default function CashShiftsPage() {
                                     </tbody>
                                 </table>
                             </div>
+                            {/* Pagination for History */}
+                            {historyShifts.length > ITEMS_PER_PAGE && (
+                                <div className="flex items-center justify-between mt-4 px-1 pb-4">
+                                    <div className="text-sm text-gray-500">
+                                        Показано {((histPage - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(histPage * ITEMS_PER_PAGE, historyShifts.length)} из {historyShifts.length}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setHistPage(p => Math.max(1, p - 1))}
+                                            disabled={histPage === 1}
+                                            className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                        </button>
+                                        <span className="text-sm font-medium px-4">
+                                            Страница {histPage} из {Math.ceil(historyShifts.length / ITEMS_PER_PAGE)}
+                                        </span>
+                                        <button
+                                            onClick={() => setHistPage(p => Math.min(Math.ceil(historyShifts.length / ITEMS_PER_PAGE), p + 1))}
+                                            disabled={histPage === Math.ceil(historyShifts.length / ITEMS_PER_PAGE)}
+                                            className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         )}
                     </div>

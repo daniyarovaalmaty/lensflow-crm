@@ -68,6 +68,9 @@ export default function OpticDashboard() {
     const [sortBy, setSortBy] = useState<SortOption>('newest');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalOrders, setTotalOrders] = useState(0);
     const [showFilters, setShowFilters] = useState(false);
     const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -90,15 +93,35 @@ export default function OpticDashboard() {
     };
 
     useEffect(() => {
+        setPage(1);
+    }, [searchQuery, filter, sortBy, dateFrom, dateTo]);
+
+    useEffect(() => {
         loadOrders();
-    }, []);
+    }, [page, searchQuery, filter, sortBy, dateFrom, dateTo]);
 
     const loadOrders = async () => {
         try {
-            const response = await fetch('/api/orders');
+            setIsLoading(true);
+            const params = new URLSearchParams({ page: page.toString(), limit: '50', sortBy });
+            if (searchQuery.trim()) params.append('search', searchQuery.trim());
+            if (filter !== 'all') {
+                if (filter === 'unpaid') params.append('paymentStatus', 'unpaid');
+                else params.append('status', filter);
+            }
+            if (dateFrom) params.append('dateFrom', dateFrom);
+            if (dateTo) params.append('dateTo', dateTo);
+
+            const response = await fetch(`/api/orders?${params.toString()}`);
             if (response.ok) {
                 const data = await response.json();
-                setOrders(data);
+                if (data.data) {
+                    setOrders(data.data);
+                    setTotalPages(data.totalPages || 1);
+                    setTotalOrders(data.total || 0);
+                } else {
+                    setOrders(data);
+                }
             }
         } catch (error) {
             console.error('Failed to load orders:', error);
@@ -139,64 +162,15 @@ export default function OpticDashboard() {
         }
     };
 
-    const filteredOrders = useMemo(() => {
-        let result = [...orders];
-
-        // Status filter
-        if (filter === 'unpaid') {
-            result = result.filter(o => (o as any).payment_status !== 'paid');
-        } else if (filter !== 'all') {
-            result = result.filter(o => o.status === filter);
-        }
-
-        // Search filter
-        if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase().trim();
-            result = result.filter(o =>
-                o.order_id.toLowerCase().includes(q) ||
-                o.patient.name.toLowerCase().includes(q) ||
-                (o.meta.doctor || '').toLowerCase().includes(q) ||
-                (o.company || '').toLowerCase().includes(q)
-            );
-        }
-
-        // Date range filter
-        if (dateFrom) {
-            const from = new Date(dateFrom);
-            result = result.filter(o => new Date(o.meta.created_at) >= from);
-        }
-        if (dateTo) {
-            const to = new Date(dateTo);
-            to.setHours(23, 59, 59, 999);
-            result = result.filter(o => new Date(o.meta.created_at) <= to);
-        }
-
-        // Sort
-        result.sort((a, b) => {
-            switch (sortBy) {
-                case 'newest':
-                    return new Date(b.meta.created_at).getTime() - new Date(a.meta.created_at).getTime();
-                case 'oldest':
-                    return new Date(a.meta.created_at).getTime() - new Date(b.meta.created_at).getTime();
-                case 'patient_az':
-                    return a.patient.name.localeCompare(b.patient.name, 'ru');
-                case 'patient_za':
-                    return b.patient.name.localeCompare(a.patient.name, 'ru');
-                default:
-                    return 0;
-            }
-        });
-
-        return result;
-    }, [orders, filter, searchQuery, sortBy, dateFrom, dateTo]);
+    const filteredOrders = orders; // Filtering is now server-side
 
     const stats = {
-        total: orders.length,
-        new: orders.filter(o => o.status === 'new').length,
-        in_production: orders.filter(o => o.status === 'in_production').length,
-        ready: orders.filter(o => o.status === 'ready').length,
-        shipped: orders.filter(o => o.status === 'shipped').length,
-        delivered: orders.filter(o => o.status === 'delivered').length,
+        total: filter === 'all' && !searchQuery && !dateFrom && !dateTo ? totalOrders : '-',
+        new: '-', // Cannot count exact status numbers without fetching all, showing '-' for now
+        in_production: '-',
+        ready: '-',
+        shipped: '-',
+        delivered: '-',
     };
 
     const toggleExpand = (orderId: string) => {
@@ -661,9 +635,6 @@ export default function OpticDashboard() {
                             `}
                         >
                             {status === 'all' ? 'Все' : OrderStatusLabels[status]}
-                            <span className="ml-1 sm:ml-1.5 text-xs opacity-70">
-                                {status === 'all' ? orders.length : orders.filter(o => o.status === status).length}
-                            </span>
                         </button>
                     ))}
                     <button
@@ -676,15 +647,12 @@ export default function OpticDashboard() {
                         `}
                     >
                         Неоплаченные
-                        <span className="ml-1 sm:ml-1.5 text-xs opacity-70">
-                            {orders.filter(o => (o as any).payment_status !== 'paid').length}
-                        </span>
                     </button>
                 </div>
 
                 {/* Results count */}
                 <p className="text-sm text-gray-500 mb-4">
-                    Найдено: {filteredOrders.length} {filteredOrders.length === 1 ? 'заказ' : filteredOrders.length < 5 ? 'заказа' : 'заказов'}
+                    Найдено: {totalOrders} {totalOrders === 1 ? 'заказ' : totalOrders < 5 ? 'заказа' : 'заказов'}
                 </p>
 
                 {/* Orders List */}
@@ -1298,6 +1266,27 @@ export default function OpticDashboard() {
                                 </motion.div>
                             );
                         })}
+                    </div>
+                )}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-6 pb-6">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1 || isLoading}
+                            className="px-4 py-2 border rounded-xl hover:bg-gray-50 disabled:opacity-50 text-sm font-medium"
+                        >
+                            Назад
+                        </button>
+                        <span className="text-sm text-gray-600 font-medium px-4">
+                            Страница {page} из {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages || isLoading}
+                            className="px-4 py-2 border rounded-xl hover:bg-gray-50 disabled:opacity-50 text-sm font-medium"
+                        >
+                            Вперед
+                        </button>
                     </div>
                 )}
             {/* Expedite Order Modal */}

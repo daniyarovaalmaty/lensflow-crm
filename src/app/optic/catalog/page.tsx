@@ -8,7 +8,7 @@ import {
     Package, Plus, Search, X, Eye, Edit2, Trash2,
     Tag, ShoppingBag, Droplets, Glasses, Wrench, Star,
     Camera, DollarSign, AlertTriangle, BarChart3, Image as ImageIcon, ArrowLeft,
-    Sparkles, Send, Bot, Loader2, MessageSquare, Printer, Upload
+    Sparkles, Send, Bot, Loader2, MessageSquare, Printer, Upload, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
@@ -80,6 +80,8 @@ export default function OpticCatalogPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 24;
     const [showForm, setShowForm] = useState(false);
     const [editProduct, setEditProduct] = useState<OpticProduct | null>(null);
     const [detailProduct, setDetailProduct] = useState<OpticProduct | null>(null);
@@ -129,7 +131,29 @@ export default function OpticCatalogPage() {
     ]);
     const aiChatRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => { loadProducts(); }, []);
+    // Reset pagination when search or filter changes
+    useEffect(() => {
+        setPage(1);
+    }, [search, categoryFilter]);
+
+    useEffect(() => {
+        const loadInitial = () => {
+            const savedOrgId = localStorage.getItem('lf_selected_branch') || 'all';
+            loadProducts(savedOrgId);
+        };
+        
+        loadInitial();
+
+        const handleBranchChange = (e: any) => {
+            if (e.detail?.branchId) {
+                setLoading(true);
+                loadProducts(e.detail.branchId);
+            }
+        };
+
+        window.addEventListener('branch-changed', handleBranchChange);
+        return () => window.removeEventListener('branch-changed', handleBranchChange);
+    }, []);
 
     // WebUSB printer auto-reconnect
     useEffect(() => {
@@ -165,10 +189,19 @@ export default function OpticCatalogPage() {
         }
     }, []);
 
-    const loadProducts = async () => {
+    const loadProducts = async (orgId?: string) => {
         try {
-            const res = await fetch('/api/optic/products?t=' + Date.now(), { cache: 'no-store' });
+            const url = new URL('/api/optic/products', window.location.origin);
+            url.searchParams.set('t', Date.now().toString());
+            if (orgId && orgId !== 'all') {
+                url.searchParams.set('orgId', orgId);
+            } else if (orgId === 'all') {
+                url.searchParams.set('orgId', 'all');
+            }
+            const res = await fetch(url.toString(), { cache: 'no-store' });
             if (res.ok) setProducts(await res.json());
+        } catch (e) {
+            console.error('Failed to load products', e);
         } finally {
             setLoading(false);
         }
@@ -837,6 +870,13 @@ export default function OpticCatalogPage() {
         return result;
     }, [products, categoryFilter, search]);
 
+    const paginatedProducts = useMemo(() => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredProducts, page]);
+
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
     const openCreateForm = () => {
         setEditProduct(null);
         setForm({
@@ -1286,7 +1326,7 @@ export default function OpticCatalogPage() {
                     </div>
 
                     {/* Search + Category Filter */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col gap-3">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
@@ -1338,6 +1378,32 @@ export default function OpticCatalogPage() {
 
             {/* Product Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between mb-6 px-4">
+                        <div className="text-sm text-gray-500">
+                            Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <span className="text-sm font-medium px-4">
+                                Страница {page} из {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {filteredProducts.length === 0 ? (
                     <div className="text-center py-20">
                         <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -1348,7 +1414,7 @@ export default function OpticCatalogPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredProducts.map(product => {
+                        {paginatedProducts.map(product => {
                             const cat = CATEGORIES[product.category];
                             const CatIcon = cat?.icon || Package;
                             const stock = product.currentStock;
@@ -1357,6 +1423,7 @@ export default function OpticCatalogPage() {
                             const marginPct = product.purchasePrice > 0 ? Math.round((margin / product.purchasePrice) * 100) : 0;
                             const mainImage = (product.images as string[] | null)?.[0];
 
+                            const isItigris = product.specs?.source === 'itigris' || product.sku?.startsWith('ITG-');
                             return (
                                 <motion.div
                                     key={product.id}
@@ -1396,7 +1463,14 @@ export default function OpticCatalogPage() {
                                         {product.brand && (
                                             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{product.brand}</p>
                                         )}
-                                        <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{product.name}</h3>
+                                        <h3 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2 mb-1 flex items-center flex-wrap gap-1">
+                                            {product.name}
+                                            {isItigris && (
+                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-100 text-orange-600 uppercase tracking-wider">
+                                                    ITIGRIS
+                                                </span>
+                                            )}
+                                        </h3>
                                         {product.shortDescription && (
                                             <p className="text-xs text-gray-500 mt-1 line-clamp-1">{product.shortDescription}</p>
                                         )}
@@ -1434,18 +1508,22 @@ export default function OpticCatalogPage() {
                                                 <Printer className="w-3.5 h-3.5" /> Печать
                                             </button>
                                         )}
-                                        <button
-                                            onClick={e => { e.stopPropagation(); openEditForm(product); }}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                                        >
-                                            <Edit2 className="w-3.5 h-3.5" /> Изменить
-                                        </button>
-                                        <button
-                                            onClick={e => { e.stopPropagation(); handleDelete(product.id); }}
-                                            className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" /> Удалить
-                                        </button>
+                                        {!isItigris && (
+                                            <>
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); openEditForm(product); }}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5" /> Изменить
+                                                </button>
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); handleDelete(product.id); }}
+                                                    className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" /> Удалить
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </motion.div>
                             );
@@ -1769,18 +1847,22 @@ export default function OpticCatalogPage() {
                                             <Printer className="w-4 h-4" /> Печать этикетки
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => { setDetailProduct(null); openEditForm(detailProduct); }}
-                                        className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <Edit2 className="w-4 h-4" /> Редактировать
-                                    </button>
-                                    <button
-                                        onClick={() => { handleDelete(detailProduct.id); setDetailProduct(null); }}
-                                        className="py-2.5 px-4 border border-red-200 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    {detailProduct.specs?.source !== 'itigris' && !detailProduct.sku?.startsWith('ITG-') && (
+                                        <>
+                                            <button
+                                                onClick={() => { setDetailProduct(null); openEditForm(detailProduct); }}
+                                                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Edit2 className="w-4 h-4" /> Редактировать
+                                            </button>
+                                            <button
+                                                onClick={() => { handleDelete(detailProduct.id); setDetailProduct(null); }}
+                                                className="py-2.5 px-4 border border-red-200 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

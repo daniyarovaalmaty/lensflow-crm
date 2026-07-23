@@ -45,12 +45,27 @@ interface OpticProduct {
 
 // ==================== Constants ====================
 const CATEGORIES: Record<string, { label: string; icon: any; color: string }> = {
+    iol: { label: 'ИОЛ (интраокулярные линзы)', icon: Eye, color: 'bg-blue-50 text-blue-700' },
+    diagnostic_lens: { label: 'Диагностические линзы', icon: Eye, color: 'bg-indigo-50 text-indigo-700' },
+    viscoelastic: { label: 'Вискоэластики', icon: Droplets, color: 'bg-cyan-50 text-cyan-700' },
+    ophthalmic_solution: { label: 'Офтальмологические растворы', icon: Droplets, color: 'bg-teal-50 text-teal-700' },
+    solutions: { label: 'Офтальмологические растворы', icon: Droplets, color: 'bg-teal-50 text-teal-700' },
+    silicone_oil: { label: 'Силиконовое масло', icon: Droplets, color: 'bg-yellow-50 text-yellow-700' },
+    corneal_ring: { label: 'Роговичные кольца/сегменты', icon: Tag, color: 'bg-purple-50 text-purple-700' },
+    rings: { label: 'Роговичные кольца/сегменты', icon: Tag, color: 'bg-purple-50 text-purple-700' },
+    surgical_kit: { label: 'Хирургические наборы', icon: Package, color: 'bg-red-50 text-red-700' },
+    implant: { label: 'Импланты/протезы', icon: Package, color: 'bg-pink-50 text-pink-700' },
+    drainage: { label: 'Дренажи', icon: Droplets, color: 'bg-green-50 text-green-700' },
+    equipment: { label: 'Оборудование', icon: Wrench, color: 'bg-gray-50 text-gray-700' },
+    instrument: { label: 'Инструменты', icon: Wrench, color: 'bg-orange-50 text-orange-700' },
+    consumable: { label: 'Расходные материалы', icon: ShoppingBag, color: 'bg-lime-50 text-lime-700' },
+    contact_lens: { label: 'Контактные линзы', icon: Eye, color: 'bg-violet-50 text-violet-700' },
     frame: { label: 'Оправы', icon: Glasses, color: 'bg-blue-50 text-blue-700' },
-    sun_glasses: { label: 'Солнцезащитные', icon: Star, color: 'bg-amber-50 text-amber-700' },
-    contact_lens: { label: 'Контактные линзы', icon: Eye, color: 'bg-purple-50 text-purple-700' },
+    sun_glasses: { label: 'Солнцезащитные очки', icon: Star, color: 'bg-amber-50 text-amber-700' },
     spectacle_lens: { label: 'Очковые линзы', icon: Eye, color: 'bg-indigo-50 text-indigo-700' },
     solution: { label: 'Растворы', icon: Droplets, color: 'bg-cyan-50 text-cyan-700' },
     accessory: { label: 'Аксессуары', icon: ShoppingBag, color: 'bg-pink-50 text-pink-700' },
+    other: { label: 'Другое', icon: Package, color: 'bg-gray-50 text-gray-700' },
     service_exam: { label: 'Проверка зрения', icon: Wrench, color: 'bg-emerald-50 text-emerald-700' },
     service_fitting: { label: 'Подбор линз', icon: Wrench, color: 'bg-emerald-50 text-emerald-700' },
     service_cutting: { label: 'Вытачка линз', icon: Wrench, color: 'bg-emerald-50 text-emerald-700' },
@@ -89,7 +104,6 @@ export default function OpticCatalogPage() {
     const [labelWidth, setLabelWidth] = useState(58); // default 58mm
     const [labelHeight, setLabelHeight] = useState(30); // default 30mm
     const [includePrice, setIncludePrice] = useState(true);
-    const [includeBrand, setIncludeBrand] = useState(true);
     const [includeName, setIncludeName] = useState(true);
     const [printAlignment, setPrintAlignment] = useState<'left' | 'center' | 'right'>('left');
 
@@ -178,8 +192,7 @@ export default function OpticCatalogPage() {
         product: OpticProduct,
         widthMm: number = 58,
         heightMm: number = 30,
-        incPrice: boolean = true,
-        incBrand: boolean = true
+        incPrice: boolean = true
     ) => {
         const barcodeToPrint = product.barcode || product.sku;
         if (!barcodeToPrint) {
@@ -252,19 +265,6 @@ export default function OpticCatalogPage() {
                                 align-items: flex-start;
                                 overflow: hidden;
                             }
-                            .brand-tail {
-                                font-size: 10px;
-                                font-weight: bold;
-                                text-transform: uppercase;
-                                color: #000000;
-                                line-height: 1;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                width: 180%;
-                                transform: scale(0.55);
-                                transform-origin: left top;
-                            }
                             .name-tail {
                                 font-size: 10px;
                                 font-weight: bold;
@@ -307,7 +307,6 @@ export default function OpticCatalogPage() {
                     <body>
                         <div class="tail-label">
                             <div class="left-part">
-                                ${incBrand ? `<div class="brand-tail">${product.brand || 'ОПТИКА'}</div>` : ''}
                                 ${includeName ? `<div class="name-tail">${product.name}</div>` : ''}
                                 ${incPrice ? `<div class="price-tail">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>` : ''}
                             </div>
@@ -346,9 +345,7 @@ export default function OpticCatalogPage() {
                                 justify-content: space-between;
                                 align-items: center;
                                 ${shiftStyle}
-                            }
-                            .brand {
-                                font-size: ${heightMm > 25 ? '8px' : '6px'};
+                            };
                                 font-weight: bold;
                                 text-transform: uppercase;
                                 color: black;
@@ -386,7 +383,6 @@ export default function OpticCatalogPage() {
                         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
                     </head>
                     <body>
-                        ${incBrand ? `<div class="brand">${product.brand || 'ОПТИКА'}</div>` : ''}
                         ${includeName ? `<div class="name">${product.name}</div>` : ''}
                         <svg id="barcode"></svg>
                         ${incPrice ? `<div class="price">${product.retailPrice.toLocaleString('ru-RU')} ₸</div>` : ''}
@@ -504,9 +500,8 @@ export default function OpticCatalogPage() {
         return 1; // Fallback Bulk Out endpoint
     };
 
-    const generateZpl = (product: OpticProduct, incPrice: boolean, incBrand: boolean) => {
+    const generateZpl = (product: OpticProduct, incPrice: boolean) => {
         const barcode = product.barcode || product.sku || '1234567890';
-        const brand = (product.brand || 'ОПТИКА').substring(0, 15).toUpperCase();
         const name = product.name.substring(0, 20);
         const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
         
@@ -521,10 +516,6 @@ export default function OpticCatalogPage() {
         zpl += `^CI28\r\n`;
         
         let textY = 15;
-        if (incBrand) {
-            zpl += `^FT10,${textY}^A0N,14,14^FD${brand}^FS\r\n`;
-            textY += 20;
-        }
         if (includeName) {
             zpl += `^FT10,${textY}^A0N,16,16^FD${name}^FS\r\n`;
             textY += 22;
@@ -541,9 +532,8 @@ export default function OpticCatalogPage() {
         return zpl;
     };
 
-    const generateTspl = (product: OpticProduct, incPrice: boolean, incBrand: boolean) => {
+    const generateTspl = (product: OpticProduct, incPrice: boolean) => {
         const barcode = product.barcode || product.sku || '1234567890';
-        const brand = (product.brand || 'ОПТИКА').substring(0, 15).toUpperCase();
         const name = product.name.substring(0, 20);
         const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
         
@@ -559,10 +549,6 @@ export default function OpticCatalogPage() {
         tspl += `CLS\r\n`;
         
         let textY = 10;
-        if (incBrand) {
-            tspl += `TEXT 10,${textY},"1",0,1,1,"${brand}"\r\n`;
-            textY += 20;
-        }
         if (includeName) {
             tspl += `TEXT 10,${textY},"1",0,1,1,"${name}"\r\n`;
             textY += 22;
@@ -576,9 +562,8 @@ export default function OpticCatalogPage() {
         return tspl;
     };
 
-    const generateZplStandard = (product: OpticProduct, widthMm: number, heightMm: number, incPrice: boolean, incBrand: boolean) => {
+    const generateZplStandard = (product: OpticProduct, widthMm: number, heightMm: number, incPrice: boolean) => {
         const barcode = product.barcode || product.sku || '1234567890';
-        const brand = (product.brand || 'ОПТИКА').substring(0, 20).toUpperCase();
         const name = product.name.substring(0, 25);
         const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
         const widthDots = widthMm * 8;
@@ -595,10 +580,6 @@ export default function OpticCatalogPage() {
         zpl += `^CI28\r\n`;
         
         let currentY = 30;
-        if (incBrand) {
-            zpl += `^FT${Math.round(widthDots / 2)},${currentY}^A0N,20,20^FB${widthDots},1,0,C^FD${brand}^FS\r\n`;
-            currentY += 25;
-        }
         if (includeName) {
             zpl += `^FT${Math.round(widthDots / 2)},${currentY}^A0N,22,22^FB${widthDots},2,0,C^FD${name}^FS\r\n`;
             currentY += 50;
@@ -616,9 +597,8 @@ export default function OpticCatalogPage() {
         return zpl;
     };
 
-    const generateTsplStandard = (product: OpticProduct, widthMm: number, heightMm: number, incPrice: boolean, incBrand: boolean) => {
+    const generateTsplStandard = (product: OpticProduct, widthMm: number, heightMm: number, incPrice: boolean) => {
         const barcode = product.barcode || product.sku || '1234567890';
-        const brand = (product.brand || 'ОПТИКА').substring(0, 20).toUpperCase();
         const name = product.name.substring(0, 25);
         const price = `${product.retailPrice.toLocaleString('ru-RU')} T`;
         
@@ -634,10 +614,6 @@ export default function OpticCatalogPage() {
         tspl += `CLS\r\n`;
         
         let currentY = 20;
-        if (incBrand) {
-            tspl += `TEXT 30,${currentY},"1",0,1,1,"${brand}"\r\n`;
-            currentY += 25;
-        }
         if (includeName) {
             tspl += `TEXT 30,${currentY},"1",0,1,1,"${name}"\r\n`;
             currentY += 30;
@@ -668,12 +644,12 @@ export default function OpticCatalogPage() {
             
             if (printerLanguage === 'zpl') {
                 commandString = isTail 
-                    ? generateZpl(printProduct, includePrice, includeBrand)
-                    : generateZplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                    ? generateZpl(printProduct, includePrice)
+                    : generateZplStandard(printProduct, labelWidth, labelHeight, includePrice);
             } else {
                 commandString = isTail
-                    ? generateTspl(printProduct, includePrice, includeBrand)
-                    : generateTsplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                    ? generateTspl(printProduct, includePrice)
+                    : generateTsplStandard(printProduct, labelWidth, labelHeight, includePrice);
             }
             
             const encoder = new TextEncoder();
@@ -744,12 +720,12 @@ export default function OpticCatalogPage() {
             
             if (printerLanguage === 'zpl') {
                 commandString = isTail 
-                    ? generateZpl(printProduct, includePrice, includeBrand)
-                    : generateZplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                    ? generateZpl(printProduct, includePrice)
+                    : generateZplStandard(printProduct, labelWidth, labelHeight, includePrice);
             } else {
                 commandString = isTail
-                    ? generateTspl(printProduct, includePrice, includeBrand)
-                    : generateTsplStandard(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                    ? generateTspl(printProduct, includePrice)
+                    : generateTsplStandard(printProduct, labelWidth, labelHeight, includePrice);
             }
             
             const encoder = new TextEncoder();
@@ -827,10 +803,8 @@ export default function OpticCatalogPage() {
             const s = search.toLowerCase();
             result = result.filter(p =>
                 p.name.toLowerCase().includes(s) ||
-                p.brand?.toLowerCase().includes(s) ||
                 p.sku?.toLowerCase().includes(s) ||
-                p.barcode?.toLowerCase().includes(s) ||
-                p.model?.toLowerCase().includes(s)
+                p.barcode?.toLowerCase().includes(s)
             );
         }
         return result;
@@ -839,9 +813,9 @@ export default function OpticCatalogPage() {
     const openCreateForm = () => {
         setEditProduct(null);
         setForm({
-            name: '', category: 'frame', brand: '', model: '', sku: '', barcode: '',
+            name: '', category: 'iol', brand: '', model: '', sku: '', barcode: '',
             shortDescription: '', fullDescription: '', purchasePrice: '', retailPrice: '',
-            minStock: '0', unit: 'шт', trackSerials: false, isPublic: false,
+            minStock: '0', unit: 'шт', trackSerials: true, isPublic: false,
             images: [], specs: {},
         });
         setShowForm(true);
@@ -892,7 +866,7 @@ export default function OpticCatalogPage() {
     // ==================== CSV Bulk Import Handlers ====================
     const handleDownloadTemplate = () => {
         // UTF-8 BOM helps MS Excel open Russian columns correctly
-        const csvContent = "\uFEFFНаименование;Бренд;Модель;Категория;Артикул;Штрихкод;Цена закупки;Цена продажи;Мин. остаток\nОправа Ray-Ban RX5228;Ray-Ban;RX5228;frame;RB-5228;5901234123457;15000;25000;5\nМягкие дневные линзы ArtMost;ArtMost;Dailies;contact_lens;;234567876543;8000;14000;10\nСалфетки микрофибра;;;accessory;CL-CLOTH;;300;800;50\n";
+        const csvContent = "\uFEFFНаименование;Категория;Артикул;Штрихкод;Цена закупки;Цена продажи;Мин. остаток\nОправа Ray-Ban RX5228;Ray-Ban;RX5228;frame;RB-5228;5901234123457;15000;25000;5\nМягкие дневные линзы ArtMost;ArtMost;Dailies;contact_lens;;234567876543;8000;14000;10\nСалфетки микрофибра;;;accessory;CL-CLOTH;;300;800;50\n";
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -935,9 +909,7 @@ export default function OpticCatalogPage() {
                     'товар': 'name',
                     'название': 'name',
                     'бренд': 'brand',
-                    'brand': 'brand',
                     'модель': 'model',
-                    'model': 'model',
                     'категория': 'category',
                     'category': 'category',
                     'артикул': 'sku',
@@ -1285,7 +1257,7 @@ export default function OpticCatalogPage() {
                     </div>
 
                     {/* Search + Category Filter */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col gap-3">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
@@ -1480,10 +1452,26 @@ export default function OpticCatalogPage() {
                                         onChange={e => setForm({ ...form, category: e.target.value })}
                                         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     >
-                                        <optgroup label="Товары">
+                                        <optgroup label="Медицинские изделия">
+                                            <option value="iol">ИОЛ (интраокулярные линзы)</option>
+                                            <option value="diagnostic_lens">Диагностические линзы</option>
+                                            <option value="viscoelastic">Вискоэластики</option>
+                                            <option value="ophthalmic_solution">Офтальмологические растворы</option>
+                                            <option value="silicone_oil">Силиконовое масло</option>
+                                            <option value="corneal_ring">Роговичные кольца/сегменты</option>
+                                            <option value="surgical_kit">Хирургические наборы</option>
+                                            <option value="implant">Импланты/протезы</option>
+                                            <option value="drainage">Дренажи</option>
+                                            <option value="contact_lens">Контактные линзы</option>
+                                        </optgroup>
+                                        <optgroup label="Оборудование и инструменты">
+                                            <option value="equipment">Оборудование</option>
+                                            <option value="instrument">Инструменты</option>
+                                            <option value="consumable">Расходные материалы</option>
+                                        </optgroup>
+                                        <optgroup label="Оптика">
                                             <option value="frame">Оправы</option>
                                             <option value="sun_glasses">Солнцезащитные очки</option>
-                                            <option value="contact_lens">Контактные линзы</option>
                                             <option value="spectacle_lens">Очковые линзы</option>
                                             <option value="solution">Растворы</option>
                                             <option value="accessory">Аксессуары</option>
@@ -1494,6 +1482,9 @@ export default function OpticCatalogPage() {
                                             <option value="service_cutting">Вытачка / обработка линз</option>
                                             <option value="service_repair">Ремонт очков</option>
                                             <option value="service_other">Другие услуги</option>
+                                        </optgroup>
+                                        <optgroup label="Прочее">
+                                            <option value="other">Другое</option>
                                         </optgroup>
                                     </select>
                                 </div>
@@ -1509,22 +1500,6 @@ export default function OpticCatalogPage() {
                                         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     />
                                 </div>
-
-                                {/* Brand + Model (only for products) */}
-                                {!isService && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Бренд</label>
-                                            <input type="text" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })}
-                                                placeholder="Ray-Ban" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Модель</label>
-                                            <input type="text" value={form.model} onChange={e => setForm({ ...form, model: e.target.value })}
-                                                placeholder="RB5228" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500" />
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* SKU + Barcode */}
                                 {!isService && (
@@ -1670,9 +1645,7 @@ export default function OpticCatalogPage() {
                             </div>
 
                             <div className="p-6">
-                                {detailProduct.brand && (
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{detailProduct.brand}</p>
-                                )}
+                                
                                 <h2 className="text-xl font-bold text-gray-900">{detailProduct.name}</h2>
                                 {detailProduct.shortDescription && (
                                     <p className="text-sm text-gray-500 mt-2">{detailProduct.shortDescription}</p>
@@ -1688,12 +1661,7 @@ export default function OpticCatalogPage() {
 
                                 {/* Details grid */}
                                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                                    {detailProduct.sku && (
-                                        <div className="bg-gray-50 rounded-lg px-3 py-2">
-                                            <span className="text-gray-400 text-xs">Артикул</span>
-                                            <p className="font-medium text-gray-700">{detailProduct.sku}</p>
-                                        </div>
-                                    )}
+
                                     {detailProduct.barcode && (
                                         <div className="bg-gray-50 rounded-lg px-3 py-2">
                                             <span className="text-gray-400 text-xs">Штрих-код</span>
@@ -1728,20 +1696,6 @@ export default function OpticCatalogPage() {
                                     )}
                                 </div>
 
-                                {/* Specs */}
-                                {detailProduct.specs && Object.keys(detailProduct.specs as object).length > 0 && (
-                                    <div className="mt-4">
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Характеристики</h3>
-                                        <div className="space-y-1.5">
-                                            {Object.entries(detailProduct.specs as Record<string, string>).map(([k, v]) => (
-                                                <div key={k} className="flex justify-between text-sm">
-                                                    <span className="text-gray-400">{k}</span>
-                                                    <span className="text-gray-700 font-medium">{v}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* Actions */}
                                 <div className="mt-6 flex gap-3">
@@ -1891,7 +1845,7 @@ export default function OpticCatalogPage() {
                                                     <thead>
                                                         <tr className="bg-gray-50/80 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                                                             <th className="px-4 py-2.5">Наименование</th>
-                                                            <th className="px-4 py-2.5">Бренд / Модель</th>
+                                                            
                                                             <th className="px-4 py-2.5">Категория</th>
                                                             <th className="px-4 py-2.5 text-right">Штрихкод</th>
                                                             <th className="px-4 py-2.5 text-right">Цены (Закуп/Рознич)</th>
@@ -2021,11 +1975,6 @@ export default function OpticCatalogPage() {
                                             <div className="w-full h-full flex justify-between items-stretch text-[5.5px]">
                                                 {/* Left zone: Info */}
                                                 <div className="w-[42%] flex flex-col justify-between items-start text-left overflow-hidden py-0.5">
-                                                    {includeBrand && (
-                                                        <div className="font-extrabold text-[4.5px] text-gray-500 uppercase tracking-wide truncate w-full">
-                                                            {printProduct.brand || 'ОПТИКА'}
-                                                        </div>
-                                                    )}
                                                     {includeName && (
                                                         <div className="font-bold text-black truncate w-full line-clamp-1">
                                                             {printProduct.name}
@@ -2064,11 +2013,6 @@ export default function OpticCatalogPage() {
                                             </div>
                                         ) : (
                                             <>
-                                                {includeBrand && (
-                                                    <div className="text-[9px] font-black text-gray-500 uppercase tracking-wide truncate w-full text-center">
-                                                        {printProduct.brand || 'ОПТИКА'}
-                                                    </div>
-                                                )}
                                                 {includeName && (
                                                     <div className="text-[10px] font-bold text-black text-center line-clamp-2 leading-tight w-full my-0.5">
                                                         {printProduct.name}
@@ -2165,7 +2109,7 @@ export default function OpticCatalogPage() {
                                 {/* Custom Toggles */}
                                 <div className="space-y-2.5 pt-1">
                                     <label className="block text-sm font-semibold text-gray-900">2. Дополнительные опции:</label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-2 gap-2">
                                         <label className="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors border border-gray-100">
                                             <input
                                                 type="checkbox"
@@ -2175,17 +2119,6 @@ export default function OpticCatalogPage() {
                                             />
                                             <div>
                                                 <span className="text-xs font-semibold text-gray-800">Название</span>
-                                            </div>
-                                        </label>
-                                        <label className="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors border border-gray-100">
-                                            <input
-                                                type="checkbox"
-                                                checked={includeBrand}
-                                                onChange={e => setIncludeBrand(e.target.checked)}
-                                                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                            />
-                                            <div>
-                                                <span className="text-xs font-semibold text-gray-800">Бренд</span>
                                             </div>
                                         </label>
                                         <label className="flex items-center gap-2 p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl cursor-pointer transition-colors border border-gray-100">
@@ -2375,7 +2308,7 @@ export default function OpticCatalogPage() {
                                     <>
                                         <button
                                             onClick={() => {
-                                                handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                                                handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice);
                                                 setPrintProduct(null);
                                             }}
                                             className="flex-1 py-3 border border-indigo-100 hover:bg-indigo-50/50 text-indigo-700 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
@@ -2396,7 +2329,7 @@ export default function OpticCatalogPage() {
                                     <>
                                         <button
                                             onClick={() => {
-                                                handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                                                handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice);
                                                 setPrintProduct(null);
                                             }}
                                             className="flex-1 py-3 border border-indigo-100 hover:bg-indigo-50/50 text-indigo-700 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
@@ -2416,7 +2349,7 @@ export default function OpticCatalogPage() {
                                 ) : (
                                     <button
                                         onClick={() => {
-                                            handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice, includeBrand);
+                                            handlePrintLabel(printProduct, labelWidth, labelHeight, includePrice);
                                             setPrintProduct(null);
                                         }}
                                         className="flex-1 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md shadow-primary-100"

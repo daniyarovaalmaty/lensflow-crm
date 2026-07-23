@@ -200,9 +200,50 @@ export class ItigrisSyncService {
         }
     }
 
+    // ----- Sync Patients (Standalone) -----
+
+    /**
+     * Incrementally sync patients modified since a given date.
+     * Use this in a cron to keep the LensFlow patient database updated 
+     * even for clients without recent orders.
+     */
+    async syncPatients(since: Date): Promise<ItigrisSyncResult> {
+        const result: ItigrisSyncResult = {
+            entity: 'clients',
+            created: 0,
+            updated: 0,
+            errors: 0,
+            details: [],
+        };
+
+        try {
+            // The API returns summaries (id, name, phone). 
+            // We need to fetch the full client to get address, email, gender, etc.
+            const sinceIso = since.toISOString().slice(0, 19) + 'Z';
+            const changes = await this.api.getClientChanges(sinceIso);
+            
+            result.details.push(`Найдено измененных клиентов: ${changes.length}`);
+
+            for (const summary of changes) {
+                try {
+                    const fullClient = await this.api.getClient(summary.id);
+                    await this.upsertPatient(fullClient, result);
+                } catch (err: any) {
+                    result.errors++;
+                    result.details.push(`Ошибка загрузки клиента ${summary.id}: ${err.message}`);
+                }
+            }
+        } catch (err: any) {
+            result.errors++;
+            result.details.push(`Ошибка получения изменений клиентов: ${err.message}`);
+        }
+
+        return result;
+    }
+
     // ----- Sync Orders -----
 
-    async syncOrders(): Promise<ItigrisSyncResult> {
+    async syncOrders(opts?: { forceStatus?: string, skipExisting?: boolean, departmentId?: number, limitMonths?: number }): Promise<ItigrisSyncResult> {
         const result: ItigrisSyncResult = {
             entity: 'orders',
             created: 0,
@@ -213,7 +254,10 @@ export class ItigrisSyncService {
 
         try {
             // 1. Get all available departments
-            const departments = await this.api.getDepartments();
+            let departments = await this.api.getDepartments();
+            if (opts?.departmentId) {
+                departments = departments.filter(d => d.id === opts.departmentId);
+            }
             const storeDepts = departments.filter(d => d.type === 'STORE' || d.type === 'OFFICE');
             result.details.push(`Найдено ${storeDepts.length} филиалов для синхронизации заказов`);
 
@@ -221,7 +265,7 @@ export class ItigrisSyncService {
             for (const dept of storeDepts) {
                 try {
                     const ok = await this.api.signInToDepartment(dept.id);
-                    if (!ok) {
+                    if (ok === false || (typeof ok === 'object' && !(ok as any).ok)) {
                         result.details.push(`Нет доступа к филиалу: ${dept.name}`);
                         continue;
                     }
@@ -229,23 +273,52 @@ export class ItigrisSyncService {
                     // Get all orders from this department (paginated)
                     let page = 0;
                     let hasMore = true;
-                    while (hasMore) {
+                    
+                    // Stop fetching if we go older than limit
+                    const limitDate = new Date();
+                    limitDate.setMonth(limitDate.getMonth() - (opts?.limitMonths || 6));
+                    let reachedLimit = false;
+
+                    while (hasMore && !reachedLimit) {
+                        console.log(`Dept ${dept.id}: Fetching page ${page}...`);
                         const { content, totalElements } = await this.api.getDepartmentOrders(page, 50);
                         if (content.length === 0) break;
 
                         for (const order of content) {
+                            const orderDate = new Date(order.createdAt || Date.now());
+                            if (orderDate < limitDate) {
+                                reachedLimit = true;
+                                break; // Stop processing this page, we hit the limit
+                            }
                             try {
+                                if (opts?.skipExisting) {
+                                    const orderNumber = `ITG-${order.id}`;
+                                    const existing = await (this.prisma as any).order.findUnique({ where: { orderNumber } });
+                                    if (existing) {
+                                        continue; // skip full fetch to save API requests and time
+                                    }
+                                }
+
                                 // Get full details (prescription, lens, frame)
                                 const fullOrder = await this.api.getOrderFull(order.id);
-                                await this.upsertOrderFull(order, fullOrder, dept.id, result);
+                                await this.upsertOrderFull(order, fullOrder, dept.id, result, opts?.forceStatus);
+                                
+                                // Pause between requests to avoid ban
+                                await new Promise(r => setTimeout(r, 300));
                             } catch (err: any) {
                                 result.errors++;
                                 result.details.push(`Ошибка заказа ${order.id}: ${err.message}`);
+                                if (err.message?.includes('ENOTFOUND') || err.message?.includes('ECONNREFUSED') || err.message?.includes('timeout')) {
+                                    await new Promise(r => setTimeout(r, 2000));
+                                }
                             }
                         }
 
                         page++;
                         hasMore = (page * 50) < totalElements;
+                        
+                        // Pause between pages to avoid ban
+                        await new Promise(r => setTimeout(r, 500));
                     }
 
                     result.details.push(`Филиал ${dept.name}: обработано`);
@@ -279,7 +352,7 @@ export class ItigrisSyncService {
                         where: { organizationId: this.orgId, externalId: `itigris:${order.id}` },
                     });
                     if (!existing) {
-                        await this.upsertOrderFull(order, null, undefined, result);
+                        await this.upsertOrderFull(order, null, undefined, result, opts?.forceStatus);
                     }
                 } catch (err: any) {
                     result.errors++;
@@ -412,7 +485,8 @@ export class ItigrisSyncService {
         order: ItigrisOrder,
         fullOrder: any | null,
         deptId: number | undefined,
-        result: ItigrisSyncResult
+        result: ItigrisSyncResult,
+        forceStatus?: string
     ): Promise<void> {
         // Find patient linked to this order
         let patient: any = null;
@@ -423,7 +497,13 @@ export class ItigrisSyncService {
             });
         }
 
-        const lensflowStatus = this.mapOrderStatus(order.status || fullOrder?.status || '');
+        let lensflowStatus = forceStatus || this.mapOrderStatus(order.status || fullOrder?.status || '');
+        
+        // Force ALL Itigris orders to 'delivered' so they don't clutter production, 
+        // as they are already managed in Itigris or just imported for history.
+        if (!forceStatus) {
+            lensflowStatus = 'delivered';
+        }
         const totalPrice = Math.round(order.sum || order.totalAmount || fullOrder?.sum || 0);
         const lensConfig: any = this.buildLensConfig(fullOrder);
         const orderNumber = `ITG-${order.id}`;
@@ -513,20 +593,20 @@ export class ItigrisSyncService {
         if (rawDate) { const d = new Date(rawDate); if (!isNaN(d.getTime())) prescribedAt = d; }
 
         const typeMap: Record<string, string> = { CONTACT_LENS: 'contacts', GLASSES: 'glasses' };
-        const externalId = `itigris:order:${order.id}`;
+        const orderIdentifier = `[ITIGRIS_ORDER:${order.id}]`;
         const data: any = {
             patientId,
             odSph: rx.sphOd ?? null, odCyl: rx.cylOd ?? null, odAx: rx.axOd ?? null, odAdd: rx.addOd ?? null, odPd: rx.dppOd ?? null,
             osSph: rx.sphOs ?? null, osCyl: rx.cylOs ?? null, osAx: rx.axOs ?? null, osAdd: rx.addOs ?? null, osPd: rx.dppOs ?? null,
             pdTotal: rx.dpp ?? null,
             type: typeMap[fullOrder.type] || 'glasses',
-            notes: [rx.purpose, rx.comments, rx.doctor?.fullName ? `Врач: ${rx.doctor.fullName}` : null].filter(Boolean).join(' · ') || null,
+            notes: [rx.purpose, rx.comments, rx.doctor?.fullName ? `Врач: ${rx.doctor.fullName}` : null, orderIdentifier].filter(Boolean).join(' · ') || null,
             prescribedAt,
-            externalId,
-            externalSource: 'itigris',
         };
 
-        const existing = await (this.prisma as any).prescription.findFirst({ where: { externalId, patientId } });
+        const existing = await (this.prisma as any).prescription.findFirst({ 
+            where: { patientId, notes: { contains: orderIdentifier } } 
+        });
         if (existing) {
             await (this.prisma as any).prescription.update({ where: { id: existing.id }, data });
         } else {
@@ -695,8 +775,9 @@ export class ItigrisSyncService {
                 }
 
                 if (accessDenied) {
-                    result.details.push(`${cat}: нет доступа к остаткам (403) — нужна роль со складом`);
-                } else {
+                    result.errors++;
+                    result.details.push(`${cat}: доступ к остаткам запрещен (403)`);
+                } else if (catRows > 0) {
                     result.details.push(`${cat}: строк остатков ${catRows}`);
                 }
             }
@@ -760,13 +841,22 @@ export class ItigrisSyncService {
                 result.details.push(`${rp}: строк ${catRows}`);
             } catch (err: any) {
                 const s = err.response?.status;
-                result.details.push(`${rp}: ${s === 401 ? '401 — проверьте RemoteAPI-ключ' : 'ошибка ' + (s || err.message)}`);
+                result.errors++;
+                if (s === 403) {
+                    result.details.push(`${rp}: доступ к остаткам запрещен (403)`);
+                } else {
+                    result.details.push(`${rp}: ${s === 401 ? '401 — проверьте RemoteAPI-ключ' : 'ошибка ' + (s || err.message)}`);
+                }
             }
         }
 
-        for (const [sig, p] of agg) {
-            try { await this.upsertProduct(sig, p.category, p.item, p.stock, p.price, result); }
-            catch (err: any) { result.errors++; result.details.push(`Ошибка товара ${sig}: ${err.message}`); }
+        const aggEntries = Array.from(agg.entries());
+        for (let i = 0; i < aggEntries.length; i += 50) {
+            const chunk = aggEntries.slice(i, i + 50);
+            await Promise.all(chunk.map(async ([sig, p]) => {
+                try { await this.upsertProduct(sig, p.category, p.item, p.stock, p.price, result); }
+                catch (err: any) { result.errors++; result.details.push(`Ошибка товара ${sig}: ${err.message}`); }
+            }));
         }
         result.details.push(`Уникальных позиций: ${agg.size}`);
         return result;

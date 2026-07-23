@@ -18,7 +18,7 @@ export async function OPTIONS() {
  */
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
+        const searchParams = (request as any).nextUrl.searchParams;
         const city = searchParams.get('city');
         const orgId = searchParams.get('org_id');
 

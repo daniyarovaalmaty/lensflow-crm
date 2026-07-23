@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil, ClipboardCheck } from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil, ClipboardCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
@@ -179,6 +179,13 @@ export default function WarehousePage() {
     const [documents, setDocuments] = useState<StockDoc[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 50;
+
+    // Reset pagination when search or tab changes
+    useEffect(() => {
+        setPage(1);
+    }, [search, tab]);
 
     // Receive form
     const [receiveItems, setReceiveItems] = useState<Array<{
@@ -447,25 +454,57 @@ export default function WarehousePage() {
         }, 8000);
     };
 
-    useEffect(() => { loadData(); }, [tab]);
+    useEffect(() => {
+        const loadInitial = () => {
+            const savedOrgId = localStorage.getItem('lf_selected_branch') || 'all';
+            loadData(savedOrgId);
+        };
+        
+        loadInitial();
 
-    const loadData = async () => {
+        const handleBranchChange = (e: any) => {
+            if (e.detail?.branchId) {
+                setLoading(true);
+                loadData(e.detail.branchId);
+            }
+        };
+
+        window.addEventListener('branch-changed', handleBranchChange);
+        return () => window.removeEventListener('branch-changed', handleBranchChange);
+    }, [tab]);
+
+    const loadData = async (orgId?: string) => {
         setLoading(true);
         try {
+            const baseUrl = (path: string) => {
+                const url = new URL(path, window.location.origin);
+                url.searchParams.set('t', Date.now().toString());
+                if (orgId && orgId !== 'all') {
+                    url.searchParams.set('orgId', orgId);
+                } else if (orgId === 'all') {
+                    url.searchParams.set('orgId', 'all');
+                }
+                return url.toString();
+            };
+
             if (tab === 'stock' || tab === 'receive') {
-                const res = await fetch('/api/optic/stock');
+                const res = await fetch(baseUrl('/api/optic/stock'));
                 if (res.ok) setProducts(await res.json());
             }
             if (tab === 'movements') {
-                const res = await fetch('/api/optic/stock?view=movements');
+                const url = new URL(baseUrl('/api/optic/stock'));
+                url.searchParams.set('view', 'movements');
+                const res = await fetch(url.toString());
                 if (res.ok) setMovements(await res.json());
             }
             if (tab === 'documents') {
-                const res = await fetch('/api/optic/stock?view=documents');
+                const url = new URL(baseUrl('/api/optic/stock'));
+                url.searchParams.set('view', 'documents');
+                const res = await fetch(url.toString());
                 if (res.ok) setDocuments(await res.json());
             }
             if (tab === 'inventory') {
-                const res = await fetch('/api/optic/inventory');
+                const res = await fetch(baseUrl('/api/optic/inventory'));
                 if (res.ok) {
                     const data = await res.json();
                     setInventories(data);
@@ -520,7 +559,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'receive', items, supplier, notes: receiveNotes }),
+                body: JSON.stringify({ action: 'receive', items, supplier, notes: receiveNotes, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
 
             if (res.ok) {
@@ -546,6 +585,7 @@ export default function WarehousePage() {
                     action: 'write_off',
                     items: [{ productId: woProduct, quantity: Number(woQty) || 1 }],
                     reason: woReason,
+                    orgId: localStorage.getItem('lf_selected_branch') || 'all'
                 }),
             });
             if (res.ok) {
@@ -563,7 +603,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'recalculate' }),
+                body: JSON.stringify({ action: 'recalculate', orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
             const result = await res.json();
             if (res.ok) {
@@ -595,7 +635,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/inventory', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'create' }),
+                body: JSON.stringify({ action: 'create', orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
             const result = await res.json();
             if (res.ok) {
@@ -622,6 +662,7 @@ export default function WarehousePage() {
                 productId,
                 actualQty,
                 note,
+                orgId: localStorage.getItem('lf_selected_branch') || 'all'
             }),
         });
         if (res.ok) {
@@ -655,7 +696,7 @@ export default function WarehousePage() {
             const res = await fetch('/api/optic/inventory', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'complete', inventoryId: activeInventory.id }),
+                body: JSON.stringify({ action: 'complete', inventoryId: activeInventory.id, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
             });
             const result = await res.json();
             if (res.ok) {
@@ -675,7 +716,7 @@ export default function WarehousePage() {
         const res = await fetch('/api/optic/inventory', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'cancel', inventoryId: activeInventory.id }),
+            body: JSON.stringify({ action: 'cancel', inventoryId: activeInventory.id, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
         });
         if (res.ok) {
             setActiveInventory(null);
@@ -695,7 +736,8 @@ export default function WarehousePage() {
                     documentNumber: editDocNum,
                     counterpartyName: editSupplier,
                     notes: editNotes,
-                    items: editItems
+                    items: editItems,
+                    orgId: localStorage.getItem('lf_selected_branch') || 'all'
                 })
             });
             if (res.ok) {
@@ -717,8 +759,15 @@ export default function WarehousePage() {
     const filteredProducts = useMemo(() => {
         if (!search) return products;
         const s = search.toLowerCase();
-        return products.filter(p => p.name.toLowerCase().includes(s) || p.sku?.toLowerCase().includes(s));
+        return products.filter(p => p.name.toLowerCase().includes(s) || p.sku?.toLowerCase().includes(s) || p.barcode?.toLowerCase().includes(s) || p.brand?.toLowerCase().includes(s));
     }, [products, search]);
+
+    const paginatedProducts = useMemo(() => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredProducts, page]);
+
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
     const lowStockProducts = useMemo(() => {
         return products.filter(p => p.minStock > 0 && p.currentStock <= p.minStock);
@@ -871,6 +920,33 @@ export default function WarehousePage() {
                             </button>
                         </div>
 
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between mb-4 px-1">
+                                <div className="text-sm text-gray-500">
+                                    Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <span className="text-sm font-medium px-4">
+                                        Страница {page} из {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {loading ? (
                             <div className="text-center py-20"><div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full mx-auto" /></div>
                         ) : filteredProducts.length === 0 ? (
@@ -893,7 +969,7 @@ export default function WarehousePage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredProducts.map(p => {
+                                        {paginatedProducts.map(p => {
                                             const stock = p.currentStock;
                                             const isLow = p.minStock > 0 && stock <= p.minStock;
                                             return (
@@ -1189,7 +1265,7 @@ export default function WarehousePage() {
                                                     const res = await fetch('/api/optic/stock', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ action: 'delete_document', documentNumber: doc.documentNumber }),
+                                                        body: JSON.stringify({ action: 'delete_document', documentNumber: doc.documentNumber, orgId: localStorage.getItem('lf_selected_branch') || 'all' }),
                                                     });
                                                     if (res.ok) {
                                                         alert(`✅ Документ ${doc.documentNumber} удалён`);

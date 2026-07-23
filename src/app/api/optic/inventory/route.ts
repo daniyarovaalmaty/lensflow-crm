@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const action = body.action;
 
     if (action === 'create') {
-        return handleCreate(user);
+        return handleCreate(user, body);
     } else if (action === 'update_item') {
         return handleUpdateItem(body, user);
     } else if (action === 'complete') {
@@ -46,8 +46,9 @@ export async function POST(req: NextRequest) {
 }
 
 // ==================== CREATE — New inventory session ====================
-async function handleCreate(user: any) {
-    const orgId = user.organizationId;
+async function handleCreate(user: any, body: any) {
+    const reqOrgId = body?.orgId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
 
     // Check for existing in-progress inventory
     const existing = await prisma.inventory.findFirst({
@@ -102,12 +103,12 @@ async function handleCreate(user: any) {
 
 // ==================== UPDATE_ITEM — Set actual quantity for a product ====================
 async function handleUpdateItem(body: any, user: any) {
-    const { inventoryId, productId, actualQty, note } = body;
+    const { inventoryId, productId, actualQty, note, orgId: reqOrgId } = body;
     if (!inventoryId || !productId) {
         return NextResponse.json({ error: 'Missing inventoryId or productId' }, { status: 400 });
     }
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
     const inventory = await prisma.inventory.findFirst({
         where: { id: inventoryId, organizationId: orgId, status: 'in_progress' }
     });
@@ -146,10 +147,10 @@ async function handleUpdateItem(body: any, user: any) {
 
 // ==================== COMPLETE — Finalize inventory and apply corrections ====================
 async function handleComplete(body: any, user: any) {
-    const { inventoryId } = body;
+    const { inventoryId, orgId: reqOrgId } = body;
     if (!inventoryId) return NextResponse.json({ error: 'Missing inventoryId' }, { status: 400 });
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
     const inventory = await prisma.inventory.findFirst({
         where: { id: inventoryId, organizationId: orgId, status: 'in_progress' }
     });
@@ -231,10 +232,10 @@ async function handleComplete(body: any, user: any) {
 
 // ==================== CANCEL — Cancel inventory ====================
 async function handleCancel(body: any, user: any) {
-    const { inventoryId } = body;
+    const { inventoryId, orgId: reqOrgId } = body;
     if (!inventoryId) return NextResponse.json({ error: 'Missing inventoryId' }, { status: 400 });
 
-    const orgId = user.organizationId;
+    const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
     const inventory = await prisma.inventory.findFirst({
         where: { id: inventoryId, organizationId: orgId, status: 'in_progress' }
     });

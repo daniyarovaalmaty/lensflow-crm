@@ -19,11 +19,21 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const targetOrgId = searchParams.get('orgId');
 
-    let fetchOrgId = user.organizationId;
-    if (targetOrgId && targetOrgId !== user.organizationId) {
+    let fetchOrgId: any = user.organizationId;
+    if (targetOrgId && targetOrgId !== 'all') {
         const myOrg = await prisma.organization.findUnique({ where: { id: user.organizationId }, select: { type: true } });
         if (myOrg?.type === 'headquarters') {
             fetchOrgId = targetOrgId;
+        }
+    } else if (targetOrgId === 'all' || !targetOrgId) {
+        // If "All branches" or no branch specified, fetch products for HQ and all its child branches
+        const myOrg = await prisma.organization.findUnique({ where: { id: user.organizationId }, select: { type: true } });
+        if (myOrg?.type === 'headquarters') {
+            const childOrgs = await prisma.organization.findMany({ 
+                where: { parentId: user.organizationId }, 
+                select: { id: true } 
+            });
+            fetchOrgId = { in: [user.organizationId, ...childOrgs.map(o => o.id)] };
         }
     }
 

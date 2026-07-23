@@ -15,9 +15,12 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'No organization linked' }, { status: 403 });
     }
 
+    const orgIdParam = req.nextUrl.searchParams.get('orgId');
+    const targetOrgId = (orgIdParam && orgIdParam !== 'all') ? orgIdParam : user.organizationId;
+
     // Load cash registers for organization
     let registers = await prisma.cashRegister.findMany({
-        where: { organizationId: user.organizationId },
+        where: { organizationId: targetOrgId },
         orderBy: { name: 'asc' },
     });
 
@@ -26,7 +29,7 @@ export async function GET(req: NextRequest) {
         const defaultRegister = await prisma.cashRegister.create({
             data: {
                 name: 'Основная касса',
-                organizationId: user.organizationId,
+                organizationId: targetOrgId,
                 currentBalance: 0,
             },
         });

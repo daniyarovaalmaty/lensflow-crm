@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan, Wallet, Calendar, Layers, SplitSquareHorizontal } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, Search, CreditCard, Banknote, ArrowRightLeft, Trash2, CheckCircle, Package, Wrench, Receipt, Camera, ChevronDown, ArrowLeft, Maximize, Minimize, Scan, Wallet, Calendar, Layers, SplitSquareHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
@@ -78,6 +78,13 @@ export default function POSPage() {
     const [search, setSearch] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [loading, setLoading] = useState(true);
+    
+    // Pagination state
+    const ITEMS_PER_PAGE = 24;
+    const [page, setPage] = useState(1);
+    
+    // Reset page on search/filter change
+    useEffect(() => { setPage(1); }, [search, categoryFilter]);
     const [showScanner, setShowScanner] = useState(false);
     const [showCheckout, setShowCheckout] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
@@ -195,11 +202,21 @@ export default function POSPage() {
         loadProducts(); 
         loadPendingSales();
         loadDoctors();
+        
+        const handleBranchChange = (e: any) => {
+            if (e.detail?.branchId) {
+                loadProducts(e.detail.branchId);
+                loadPendingSales(e.detail.branchId);
+            }
+        };
+        window.addEventListener('branchChanged', handleBranchChange);
+        return () => window.removeEventListener('branchChanged', handleBranchChange);
     }, []);
 
-    const loadPendingSales = async () => {
+    const loadPendingSales = async (branchId?: string) => {
         try {
-            const res = await fetch('/api/optic/sales/pending');
+            const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+            const res = await fetch(`/api/optic/sales/pending?orgId=${orgId}`);
             if (res.ok) {
                 setPendingSales(await res.json());
             }
@@ -237,23 +254,28 @@ export default function POSPage() {
         } catch(e) {}
     };
 
-    const loadProducts = async () => {
+    const loadProducts = async (branchId?: string) => {
+        setLoading(true);
         try {
-            const res = await fetch('/api/optic/products');
+            const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+            const res = await fetch(`/api/optic/products?orgId=${orgId}`);
             if (res.ok) {
                 const data = await res.json();
                 setProducts(data.filter((p: Product) => p.isActive !== false));
+                setPage(1);
             }
         } finally { setLoading(false); }
     };
 
-    const loadSales = async () => {
-        const res = await fetch('/api/optic/sales');
+    const loadSales = async (branchId?: string) => {
+        const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+        const res = await fetch(`/api/optic/sales?orgId=${orgId}`);
         if (res.ok) setSales(await res.json());
     };
 
-    const loadDebts = async () => {
-        const res = await fetch('/api/optic/sales?status=partial');
+    const loadDebts = async (branchId?: string) => {
+        const orgId = branchId || localStorage.getItem('lf_selected_branch') || 'all';
+        const res = await fetch(`/api/optic/sales?status=partial&orgId=${orgId}`);
         if (res.ok) setDebts(await res.json());
     };
 
@@ -403,6 +425,7 @@ export default function POSPage() {
                     leadId: leadId || undefined,
                     draftSaleId: draftSaleId || undefined,
                     doctorId: selectedDoctorId || undefined,
+                    orgId: localStorage.getItem('lf_selected_branch') || 'all',
                 }),
             });
             if (res.ok) {
@@ -554,6 +577,34 @@ export default function POSPage() {
                             </div>
                         </div>
 
+                        {/* Pagination Controls */}
+                        {categoryFilter !== 'pending' && filteredProducts.length > ITEMS_PER_PAGE && (
+                            <div className="flex items-center justify-between mb-4 px-3 py-2 bg-white rounded-2xl border border-gray-200 shadow-sm flex-shrink-0">
+                                <div className="text-sm text-gray-500 font-medium">
+                                    Показано {((page - 1) * ITEMS_PER_PAGE) + 1} – {Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)} из {filteredProducts.length}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </button>
+                                    <span className="text-sm font-bold text-gray-700 px-2">
+                                        {page} из {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
+                                    </span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(Math.ceil(filteredProducts.length / ITEMS_PER_PAGE), p + 1))}
+                                        disabled={page === Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
+                                        className="p-1.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Products grid - scrollable */}
                         <div className="flex-1 overflow-y-auto pr-1">
                             {loading ? (
@@ -625,7 +676,7 @@ export default function POSPage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
-                                    {filteredProducts.map(p => {
+                                    {filteredProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map(p => {
                                         const stock = p.type === 'service' ? null : p.currentStock;
                                         const inCart = cart.find(c => c.productId === p.id);
                                         const outOfStock = p.type === 'product' && (stock === 0);
@@ -669,6 +720,7 @@ export default function POSPage() {
                                 </div>
                             )}
                         </div>
+
                     </div>
 
                     {/* RIGHT: Cart - fixed split viewport */}

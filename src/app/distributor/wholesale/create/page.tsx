@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Save, ArrowLeft, Search } from 'lucide-react';
+import { Trash2, Save, ArrowLeft, Search, ChevronDown, Check } from 'lucide-react';
 import { useUsbScanner } from '@/hooks/useUsbScanner';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
+import { ProductBatchSelectorModal } from './ProductBatchSelectorModal';
 
 interface Product {
     id: string;
@@ -26,10 +27,14 @@ interface Counterparty {
 
 interface CartItem {
     productId: string;
+    stockItemId?: string;
     name: string;
     price: number;
     quantity: number;
     maxStock: number;
+    diopter?: string;
+    serialNumber?: string;
+    expiryDate?: string;
 }
 
 export default function CreateWholesaleOrderPage() {
@@ -43,6 +48,21 @@ export default function CreateWholesaleOrderPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [scanFeedback, setScanFeedback] = useState<string | null>(null);
     const [manualCode, setManualCode] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [isCounterpartyOpen, setIsCounterpartyOpen] = useState(false);
+    const [counterpartySearch, setCounterpartySearch] = useState('');
+    const counterpartyRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (counterpartyRef.current && !counterpartyRef.current.contains(event.target as Node)) {
+                setIsCounterpartyOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Fetch initial data
     useEffect(() => {
@@ -72,42 +92,62 @@ export default function CreateWholesaleOrderPage() {
     const handleScan = useCallback((rawCode: string) => {
         // Очистка от спецсимволов сканера (например DataMatrix ]C1)
         let code = rawCode.trim().replace(/^\]C1/, '');
-
         code = translateCyrillicToEnglishLayout(code);
 
-        const product = products.find(p => 
-            p.barcode === code || 
-            p.sku === code ||
-            (p.stockItems && p.stockItems.some((si: any) => si.serialNumber === code || si.barcode === code))
-        );
+        let foundProduct: Product | undefined;
+        let foundStockItem: any = undefined;
+
+        // Try finding by stock item first
+        for (const p of products) {
+            if (p.stockItems) {
+                const si = p.stockItems.find((s: any) => s.serialNumber === code || s.barcode === code);
+                if (si) {
+                    foundProduct = p;
+                    foundStockItem = si;
+                    break;
+                }
+            }
+        }
+
+        // Fallback to product barcode/sku
+        if (!foundProduct) {
+            foundProduct = products.find(p => p.barcode === code || p.sku === code);
+        }
         
-        if (product) {
-            const stock = product.currentStock;
-            if (stock <= 0) {
-                toast.error(`Товара ${product.name} нет на складе`);
-                setScanFeedback(`⚠️ ${product.name} — нет на складе`);
+        if (foundProduct) {
+            const maxAvailable = foundStockItem ? foundStockItem.quantity : foundProduct.currentStock;
+            
+            if (maxAvailable <= 0) {
+                toast.error(`Товара ${foundProduct.name} нет на складе`);
+                setScanFeedback(`⚠️ ${foundProduct.name} — нет на складе`);
                 setTimeout(() => setScanFeedback(null), 3000);
                 return;
             }
 
+            const itemKey = foundStockItem ? foundStockItem.id : foundProduct.id;
+
             setCart(prev => {
-                const existing = prev.find(c => c.productId === product.id);
+                const existing = prev.find(c => (c.stockItemId || c.productId) === itemKey);
                 if (existing) {
-                    if (existing.quantity >= stock) {
-                        toast.error(`Достигнут максимум остатка для ${product.name}`);
-                        setScanFeedback(`⚠️ Максимум остатка (${stock} шт)`);
+                    if (existing.quantity >= maxAvailable) {
+                        toast.error(`Достигнут максимум остатка для ${foundProduct!.name}`);
+                        setScanFeedback(`⚠️ Максимум остатка (${maxAvailable} шт)`);
                         return prev;
                     }
-                    setScanFeedback(`✅ ${product.name} (${existing.quantity + 1} шт)`);
-                    return prev.map(c => c.productId === product.id ? { ...c, quantity: c.quantity + 1 } : c);
+                    setScanFeedback(`✅ ${foundProduct!.name} (${existing.quantity + 1} шт)`);
+                    return prev.map(c => (c.stockItemId || c.productId) === itemKey ? { ...c, quantity: c.quantity + 1 } : c);
                 } else {
-                    setScanFeedback(`✅ ${product.name} добавлен`);
+                    setScanFeedback(`✅ ${foundProduct!.name} добавлен`);
                     return [...prev, {
-                        productId: product.id,
-                        name: product.name,
-                        price: product.wholesalePrice || product.retailPrice || 0,
+                        productId: foundProduct!.id,
+                        stockItemId: foundStockItem?.id,
+                        name: foundProduct!.name,
+                        price: foundProduct!.wholesalePrice || foundProduct!.retailPrice || 0,
                         quantity: 1,
-                        maxStock: stock,
+                        maxStock: maxAvailable,
+                        diopter: foundStockItem?.diopters,
+                        serialNumber: foundStockItem?.serialNumber,
+                        expiryDate: foundStockItem?.expiryDate,
                     }];
                 }
             });
@@ -119,11 +159,48 @@ export default function CreateWholesaleOrderPage() {
         }
     }, [products]);
 
+    const handleManualSelect = useCallback((product: Product, batch: any) => {
+        const maxAvailable = batch.quantity;
+        
+        if (maxAvailable <= 0) {
+            toast.error(`Партии нет в наличии`);
+            return;
+        }
+
+        const itemKey = batch.id;
+
+        setCart(prev => {
+            const existing = prev.find(c => (c.stockItemId || c.productId) === itemKey);
+            if (existing) {
+                if (existing.quantity >= maxAvailable) {
+                    toast.error(`Достигнут максимум остатка для этой партии`);
+                    return prev;
+                }
+                toast.success(`${product.name} (${existing.quantity + 1} шт)`);
+                return prev.map(c => (c.stockItemId || c.productId) === itemKey ? { ...c, quantity: c.quantity + 1 } : c);
+            } else {
+                toast.success(`${product.name} добавлен`);
+                return [...prev, {
+                    productId: product.id,
+                    stockItemId: batch.id,
+                    name: product.name,
+                    price: product.wholesalePrice || product.retailPrice || 0,
+                    quantity: 1,
+                    maxStock: maxAvailable,
+                    diopter: batch.diopters,
+                    serialNumber: batch.serialNumber,
+                    expiryDate: batch.expiryDate,
+                }];
+            }
+        });
+        setIsModalOpen(false);
+    }, []);
+
     useUsbScanner(handleScan);
 
-    const updateQuantity = (productId: string, val: number) => {
+    const updateQuantity = (itemKey: string, val: number) => {
         setCart(prev => prev.map(item => {
-            if (item.productId === productId) {
+            if ((item.stockItemId || item.productId) === itemKey) {
                 let newQty = val;
                 if (newQty < 1) newQty = 1;
                 if (newQty > item.maxStock) newQty = item.maxStock;
@@ -133,17 +210,17 @@ export default function CreateWholesaleOrderPage() {
         }));
     };
 
-    const updatePrice = (productId: string, val: number) => {
+    const updatePrice = (itemKey: string, val: number) => {
         setCart(prev => prev.map(item => {
-            if (item.productId === productId) {
+            if ((item.stockItemId || item.productId) === itemKey) {
                 return { ...item, price: val >= 0 ? val : 0 };
             }
             return item;
         }));
     };
 
-    const removeItem = (productId: string) => {
-        setCart(prev => prev.filter(c => c.productId !== productId));
+    const removeItem = (itemKey: string) => {
+        setCart(prev => prev.filter(c => (c.stockItemId || c.productId) !== itemKey));
     };
 
     const totalSum = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -164,6 +241,7 @@ export default function CreateWholesaleOrderPage() {
                     notes,
                     items: cart.map(item => ({
                         productId: item.productId,
+                        stockItemId: item.stockItemId || null,
                         quantity: item.quantity,
                         price: item.price,
                         total: item.price * item.quantity
@@ -215,6 +293,13 @@ export default function CreateWholesaleOrderPage() {
                 </div>
 
                 <button 
+                    onClick={() => setIsModalOpen(true)}
+                    className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md font-medium text-sm"
+                >
+                    Выбрать вручную
+                </button>
+
+                <button 
                     onClick={handleSaveDraft} 
                     disabled={isSaving || cart.length === 0}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 flex items-center gap-2"
@@ -223,6 +308,13 @@ export default function CreateWholesaleOrderPage() {
                     Сохранить черновик
                 </button>
             </div>
+
+            <ProductBatchSelectorModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                products={products as any}
+                onSelectBatch={handleManualSelect}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Left Col: Cart & Scanning */}
@@ -259,15 +351,27 @@ export default function CreateWholesaleOrderPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
-                                    {cart.map((item) => (
-                                        <tr key={item.productId} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 font-medium">{item.name}</td>
+                                    {cart.map((item) => {
+                                        const itemKey = item.stockItemId || item.productId;
+                                        return (
+                                        <tr key={itemKey} className="hover:bg-gray-50">
+                                            <td className="px-4 py-3 font-medium">
+                                                <div className="flex flex-col">
+                                                    <span>{item.name}</span>
+                                                    {item.diopter && (
+                                                        <span className="text-xs text-gray-500">Диоптрия: {item.diopter}</span>
+                                                    )}
+                                                    {item.serialNumber && (
+                                                        <span className="text-xs text-gray-500">Партия: {item.serialNumber}</span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <input 
                                                     type="number" 
                                                     className="w-20 px-3 py-1 border rounded" 
                                                     value={item.quantity} 
-                                                    onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1)}
+                                                    onChange={(e) => updateQuantity(itemKey, parseInt(e.target.value) || 1)}
                                                     min={1}
                                                     max={item.maxStock}
                                                 />
@@ -277,7 +381,7 @@ export default function CreateWholesaleOrderPage() {
                                                     type="number" 
                                                     className="w-24 px-3 py-1 border rounded" 
                                                     value={item.price} 
-                                                    onChange={(e) => updatePrice(item.productId, parseInt(e.target.value) || 0)}
+                                                    onChange={(e) => updatePrice(itemKey, parseInt(e.target.value) || 0)}
                                                     min={0}
                                                 />
                                             </td>
@@ -285,12 +389,12 @@ export default function CreateWholesaleOrderPage() {
                                                 {(item.price * item.quantity).toLocaleString('ru-RU')}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <button onClick={() => removeItem(item.productId)} className="text-red-500 hover:bg-red-50 p-2 rounded">
+                                                <button onClick={() => removeItem(itemKey)} className="text-red-500 hover:bg-red-50 p-2 rounded">
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))}
+                                    )})}
                                 </tbody>
                             </table>
                         )}
@@ -302,18 +406,61 @@ export default function CreateWholesaleOrderPage() {
                     <div className="bg-white border rounded-lg p-6 shadow-sm space-y-4">
                         <h2 className="text-lg font-semibold">Детали заказа</h2>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-2 relative" ref={counterpartyRef}>
                             <label className="text-sm font-medium">Контрагент (Покупатель)</label>
-                            <select 
-                                className="w-full px-3 py-2 border rounded-md bg-white"
-                                value={selectedCounterpartyId} 
-                                onChange={(e) => setSelectedCounterpartyId(e.target.value)}
+                            
+                            <div 
+                                className="w-full px-3 py-2 border rounded-md bg-white cursor-pointer flex justify-between items-center"
+                                onClick={() => {
+                                    setIsCounterpartyOpen(!isCounterpartyOpen);
+                                    setCounterpartySearch('');
+                                }}
                             >
-                                <option value="">Выберите контрагента</option>
-                                {counterparties.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
+                                <span className={selectedCounterpartyId ? 'text-gray-900' : 'text-gray-500'}>
+                                    {selectedCounterpartyId 
+                                        ? counterparties.find(c => c.id === selectedCounterpartyId)?.name 
+                                        : 'Выберите контрагента...'}
+                                </span>
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                            </div>
+
+                            {isCounterpartyOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-hidden flex flex-col">
+                                    <div className="p-2 border-b sticky top-0 bg-white">
+                                        <div className="relative">
+                                            <Search className="w-4 h-4 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                                            <input 
+                                                type="text"
+                                                className="w-full pl-8 pr-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                placeholder="Поиск..."
+                                                value={counterpartySearch}
+                                                onChange={e => setCounterpartySearch(e.target.value)}
+                                                onClick={e => e.stopPropagation()}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="overflow-y-auto">
+                                        {counterparties
+                                            .filter(c => c.name.toLowerCase().includes(counterpartySearch.toLowerCase()))
+                                            .map(c => (
+                                                <div 
+                                                    key={c.id} 
+                                                    className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center justify-between"
+                                                    onClick={() => {
+                                                        setSelectedCounterpartyId(c.id);
+                                                        setIsCounterpartyOpen(false);
+                                                    }}
+                                                >
+                                                    <span>{c.name}</span>
+                                                    {selectedCounterpartyId === c.id && <Check className="w-4 h-4 text-blue-600" />}
+                                                </div>
+                                            ))}
+                                        {counterparties.filter(c => c.name.toLowerCase().includes(counterpartySearch.toLowerCase())).length === 0 && (
+                                            <div className="px-3 py-4 text-sm text-center text-gray-500">Ничего не найдено</div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-2">

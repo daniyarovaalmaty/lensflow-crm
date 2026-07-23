@@ -10,12 +10,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
-    const orgId = user.organizationId;
+    const actionBody = await req.json().catch(() => ({}));
+    const reqOrgId = actionBody.orgId;
+    let orgId = user.organizationId;
+    
+    if (reqOrgId && reqOrgId !== 'all' && reqOrgId !== orgId) {
+        const myOrg = await prisma.organization.findUnique({ where: { id: orgId }, select: { type: true } });
+        if (myOrg?.type === 'headquarters') {
+            orgId = reqOrgId;
+        }
+    }
 
     const t = await prisma.stockTransfer.findFirst({ where: { id: params.id, OR: [{ fromOrgId: orgId }, { toOrgId: orgId }] } });
     if (!t) return NextResponse.json({ error: 'Трансфер не найден' }, { status: 404 });
 
-    const action = (await req.json())?.action as string;
+    const action = actionBody.action as string;
     const items = (t.items as any[]) || [];
 
     if (action === 'send') {

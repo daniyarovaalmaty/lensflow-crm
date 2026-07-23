@@ -3,14 +3,13 @@
 import { useState } from 'react';
 import { 
     Package, RefreshCcw, FileText, ArrowRightLeft, Target, 
-    ClipboardList, TrendingDown, Search 
+    TrendingDown, Search 
 } from 'lucide-react';
 import SupplyModule from './components/SupplyModule';
 import TransferModule from './components/TransferModule';
 import ProductBalances from './components/ProductBalances';
 import DocumentFlowModule from './components/DocumentFlowModule';
 import InventoryModule from './components/InventoryModule';
-import RequestsModule from './components/RequestsModule';
 import LotTrackingModule from './components/LotTrackingModule';
 
 export default function DistributorWarehousePage() {
@@ -18,10 +17,9 @@ export default function DistributorWarehousePage() {
 
     const TABS = [
         { id: 'supplies', label: 'Поставки', icon: Package },
-        { id: 'requests', label: 'Заявки на товар', icon: ClipboardList },
         { id: 'transfers', label: 'Трансферы', icon: ArrowRightLeft },
         { id: 'balances', label: 'Остатки товара', icon: Target },
-        { id: 'tracking', label: 'Поиск по LOT', icon: Search },
+        { id: 'tracking', label: 'Поиск товара', icon: Search },
         { id: 'documents', label: 'Документооборот', icon: FileText },
         { id: 'writeoffs', label: 'Списания', icon: TrendingDown },
         { id: 'inventory', label: 'Ревизии', icon: RefreshCcw }
@@ -63,7 +61,6 @@ export default function DistributorWarehousePage() {
             {/* Module Content */}
             <div className="mt-6 bg-white rounded-xl shadow-sm ring-1 ring-gray-900/5 p-6">
                 {activeTab === 'supplies' && <SupplyModule />}
-                {activeTab === 'requests' && <RequestsModule />}
                 {activeTab === 'transfers' && <TransferModule />}
                 { activeTab === 'balances' && <ProductBalances /> }
                 { activeTab === 'tracking' && <LotTrackingModule /> }

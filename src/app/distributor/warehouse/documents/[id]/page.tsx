@@ -3,6 +3,8 @@ import prisma from '@/lib/db/prisma';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileText, CheckCircle, Clock, Package, Barcode } from 'lucide-react';
+import { formatGS1Barcode, parseGS1Barcode } from '@/lib/utils/gs1Parser';
+import ExpiryDateBadge from '../../components/ExpiryDateBadge';
 
 export default async function DocumentPage({ params }: { params: { id: string } }) {
     const session = await auth();
@@ -19,6 +21,13 @@ export default async function DocumentPage({ params }: { params: { id: string } 
     }
 
     const items = doc.items as any[] || [];
+
+    const productIds = Array.from(new Set(items.map((i: any) => i.productId).filter(Boolean))) as string[];
+    const products = await prisma.opticProduct.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, model: true }
+    });
+    const productMap = new Map(products.map(p => [p.id, p]));
 
     // Parse JSON notes if it exists
     let parsedNotes: any = {};
@@ -123,7 +132,7 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                         <table className="min-w-full divide-y divide-gray-300">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Наименование</th>
+                                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Товар</th>
                                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Кол-во</th>
                                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Цена</th>
                                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Сумма</th>
@@ -137,6 +146,13 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                                 {item.trackSerials ? <Barcode className="w-5 h-5 text-indigo-500" /> : <Package className="w-5 h-5 text-gray-400" />}
                                                 <div>
                                                     <p className="font-semibold text-gray-900">{item.name}</p>
+                                                    {(() => {
+                                                        const p = productMap.get(item.productId);
+                                                        if (p?.model) {
+                                                            return <p className="text-xs text-gray-500 mt-0.5 mb-1.5">Модель: {p.model}</p>;
+                                                        }
+                                                        return null;
+                                                    })()}
                                                     {(item.trackSerials && item.serialNumbers && item.serialNumbers.length > 0) ? (
                                                         <div className="mt-1 flex gap-1 flex-wrap">
                                                             {item.serialNumbers.map((sn: string) => (
@@ -146,12 +162,33 @@ export default async function DocumentPage({ params }: { params: { id: string } 
                                                             ))}
                                                         </div>
                                                     ) : item.batchBarcode ? (
-                                                        <div className="mt-1.5 space-y-1">
-                                                            <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit block">
-                                                                С/Н: {item.batchBarcode}
-                                                            </span>
-                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
-                                                                {item.batchExpiration && <span>Срок: {new Date(item.batchExpiration).toLocaleDateString('ru-RU')}</span>}
+                                                        <div className="mt-1.5 space-y-2">
+                                                            <div className="flex flex-wrap gap-4">
+                                                                <div className="inline-flex flex-col items-start rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 mb-1 w-fit">
+                                                                    <span className="text-indigo-400 mb-0.5">Штрихкод партии:</span>
+                                                                    {formatGS1Barcode(item.batchBarcode).map((block, i) => (
+                                                                        <span key={i} className="block">{block}</span>
+                                                                    ))}
+                                                                </div>
+                                                                {(() => {
+                                                                    const parsed = parseGS1Barcode(item.batchBarcode);
+                                                                    const extracted = parsed.serialNumber || parsed.batchNumber;
+                                                                    if (!extracted) return null;
+                                                                    return (
+                                                                        <div className="inline-flex flex-col items-start rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 mb-1 w-fit h-fit">
+                                                                            <span className="text-blue-400 mb-0.5">Серийный номер:</span>
+                                                                            <span className="font-semibold">{extracted}</span>
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500 items-center">
+                                                                {item.batchExpiration && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <span>Срок:</span>
+                                                                        <ExpiryDateBadge date={item.batchExpiration} />
+                                                                    </div>
+                                                                )}
                                                                 {item.batchProduction && <span>Произв: {new Date(item.batchProduction).toLocaleDateString('ru-RU')}</span>}
                                                                 {item.batchDiopters && <span>Диоптрии: {item.batchDiopters}</span>}
                                                             </div>

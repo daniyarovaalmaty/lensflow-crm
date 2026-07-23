@@ -115,6 +115,7 @@ function transformOrder(order: any) {
             provider: order.contract.provider,
             client: order.contract.client,
         } : undefined,
+        source: order.source || undefined,
     };
 }
 

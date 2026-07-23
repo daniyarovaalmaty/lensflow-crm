@@ -362,13 +362,13 @@ export const PermissionsBySubRole: Record<SubRole, PermissionSet> = {
     dist_admin: {
         canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
         canDeliver: false, canAddDefects: false, canViewPayments: true, canChangePayments: false,
-        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canShip: false, canPrint: false, canCreateOrders: true, canViewOrders: true,
         canViewAllOrders: false, canViewStats: true, canSendToAccountant: false, canProcessDocs: false,
     },
     dist_manager: {
         canViewKanban: false, canChangeStatus: false, canMarkReady: false, canMarkRework: false,
         canDeliver: false, canAddDefects: false, canViewPayments: false, canChangePayments: false,
-        canShip: false, canPrint: false, canCreateOrders: false, canViewOrders: true,
+        canShip: false, canPrint: false, canCreateOrders: true, canViewOrders: true,
         canViewAllOrders: false, canViewStats: false, canSendToAccountant: false, canProcessDocs: false,
     },
     dist_accountant: {
@@ -553,7 +553,53 @@ export const DefaultClinicPermissions: Record<SubRole, ClinicPermissions> = {
     dist_accountant: { canViewPos: false, canViewWarehouse: false, canViewCatalog: true, canViewCash: false, canViewPatients: false, canViewFinance: true, canViewOrders: true, canViewCrm: false, canViewTransfers: false, canViewNews: false, canViewBooking: false, canViewTasks: false, canViewAnalytics: false, canViewIssue: false, canViewRepairs: false, canViewReworks: false, canViewSupplierOrders: false },
 };
 
+export interface DistributorPermissions {
+    canViewDashboard: boolean;
+    canViewCounterparties: boolean;
+    canViewCatalog: boolean;
+    canViewWholesale: boolean;
+    canViewWarehouse: boolean;
+    canViewStaff: boolean;
+    canViewSettings: boolean;
+}
+
+export const DefaultDistributorPermissions: Record<string, DistributorPermissions> = {
+    dist_head: { canViewDashboard: true, canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: true },
+    dist_admin: { canViewDashboard: true, canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: true, canViewSettings: false },
+    dist_manager: { canViewDashboard: true, canViewCounterparties: true, canViewCatalog: true, canViewWholesale: true, canViewWarehouse: true, canViewStaff: false, canViewSettings: false },
+    dist_accountant: { canViewDashboard: true, canViewCounterparties: false, canViewCatalog: true, canViewWholesale: false, canViewWarehouse: false, canViewStaff: false, canViewSettings: false },
+};
+
+export function getEffectiveDistributorPermissions(user: { subRole: string; permissions?: any }): DistributorPermissions {
+    const roleDefault = DefaultDistributorPermissions[user.subRole] || {
+        canViewDashboard: false,
+        canViewCounterparties: false,
+        canViewCatalog: false,
+        canViewWholesale: false,
+        canViewWarehouse: false,
+        canViewStaff: false,
+        canViewSettings: false,
+    };
+
+    if (!user.permissions || typeof user.permissions !== 'object') {
+        return roleDefault;
+    }
+
+    const p = user.permissions;
+    return {
+        canViewDashboard: typeof p.canViewDashboard === 'boolean' ? p.canViewDashboard : roleDefault.canViewDashboard,
+        canViewCounterparties: typeof p.canViewCounterparties === 'boolean' ? p.canViewCounterparties : roleDefault.canViewCounterparties,
+        canViewCatalog: typeof p.canViewCatalog === 'boolean' ? p.canViewCatalog : roleDefault.canViewCatalog,
+        canViewWholesale: typeof p.canViewWholesale === 'boolean' ? p.canViewWholesale : roleDefault.canViewWholesale,
+        canViewWarehouse: typeof p.canViewWarehouse === 'boolean' ? p.canViewWarehouse : roleDefault.canViewWarehouse,
+        canViewStaff: typeof p.canViewStaff === 'boolean' ? p.canViewStaff : roleDefault.canViewStaff,
+        canViewSettings: typeof p.canViewSettings === 'boolean' ? p.canViewSettings : roleDefault.canViewSettings,
+    };
+}
+
 export function getEffectiveClinicPermissions(user: { subRole: string; permissions?: any }): ClinicPermissions {
+
+
     const roleDefault = DefaultClinicPermissions[user.subRole as SubRole] || {
         canViewPos: false,
         canViewWarehouse: false,

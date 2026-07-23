@@ -11,18 +11,6 @@ import prisma from '@/lib/db/prisma';
 
 export const dynamic = 'force-dynamic';
 
-// In-memory OTP store (for serverless, consider Redis in production)
-// Map<phone, { code: string, expiresAt: number, attempts: number }>
-const otpStore = new Map<string, { code: string; expiresAt: number; attempts: number }>();
-
-// Clean expired entries periodically
-function cleanExpired() {
-    const now = Date.now();
-    for (const [key, val] of otpStore.entries()) {
-        if (val.expiresAt < now) otpStore.delete(key);
-    }
-}
-
 function normalizePhone(phone: string): string {
     let digits = phone.replace(/\D/g, '');
     // Kazakhstan: 8xxx → 7xxx
@@ -54,22 +42,22 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Неверный формат номера' }, { status: 400 });
         }
 
-        cleanExpired();
-
         // ==================== SEND ====================
         if (action === 'send') {
             // Rate limit: max 1 code per 60 seconds
-            const existing = otpStore.get(normalizedPhone);
-            if (existing && existing.expiresAt > Date.now() + 4 * 60 * 1000) {
+            const existing = await prisma.otpCode.findUnique({ where: { phone: normalizedPhone } });
+            if (existing && existing.expiresAt.getTime() > Date.now() + 4 * 60 * 1000) {
                 // Code was sent less than 60 seconds ago
                 return NextResponse.json({ error: 'Код уже отправлен. Подождите 60 секунд.' }, { status: 429 });
             }
 
             const code = generateCode();
-            otpStore.set(normalizedPhone, {
-                code,
-                expiresAt: Date.now() + 5 * 60 * 1000, // 5 min TTL
-                attempts: 0,
+            const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min TTL
+            
+            await prisma.otpCode.upsert({
+                where: { phone: normalizedPhone },
+                update: { code, expiresAt, attempts: 0 },
+                create: { phone: normalizedPhone, code, expiresAt, attempts: 0 }
             });
 
             // Send via WhatsApp
@@ -96,28 +84,31 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: 'Введите код' }, { status: 400 });
             }
 
-            const stored = otpStore.get(normalizedPhone);
+            const stored = await prisma.otpCode.findUnique({ where: { phone: normalizedPhone } });
             if (!stored) {
-                return NextResponse.json({ error: 'Код не найден. Запросите новый.' }, { status: 400 });
+                return NextResponse.json({ error: 'Код устарел или не был отправлен' }, { status: 400 });
             }
 
-            if (stored.expiresAt < Date.now()) {
-                otpStore.delete(normalizedPhone);
-                return NextResponse.json({ error: 'Код истёк. Запросите новый.' }, { status: 400 });
+            if (stored.expiresAt.getTime() < Date.now()) {
+                await prisma.otpCode.delete({ where: { phone: normalizedPhone } });
+                return NextResponse.json({ error: 'Срок действия кода истёк' }, { status: 400 });
             }
 
-            stored.attempts++;
-            if (stored.attempts > 5) {
-                otpStore.delete(normalizedPhone);
-                return NextResponse.json({ error: 'Слишком много попыток. Запросите новый код.' }, { status: 429 });
+            if (stored.attempts >= 3) {
+                await prisma.otpCode.delete({ where: { phone: normalizedPhone } });
+                return NextResponse.json({ error: 'Слишком много попыток. Запросите новый код.' }, { status: 400 });
             }
 
             if (stored.code !== inputCode) {
-                return NextResponse.json({ error: 'Неверный код' }, { status: 401 });
+                await prisma.otpCode.update({
+                    where: { phone: normalizedPhone },
+                    data: { attempts: stored.attempts + 1 }
+                });
+                return NextResponse.json({ error: 'Неверный код' }, { status: 400 });
             }
 
-            // Code is valid! Clean up
-            otpStore.delete(normalizedPhone);
+            // Valid!
+            await prisma.otpCode.delete({ where: { phone: normalizedPhone } });
 
             // Check if user exists in LensFlow
             const existingUser = await prisma.user.findFirst({

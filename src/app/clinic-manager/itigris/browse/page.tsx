@@ -135,8 +135,8 @@ export default function ItigrisBrowsePage() {
                                             <tr key={o.id} className="border-t border-gray-100 hover:bg-gray-50">
                                                 <td className="px-4 py-2.5 font-mono text-gray-700">{o.id}</td>
                                                 <td className="px-4 py-2.5 text-gray-900">{fio(o.client)}</td>
-                                                <td className="px-4 py-2.5 text-gray-600">{o.type || '—'}</td>
-                                                <td className="px-4 py-2.5"><span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{o.statusName || o.status || '—'}</span></td>
+                                                <td className="px-4 py-2.5 text-gray-600">{o.type?.name || (typeof o.type === 'string' ? o.type : '—')}</td>
+                                                <td className="px-4 py-2.5"><span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{o.statusName || o.status?.name || (typeof o.status === 'string' ? o.status : '—')}</span></td>
                                                 <td className="px-4 py-2.5 text-gray-500">{fmt(o.createdAt)}</td>
                                             </tr>
                                         ))}</tbody>
@@ -152,8 +152,8 @@ export default function ItigrisBrowsePage() {
                                             <tr key={r.id} className="border-t border-gray-100 hover:bg-gray-50">
                                                 <td className="px-4 py-2.5 text-gray-900">{fmt(r.appointmentAt)}</td>
                                                 <td className="px-4 py-2.5 text-gray-700">{r.client?.fullName || '—'}<span className="text-gray-400 ml-1">{r.client?.phone || ''}</span></td>
-                                                <td className="px-4 py-2.5 text-gray-600">{r.serviceType || '—'}</td>
-                                                <td className="px-4 py-2.5"><span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{r.status || '—'}</span></td>
+                                                <td className="px-4 py-2.5 text-gray-600">{r.serviceType?.name || (typeof r.serviceType === 'string' ? r.serviceType : '—')}</td>
+                                                <td className="px-4 py-2.5"><span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{r.status?.name || (typeof r.status === 'string' ? r.status : '—')}</span></td>
                                             </tr>
                                         ))}</tbody>
                                     </>

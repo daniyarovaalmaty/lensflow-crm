@@ -4,9 +4,12 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import bcrypt from 'bcryptjs';
 
+const LAB_ADMIN_SUBROLES = ['lab_head', 'lab_admin'];
+const DIST_ADMIN_SUBROLES = ['dist_head', 'dist_admin'];
+
 /**
- * PATCH /api/staff/[id] — update user password
- * Only lab_head and lab_admin can access
+ * PATCH /api/staff/[id] update user password or profile
+ * lab_head/lab_admin for laboratory, dist_head/dist_admin for distributor
  */
 export async function PATCH(
     request: NextRequest,
@@ -16,18 +19,23 @@ export async function PATCH(
         const session = await auth();
         if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
-        const sub = session.user.subRole;
-        if (sub !== 'lab_head' && sub !== 'lab_admin') {
+        const sub = (session.user as any).subRole;
+        const role = (session.user as any).role;
+        
+        const isLabAdmin = role === 'laboratory' && LAB_ADMIN_SUBROLES.includes(sub);
+        const isDistAdmin = role === 'distributor' && DIST_ADMIN_SUBROLES.includes(sub);
+
+        if (!isLabAdmin && !isDistAdmin) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const user = await prisma.user.findUnique({ where: { id: params.id } });
-        if (!user || user.role !== 'laboratory') {
+        if (!user || (isLabAdmin && user.role !== 'laboratory') || (isDistAdmin && user.role !== 'distributor')) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
         const body = await request.json();
-        const { password, fullName, phone, subRole } = body;
+        const { password, fullName, phone, subRole, permissions } = body;
 
         const data: any = {};
 
@@ -43,6 +51,7 @@ export async function PATCH(
         if (fullName !== undefined) data.fullName = fullName;
         if (phone !== undefined) data.phone = phone || null;
         if (subRole !== undefined) data.subRole = subRole;
+        if (permissions !== undefined) data.permissions = permissions;
 
         if (Object.keys(data).length === 0) {
             return NextResponse.json({ error: 'Нечего обновлять' }, { status: 400 });
@@ -58,6 +67,7 @@ export async function PATCH(
                 phone: true,
                 subRole: true,
                 status: true,
+                permissions: true,
                 createdAt: true,
             },
         });

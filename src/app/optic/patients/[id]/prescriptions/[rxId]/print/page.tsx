@@ -27,13 +27,24 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
         glasses: 'Очки', contacts: 'Контактные линзы', 'ortho-k': 'Орто-К'
     };
 
+    const opticName = session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Оптика';
+    const doctorName = prescription.doctor?.fullName || session?.user?.profile?.fullName || 'Врач не указан';
+
     return (
-        <div className="bg-white p-8 max-w-4xl mx-auto min-h-screen text-black" style={{ fontFamily: 'Arial, sans-serif' }}>
+        <div className="bg-white p-4 sm:p-8 max-w-4xl mx-auto min-h-screen text-black print:p-0 print:m-0 print:max-w-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+            <style>{`
+                @media print {
+                    @page { margin: 1cm; }
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+                }
+            `}</style>
             {/* Header */}
             <div className="flex justify-between items-start border-b-2 border-black pb-6 mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold uppercase tracking-wider">Рецепт на {typeLabels[prescription.type] || 'оптику'}</h1>
-                    <p className="text-sm text-gray-500 mt-1">LensFlow Optic CRM</p>
+                    <h1 className="text-2xl font-bold uppercase tracking-wider mb-2">Рецепт на {typeLabels[prescription.type] || 'оптику'}</h1>
+                    <p className="font-medium text-lg">{opticName}</p>
+                    <p className="text-sm text-gray-500 mt-1">Врач: <span className="font-medium text-black">{doctorName}</span></p>
                 </div>
                 <div className="text-right">
                     <p className="font-semibold text-lg">{patient.name}</p>
@@ -51,12 +62,12 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
                 </div>
                 <div>
                     <p className="text-sm text-gray-600">Врач/Оптометрист:</p>
-                    <p className="font-medium">{prescription.doctor?.fullName || '—'}</p>
+                    <p className="font-medium">{doctorName}</p>
                 </div>
             </div>
 
             {/* Medical Info */}
-            <div className="space-y-6 mb-8">
+            <div className="space-y-6 mb-8 avoid-break">
                 <div>
                     <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Медицинские данные</h2>
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
@@ -110,7 +121,7 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
             </div>
 
             {/* Metrics */}
-            <div className="space-y-6">
+            <div className="space-y-6 avoid-break">
                 <div>
                     <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Параметры коррекции</h2>
                     <table className="w-full text-center border-collapse border border-black text-sm">
@@ -185,7 +196,7 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
                 </div>
 
                 {prescription.notes && (
-                    <div className="mt-6">
+                    <div className="mt-6 avoid-break">
                         <h2 className="text-lg font-bold border-b border-gray-200 pb-2 mb-4">Примечание / Рекомендации</h2>
                         <p className="whitespace-pre-wrap">{prescription.notes}</p>
                     </div>
@@ -193,9 +204,9 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
             </div>
 
             {/* Footer Signatures */}
-            <div className="mt-16 pt-8 border-t border-gray-300 grid grid-cols-2 gap-8 text-sm">
+            <div className="mt-16 pt-8 border-t border-gray-300 grid grid-cols-2 gap-8 text-sm avoid-break">
                 <div>
-                    <p className="mb-8 font-medium">Подпись врача:</p>
+                    <p className="mb-8 font-medium">Подпись врача ({doctorName}):</p>
                     <div className="border-b border-black w-64"></div>
                 </div>
                 <div>

@@ -30,31 +30,83 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
             // Reserve stock for each item
             for (const item of order.items) {
-                // Find available stock items
-                const availableStockItems = await tx.stockItem.findMany({
-                    where: {
-                        organizationId,
-                        productId: item.productId,
-                        status: 'in_stock'
-                    },
-                    take: item.quantity,
-                    orderBy: { receivedAt: 'asc' } // FIFO
-                });
+                let neededQty = item.quantity;
 
-                if (availableStockItems.length < item.quantity) {
-                    throw new Error(`Not enough stock for product ${item.productId}. Needed ${item.quantity}, found ${availableStockItems.length}.`);
-                }
-
-                const stockItemIds = availableStockItems.map(si => si.id);
-
-                // Update stock items
-                await tx.stockItem.updateMany({
-                    where: { id: { in: stockItemIds } },
-                    data: {
-                        status: 'reserved',
-                        wholesaleOrderId: orderId
+                if (item.stockItemId) {
+                    // Specific batch/diopter requested
+                    const si = await tx.stockItem.findUnique({ where: { id: item.stockItemId } });
+                    if (!si || si.status !== 'in_stock' || si.quantity < neededQty) {
+                        throw new Error(`Недостаточно остатка в выбранной партии для товара ${item.productId}`);
                     }
-                });
+
+                    if (si.quantity === neededQty) {
+                        await tx.stockItem.update({
+                            where: { id: si.id },
+                            data: { status: 'reserved', wholesaleOrderId: orderId }
+                        });
+                    } else {
+                        // Split the stock item
+                        await tx.stockItem.update({
+                            where: { id: si.id },
+                            data: { quantity: si.quantity - neededQty }
+                        });
+                        // Create a clone for the reserved portion
+                        const { id: _removedId, ...cloneData } = si;
+                        await tx.stockItem.create({
+                            data: {
+                                ...cloneData,
+                                quantity: neededQty,
+                                status: 'reserved',
+                                wholesaleOrderId: orderId
+                            }
+                        });
+                    }
+                } else {
+                    // Fallback: Find available stock items (FIFO)
+                    const availableStockItems = await tx.stockItem.findMany({
+                        where: {
+                            organizationId,
+                            productId: item.productId,
+                            status: 'in_stock'
+                        },
+                        orderBy: { receivedAt: 'asc' } // FIFO
+                    });
+
+                    let foundQty = 0;
+                    for (const si of availableStockItems) {
+                        if (neededQty <= 0) break;
+
+                        const takeQty = Math.min(si.quantity, neededQty);
+
+                        if (si.quantity === takeQty) {
+                            await tx.stockItem.update({
+                                where: { id: si.id },
+                                data: { status: 'reserved', wholesaleOrderId: orderId }
+                            });
+                        } else {
+                            await tx.stockItem.update({
+                                where: { id: si.id },
+                                data: { quantity: si.quantity - takeQty }
+                            });
+                            const { id: _removedId, ...cloneData } = si;
+                            await tx.stockItem.create({
+                                data: {
+                                    ...cloneData,
+                                    quantity: takeQty,
+                                    status: 'reserved',
+                                    wholesaleOrderId: orderId
+                                }
+                            });
+                        }
+
+                        neededQty -= takeQty;
+                        foundQty += takeQty;
+                    }
+
+                    if (neededQty > 0) {
+                        throw new Error(`Недостаточно общего остатка для товара ${item.productId}. Требовалось ${item.quantity}, найдено ${foundQty}.`);
+                    }
+                }
             }
 
             // Update order status

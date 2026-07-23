@@ -11,9 +11,12 @@ export async function GET(req: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
     if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
+    const orgIdParam = req.nextUrl.searchParams.get('orgId');
+    const targetOrgId = (orgIdParam && orgIdParam !== 'all') ? orgIdParam : user.organizationId;
+
     const pendingSales = await prisma.sale.findMany({
         where: { 
-            organizationId: user.organizationId,
+            organizationId: targetOrgId,
             paymentStatus: 'unpaid'
         },
         include: { items: true, patient: true },

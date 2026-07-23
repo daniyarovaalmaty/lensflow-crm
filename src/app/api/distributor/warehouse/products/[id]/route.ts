@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         const body = await req.json();
         const { name, brand, model, barcode, sku, purchasePrice, retailPrice, specs, trackSerials } = body;
 
-        const product = await prisma.opticProduct.findUnique({
+        const product = await prisma.opticProduct.findFirst({
             where: { id: params.id, organizationId: session.user.organizationId }
         });
 
@@ -52,7 +52,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const product = await prisma.opticProduct.findUnique({
+        const product = await prisma.opticProduct.findFirst({
             where: { id: params.id, organizationId: session.user.organizationId }
         });
 
@@ -60,12 +60,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
 
-        const hasStockMovements = await prisma.stockMovement.findFirst({
-            where: { productId: params.id, organizationId: session.user.organizationId },
-            select: { id: true }
-        });
+        if (product.currentStock > 0) {
+            return NextResponse.json({ error: 'Невозможно удалить товар с положительным остатком.' }, { status: 400 });
+        }
 
-        const hasStockItems = await prisma.stockItem.findFirst({
+        const hasStockMovements = await prisma.stockMovement.findFirst({
             where: { productId: params.id, organizationId: session.user.organizationId },
             select: { id: true }
         });
@@ -80,15 +79,27 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
             select: { id: true }
         });
 
-        if (hasStockMovements || hasStockItems || hasSaleItems) {
+        const hasWholesaleOrderItems = await prisma.wholesaleOrderItem.findFirst({
+            where: { 
+                productId: params.id,
+                order: {
+                    organizationId: session.user.organizationId
+                }
+            },
+            select: { id: true }
+        });
+
+        if (hasStockMovements || hasSaleItems || hasWholesaleOrderItems) {
             return NextResponse.json({ error: 'Невозможно удалить товар, так как по нему есть движения на складе или он используется в заказах.' }, { status: 400 });
         }
 
+        // Delete any orphaned stock items (with 0 quantity) since there are no movements
+        await prisma.stockItem.deleteMany({
+            where: { productId: params.id, organizationId: session.user.organizationId }
+        });
+
         await prisma.opticProduct.delete({
-            where: { 
-                id: params.id,
-                organizationId: session.user.organizationId 
-            }
+            where: { id: params.id }
         });
 
         return NextResponse.json({ success: true });

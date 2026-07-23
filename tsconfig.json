@@ -39,6 +39,7 @@
         "node_modules",
         "prisma",
         "vitest.config.ts",
-        "src/__tests__"
+        "src/__tests__",
+        "scripts"
     ]
 }

@@ -5,7 +5,7 @@ import prisma from '@/lib/db/prisma';
 export const dynamic = 'force-dynamic';
 
 // GET — transfers involving this org (outgoing + incoming).
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
         const session = await auth();
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized', debug: 'no session.user.id', session: JSON.stringify(session) }, { status: 401 });
@@ -15,7 +15,10 @@ export async function GET() {
         const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { type: true } });
         const isHQ = org?.type === 'headquarters';
 
-        const where = isHQ ? {} : { OR: [{ fromOrgId: orgId }, { toOrgId: orgId }] };
+        const reqOrgId = new URL(req.url).searchParams.get('orgId');
+        const targetOrgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : (isHQ ? null : orgId);
+
+        const where = targetOrgId ? { OR: [{ fromOrgId: targetOrgId }, { toOrgId: targetOrgId }] } : {};
 
         const transfers = await prisma.stockTransfer.findMany({
             where,
