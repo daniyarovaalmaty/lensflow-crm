@@ -278,7 +278,7 @@ export default function AccountantPage() {
 
     const loadOrders = async () => {
         try {
-            const res = await fetch('/api/orders?hideItigris=true');
+            const res = await fetch('/api/orders?hideItigris=true', { cache: 'no-store' });
             if (res.ok) {
                 const data: Order[] = await res.json();
                 setOrders(data);

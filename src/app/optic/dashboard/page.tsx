@@ -112,7 +112,7 @@ export default function OpticDashboard() {
             if (dateFrom) params.append('dateFrom', dateFrom);
             if (dateTo) params.append('dateTo', dateTo);
 
-            const response = await fetch(`/api/orders?${params.toString()}&hideItigris=true`);
+            const response = await fetch(`/api/orders?${params.toString()}&hideItigris=true`, { cache: 'no-store' });
             if (response.ok) {
                 const data = await response.json();
                 if (data.data) {

@@ -152,14 +152,21 @@ export async function GET(request: NextRequest) {
 
         const hideItigris = searchParams.get('hideItigris') === 'true';
         if (hideItigris) {
-            where.NOT = {
-                ...where.NOT,
-                OR: [
-                    { orderNumber: { startsWith: 'ITG-' } },
-                    { company: { contains: 'itigris', mode: 'insensitive' } },
-                    { organizationId: 'org-itigris' }
-                ]
+            const itigrisNot = {
+                NOT: {
+                    OR: [
+                        { orderNumber: { startsWith: 'ITG-' } },
+                        { company: { contains: 'itigris', mode: 'insensitive' } },
+                        { organizationId: 'org-itigris' }
+                    ]
+                }
             };
+            
+            if (where.AND) {
+                where.AND.push(itigrisNot);
+            } else {
+                where.AND = [itigrisNot];
+            }
         }
 
         // Pagination
