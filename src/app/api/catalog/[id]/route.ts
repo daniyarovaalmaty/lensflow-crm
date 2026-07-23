@@ -25,7 +25,7 @@ export async function PUT(
 
         const { id } = await params;
         const body = await request.json();
-        const { name, category, sku, name1c, code, description, price, unit, isActive, sortOrder } = body;
+        const { name, category, sku, name1c, code, description, price, priceByDk, unit, isActive, sortOrder } = body;
 
         const updateData: any = {};
         if (typeof name === 'string') updateData.name = name;
@@ -35,6 +35,7 @@ export async function PUT(
         if (typeof code === 'string') updateData.code = code || null;
         if (typeof description === 'string') updateData.description = description || null;
         if (price !== undefined) updateData.price = Number(price);
+        if (priceByDk !== undefined) updateData.priceByDk = priceByDk;
         if (typeof unit === 'string') updateData.unit = unit;
         if (typeof isActive === 'boolean') updateData.isActive = isActive;
         if (sortOrder !== undefined) updateData.sortOrder = Number(sortOrder);

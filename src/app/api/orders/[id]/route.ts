@@ -249,9 +249,9 @@ export async function PATCH(
                     select: { metadata: true },
                 });
                 distPriceList = (distOrg?.metadata as any)?.priceList || null;
-            } else if (session.user.role === 'optic' && session.user.organizationId) {
+            } else if (session.user.role === 'optic' && order.organizationId) {
                 const opticOrg = await prisma.organization.findUnique({
-                    where: { id: session.user.organizationId },
+                    where: { id: order.organizationId },
                     select: { metadata: true, parentId: true },
                 });
                 distPriceList = (opticOrg?.metadata as any)?.priceList || null;

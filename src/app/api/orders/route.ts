@@ -389,10 +389,8 @@ export async function POST(request: NextRequest) {
                 });
                 distPriceList = (distOrg?.metadata as any)?.priceList || null;
             } else if (session.user.role === 'optic') {
-                // For optic (including procurement): use branch org or user's org
-                const effectiveOrgId = (session.user.subRole === 'optic_procurement' && body.branchOrgId)
-                    ? body.branchOrgId
-                    : session.user.organizationId;
+                // For optic: use the branch being ordered for, otherwise fallback to the user's org
+                const effectiveOrgId = body.branchOrgId || session.user.organizationId;
                 if (effectiveOrgId) {
                     const opticOrg = await prisma.organization.findUnique({
                         where: { id: effectiveOrgId },
@@ -528,11 +526,6 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
-                // Заказ падает в статус черновика (ожидает подтверждения оплаты/бухгалтером)
-                const subRole = session.user.subRole;
-                if (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'optic_manager', 'optic_admin'].includes(subRole as string)) {
-                    initialStatus = 'draft';
-                }
 
                 order = await prisma.order.create({
                     data: {

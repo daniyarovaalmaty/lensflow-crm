@@ -60,6 +60,9 @@ export default function CatalogPage() {
     const [formPrice, setFormPrice] = useState('');
     const [formUnit, setFormUnit] = useState('шт');
     const [formSortOrder, setFormSortOrder] = useState('0');
+    const [formPriceByDk, setFormPriceByDk] = useState<{ [key: string]: string }>({
+        '50': '', '100': '', '125': '', '180': ''
+    });
 
     const canEdit = subRole === 'lab_head' || subRole === 'lab_admin';
 
@@ -89,6 +92,7 @@ export default function CatalogPage() {
         setFormPrice('');
         setFormUnit('шт');
         setFormSortOrder('0');
+        setFormPriceByDk({ '50': '', '100': '', '125': '', '180': '' });
         setShowModal(true);
     };
 
@@ -103,6 +107,15 @@ export default function CatalogPage() {
         setFormPrice(String(product.price));
         setFormUnit(product.unit);
         setFormSortOrder(String(product.sortOrder));
+        
+        const pdk = product.priceByDk as Record<string, number> || {};
+        setFormPriceByDk({
+            '50': pdk['50'] ? String(pdk['50']) : '',
+            '100': pdk['100'] ? String(pdk['100']) : '',
+            '125': pdk['125'] ? String(pdk['125']) : '',
+            '180': pdk['180'] ? String(pdk['180']) : ''
+        });
+        
         setShowModal(true);
     };
 
@@ -121,6 +134,21 @@ export default function CatalogPage() {
             unit: formUnit,
             sortOrder: Number(formSortOrder) || 0,
         };
+
+        if (formCategory === 'lens') {
+            const parsedPdk: Record<string, number> = {};
+            if (formPriceByDk['50']) parsedPdk['50'] = Number(formPriceByDk['50']);
+            if (formPriceByDk['100']) parsedPdk['100'] = Number(formPriceByDk['100']);
+            if (formPriceByDk['125']) parsedPdk['125'] = Number(formPriceByDk['125']);
+            if (formPriceByDk['180']) parsedPdk['180'] = Number(formPriceByDk['180']);
+            if (Object.keys(parsedPdk).length > 0) {
+                (body as any).priceByDk = parsedPdk;
+            } else {
+                (body as any).priceByDk = null;
+            }
+        } else {
+            (body as any).priceByDk = null;
+        }
 
         try {
             if (editingProduct) {
@@ -488,7 +516,31 @@ export default function CatalogPage() {
                                             min="0"
                                         />
                                     </div>
+                                    </div>
                                 </div>
+                                {formCategory === 'lens' && (
+                                    <div className="border-t border-gray-100 pt-4 mt-2">
+                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                                            <DollarSign className="w-4 h-4 text-gray-400" />
+                                            Цены в зависимости от DK (₸)
+                                        </label>
+                                        <div className="grid grid-cols-4 gap-3">
+                                            {['50', '100', '125', '180'].map(dk => (
+                                                <div key={dk}>
+                                                    <label className="text-xs text-gray-500 mb-1 block">DK {dk}</label>
+                                                    <input
+                                                        type="number"
+                                                        value={formPriceByDk[dk]}
+                                                        onChange={e => setFormPriceByDk(prev => ({ ...prev, [dk]: e.target.value }))}
+                                                        placeholder="0"
+                                                        className="input w-full px-2 py-1.5 text-sm"
+                                                        min="0"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex justify-end gap-3 p-5 border-t border-gray-100 bg-gray-50">
                                 <button onClick={() => setShowModal(false)} className="btn btn-secondary">

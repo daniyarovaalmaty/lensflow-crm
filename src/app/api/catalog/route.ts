@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, category, sku, name1c, code, description, price, unit, sortOrder } = body;
+        const { name, category, sku, name1c, code, description, price, priceByDk, unit, sortOrder } = body;
 
         if (!name || !category) {
             return NextResponse.json({ error: 'name and category are required' }, { status: 400 });
@@ -139,6 +139,7 @@ export async function POST(request: NextRequest) {
                 code: code || undefined,
                 description: description || undefined,
                 price: Number(price) || 0,
+                priceByDk: priceByDk || undefined,
                 unit: unit || 'шт',
                 sortOrder: Number(sortOrder) || 0,
             },
