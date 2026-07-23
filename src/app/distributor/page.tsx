@@ -40,6 +40,8 @@ export default function DistributorDashboard() {
 
     // ==================== STATE ====================
     const [orders, setOrders] = useState<Order[]>([]);
+    const [selectedBulkOrders, setSelectedBulkOrders] = useState<Set<string>>(new Set());
+    const [isBulkUpdating, setIsBulkUpdating] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -77,6 +79,40 @@ export default function DistributorDashboard() {
         document.body.style.overflow = selectedOrderId ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
     }, [selectedOrderId]);
+
+    
+    const toggleOrderSelection = (orderId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSelectedBulkOrders(prev => {
+            const next = new Set(prev);
+            if (next.has(orderId)) next.delete(orderId);
+            else next.add(orderId);
+            return next;
+        });
+    };
+    
+    const handleBulkDeliver = async () => {
+        if (selectedBulkOrders.size === 0) return;
+        if (!confirm(`Подтвердить доставку для ${selectedBulkOrders.size} заказов?`)) return;
+        setIsBulkUpdating(true);
+        try {
+            const res = await fetch('/api/orders/bulk-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderIds: Array.from(selectedBulkOrders), status: 'delivered' })
+            });
+            if (res.ok) {
+                setOrders(prev => prev.map(o => selectedBulkOrders.has(o.order_id) ? { ...o, status: 'delivered' } : o));
+                setSelectedBulkOrders(new Set());
+            } else {
+                alert('Ошибка при обновлении статусов');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsBulkUpdating(false);
+        }
+    };
 
     // ==================== DATA LOADING ====================
     useEffect(() => { loadOrders(); loadPartnerLab(); }, []);
@@ -382,7 +418,25 @@ export default function DistributorDashboard() {
     };
 
     // ==================== KANBAN COLUMN ====================
-    const renderColumn = (title: string, Icon: any, colOrders: Order[], color: string) => (
+        const renderColumn = (title: string, Icon: any, colOrders: Order[], color: string) => {
+        const isShippedCol = title === 'Отгружены';
+        const allShippedIds = colOrders.map(o => o.order_id);
+        const allSelected = allShippedIds.length > 0 && allShippedIds.every(id => selectedBulkOrders.has(id));
+        const someSelected = allShippedIds.some(id => selectedBulkOrders.has(id));
+
+        const handleSelectAll = () => {
+            setSelectedBulkOrders(prev => {
+                const next = new Set(prev);
+                if (allSelected) {
+                    allShippedIds.forEach(id => next.delete(id));
+                } else {
+                    allShippedIds.forEach(id => next.add(id));
+                }
+                return next;
+            });
+        };
+
+        return (
         <div className="flex-shrink-0 w-[75vw] sm:w-auto sm:flex-1 min-w-0 sm:min-w-[220px]">
             <div className={`card mb-3 ${color}`}>
                 <div className="flex items-center gap-2">
@@ -392,6 +446,28 @@ export default function DistributorDashboard() {
                         {colOrders.length}
                     </span>
                 </div>
+                {isShippedCol && colOrders.length > 0 && (
+                    <div className="mt-2 flex items-center justify-between border-t border-black/5 pt-2">
+                        <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                checked={allSelected} 
+                                onChange={handleSelectAll}
+                                className="rounded text-purple-600 focus:ring-purple-500 bg-white/50 border-black/10"
+                            />
+                            Выбрать все
+                        </label>
+                        {someSelected && (
+                            <button 
+                                onClick={handleBulkDeliver}
+                                disabled={isBulkUpdating}
+                                className="text-[10px] uppercase font-bold bg-purple-700 text-white px-2 py-1 rounded shadow-sm hover:bg-purple-800 transition-colors"
+                            >
+                                {isBulkUpdating ? '...' : `Выдать (${Array.from(selectedBulkOrders).filter(id => allShippedIds.includes(id)).length})`}
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
             <div className="space-y-3">
                 {colOrders.length === 0 ? (
@@ -404,7 +480,8 @@ export default function DistributorDashboard() {
                 )}
             </div>
         </div>
-    );
+        );
+    };
 
     // ==================== ORDER MODAL ====================
     const renderOrderModal = () => {
