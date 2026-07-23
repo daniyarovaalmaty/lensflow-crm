@@ -279,7 +279,14 @@ export default function AccountantPage() {
     const loadOrders = async () => {
         try {
             const res = await fetch('/api/orders');
-            if (res.ok) setOrders(await res.json());
+            if (res.ok) {
+                const data: Order[] = await res.json();
+                const filteredData = data.filter(o => 
+                    !((o as any).company || '').toLowerCase().includes('itigris') && 
+                    o.organizationId !== 'org-itigris'
+                );
+                setOrders(filteredData);
+            }
         } finally {
             setIsLoading(false);
         }
