@@ -144,8 +144,21 @@ export async function GET(request: NextRequest) {
         // Hide huge iTigris history from production hub if requested
         if (hideItigrisDelivered) {
             where.NOT = {
+                ...where.NOT,
                 status: 'delivered',
                 orderNumber: { startsWith: 'ITG-' }
+            };
+        }
+
+        const hideItigris = searchParams.get('hideItigris') === 'true';
+        if (hideItigris) {
+            where.NOT = {
+                ...where.NOT,
+                OR: [
+                    { orderNumber: { startsWith: 'ITG-' } },
+                    { company: { contains: 'itigris', mode: 'insensitive' } },
+                    { organizationId: 'org-itigris' }
+                ]
             };
         }
 

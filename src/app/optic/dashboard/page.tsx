@@ -112,21 +112,15 @@ export default function OpticDashboard() {
             if (dateFrom) params.append('dateFrom', dateFrom);
             if (dateTo) params.append('dateTo', dateTo);
 
-            const response = await fetch(`/api/orders?${params.toString()}`);
+            const response = await fetch(`/api/orders?${params.toString()}&hideItigris=true`);
             if (response.ok) {
                 const data = await response.json();
-                const hideItigris = (arr: any[]) => arr.filter(o => 
-                    !((o.company || '').toLowerCase().includes('itigris')) && 
-                    !(o.order_id || '').startsWith('ITG') && 
-                    o.organizationId !== 'org-itigris'
-                );
-
                 if (data.data) {
-                    setOrders(hideItigris(data.data));
+                    setOrders(data.data);
                     setTotalPages(data.totalPages || 1);
                     setTotalOrders(data.total || 0);
                 } else {
-                    setOrders(hideItigris(data));
+                    setOrders(data);
                 }
             }
         } catch (error) {

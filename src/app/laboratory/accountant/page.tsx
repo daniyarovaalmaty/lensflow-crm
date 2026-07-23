@@ -278,14 +278,10 @@ export default function AccountantPage() {
 
     const loadOrders = async () => {
         try {
-            const res = await fetch('/api/orders');
+            const res = await fetch('/api/orders?hideItigris=true');
             if (res.ok) {
                 const data: Order[] = await res.json();
-                const filteredData = data.filter(o => 
-                    !((o as any).company || '').toLowerCase().includes('itigris') && 
-                    o.organizationId !== 'org-itigris'
-                );
-                setOrders(filteredData);
+                setOrders(data);
             }
         } finally {
             setIsLoading(false);
