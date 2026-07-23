@@ -83,15 +83,22 @@ export async function GET(request: NextRequest) {
             if (priceList?.lenses) {
                 const patched = products.map((product: any) => {
                     if (product.category !== 'lens') return product;
-                    const desc = product.description; // 'toric', 'spherical', 'probe', 'rgp'
-                    if (desc === 'toric' && priceList.lenses.toric) {
-                        return { ...product, priceByDk: priceList.lenses.toric, price: Object.values(priceList.lenses.toric)[0] };
+                    const desc = product.description || '';
+                    
+                    if (desc.startsWith('toric_') && priceList.lenses.toric) {
+                        const dk = desc.split('_')[1];
+                        const customPrice = priceList.lenses.toric[dk];
+                        if (customPrice != null) return { ...product, price: customPrice };
                     }
-                    if (desc === 'spherical' && priceList.lenses.spherical) {
-                        return { ...product, priceByDk: priceList.lenses.spherical, price: Object.values(priceList.lenses.spherical)[0] };
+                    if (desc.startsWith('spherical_') && priceList.lenses.spherical) {
+                        const dk = desc.split('_')[1];
+                        const customPrice = priceList.lenses.spherical[dk];
+                        if (customPrice != null) return { ...product, price: customPrice };
                     }
                     if ((desc === 'probe' || desc === 'rgp') && priceList.lenses.probe) {
-                        return { ...product, priceByDk: priceList.lenses.probe, price: Object.values(priceList.lenses.probe)[0] };
+                        // Trial is typically DK 50 in custom lists
+                        const customPrice = priceList.lenses.probe['50'];
+                        if (customPrice != null) return { ...product, price: customPrice };
                     }
                     return product;
                 });

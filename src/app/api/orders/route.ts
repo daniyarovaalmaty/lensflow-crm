@@ -533,7 +533,7 @@ export async function POST(request: NextRequest) {
                     );
                     if (trial) return trial;
                 }
-                return lensProducts.find((p: any) => p.description === char);
+                return lensProducts.find((p: any) => p.description === `${char}_${dk}`);
             };
             const odProduct: any = odChar ? resolveLensProduct(odChar, odDk, odTrial) : undefined;
             const osProduct: any = osChar ? resolveLensProduct(osChar, osDk, osTrial) : undefined;
