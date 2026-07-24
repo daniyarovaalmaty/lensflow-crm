@@ -14,8 +14,11 @@ export async function GET() {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        // Get all organizations
+        // Get all organizations (excluding the special itigris sync org)
         const organizations = await prisma.organization.findMany({
+            where: {
+                id: { not: 'org-itigris' }
+            },
             select: {
                 id: true,
                 name: true,
@@ -40,7 +43,8 @@ export async function GET() {
                         { source: 'itigris' },
                         { externalSource: 'itigris' },
                         { externalId: { startsWith: 'itigris' } },
-                        { orderNumber: { startsWith: 'ITG-' } }
+                        { orderNumber: { startsWith: 'ITG-' } },
+                        { organizationId: 'org-itigris' }
                     ]
                 }
             },
