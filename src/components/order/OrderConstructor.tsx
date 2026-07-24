@@ -97,7 +97,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         resolver: zodResolver(CreateOrderSchema),
         defaultValues: {
             optic_id: opticId,
-            doctor: ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole) ? (session?.user?.profile?.fullName || '') : '',
+            doctor: (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'doctor'].includes(subRole) || userRole === 'doctor' || subRole.includes('doctor')) ? (session?.user?.profile?.fullName || session?.user?.name || '') : '',
             is_urgent: false,
             patient: {
                 name: '',
@@ -107,7 +107,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             inn: '',
             delivery_method: '',
             delivery_address: '',
-            doctor_email: '',
+            doctor_email: (['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'doctor'].includes(subRole) || userRole === 'doctor' || subRole.includes('doctor')) ? (session?.user?.email || '') : '',
             config: {
                 type: 'medilens',
                 eyes: {
@@ -219,14 +219,40 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         }
     }, [branches, selectedBranchId, session?.user?.organizationId]);
 
-    // Fetch organization profile for auto-fill
+    // Fetch profile and auto-fill doctor info & organization details
     useEffect(() => {
-        if (!session?.user?.organizationId) return;
+        if (!session?.user) return;
+
+        const userSubR = session.user.subRole || '';
+        const userR = session.user.role || '';
+        const isDoctorUser = userR === 'doctor' || 
+            ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist', 'doctor'].includes(userSubR) ||
+            userSubR.toLowerCase().includes('doctor') ||
+            userSubR.toLowerCase().includes('ophthalmologist') ||
+            userSubR.toLowerCase().includes('orthokeratologist');
+
+        if (isDoctorUser) {
+            const sessName = session.user.profile?.fullName || session.user.name;
+            const sessEmail = session.user.email;
+            if (sessName && !getValues('doctor')) {
+                setValue('doctor', sessName, { shouldValidate: true });
+            }
+            if (sessEmail && !getValues('doctor_email')) {
+                setValue('doctor_email', sessEmail, { shouldValidate: true });
+            }
+        }
+
         (async () => {
             try {
                 const res = await fetch('/api/profile');
                 if (res.ok) {
                     const data = await res.json();
+                    if (isDoctorUser) {
+                        const docName = data.fullName || data.name || session.user?.name;
+                        const docEmail = data.email || session.user?.email;
+                        if (docName && !getValues('doctor')) setValue('doctor', docName, { shouldValidate: true });
+                        if (docEmail && !getValues('doctor_email')) setValue('doctor_email', docEmail, { shouldValidate: true });
+                    }
                     if (data.organization) {
                         const org = data.organization;
                         if (org.name) setValue('company', org.name);
@@ -238,7 +264,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                 }
             } catch (e) { console.error(e); }
         })();
-    }, [session?.user?.organizationId]);
+    }, [session, setValue, getValues]);
 
     // Lens products from catalog (matched by description field = characteristic code)
     const lensProducts = useMemo(
