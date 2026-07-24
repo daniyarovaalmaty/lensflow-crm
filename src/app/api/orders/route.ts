@@ -657,11 +657,12 @@ export async function POST(request: NextRequest) {
                     },
                 });
                 
-                // Send WhatsApp notification to accountant if order is new
-                if (order.status === 'new_order') {
+                // Send WhatsApp notification to accountant if order is new or draft
+                if (order.status === 'new_order' || order.status === 'draft') {
                     try {
                         const doctorDisplayName = String(validatedData.doctor || session.user.profile?.fullName || 'Неизвестно').trim();
-                        const message = `🚨 Новый заказ №${orderNumber} от врача ${doctorDisplayName}! Сумма: ${totalPrice.toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
+                        const statusText = order.status === 'draft' ? 'Ожидает оплаты/бухгалтера!' : 'Ожидает проверки!';
+                        const message = `🚨 Новый заказ №${orderNumber} от врача ${doctorDisplayName}! Сумма: ${totalPrice.toLocaleString('ru-RU')} ₸. ${statusText}`;
                         const orgName = (order.organization?.name || '').toLowerCase();
                         const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye') || orgName.includes('аймакс');
                         if (isAraiClinic) {
