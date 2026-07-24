@@ -110,6 +110,35 @@ export async function PATCH(
         
         // Send WhatsApp notifications
         try {
+            // Helper to find doctor's phone number from order (via createdById, doctorName, or doctorEmail)
+            const findDoctorPhone = async () => {
+                if (order.createdById) {
+                    const u = await prisma.user.findUnique({ where: { id: order.createdById } });
+                    if (u?.phone) return u.phone;
+                }
+                if (order.doctorName && order.doctorName.trim().length > 2) {
+                    const trimmed = order.doctorName.trim();
+                    const u = await prisma.user.findFirst({
+                        where: { fullName: { contains: trimmed, mode: 'insensitive' }, phone: { not: null } },
+                    });
+                    if (u?.phone) return u.phone;
+                    const parts = trimmed.split(/\s+/).filter((p: string) => p.length > 2);
+                    for (const part of parts) {
+                        const match = await prisma.user.findFirst({
+                            where: { fullName: { contains: part, mode: 'insensitive' }, phone: { not: null } },
+                        });
+                        if (match?.phone) return match.phone;
+                    }
+                }
+                if (order.doctorEmail) {
+                    const u = await prisma.user.findFirst({
+                        where: { email: { equals: order.doctorEmail, mode: 'insensitive' }, phone: { not: null } },
+                    });
+                    if (u?.phone) return u.phone;
+                }
+                return null;
+            };
+
             if (newStatus === 'new_order' && order.status === 'draft') {
                 const message = `🚨 Новый заказ №${orderNumber} от врача ${order.doctorName?.trim() || 'Неизвестно'}! Сумма: ${(order.totalPrice || 0).toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
                 const orgName = (updated.organization?.name || '').toLowerCase();
@@ -117,27 +146,30 @@ export async function PATCH(
                 if (isAraiClinic) {
                     sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
                 }
-            } else if (newStatus === 'ready' && order.status !== 'ready' && order.createdById) {
-                const orgName = (updated.organization?.name || '').toLowerCase();
-                if (orgName.includes('new eye') || orgName.includes('eye') || orgName.includes('коновалова') || orgName.includes('аймакс')) {
-                    const doctorUser = await prisma.user.findUnique({ where: { id: order.createdById } });
-                    const doctorPhone = doctorUser?.phone;
-                    if (doctorPhone) {
-                        const cleanPhone = String(doctorPhone).replace(/\D/g, '');
-                        if (cleanPhone.length >= 10) {
-                            const message = `✅ Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) успешно изготовлен!`;
-                            sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
-                        }
+            } else if (newStatus === 'ready' && order.status !== 'ready') {
+                const doctorPhone = await findDoctorPhone();
+                if (doctorPhone) {
+                    const cleanPhone = String(doctorPhone).replace(/\D/g, '');
+                    if (cleanPhone.length >= 10) {
+                        const message = `✅ Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) успешно изготовлен!`;
+                        sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
                     }
                 }
-            } else if (newStatus === 'shipped' && order.status !== 'shipped' && order.createdById) {
-                const doctorUser = await prisma.user.findUnique({ where: { id: order.createdById } });
-                const doctorPhone = doctorUser?.phone;
+            } else if ((newStatus === 'shipped' || newStatus === 'out_for_delivery') && order.status !== 'shipped' && order.status !== 'out_for_delivery') {
+                const doctorPhone = await findDoctorPhone();
                 if (doctorPhone) {
-                    // Remove non-digits
                     const cleanPhone = String(doctorPhone).replace(/\D/g, '');
                     if (cleanPhone.length >= 10) {
                         const message = `🚚 Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) готов и передан в доставку!`;
+                        sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
+                    }
+                }
+            } else if (newStatus === 'delivered' && order.status !== 'delivered') {
+                const doctorPhone = await findDoctorPhone();
+                if (doctorPhone) {
+                    const cleanPhone = String(doctorPhone).replace(/\D/g, '');
+                    if (cleanPhone.length >= 10) {
+                        const message = `🎉 Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) успешно выдан!`;
                         sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
                     }
                 }
