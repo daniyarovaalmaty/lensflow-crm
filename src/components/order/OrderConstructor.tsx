@@ -260,7 +260,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const orgName = (session?.user?.organizationName || '').toLowerCase();
     const selectedBranchName = (branches.find(b => b.id === selectedBranchId)?.name || '').toLowerCase();
     const isEyeMax = orgName.includes('eye max') || orgName.includes('eyemax') || orgName.includes('eye-max') ||
-                     selectedBranchName.includes('eye max') || selectedBranchName.includes('eyemax') || selectedBranchName.includes('eye-max');
+                     selectedBranchName.includes('eye max') || selectedBranchName.includes('eyemax') || selectedBranchName.includes('eye-max') ||
+                     orgName.includes('коновалов') || selectedBranchName.includes('коновалов');
 
     // Map characteristic code → catalog product
     // When DK=50, it's always a trial lens — find the trial product
