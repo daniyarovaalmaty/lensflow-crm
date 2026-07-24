@@ -56,6 +56,7 @@ export default function CounterpartyDetailPage() {
     const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
     const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
     const [isGeneratingReconciliation, setIsGeneratingReconciliation] = useState(false);
+    const [isUpdatingPayment, setIsUpdatingPayment] = useState<string | null>(null);
     const [reconciliationStart, setReconciliationStart] = useState('');
     const [reconciliationEnd, setReconciliationEnd] = useState('');
 
@@ -140,6 +141,29 @@ export default function CounterpartyDetailPage() {
     useEffect(() => {
         fetchCounterparty();
     }, [id, type]);
+
+    const updatePaymentStatus = async (orderId: string, newStatus: string) => {
+        setIsUpdatingPayment(orderId);
+        try {
+            const res = await fetch(`/api/orders/${orderId}/payment`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_status: newStatus }),
+            });
+            if (res.ok) {
+                // Update local state
+                setOrders(prev => prev.map(o => o.order_id === orderId ? { ...o, payment_status: newStatus } : o));
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Ошибка обновления статуса оплаты');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Сбой при обновлении');
+        } finally {
+            setIsUpdatingPayment(null);
+        }
+    };
 
     const openPricingModal = () => {
         const discount = data.discountPercent || 0;
@@ -560,9 +584,23 @@ export default function CounterpartyDetailPage() {
                                                     {order.total_price ? `${fmt(order.total_price)} ₸` : '—'}
                                                 </td>
                                                 <td className="py-3 px-4 text-center">
-                                                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${PaymentStatusColors[order.payment_status as PaymentStatus] || 'bg-gray-100 text-gray-600'}`}>
-                                                        {PaymentStatusLabels[order.payment_status as PaymentStatus] || order.payment_status}
-                                                    </span>
+                                                    {session?.user?.subRole === 'lab_accountant' ? (
+                                                        <select
+                                                            value={order.payment_status}
+                                                            disabled={isUpdatingPayment === order.order_id}
+                                                            onChange={(e) => updatePaymentStatus(order.order_id, e.target.value)}
+                                                            className={`text-xs font-medium px-2 py-1 rounded-full border-none outline-none cursor-pointer text-center appearance-none ${PaymentStatusColors[order.payment_status as PaymentStatus] || 'bg-gray-100 text-gray-600'}`}
+                                                            style={{ paddingRight: '1rem' }}
+                                                        >
+                                                            <option value="unpaid">Не оплачен</option>
+                                                            <option value="partial">Частично</option>
+                                                            <option value="paid">Оплачен</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${PaymentStatusColors[order.payment_status as PaymentStatus] || 'bg-gray-100 text-gray-600'}`}>
+                                                            {PaymentStatusLabels[order.payment_status as PaymentStatus] || order.payment_status}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="py-3 px-4 text-right text-gray-500 text-xs">
                                                     {new Date(order.created_at).toLocaleDateString('ru-RU')}
