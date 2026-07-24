@@ -257,10 +257,6 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
         return contracts.filter(c => c.clientId === selectedBranchId || c.client?.type === 'headquarters' || c.client?.type === 'standalone' || c.clientId === session?.user?.organizationId);
     }, [contracts, selectedBranchId, session?.user?.organizationId, contracts]);
 
-    const orgName = (session?.user?.organizationName || '').toLowerCase();
-    const selectedBranchName = (branches.find(b => b.id === selectedBranchId)?.name || '').toLowerCase();
-    const isOptic = session?.user?.role === 'optic';
-
     // Map characteristic code → catalog product
     // When DK=50, it's always a trial lens — find the trial product
     const getLensProduct = (characteristic: string, dk?: string) => {

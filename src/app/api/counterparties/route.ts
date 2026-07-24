@@ -41,8 +41,6 @@ export async function GET() {
                 NOT: {
                     OR: [
                         { source: 'itigris' },
-                        { externalSource: 'itigris' },
-                        { externalId: { startsWith: 'itigris' } },
                         { orderNumber: { startsWith: 'ITG-' } },
                         { organizationId: 'org-itigris' }
                     ]
