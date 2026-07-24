@@ -39,7 +39,8 @@ export async function GET() {
                     OR: [
                         { source: 'itigris' },
                         { externalSource: 'itigris' },
-                        { externalId: { startsWith: 'itigris' } }
+                        { externalId: { startsWith: 'itigris' } },
+                        { orderNumber: { startsWith: 'ITG-' } }
                     ]
                 }
             },

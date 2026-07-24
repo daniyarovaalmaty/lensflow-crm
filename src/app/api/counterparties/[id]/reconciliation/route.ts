@@ -47,7 +47,7 @@ export async function GET(
                     { organizationId: params.id },
                     { createdById: params.id },
                 ],
-                NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }, { externalId: { startsWith: 'itigris' } }] }
+                NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }, { externalId: { startsWith: 'itigris' } }, { orderNumber: { startsWith: 'ITG-' } }] }
             },
             orderBy: { createdAt: 'asc' },
         });
