@@ -3,6 +3,8 @@ import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 import { translateCyrillicToEnglishLayout } from '@/lib/utils/keyboard-layout';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
     try {
         const session = await auth();

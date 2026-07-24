@@ -69,6 +69,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: true, results });
     } catch (error: any) {
         console.error('[CRON] Error during Itigris sync:', error);
-        return NextResponse.json({ error: 'Sync failed', details: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

@@ -36,7 +36,13 @@ async function columnExists(table: string, column: string): Promise<boolean> {
     return !!r?.[0]?.ok;
 }
 
+import { auth } from '@/auth';
+
 export async function POST(req: NextRequest) {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'laboratory' || session.user.subRole !== 'lab_head') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const token = process.env.ADMIN_MIGRATE_TOKEN;
     if (!token) return NextResponse.json({ error: 'ADMIN_MIGRATE_TOKEN не задан на сервере' }, { status: 503 });
 

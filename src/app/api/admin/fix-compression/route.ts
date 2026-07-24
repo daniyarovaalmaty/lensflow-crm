@@ -1,8 +1,13 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { auth } from '@/auth';
 
 export async function GET() {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'laboratory' || session.user.subRole !== 'lab_head') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     try {
         const orders = await prisma.order.findMany({
             select: { id: true, lensConfig: true }
@@ -35,6 +40,6 @@ export async function GET() {
         return NextResponse.json({ success: true, updatedCount });
     } catch (error) {
         console.error(error);
-        return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

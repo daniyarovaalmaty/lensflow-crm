@@ -749,7 +749,7 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json(
-            { error: error.message || 'Не удалось создать заказ' },
+            { error: 'Internal server error' },
             { status: 500 }
         );
     }

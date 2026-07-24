@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { auth } from '@/auth';
 
 // Ensure the edge or node runtime can access env vars
 const openai = new OpenAI({
@@ -9,6 +10,10 @@ const openai = new OpenAI({
 export const maxDuration = 30; // 30 seconds
 
 export async function POST(req: Request) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;

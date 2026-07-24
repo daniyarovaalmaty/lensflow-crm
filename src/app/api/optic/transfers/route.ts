@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         });
     } catch (err: any) {
         console.error('TRANSFERS GET ERROR:', err);
-        return NextResponse.json({ error: 'Internal error', message: err?.message, stack: err?.stack?.slice(0, 500) }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 

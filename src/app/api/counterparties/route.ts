@@ -35,14 +35,7 @@ export async function GET() {
         const orders = await prisma.order.findMany({
             where: { 
                 status: { not: 'cancelled' },
-                NOT: {
-                    OR: [
-                        { source: 'itigris' },
-                        { externalSource: 'itigris' },
-                        { externalId: { startsWith: 'itigris' } },
-                        { orderNumber: { startsWith: 'ITG-' } }
-                    ]
-                }
+                NOT: { source: 'itigris' }
             },
             select: {
                 id: true,
