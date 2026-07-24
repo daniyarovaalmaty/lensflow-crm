@@ -39,7 +39,8 @@ export async function POST(
                 OR: [
                     { organizationId: params.id },
                     { createdById: params.id },
-                ]
+                ],
+                NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }] }
             },
             include: {
                 patient: true,

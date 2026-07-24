@@ -31,8 +31,17 @@ export async function GET() {
         });
 
         // Get all orders with doctor info (exclude cancelled)
+        // Get all orders with doctor info (exclude cancelled and itigris)
         const orders = await prisma.order.findMany({
-            where: { status: { not: 'cancelled' } },
+            where: { 
+                status: { not: 'cancelled' },
+                NOT: {
+                    OR: [
+                        { source: 'itigris' },
+                        { externalSource: 'itigris' }
+                    ]
+                }
+            },
             select: {
                 id: true,
                 orderNumber: true,
