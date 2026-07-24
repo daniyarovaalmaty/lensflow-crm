@@ -1407,19 +1407,21 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {lensProducts.map(product => {
-                        const isSelected = odLensProduct?.id === product.id || osLensProduct?.id === product.id;
+                        const isOd = odQty > 0 && odLensProduct?.id === product.id;
+                        const isOs = osQty > 0 && osLensProduct?.id === product.id;
+                        const isSelected = isOd || isOs;
                         const isRgp = product.description === 'rgp';
                         // When this lens is selected for an eye, show the exact price for
                         // that eye's DK; otherwise show the lowest price as a reference.
                         const cardPrice =
-                            (odLensProduct?.id === product.id && odDk) ? getLensPrice(product, odDk) :
-                            (osLensProduct?.id === product.id && osDk) ? getLensPrice(product, osDk) :
+                            (isOd && odDk) ? getLensPrice(product, odDk) :
+                            (isOs && osDk) ? getLensPrice(product, osDk) :
                             getLensDisplayPrice(product);
                         return (
                             <div
                                 key={product.id}
                                 className={`p-4 rounded-xl border-2 text-center transition-all ${isSelected
-                                    ? 'border-primary-500 bg-primary-50'
+                                    ? 'border-primary-500 bg-primary-50 shadow-sm'
                                     : 'border-gray-200 bg-gray-50'
                                     }`}
                             >
@@ -1430,9 +1432,26 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                     </p>
                                 )}
                                 {isSelected && (
-                                    <span className="inline-block mt-2 text-xs font-semibold text-primary-600 bg-primary-100 px-2 py-0.5 rounded-full">
-                                        Выбрано
-                                    </span>
+                                    <div className="flex items-center justify-center gap-1.5 mt-2 flex-wrap">
+                                        {isOd && isOs ? (
+                                            <span className="inline-block text-xs font-semibold text-primary-700 bg-primary-100 px-2.5 py-0.5 rounded-full">
+                                                Выбрано (OD + OS)
+                                            </span>
+                                        ) : (
+                                            <>
+                                                {isOd && (
+                                                    <span className="inline-block text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                                                        OD (Правый)
+                                                    </span>
+                                                )}
+                                                {isOs && (
+                                                    <span className="inline-block text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                                                        OS (Левый)
+                                                    </span>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         );
