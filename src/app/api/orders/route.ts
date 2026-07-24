@@ -662,8 +662,12 @@ export async function POST(request: NextRequest) {
                     try {
                         const doctorDisplayName = String(validatedData.doctor || session.user.profile?.fullName || 'Неизвестно').trim();
                         const message = `🚨 Новый заказ №${orderNumber} от врача ${doctorDisplayName}! Сумма: ${totalPrice.toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
-                        // Send async so it doesn't block
-                        sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
+                        const orgName = (order.organization?.name || '').toLowerCase();
+                        const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye') || orgName.includes('аймакс');
+                        if (isAraiClinic) {
+                            // Send async so it doesn't block
+                            sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
+                        }
                     } catch (e) {}
                 }
 

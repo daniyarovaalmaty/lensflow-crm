@@ -112,7 +112,11 @@ export async function PATCH(
         try {
             if (newStatus === 'new_order' && order.status === 'draft') {
                 const message = `🚨 Новый заказ №${orderNumber} от врача ${order.doctorName?.trim() || 'Неизвестно'}! Сумма: ${(order.totalPrice || 0).toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
-                sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
+                const orgName = (updated.organization?.name || '').toLowerCase();
+                const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye') || orgName.includes('аймакс');
+                if (isAraiClinic) {
+                    sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
+                }
             } else if (newStatus === 'shipped' && order.status !== 'shipped' && order.createdById) {
                 const doctorUser = await prisma.user.findUnique({ where: { id: order.createdById } });
                 const doctorPhone = doctorUser?.phone;
