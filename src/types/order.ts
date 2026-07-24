@@ -206,6 +206,7 @@ export const OrderSchema = z.object({
     patient: PatientSchema,
     config: LensConfigSchema,
     company: z.string().optional(),
+    contragent: z.string().optional(),
     inn: z.string().optional(),
     delivery_method: z.string().optional(),
     delivery_address: z.string().optional(),

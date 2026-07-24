@@ -132,7 +132,7 @@ async function generateInvoice(order: Order, urgentPct: number = 0) {
 
     ws.addRow([]);
 
-    r = ws.addRow(['', 'Покупатель:', '', order.company || order.patient.name, '', '', '']);
+    r = ws.addRow(['', 'Покупатель:', '', order.contragent || order.company || order.patient.name, '', '', '']);
     ws.mergeCells(r.number, 4, r.number, 7);
     infoStyle(r);
 
@@ -440,7 +440,7 @@ export default function AccountantPage() {
             const rows = filtered.map(o => ({
                 '№': o.order_id,
                 'Пациент': o.patient.name,
-                'Компания': o.company || '',
+                'Контрагент': o.contragent || o.company || '',
                 'Телефон': o.patient.phone,
                 'Статус заказа': OrderStatusLabels[o.status],
                 'Статус оплаты': PaymentStatusLabels[o.payment_status ?? 'unpaid'],
@@ -608,7 +608,7 @@ export default function AccountantPage() {
                                         <th className="w-8 px-2"></th>
                                         <th className="text-left px-4 py-3 font-semibold text-gray-600">№ заказа</th>
                                         <th className="text-left px-4 py-3 font-semibold text-gray-600">Пациент</th>
-                                        <th className="text-left px-4 py-3 font-semibold text-gray-600">Компания</th>
+                                        <th className="text-left px-4 py-3 font-semibold text-gray-600">Контрагент</th>
                                         <th className="text-left px-4 py-3 font-semibold text-gray-600">Статус</th>
                                         <th className="text-left px-4 py-3 font-semibold text-gray-600">Срочный</th>
                                         <th className="text-right px-4 py-3 font-semibold text-gray-600">Сумма</th>
@@ -661,7 +661,7 @@ export default function AccountantPage() {
                                                         <div className="text-xs text-gray-400">{order.patient.phone}</div>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-gray-600">
-                                                        {order.company || '—'}
+                                                        {order.contragent || order.company || '—'}
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <span className="text-xs text-gray-600">{OrderStatusLabels[order.status]}</span>
@@ -719,10 +719,10 @@ export default function AccountantPage() {
                                                                                 <User className="w-3.5 h-3.5 text-gray-400" />
                                                                                 <span className="font-medium">Врач:</span> {order.meta.doctor || '—'}
                                                                             </div>
-                                                                            {order.company && (
+                                                                            {(order.contragent || order.company) && (
                                                                                 <div className="flex items-center gap-1.5">
                                                                                     <Building2 className="w-3.5 h-3.5 text-gray-400" />
-                                                                                    <span className="font-medium">Компания:</span> {order.company}
+                                                                                    <span className="font-medium">Контрагент:</span> {order.contragent || order.company}
                                                                                     {order.inn && <span className="text-gray-400 ml-1">(ИНН: {order.inn})</span>}
                                                                                 </div>
                                                                             )}

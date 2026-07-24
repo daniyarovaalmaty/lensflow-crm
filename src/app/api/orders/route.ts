@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
             where,
             include: {
                 patient: true,
-                createdBy: { select: { fullName: true, email: true } },
+                createdBy: { select: { fullName: true, email: true, organization: { select: { name: true } } } },
                 organization: { select: { name: true, inn: true, deliveryAddress: true } },
                 labOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
                 distributorOrg: { select: { name: true, inn: true, deliveryAddress: true, bankName: true, bik: true, iban: true } },
@@ -273,6 +273,7 @@ export async function GET(request: NextRequest) {
                 } : { name: '', phone: '' },
                 config: lensConfig,
                 company: order.company || undefined,
+                contragent: order.createdBy?.organization?.name || undefined,
                 inn: order.inn || undefined,
                 delivery_method: order.deliveryMethod || undefined,
                 delivery_address: order.deliveryAddress || undefined,
