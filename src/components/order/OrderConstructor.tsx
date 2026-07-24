@@ -837,10 +837,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             type="text"
                             list={session?.user?.role === 'distributor' ? "distributor-clients" : undefined}
                             {...register('company')}
-                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
+                            className="input disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="Ozat clinic"
-                            disabled={isOptic}
-                            readOnly={isOptic}
+                            disabled={!isDistributor}
+                            readOnly={!isDistributor}
                         />
                         {session?.user?.role === 'distributor' && (
                             <datalist id="distributor-clients">
@@ -859,10 +859,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="inn"
                             type="text"
                             {...register('inn')}
-                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
+                            className="input disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="ИНН компании"
-                            disabled={isOptic}
-                            readOnly={isOptic}
+                            disabled={!isDistributor}
+                            readOnly={!isDistributor}
                         />
                     </div>
 
@@ -874,10 +874,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="delivery_method"
                             type="text"
                             {...register('delivery_method')}
-                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
+                            className="input disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="Курьер, самовывоз..."
-                            disabled={isOptic}
-                            readOnly={isOptic}
+                            disabled={!isDistributor}
+                            readOnly={!isDistributor}
                         />
                     </div>
 
@@ -889,10 +889,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="delivery_address"
                             type="text"
                             {...register('delivery_address')}
-                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
+                            className="input disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="Астана, Пр. Мангилик ел 27"
-                            disabled={isOptic}
-                            readOnly={isOptic}
+                            disabled={!isDistributor}
+                            readOnly={!isDistributor}
                         />
                     </div>
 
@@ -904,8 +904,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <select
                                 id="contract_id"
                                 {...register('contract_id')}
-                                className={`input w-full bg-white ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
-                                disabled={isOptic}
+                                className="input w-full bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                                disabled={!isDistributor}
                             >
                                 <option value="">-- Без договора --</option>
                                 {availableContracts.map(c => (
