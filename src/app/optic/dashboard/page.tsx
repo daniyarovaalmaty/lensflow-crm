@@ -145,6 +145,24 @@ export default function OpticDashboard() {
         }
     };
 
+    const updatePaymentStatus = async (orderId: string, paymentStatus: PaymentStatus) => {
+        try {
+            const res = await fetch(`/api/orders/${orderId}/payment`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_status: paymentStatus }),
+            });
+            if (res.ok) {
+                loadOrders();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to update payment status');
+            }
+        } catch (error) {
+            console.error('Failed to update payment status:', error);
+        }
+    };
+
     const handleExpediteOrder = async () => {
         if (!expediteOrderId) return;
         try {
@@ -803,6 +821,27 @@ export default function OpticDashboard() {
                                                 )}
                                                 {perms.canViewPayments && (() => {
                                                     const ps = (order as any).payment_status || 'unpaid';
+                                                    
+                                                    if (perms.canChangePayments) {
+                                                        return (
+                                                            <div className="relative z-10" onClick={e => e.stopPropagation()}>
+                                                                <select
+                                                                    value={ps}
+                                                                    onChange={(e) => updatePaymentStatus(order.order_id, e.target.value as PaymentStatus)}
+                                                                    className={`appearance-none bg-transparent pr-6 text-xs font-medium px-2.5 py-1 rounded-full border cursor-pointer ${
+                                                                        ps === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500' : 
+                                                                        ps === 'partial' ? 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500' : 
+                                                                        'bg-gray-50 text-gray-700 border-gray-200 focus:ring-gray-500'
+                                                                    }`}
+                                                                >
+                                                                    <option value="unpaid">Не оплачено</option>
+                                                                    <option value="partial">Частично</option>
+                                                                    <option value="paid">Оплачено</option>
+                                                                </select>
+                                                            </div>
+                                                        );
+                                                    }
+
                                                     return (
                                                         <span className={`badge flex items-center gap-1.5 ${PaymentStatusColors[ps as PaymentStatus]}`}>
                                                             <span className={`w-2 h-2 rounded-full ${ps === 'paid' ? 'bg-emerald-500' : ps === 'partial' ? 'bg-amber-500' : 'bg-gray-400'}`} />

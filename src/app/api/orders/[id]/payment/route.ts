@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
 
+import { getPermissions } from '@/types/user';
+
 /**
  * PATCH /api/orders/[id]/payment - Toggle payment status
  */
@@ -14,9 +16,9 @@ export async function PATCH(
         const session = await auth();
         if (!session?.user) return new NextResponse('Unauthorized', { status: 401 });
 
-        // Only lab_accountant can change payment status
-        if (session.user.subRole !== 'lab_accountant') {
-            return NextResponse.json({ error: 'Only accountant can change payment status' }, { status: 403 });
+        const perms = getPermissions(session.user.subRole as any);
+        if (!perms.canChangePayments) {
+            return NextResponse.json({ error: 'You do not have permission to change payment status' }, { status: 403 });
         }
 
         const body = await request.json();
