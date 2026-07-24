@@ -11,7 +11,13 @@ function normalizePhone(phone: string): string {
     return '+' + digits;
 }
 
+import { auth } from '@/auth';
+
 export async function GET() {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'laboratory' || session.user.subRole !== 'lab_head') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const users = await prisma.user.findMany();
     let updated = 0;
     const results = [];

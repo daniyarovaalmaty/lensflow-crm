@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { sendWhatsAppMessage } from '@/lib/greenApi';
 import prisma from '@/lib/db/prisma';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,21 @@ export async function POST(request: Request) {
         const normalizedPhone = normalizePhone(phone);
         if (normalizedPhone.length < 10 || normalizedPhone.length > 15) {
             return NextResponse.json({ error: 'Неверный формат номера' }, { status: 400 });
+        }
+
+        // IP-based rate limiting
+        const clientIp = getClientIp(request);
+        const rateLimitConfig = action === 'send'
+            ? { name: 'otp-send', maxRequests: 5, windowSeconds: 300 }   // 5 sends per 5 min
+            : { name: 'otp-verify', maxRequests: 10, windowSeconds: 300 }; // 10 verifies per 5 min
+        
+        const { allowed, remaining, resetAt } = checkRateLimit(clientIp, rateLimitConfig);
+        if (!allowed) {
+            const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
+            return NextResponse.json(
+                { error: 'Слишком много запросов. Попробуйте позже.' },
+                { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+            );
         }
 
         // ==================== SEND ====================

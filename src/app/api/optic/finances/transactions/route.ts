@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(txs);
     } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
@@ -99,6 +99,6 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(newTx, { status: 201 });
     } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

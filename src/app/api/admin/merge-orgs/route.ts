@@ -1,8 +1,13 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
+import { auth } from '@/auth';
 
 export async function GET() {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'laboratory' || session.user.subRole !== 'lab_head') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     const org1 = await prisma.organization.findFirst({ where: { name: 'New Eye' } });
     const org2 = await prisma.organization.findFirst({ where: { name: { contains: 'Офтальмологический центр' } } });
 

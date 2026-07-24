@@ -31,6 +31,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error('[DraftSaleDelete] Error:', error);
-        return NextResponse.json({ error: error.message || String(error) }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db/prisma';
 import { ItigrisApiClient, ItigrisSyncService } from '@/lib/itigris';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const session = await auth();
+    if (!session?.user || session.user.role !== 'laboratory' || session.user.subRole !== 'lab_head') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
     try {
         const orgs = await prisma.organization.findMany();
         let config = null;

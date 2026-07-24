@@ -368,6 +368,6 @@ export async function DELETE(
         return NextResponse.json({ success: true, deleted: id });
     } catch (error: any) {
         console.error('DELETE order error:', error);
-        return NextResponse.json({ error: 'Failed to delete order: ' + error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

@@ -78,6 +78,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ materials: Array.from(materials.values()) });
     } catch (error: any) {
         console.error('M11 generate error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
