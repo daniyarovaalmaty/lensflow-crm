@@ -660,7 +660,8 @@ export async function POST(request: NextRequest) {
                 // Send WhatsApp notification to accountant if order is new
                 if (order.status === 'new_order') {
                     try {
-                        const message = `🚨 Новый заказ №${orderNumber} от врача ${validatedData.doctor || session.user.profile?.fullName || 'Неизвестно'}! Сумма: ${totalPrice.toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
+                        const doctorDisplayName = String(validatedData.doctor || session.user.profile?.fullName || 'Неизвестно').trim();
+                        const message = `🚨 Новый заказ №${orderNumber} от врача ${doctorDisplayName}! Сумма: ${totalPrice.toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
                         // Send async so it doesn't block
                         sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
                     } catch (e) {}
