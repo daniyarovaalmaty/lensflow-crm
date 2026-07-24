@@ -40,7 +40,7 @@ export async function POST(
                     { organizationId: params.id },
                     { createdById: params.id },
                 ],
-                NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }] }
+                NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }, { externalId: { startsWith: 'itigris' } }] }
             },
             include: {
                 patient: true,
