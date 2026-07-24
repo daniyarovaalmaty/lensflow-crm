@@ -117,6 +117,19 @@ export async function PATCH(
                 if (isAraiClinic) {
                     sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
                 }
+            } else if (newStatus === 'ready' && order.status !== 'ready' && order.createdById) {
+                const orgName = (updated.organization?.name || '').toLowerCase();
+                if (orgName.includes('new eye') || orgName.includes('eye') || orgName.includes('коновалова') || orgName.includes('аймакс')) {
+                    const doctorUser = await prisma.user.findUnique({ where: { id: order.createdById } });
+                    const doctorPhone = doctorUser?.phone;
+                    if (doctorPhone) {
+                        const cleanPhone = String(doctorPhone).replace(/\D/g, '');
+                        if (cleanPhone.length >= 10) {
+                            const message = `✅ Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) успешно изготовлен!`;
+                            sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
+                        }
+                    }
+                }
             } else if (newStatus === 'shipped' && order.status !== 'shipped' && order.createdById) {
                 const doctorUser = await prisma.user.findUnique({ where: { id: order.createdById } });
                 const doctorPhone = doctorUser?.phone;
@@ -124,7 +137,7 @@ export async function PATCH(
                     // Remove non-digits
                     const cleanPhone = String(doctorPhone).replace(/\D/g, '');
                     if (cleanPhone.length >= 10) {
-                        const message = `✅ Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) готов и передан в доставку!`;
+                        const message = `🚚 Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) готов и передан в доставку!`;
                         sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
                     }
                 }
