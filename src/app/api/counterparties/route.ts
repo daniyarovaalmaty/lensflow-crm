@@ -38,13 +38,14 @@ export async function GET() {
         const orders = await prisma.order.findMany({
             where: { 
                 status: { not: 'cancelled' },
-                NOT: {
-                    OR: [
-                        { source: 'itigris' },
-                        { orderNumber: { startsWith: 'ITG-' } },
-                        { organizationId: 'org-itigris' }
-                    ]
-                }
+                OR: [
+                    { source: null },
+                    { source: { not: 'itigris' } },
+                ],
+                NOT: [
+                    { orderNumber: { startsWith: 'ITG-' } },
+                    { organizationId: 'org-itigris' }
+                ]
             },
             select: {
                 id: true,
@@ -113,18 +114,33 @@ export async function GET() {
             doctorMap.set(doctorId, existing);
         });
 
+        // Map parent organizations for branches
+        const orgParentMap = new Map<string, string>();
+        organizations.forEach((org: any) => {
+            if (org.parentId) {
+                orgParentMap.set(org.id, org.parentId);
+            }
+        });
+
         // Build clinic data from orders for revenue
         const clinicOrderData = new Map<string, { revenue: number; unpaid: number; orderCount: number; lastDate: string }>();
         orders.forEach((order: any) => {
             const orgId = order.organizationId;
             if (!orgId) return;
-            const existing = clinicOrderData.get(orgId) || { revenue: 0, unpaid: 0, orderCount: 0, lastDate: '' };
-            existing.orderCount++;
-            existing.revenue += order.totalPrice || 0;
-            if (order.paymentStatus !== 'paid') existing.unpaid += order.totalPrice || 0;
-            const dateStr = order.createdAt.toISOString();
-            if (!existing.lastDate || dateStr > existing.lastDate) existing.lastDate = dateStr;
-            clinicOrderData.set(orgId, existing);
+
+            const targets = [orgId];
+            const parentId = orgParentMap.get(orgId);
+            if (parentId) targets.push(parentId);
+
+            targets.forEach(targetId => {
+                const existing = clinicOrderData.get(targetId) || { revenue: 0, unpaid: 0, orderCount: 0, lastDate: '' };
+                existing.orderCount++;
+                existing.revenue += order.totalPrice || 0;
+                if (order.paymentStatus !== 'paid') existing.unpaid += order.totalPrice || 0;
+                const dateStr = order.createdAt.toISOString();
+                if (!existing.lastDate || dateStr > existing.lastDate) existing.lastDate = dateStr;
+                clinicOrderData.set(targetId, existing);
+            });
         });
 
         const clinics = organizations.map((org: any) => {
