@@ -255,7 +255,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     const availableContracts = useMemo(() => {
         if (!selectedBranchId) return contracts;
         return contracts.filter(c => c.clientId === selectedBranchId || c.client?.type === 'headquarters' || c.client?.type === 'standalone' || c.clientId === session?.user?.organizationId);
-    }, [contracts, selectedBranchId, session?.user?.organizationId]);
+    }, [contracts, selectedBranchId, session?.user?.organizationId, contracts]);
+
+    const orgName = (session?.user?.organizationName || '').toLowerCase();
+    const selectedBranchName = (branches.find(b => b.id === selectedBranchId)?.name || '').toLowerCase();
+    const isEyeMax = orgName.includes('eye max') || orgName.includes('eyemax') || orgName.includes('eye-max') ||
+                     selectedBranchName.includes('eye max') || selectedBranchName.includes('eyemax') || selectedBranchName.includes('eye-max');
 
     // Map characteristic code → catalog product
     // When DK=50, it's always a trial lens — find the trial product
@@ -879,8 +884,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="delivery_address"
                             type="text"
                             {...register('delivery_address')}
-                            className="input"
+                            className="input disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="Астана, Пр. Мангилик ел 27"
+                            disabled={isEyeMax}
+                            readOnly={isEyeMax}
                         />
                     </div>
 
@@ -892,7 +899,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <select
                                 id="contract_id"
                                 {...register('contract_id')}
-                                className="input w-full bg-white"
+                                className="input w-full bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                                disabled={isEyeMax}
                             >
                                 <option value="">-- Без договора --</option>
                                 {availableContracts.map(c => (
