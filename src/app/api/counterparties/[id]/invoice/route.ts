@@ -43,7 +43,6 @@ export async function POST(
             },
             include: {
                 patient: true,
-                items: { include: { product: true } },
             },
             orderBy: { createdAt: 'asc' },
         });
@@ -135,26 +134,37 @@ export async function POST(
 
         for (const order of orders) {
             let orderSum = 0;
-            if (order.items && order.items.length > 0) {
-                for (const item of order.items) {
-                    const price = Number(item.unitPrice || 0);
-                    const qty = item.quantity;
-                    const sum = price * qty;
+            
+            const priceOd = order.priceOd || 0;
+            const priceOs = order.priceOs || 0;
+            
+            if (priceOd > 0 || priceOs > 0) {
+                // Determine quantities from lensConfig
+                const lensConfig = order.lensConfig as any;
+                const qtyOd = lensConfig?.od ? (lensConfig.od.quantity || 1) : 0;
+                const qtyOs = lensConfig?.os ? (lensConfig.os.quantity || 1) : 0;
+                
+                if (qtyOd > 0 && priceOd > 0) {
+                    const sum = priceOd * qtyOd;
                     orderSum += sum;
-
                     const row = ws.addRow([
-                        '',
-                        rowIndex++,
-                        item.product?.name || 'Линза',
-                        `${order.patient?.name || 'Пациент'} (№${order.orderNumber})`,
-                        'шт',
-                        qty,
-                        price,
-                        sum
+                        '', rowIndex++, order.documentNameOd || 'Линза OD',
+                        `${order.patient?.name || 'Пациент'} (№${order.orderNumber})`, 'шт', qtyOd, priceOd, sum
                     ]);
-                    for (let i = 2; i <= 8; i++) {
-                        row.getCell(i).border = thinBorder;
-                    }
+                    for (let i = 2; i <= 8; i++) row.getCell(i).border = thinBorder;
+                    row.getCell(6).alignment = { horizontal: 'center' };
+                    row.getCell(7).numFmt = '#,##0.00';
+                    row.getCell(8).numFmt = '#,##0.00';
+                }
+                
+                if (qtyOs > 0 && priceOs > 0) {
+                    const sum = priceOs * qtyOs;
+                    orderSum += sum;
+                    const row = ws.addRow([
+                        '', rowIndex++, order.documentNameOs || 'Линза OS',
+                        `${order.patient?.name || 'Пациент'} (№${order.orderNumber})`, 'шт', qtyOs, priceOs, sum
+                    ]);
+                    for (let i = 2; i <= 8; i++) row.getCell(i).border = thinBorder;
                     row.getCell(6).alignment = { horizontal: 'center' };
                     row.getCell(7).numFmt = '#,##0.00';
                     row.getCell(8).numFmt = '#,##0.00';
@@ -163,22 +173,15 @@ export async function POST(
                 const price = Number(order.totalPrice || 0);
                 orderSum += price;
                 const row = ws.addRow([
-                    '',
-                    rowIndex++,
-                    'Изготовление линз',
-                    `${order.patient?.name || 'Пациент'} (№${order.orderNumber})`,
-                    'шт',
-                    1,
-                    price,
-                    price
+                    '', rowIndex++, 'Изготовление линз',
+                    `${order.patient?.name || 'Пациент'} (№${order.orderNumber})`, 'шт', 1, price, price
                 ]);
-                for (let i = 2; i <= 8; i++) {
-                    row.getCell(i).border = thinBorder;
-                }
+                for (let i = 2; i <= 8; i++) row.getCell(i).border = thinBorder;
                 row.getCell(6).alignment = { horizontal: 'center' };
                 row.getCell(7).numFmt = '#,##0.00';
                 row.getCell(8).numFmt = '#,##0.00';
             }
+            
             totalSum += orderSum;
         }
 
