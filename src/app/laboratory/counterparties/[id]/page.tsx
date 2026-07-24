@@ -53,6 +53,78 @@ export default function CounterpartyDetailPage() {
     const [isSavingInfo, setIsSavingInfo] = useState(false);
     const [isTogglingApproval, setIsTogglingApproval] = useState(false);
 
+    const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
+    const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+    const [isGeneratingReconciliation, setIsGeneratingReconciliation] = useState(false);
+    const [reconciliationStart, setReconciliationStart] = useState('');
+    const [reconciliationEnd, setReconciliationEnd] = useState('');
+
+    const toggleOrder = (orderId: string) => {
+        const next = new Set(selectedOrders);
+        if (next.has(orderId)) next.delete(orderId);
+        else next.add(orderId);
+        setSelectedOrders(next);
+    };
+
+    const toggleAllOrders = () => {
+        const unpaidOrders = orders.filter(o => o.payment_status !== 'paid');
+        if (selectedOrders.size === unpaidOrders.length && unpaidOrders.length > 0) {
+            setSelectedOrders(new Set());
+        } else {
+            setSelectedOrders(new Set(unpaidOrders.map(o => o.order_id)));
+        }
+    };
+
+    const generateInvoice = async () => {
+        if (selectedOrders.size === 0) return;
+        setIsGeneratingInvoice(true);
+        try {
+            const res = await fetch(`/api/counterparties/${id}/invoice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderIds: Array.from(selectedOrders) }),
+            });
+            if (!res.ok) throw new Error('Failed to generate invoice');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Счет_${data?.name || data?.fullName || 'Контрагент'}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка при генерации счета');
+        } finally {
+            setIsGeneratingInvoice(false);
+        }
+    };
+
+    const generateReconciliation = async () => {
+        if (!reconciliationStart || !reconciliationEnd) {
+            alert('Выберите период');
+            return;
+        }
+        setIsGeneratingReconciliation(true);
+        try {
+            const queryParams = new URLSearchParams({ start: reconciliationStart, end: reconciliationEnd, type });
+            const res = await fetch(`/api/counterparties/${id}/reconciliation?${queryParams.toString()}`);
+            if (!res.ok) throw new Error('Failed to generate reconciliation act');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Акт_сверки_${data?.name || data?.fullName || 'Контрагент'}_${reconciliationStart}_${reconciliationEnd}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка при генерации акта сверки');
+        } finally {
+            setIsGeneratingReconciliation(false);
+        }
+    };
+
     const fetchCounterparty = async () => {
         try {
             const res = await fetch(`/api/counterparties/${id}?type=${type}`);
@@ -396,16 +468,57 @@ export default function CounterpartyDetailPage() {
                     {/* Right: Orders table */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-200">
+                            <div className="px-5 py-4 border-b border-gray-200 flex flex-wrap gap-4 items-center justify-between bg-gray-50/50">
                                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                                     <Package className="w-4 h-4 text-gray-600" />
                                     Заказы ({orders.length})
                                 </h3>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                                        <input
+                                            type="date"
+                                            value={reconciliationStart}
+                                            onChange={(e) => setReconciliationStart(e.target.value)}
+                                            className="text-xs border-none bg-transparent outline-none p-0 cursor-pointer"
+                                        />
+                                        <span className="text-gray-400 text-xs">—</span>
+                                        <input
+                                            type="date"
+                                            value={reconciliationEnd}
+                                            onChange={(e) => setReconciliationEnd(e.target.value)}
+                                            className="text-xs border-none bg-transparent outline-none p-0 cursor-pointer"
+                                        />
+                                        <button
+                                            onClick={generateReconciliation}
+                                            disabled={isGeneratingReconciliation || !reconciliationStart || !reconciliationEnd}
+                                            className="ml-2 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-50"
+                                        >
+                                            {isGeneratingReconciliation ? 'Генерация...' : 'Акт сверки'}
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={generateInvoice}
+                                        disabled={isGeneratingInvoice || selectedOrders.size === 0}
+                                        className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+                                    >
+                                        <DollarSign className="w-3.5 h-3.5" />
+                                        Сгенерировать счет ({selectedOrders.size})
+                                    </button>
+                                </div>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="border-b border-gray-200 bg-gray-50/50">
+                                            <th className="px-4 py-3 text-left w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    onChange={toggleAllOrders}
+                                                    checked={selectedOrders.size > 0 && selectedOrders.size === orders.filter(o => o.payment_status !== 'paid').length}
+                                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                    title="Выбрать все неоплаченные"
+                                                />
+                                            </th>
                                             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">№ Заказа</th>
                                             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Пациент</th>
                                             {!isClinic && <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Клиника</th>}
@@ -417,7 +530,17 @@ export default function CounterpartyDetailPage() {
                                     </thead>
                                     <tbody>
                                         {orders.map((order: any) => (
-                                            <tr key={order.order_id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                                            <tr key={order.order_id} className={`border-b border-gray-50 hover:bg-gray-50/50 ${selectedOrders.has(order.order_id) ? 'bg-blue-50/20' : ''}`}>
+                                                <td className="px-4 py-3 text-left">
+                                                    {order.payment_status !== 'paid' && (
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedOrders.has(order.order_id)}
+                                                            onChange={() => toggleOrder(order.order_id)}
+                                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                        />
+                                                    )}
+                                                </td>
                                                 <td className="py-3 px-4">
                                                     <Link href={`/laboratory/orders/${order.order_id}`} className="text-blue-600 hover:underline font-medium text-xs">
                                                         {order.order_id}
@@ -447,7 +570,7 @@ export default function CounterpartyDetailPage() {
                                             </tr>
                                         ))}
                                         {orders.length === 0 && (
-                                            <tr><td colSpan={isClinic ? 6 : 7} className="py-12 text-center text-gray-400">Нет заказов</td></tr>
+                                            <tr><td colSpan={isClinic ? 7 : 8} className="py-12 text-center text-gray-400">Нет заказов</td></tr>
                                         )}
                                     </tbody>
                                 </table>

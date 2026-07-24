@@ -17,7 +17,7 @@ const navItems = [
     { href: '/laboratory/accountant', label: 'Финансы', icon: FileText, subRoles: ['lab_head', 'lab_admin', 'lab_accountant'] },
     { href: '/laboratory/analytics', label: 'Старые заказы', icon: Archive, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/reports', label: 'Аналитика', icon: BarChart3, subRoles: ['lab_head', 'lab_admin'] },
-    { href: '/laboratory/counterparties', label: 'Контрагенты', icon: Building2, subRoles: ['lab_head', 'lab_admin'] },
+    { href: '/laboratory/counterparties', label: 'Контрагенты', icon: Building2, subRoles: ['lab_head', 'lab_admin', 'lab_accountant'] },
     { href: '/sales/pipeline', label: 'CRM Продажи', icon: Target, subRoles: ['lab_head', 'lab_admin', 'sales_manager'] },
     { href: '/laboratory/partner-leads', label: 'Заявки', icon: UserPlus, subRoles: ['lab_head', 'lab_admin'] },
     { href: '/laboratory/staff', label: 'Сотрудники', icon: Users, subRoles: ['lab_head'] },
