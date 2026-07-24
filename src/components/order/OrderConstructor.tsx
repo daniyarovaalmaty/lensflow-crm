@@ -259,9 +259,7 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
     const orgName = (session?.user?.organizationName || '').toLowerCase();
     const selectedBranchName = (branches.find(b => b.id === selectedBranchId)?.name || '').toLowerCase();
-    const isEyeMax = orgName.includes('eye max') || orgName.includes('eyemax') || orgName.includes('eye-max') ||
-                     selectedBranchName.includes('eye max') || selectedBranchName.includes('eyemax') || selectedBranchName.includes('eye-max') ||
-                     orgName.includes('коновалов') || selectedBranchName.includes('коновалов');
+    const isOptic = session?.user?.role === 'optic';
 
     // Map characteristic code → catalog product
     // When DK=50, it's always a trial lens — find the trial product
@@ -839,8 +837,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             type="text"
                             list={session?.user?.role === 'distributor' ? "distributor-clients" : undefined}
                             {...register('company')}
-                            className="input"
+                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
                             placeholder="Ozat clinic"
+                            disabled={isOptic}
+                            readOnly={isOptic}
                         />
                         {session?.user?.role === 'distributor' && (
                             <datalist id="distributor-clients">
@@ -859,8 +859,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="inn"
                             type="text"
                             {...register('inn')}
-                            className="input"
+                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
                             placeholder="ИНН компании"
+                            disabled={isOptic}
+                            readOnly={isOptic}
                         />
                     </div>
 
@@ -872,8 +874,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="delivery_method"
                             type="text"
                             {...register('delivery_method')}
-                            className="input"
+                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
                             placeholder="Курьер, самовывоз..."
+                            disabled={isOptic}
+                            readOnly={isOptic}
                         />
                     </div>
 
@@ -885,10 +889,10 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             id="delivery_address"
                             type="text"
                             {...register('delivery_address')}
-                            className="input disabled:bg-gray-100 disabled:text-gray-500"
+                            className={`input ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
                             placeholder="Астана, Пр. Мангилик ел 27"
-                            disabled={isEyeMax}
-                            readOnly={isEyeMax}
+                            disabled={isOptic}
+                            readOnly={isOptic}
                         />
                     </div>
 
@@ -900,8 +904,8 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <select
                                 id="contract_id"
                                 {...register('contract_id')}
-                                className="input w-full bg-white disabled:bg-gray-100 disabled:text-gray-500"
-                                disabled={isEyeMax}
+                                className={`input w-full bg-white ${isOptic ? 'disabled:bg-gray-100 disabled:text-gray-500' : ''}`}
+                                disabled={isOptic}
                             >
                                 <option value="">-- Без договора --</option>
                                 {availableContracts.map(c => (
