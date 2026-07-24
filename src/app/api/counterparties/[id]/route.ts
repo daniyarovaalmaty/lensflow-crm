@@ -54,7 +54,10 @@ export async function GET(
             if (!org) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
             const orders = await prisma.order.findMany({
-                where: { organizationId: params.id },
+                where: { 
+                    organizationId: params.id,
+                    NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }] }
+                },
                 select: {
                     orderNumber: true,
                     doctorName: true,
@@ -107,7 +110,10 @@ export async function GET(
 
             // Get orders by this doctor
             const orders = await prisma.order.findMany({
-                where: { createdById: params.id },
+                where: { 
+                    createdById: params.id,
+                    NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }] }
+                },
                 select: {
                     orderNumber: true,
                     doctorName: true,

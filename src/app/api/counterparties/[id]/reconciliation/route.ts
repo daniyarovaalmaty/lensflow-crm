@@ -46,7 +46,8 @@ export async function GET(
                 OR: [
                     { organizationId: params.id },
                     { createdById: params.id },
-                ]
+                ],
+                NOT: { OR: [{ source: 'itigris' }, { externalSource: 'itigris' }] }
             },
             orderBy: { createdAt: 'asc' },
         });
