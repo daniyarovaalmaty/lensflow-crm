@@ -1047,8 +1047,19 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                             <Truck className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-900">Получатель заказа</h2>
-                            <p className="text-sm text-gray-500">Куда отправляется этот заказ?</p>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xl font-semibold text-gray-900">Получатель заказа</h2>
+                                {!isDistributor && (
+                                    <span className="text-xs font-medium text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-200">
+                                        авто-маршрут
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-sm text-gray-500">
+                                {!isDistributor
+                                    ? 'Маршрут отгрузки определяется профилем контрагента'
+                                    : 'Куда отправляется этот заказ?'}
+                            </p>
                         </div>
                         <span className="ml-auto text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-full">Обязательно</span>
                     </div>
@@ -1057,8 +1068,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                         <button
                             type="button"
+                            disabled={!isDistributor}
                             onClick={() => { setRecipientType('laboratory'); setSelectedDistributorId(''); }}
                             className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
+                                !isDistributor ? 'cursor-not-allowed opacity-90' : ''
+                            } ${
                                 recipientType === 'laboratory'
                                     ? 'border-blue-500 bg-blue-50 shadow-sm'
                                     : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/40'
@@ -1086,8 +1100,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
 
                         <button
                             type="button"
+                            disabled={!isDistributor}
                             onClick={() => setRecipientType('distributor')}
                             className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
+                                !isDistributor ? 'cursor-not-allowed opacity-90' : ''
+                            } ${
                                 recipientType === 'distributor'
                                     ? 'border-purple-500 bg-purple-50 shadow-sm'
                                     : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/40'
@@ -1128,8 +1145,11 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
                                         <button
                                             key={dist.id}
                                             type="button"
+                                            disabled={!isDistributor}
                                             onClick={() => setSelectedDistributorId(dist.id)}
                                             className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                                                !isDistributor ? 'cursor-not-allowed opacity-90' : ''
+                                            } ${
                                                 selectedDistributorId === dist.id
                                                     ? 'border-purple-500 bg-purple-50 text-purple-800'
                                                     : 'border-gray-200 text-gray-600 hover:border-purple-300'
