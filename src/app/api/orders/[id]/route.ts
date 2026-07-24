@@ -295,6 +295,10 @@ export async function PATCH(
                         p.description === 'probe'
                     );
                 }
+                if (dk) {
+                    const specific = lensProducts.find((p: any) => p.description === `${char}_${dk}`);
+                    if (specific) return specific;
+                }
                 return lensProducts.find((p: any) => p.description === char);
             };
 

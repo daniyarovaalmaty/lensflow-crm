@@ -241,9 +241,12 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
     }, [session?.user?.organizationId]);
 
     // Lens products from catalog (matched by description field = characteristic code)
-    const VALID_LENS_DESCRIPTIONS = new Set(['toric', 'spherical', 'rgp', 'probe', 'trial']);
     const lensProducts = useMemo(
-        () => catalog.filter(p => p.category === 'lens' && p.description != null && VALID_LENS_DESCRIPTIONS.has(p.description)),
+        () => catalog.filter(p => p.category === 'lens' && p.description != null && (
+            p.description === 'toric' || p.description.startsWith('toric_') ||
+            p.description === 'spherical' || p.description.startsWith('spherical_') ||
+            p.description === 'rgp' || p.description === 'probe' || p.description === 'trial'
+        )),
         [catalog]
     );
 
@@ -267,6 +270,13 @@ export function OrderConstructor({ opticId, onSubmit }: OrderConstructorProps) {
             );
             if (trialProduct) return trialProduct;
         }
+        // Try specific DK product first (e.g. toric_100)
+        if (dk) {
+            const specific = lensProducts.find(p => p.description === `${characteristic}_${dk}`);
+            if (specific) return specific;
+        }
+        
+        // Fallback to generic (e.g. toric)
         return lensProducts.find(p => p.description === characteristic);
     };
 

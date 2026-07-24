@@ -543,7 +543,11 @@ export async function POST(request: NextRequest) {
                     );
                     if (trial) return trial;
                 }
-                return lensProducts.find((p: any) => p.description === `${char}_${dk}`);
+                if (dk) {
+                    const specific = lensProducts.find((p: any) => p.description === `${char}_${dk}`);
+                    if (specific) return specific;
+                }
+                return lensProducts.find((p: any) => p.description === char);
             };
             const odProduct: any = odChar ? resolveLensProduct(odChar, odDk, odTrial) : undefined;
             const osProduct: any = osChar ? resolveLensProduct(osChar, osDk, osTrial) : undefined;
