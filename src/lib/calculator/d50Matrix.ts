@@ -136,30 +136,60 @@ export function recommendD50TrialLens(params: {
     // Determine row number based on Toricity, DIA, and Ex
     let targetRow = 1;
 
-    if (deltaK < 1.25) {
-        // Spherical T0.0
-        // Row 1 (DIA 10.3) vs Row 2 (DIA 10.6)
-        targetRow = targetDia >= 10.5 ? 2 : 1;
-        reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D (< 1.25 D) $\\rightarrow$ Сферическая линза (T0.0), строка ${targetRow}.`);
-    } else if (deltaK < 1.75) {
-        // Toric T1.0
-        const isLargeDia = targetDia >= 10.5;
-        if (selectedExRow === 0.42) {
-            targetRow = isLargeDia ? 6 : 3;
-        } else if (selectedExRow === 0.55) {
-            targetRow = isLargeDia ? 8 : 5;
+    // Special HVID <= 10.4 compromise logic (New Eye clinical fitting protocol)
+    const isSmallHvid = hvid <= 10.4;
+
+    if (isSmallHvid) {
+        reasoning.push(`Малый диаметр роговицы HVID = ${hvid.toFixed(1)} мм (целевой DIA = ${targetDia.toFixed(1)} мм).`);
+        
+        if (deltaK < 1.25) {
+            targetRow = 1; // T0.0, DIA 10.3
+            reasoning.push(`Выбрана линза T0.0 малого диаметра (строка 1, DIA 10.3 мм).`);
+        } else if (deltaK < 1.75) {
+            targetRow = selectedExRow === 0.42 ? 3 : (selectedExRow === 0.55 ? 5 : 4);
+            reasoning.push(`Выбрана линза T1.0 малого диаметра (строка ${targetRow}, DIA 10.2/10.4 мм).`);
+        } else if (deltaK < 2.25) {
+            // Standard T1.5 (Row 9) has DIA 10.8 mm (too large for HVID <= 10.4!).
+            // New Eye Compromise: Shift TOR down from T1.5 to T1.0 (Row 4, DIA 10.2 mm) for trial kit fitting
+            targetRow = 4;
+            reasoning.push(`⚠️ В наборе ДК 50 линза T1.5 имеет большой диаметр DIA 10.8 мм (опасность зажима лимба при HVID ${hvid.toFixed(1)} мм).`);
+            reasoning.push(`💡 Протокол компромисса New Eye: торичность в пробном наборе уменьшена до T1.0 (строка 4, DIA 10.2 мм).`);
         } else {
-            targetRow = isLargeDia ? 7 : 4;
+            // T2.0 (Row 10, DIA 10.4)
+            if (hvid <= 10.2) {
+                targetRow = 4; // Shift down to DIA 10.2 mm (T1.0) for very small corneas
+                reasoning.push(`⚠️ При сверхмалом HVID ${hvid.toFixed(1)} мм торичность снижена до T1.0 (строка 4, DIA 10.2 мм) для исключения краевого зажима.`);
+            } else {
+                targetRow = 10; // DIA 10.4 mm
+                reasoning.push(`Выбрана строка 10 (T2.0, DIA 10.4 мм) как малый торический диаметр в наборе.`);
+            }
         }
-        reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D (1.25–1.75 D) $\\rightarrow$ Торическая линза T1.0, DIA ${isLargeDia ? '10.6' : '10.2/10.4'}, строка ${targetRow}.`);
-    } else if (deltaK < 2.25) {
-        // Toric T1.5 -> Row 9
-        targetRow = 9;
-        reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D (1.75–2.25 D) $\\rightarrow$ Торическая линза T1.5, строка 9.`);
     } else {
-        // Toric T2.0 -> Row 10
-        targetRow = 10;
-        reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D ($\\ge 2.25$ D) $\\rightarrow$ Высокоторическая линза T2.0, строка 10.`);
+        if (deltaK < 1.25) {
+            // Spherical T0.0
+            // Row 1 (DIA 10.3) vs Row 2 (DIA 10.6)
+            targetRow = targetDia >= 10.5 ? 2 : 1;
+            reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D (< 1.25 D) $\\rightarrow$ Сферическая линза (T0.0), строка ${targetRow}.`);
+        } else if (deltaK < 1.75) {
+            // Toric T1.0
+            const isLargeDia = targetDia >= 10.5;
+            if (selectedExRow === 0.42) {
+                targetRow = isLargeDia ? 6 : 3;
+            } else if (selectedExRow === 0.55) {
+                targetRow = isLargeDia ? 8 : 5;
+            } else {
+                targetRow = isLargeDia ? 7 : 4;
+            }
+            reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D (1.25–1.75 D) $\\rightarrow$ Торическая линза T1.0, DIA ${isLargeDia ? '10.6' : '10.2/10.4'}, строка ${targetRow}.`);
+        } else if (deltaK < 2.25) {
+            // Toric T1.5 -> Row 9
+            targetRow = 9;
+            reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D (1.75–2.25 D) $\\rightarrow$ Торическая линза T1.5, строка 9.`);
+        } else {
+            // Toric T2.0 -> Row 10
+            targetRow = 10;
+            reasoning.push(`Астигматизм $\\Delta K = ${deltaK.toFixed(2)}$ D ($\\ge 2.25$ D) $\\rightarrow$ Высокоторическая линза T2.0, строка 10.`);
+        }
     }
 
     const primaryLens = getTrialLensSpec(matchedFk, targetRow);
