@@ -15,8 +15,26 @@ export async function GET(request: NextRequest) {
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
 
+        const orgId = session.user.organizationId;
+        let allowedOrgIds: string[] = orgId ? [orgId] : [];
+
+        if (orgId) {
+            const org = await prisma.organization.findUnique({
+                where: { id: orgId },
+                select: { type: true },
+            });
+
+            if (org?.type === 'headquarters') {
+                const branches = await prisma.organization.findMany({
+                    where: { parentId: orgId, status: 'active' },
+                    select: { id: true },
+                });
+                allowedOrgIds = [orgId, ...branches.map(b => b.id)];
+            }
+        }
+
         const where: any = {
-            clinicId: session.user.organizationId,
+            clinicId: { in: allowedOrgIds },
         };
 
         if (session.user.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session.user.subRole as string)) {
