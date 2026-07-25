@@ -80,7 +80,7 @@ export default function DoctorCalendar() {
     useEffect(() => {
         if (session) {
             fetchAppointments();
-            if ((session.user as any)?.subRole === 'optic_manager') {
+            if (!['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes((session.user as any)?.subRole)) {
                 fetch('/api/clinic-staff')
                     .then(res => res.json())
                     .then(data => {
@@ -558,7 +558,7 @@ export default function DoctorCalendar() {
                                             <input type="number" required min="15" step="15" value={newApptDuration} onChange={e => setNewApptDuration(parseInt(e.target.value))} className="input w-full" />
                                         </div>
                                     </div>
-                                    {(session?.user as any)?.subRole === 'optic_manager' && doctors.length > 0 && (
+                                    {doctors.length > 0 && (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Доктор (необязательно)</label>
                                             <select value={newApptDoctorId} onChange={e => setNewApptDoctorId(e.target.value)} className="input w-full">
