@@ -64,29 +64,39 @@ export async function POST(req: NextRequest) {
 
     if (!messageText.trim()) return NextResponse.json({ ok: true });
 
-    // Find or create Lead (for message storage)
+    // Determine receiving clinic by matching instance WID with crmPhone
+    let clinicId: string | null = null;
+    const instanceWid = body?.instanceData?.wid;
+    if (instanceWid) {
+        const receivingNumber = instanceWid.toString().replace('@c.us', '').replace(/\D/g, '');
+        if (receivingNumber) {
+            const clinic = await prisma.organization.findFirst({
+                where: {
+                    crmPhone: { contains: receivingNumber.slice(-9) },
+                    status: 'active',
+                },
+                select: { id: true },
+            });
+            if (clinic) clinicId = clinic.id;
+        }
+    }
+
+    // Find or create Lead (scoped to receiving clinic if known)
     let lead = await prisma.lead.findFirst({
-        where: { phone: { contains: normalizedPhone.slice(-9) } },
+        where: {
+            phone: { contains: normalizedPhone.slice(-9) },
+            ...(clinicId ? { clinicId } : {})
+        },
     });
 
-    if (!lead) {
-        // Determine clinic by matching the receiving WhatsApp number (crmPhone)
-        let clinicId: string | null = null;
-        const instanceWid = body?.instanceData?.wid;
-        if (instanceWid) {
-            const receivingNumber = instanceWid.toString().replace('@c.us', '').replace(/\D/g, '');
-            if (receivingNumber) {
-                const clinic = await prisma.organization.findFirst({
-                    where: {
-                        crmPhone: { contains: receivingNumber.slice(-10) },
-                        status: 'active',
-                    },
-                    select: { id: true },
-                });
-                if (clinic) clinicId = clinic.id;
-            }
-        }
+    if (lead && !lead.clinicId && clinicId) {
+        await prisma.lead.update({
+            where: { id: lead.id },
+            data: { clinicId },
+        });
+    }
 
+    if (!lead) {
         lead = await prisma.lead.create({
             data: {
                 phone: normalizedPhone,
