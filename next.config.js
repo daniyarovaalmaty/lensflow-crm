@@ -4,6 +4,7 @@ const nextConfig = {
     images: {
         domains: ['res.cloudinary.com'],
     },
+    generateBuildId: () => 'build-' + Date.now(),
     experimental: {
         optimizePackageImports: ['lucide-react'],
     },
