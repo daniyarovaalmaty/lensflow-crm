@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Method 1: OpenAI GPT-4o-mini Vision API (Explicit OD / OS Eye Detection + em/KS Mapping)
+        // Method 1: OpenAI GPT-4o-mini Vision API (Exact Tomey Topographer OCR Prompt)
         const apiKey = process.env.OPENAI_API_KEY;
         if (apiKey) {
             try {
@@ -47,23 +47,28 @@ export async function POST(req: NextRequest) {
                                 content: [
                                     {
                                         type: 'text',
-                                        text: `You are an expert corneal topography OCR system. Analyze this topographer screen photo or printed report.
+                                        text: `You are an expert corneal topography OCR system. Analyze this topographer screen photo (Tomey 22C-200S, Medmont, Antares, Pentacam, Keratron).
 
 CRITICAL EYE DETECTION RULE:
-- Look for markers like "OD", "Right", "R", "Правый", "Пр" -> detectedEye: "OD"
-- Look for markers like "OS", "Left", "L", "Левый", "Лев" -> detectedEye: "OS"
+- Look for markers like "OD", "Right", "R", "Правый" -> detectedEye: "OD" (Leave "os": {})
+- Look for markers like "OS", "Left", "L", "Левый" -> detectedEye: "OS" (Leave "od": {})
 - If both eyes are shown -> detectedEye: "BOTH"
 
-CRITICAL PARAMETER MAPPING RULES:
-1. "em" or "Em" or "ex" or "e" on screen is ALWAYS Flat Ex (eccentricity, e.g. 0.52).
-2. "KS" or "Ks" or "K2" or "Kr" or "Steep" on screen is ALWAYS Steep K (in Diopters D, e.g. 43.75).
-3. "KM" or "Km" or "FK" or "Fk" or "K1" or "Flat" on screen is ALWAYS Flat K (in Diopters D, e.g. 42.50).
-- If K values are in mm (e.g. R1=7.94mm, R2=7.71mm), convert to D: K = 337.5 / R.
+CRITICAL PARAMETER EXTRACTION RULES:
+1. Flat K (fk):
+   - Look for "Kf:", "Fk:", "Km:", "K1:", "Flat K:", "Kflat:".
+   - Example from Tomey screen: "Kf: 43.47 @ 180°" -> fk = 43.47.
+2. Steep K (ks):
+   - Look for "Ks:", "Kr:", "K2:", "Steep K:", "Ksteep:".
+   - Example from Tomey screen: "Ks: 44.90 @ 90°" -> ks = 44.90 (Do NOT confuse with Kf!).
+3. Flat Ex (ex):
+   - Look for "Em:" (Mean/Flat eccentricity) or "ex:" or "e1:".
+   - Example from Tomey screen: "Es: 0.81 / Em: 0.66" -> ex MUST BE 0.66 (Em is Flat Ex! Do NOT pick Es=0.81!).
 
 Return STRICT RAW JSON only (no markdown, no codeblock):
 {
   "detectedEye": "OD", 
-  "od": { "fk": 42.50, "ks": 43.75, "ex": 0.52 },
+  "od": { "fk": 43.47, "ks": 44.90, "ex": 0.66 },
   "os": {}
 }`
                                     },
@@ -131,24 +136,24 @@ Return STRICT RAW JSON only (no markdown, no codeblock):
             return null;
         };
 
-        // Flat K
-        const fkMatches = [...normalizedText.matchAll(/(?:Flat\s*K|Fk|Kf|Km|K1|Flat|SimK1|R1|r1|Флат|К1)[^\d]*(\d{1,2}\.\d{1,3})/gi)];
+        // Flat K (Kf / Fk / Km / K1)
+        const fkMatches = [...normalizedText.matchAll(/(?:Kf|Fk|Km|K1|Flat\s*K|Flat|SimK1|R1|r1|Флат|К1)[^\d]*(\d{2}\.\d{1,3})/gi)];
         if (fkMatches.length > 0) {
             const v = parseKVal(fkMatches[0][1]);
             if (v) targetEye.fk = v;
         }
 
-        // Steep K (KS)
-        const ksMatches = [...normalizedText.matchAll(/(?:Steep\s*K|KS|Ks|Kr|K2|Steep|SimK2|R2|r2|Стип|К2)[^\d]*(\d{1,2}\.\d{1,3})/gi)];
+        // Steep K (Ks / Kr / K2)
+        const ksMatches = [...normalizedText.matchAll(/(?:Ks|Kr|K2|Steep\s*K|Steep|SimK2|R2|r2|Стип|К2)[^\d]*(\d{2}\.\d{1,3})/gi)];
         if (ksMatches.length > 0) {
             const v = parseKVal(ksMatches[0][1]);
             if (v) targetEye.ks = v;
         }
 
-        // Flat Ex (Em / em / ex)
-        const exMatches = [...normalizedText.matchAll(/(?:em|Em|Ecc\s*flat|ex|e1|Em|Eccentricity|e_x|e\b|экс)[^\d]*(\d{1}\.\d{2,3})/gi)];
-        if (exMatches.length > 0) {
-            const v = parseFloat(exMatches[0][1]);
+        // Flat Ex (Em / em / ex / e1)
+        const emMatches = [...normalizedText.matchAll(/(?:Em|em|ex|e1|Ecc\s*flat|e_x|e\b|экс)[^\d]*(\d{1}\.\d{2,3})/gi)];
+        if (emMatches.length > 0) {
+            const v = parseFloat(emMatches[0][1]);
             if (v >= 0.15 && v <= 0.95) targetEye.ex = v;
         }
 
