@@ -4,8 +4,6 @@
  * from Corneal Topographers: CSO EyeTop / Antares / Keratron / Medmont / Pentacam / Shin-Nippon / TMS
  */
 
-import { createWorker } from 'tesseract.js';
-
 export interface ParsedTopographyData {
     od?: {
         fk?: number;
@@ -35,9 +33,9 @@ export interface ParsedTopographyData {
 export async function parseTopographerFile(file: File): Promise<ParsedTopographyData> {
     const fileName = file.name.toLowerCase();
 
-    // Check if uploaded file is an image
+    // Check if uploaded file is an image or PDF scan
     if (file.type.startsWith('image/') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png') || fileName.endsWith('.webp')) {
-        return parseTopographyImage(file);
+        return parseTopographyImageApi(file);
     }
 
     const text = await file.text();
@@ -52,77 +50,37 @@ export async function parseTopographerFile(file: File): Promise<ParsedTopography
 }
 
 /**
- * OCR Photo Recognition for Topographer Screen Photos & Reports
+ * Sends photo/image to Server OCR API Route `/api/topography/parse-image`
  */
-export async function parseTopographyImage(file: File): Promise<ParsedTopographyData> {
-    const result: ParsedTopographyData = {
-        od: {},
-        os: {},
-        sourceType: 'Распознано с фото топографа (OCR)',
-        rawFileName: file.name,
-    };
-
+export async function parseTopographyImageApi(file: File): Promise<ParsedTopographyData> {
     try {
-        const worker = await createWorker('rus+eng');
-        const imageUrl = URL.createObjectURL(file);
+        const formData = new FormData();
+        formData.append('file', file);
 
-        const ret = await worker.recognize(imageUrl);
-        await worker.terminate();
-        URL.revokeObjectURL(imageUrl);
+        const res = await fetch('/api/topography/parse-image', {
+            method: 'POST',
+            body: formData,
+        });
 
-        const text = ret.data.text || '';
-        const isOs = file.name.toLowerCase().includes('os') || text.includes(' OS') || text.includes('OS ') || text.includes('Left') || text.includes('Левый');
-        const eyeKey = isOs ? 'os' : 'od';
-
-        // 1. Flat K (Fk / Km / Kf / K1)
-        const fkMatch = text.match(/(?:Flat\s*K|Fk|Kf|Km|K1|Flat|SimK1|SimK\s*1|FlatK)[^\d]*(\d{2}[.,]\d{1,3})/i);
-        if (fkMatch) {
-            const val = parseFloat(fkMatch[1].replace(',', '.'));
-            if (val >= 35 && val <= 55) result[eyeKey]!.fk = val;
+        if (res.ok) {
+            const data = await res.json();
+            return {
+                od: data.od || {},
+                os: data.os || {},
+                sourceType: data.sourceType || 'Распознано по фото (AI OCR)',
+                rawFileName: file.name,
+            };
         }
-
-        // 2. Steep K (Ks / Kr / K2)
-        const ksMatch = text.match(/(?:Steep\s*K|Ks|Kr|K2|Steep|SimK2|SimK\s*2|SteepK)[^\d]*(\d{2}[.,]\d{1,3})/i);
-        if (ksMatch) {
-            const val = parseFloat(ksMatch[1].replace(',', '.'));
-            if (val >= 35 && val <= 55) result[eyeKey]!.ks = val;
-        }
-
-        // 3. Eccentricity Flat (ex / Em / Ecc flat / e1)
-        const exMatch = text.match(/(?:Ecc\s*flat|ex|e1|Em|Eccentricity|Eflat|e\s*flat|Ecc)[^\d]*(\d{1}[.,]\d{2,3})/i);
-        if (exMatch) {
-            const val = parseFloat(exMatch[1].replace(',', '.'));
-            if (val >= 0.1 && val <= 0.95) result[eyeKey]!.ex = val;
-        }
-
-        // 4. HVID / W2W / Diameter
-        const hvidMatch = text.match(/(?:HVID|W2W|White\s*to\s*White|Diam|WTW)[^\d]*(\d{2}[.,]\d{1,2})/i);
-        if (hvidMatch) {
-            const val = parseFloat(hvidMatch[1].replace(',', '.'));
-            if (val >= 10.0 && val <= 13.5) result[eyeKey]!.hvid = val;
-        }
-
-        // Fallback: If numbers exist in text, search standalone floats
-        if (!result[eyeKey]!.fk) {
-            const standaloneK = text.match(/\b(3[6-9]\.\d{1,2}|4[0-9]\.\d{1,2}|5[0-4]\.\d{1,2})\b/g);
-            if (standaloneK && standaloneK.length > 0) {
-                const vals = standaloneK.map(v => parseFloat(v)).sort((a, b) => a - b);
-                result[eyeKey]!.fk = vals[0];
-                if (vals.length > 1) result[eyeKey]!.ks = vals[1];
-            }
-        }
-
-        if (!result[eyeKey]!.ex) {
-            const standaloneE = text.match(/\b(0\.[3-7]\d{1,2})\b/);
-            if (standaloneE) {
-                result[eyeKey]!.ex = parseFloat(standaloneE[1]);
-            }
-        }
-    } catch (err) {
-        console.error('Image OCR error:', err);
+    } catch (e) {
+        console.error('Failed to parse topography image via API:', e);
     }
 
-    return result;
+    return {
+        od: {},
+        os: {},
+        sourceType: 'Не удалось распознать фото',
+        rawFileName: file.name,
+    };
 }
 
 /**
