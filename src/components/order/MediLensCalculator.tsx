@@ -417,53 +417,52 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                                              ((V1+V2)/2) - ((H1+H2)/2)
                                                          </span>
                                                      </div>
-
-                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
-                                                         <div>
-                                                             <label className="text-[11px] font-medium text-gray-600">⬆️ Верт. Верх (V1)</label>
-                                                             <input
-                                                                 type="number"
-                                                                 step="any"
-                                                                 value={state.v1}
-                                                                 onChange={e => handleInputChange(eye, 'v1', e.target.value)}
-                                                                 className="input text-xs h-8 bg-white border-violet-200"
-                                                                 placeholder="43.50"
-                                                             />
-                                                         </div>
-                                                         <div>
-                                                             <label className="text-[11px] font-medium text-gray-600">⬇️ Верт. Низ (V2)</label>
-                                                             <input
-                                                                 type="number"
-                                                                 step="any"
-                                                                 value={state.v2}
-                                                                 onChange={e => handleInputChange(eye, 'v2', e.target.value)}
-                                                                 className="input text-xs h-8 bg-white border-violet-200"
-                                                                 placeholder="43.70"
-                                                             />
-                                                         </div>
-                                                         <div>
-                                                             <label className="text-[11px] font-medium text-gray-600">⬅️ Гориз. Лево (H1)</label>
-                                                             <input
-                                                                 type="number"
-                                                                 step="any"
-                                                                 value={state.h1}
-                                                                 onChange={e => handleInputChange(eye, 'h1', e.target.value)}
-                                                                 className="input text-xs h-8 bg-white border-violet-200"
-                                                                 placeholder="42.00"
-                                                             />
-                                                         </div>
-                                                         <div>
-                                                             <label className="text-[11px] font-medium text-gray-600">➡️ Гориз. Право (H2)</label>
-                                                             <input
-                                                                 type="number"
-                                                                 step="any"
-                                                                 value={state.h2}
-                                                                 onChange={e => handleInputChange(eye, 'h2', e.target.value)}
-                                                                 className="input text-xs h-8 bg-white border-violet-200"
-                                                                 placeholder="41.80"
-                                                             />
-                                                         </div>
-                                                     </div>
+                                                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2 items-end">
+                                                          <div className="flex flex-col justify-between">
+                                                              <label className="text-[11px] font-medium text-gray-600 leading-tight mb-1 min-h-[28px] flex items-end">⬆️ Верт. Верх (V1)</label>
+                                                              <input
+                                                                  type="number"
+                                                                  step="any"
+                                                                  value={state.v1}
+                                                                  onChange={e => handleInputChange(eye, 'v1', e.target.value)}
+                                                                  className="input text-xs h-8 bg-white border-violet-200 w-full"
+                                                                  placeholder="43.50"
+                                                              />
+                                                          </div>
+                                                          <div className="flex flex-col justify-between">
+                                                              <label className="text-[11px] font-medium text-gray-600 leading-tight mb-1 min-h-[28px] flex items-end">⬇️ Верт. Низ (V2)</label>
+                                                              <input
+                                                                  type="number"
+                                                                  step="any"
+                                                                  value={state.v2}
+                                                                  onChange={e => handleInputChange(eye, 'v2', e.target.value)}
+                                                                  className="input text-xs h-8 bg-white border-violet-200 w-full"
+                                                                  placeholder="43.70"
+                                                              />
+                                                          </div>
+                                                          <div className="flex flex-col justify-between">
+                                                              <label className="text-[11px] font-medium text-gray-600 leading-tight mb-1 min-h-[28px] flex items-end">⬅️ Гориз. Лево (H1)</label>
+                                                              <input
+                                                                  type="number"
+                                                                  step="any"
+                                                                  value={state.h1}
+                                                                  onChange={e => handleInputChange(eye, 'h1', e.target.value)}
+                                                                  className="input text-xs h-8 bg-white border-violet-200 w-full"
+                                                                  placeholder="42.00"
+                                                              />
+                                                          </div>
+                                                          <div className="flex flex-col justify-between">
+                                                              <label className="text-[11px] font-medium text-gray-600 leading-tight mb-1 min-h-[28px] flex items-end">➡️ Гориз. Право (H2)</label>
+                                                              <input
+                                                                  type="number"
+                                                                  step="any"
+                                                                  value={state.h2}
+                                                                  onChange={e => handleInputChange(eye, 'h2', e.target.value)}
+                                                                  className="input text-xs h-8 bg-white border-violet-200 w-full"
+                                                                  placeholder="41.80"
+                                                              />
+                                                          </div>
+                                                      </div>
 
                                                      {calc?.mountford.computedTorDetail && (
                                                          <div className="text-xs bg-white rounded-lg p-2 border border-violet-200 text-violet-900 font-bold flex items-center justify-between">
