@@ -12,6 +12,7 @@ import {
 } from '@/lib/calculator/mountfordFormulas';
 import { recommendD50TrialLens, type TrialLensSpec } from '@/lib/calculator/d50Matrix';
 import { parseTopographerFile, type ParsedTopographyData } from '@/lib/calculator/topographerParser';
+import { findEmpiricalMatchingFit } from '@/lib/calc/patientFittingDataset';
 
 interface MediLensCalculatorProps {
     onApplyToEye: (eye: 'od' | 'os', data: any) => void;
@@ -161,10 +162,13 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
             currentSe: mountfordRes.spheroEquivalent,
         });
 
+        const empiricalMatch = findEmpiricalMatchingFit(fk, ks, mountfordRes.cornealAstigmatism);
+
         return {
             mountford: mountfordRes,
             d50: d50Recommendation,
             adjustment: adjustmentRes,
+            empirical: empiricalMatch,
         };
     };
 
@@ -520,6 +524,40 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                                                 )}
                                                             </button>
                                                         </div>
+
+                                                        {/* EMPIRICAL RECOMMENDATION TRAINED ON 231 NEW EYE PATIENTS */}
+                                                        {calc.empirical && (
+                                                            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 shadow-sm relative">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <span className="text-xs font-black uppercase text-purple-800 tracking-wider flex items-center gap-1.5">
+                                                                        <Sparkles className="w-4 h-4 text-purple-600 animate-pulse" />
+                                                                        Опыт New Eye (Обучен на 231 пациенте)
+                                                                    </span>
+                                                                    <span className="bg-purple-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full">
+                                                                        {calc.empirical.similarityScore}% Совпадение
+                                                                    </span>
+                                                                </div>
+
+                                                                <div className="text-xs text-gray-700 font-medium mb-3">
+                                                                    Аналогичный клинический случай: <span className="font-bold text-gray-900">Пациент {calc.empirical.matchedPatient.patientName}</span> (Flat K: {calc.empirical.matchedPatient.flatK.toFixed(2)} D, Steep K: {calc.empirical.matchedPatient.steepK.toFixed(2)} D)
+                                                                </div>
+
+                                                                <div className="grid grid-cols-2 gap-2 mb-3">
+                                                                    <div className="bg-white/80 rounded-lg p-2.5 border border-purple-100">
+                                                                        <div className="text-[10px] font-bold uppercase text-purple-600 mb-1">1. Примеренная линза в клинике:</div>
+                                                                        <div className="text-xs font-black text-gray-900">{calc.empirical.recommendedTrialLens}</div>
+                                                                    </div>
+                                                                    <div className="bg-white/95 rounded-lg p-2.5 border border-indigo-300 shadow-sm">
+                                                                        <div className="text-[10px] font-bold uppercase text-indigo-600 mb-1">2. Итоговая подходящая линза:</div>
+                                                                        <div className="text-xs font-black text-indigo-900">{calc.empirical.recommendedFinalLens}</div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="text-xs text-purple-900 bg-purple-100/70 rounded-lg p-2 font-medium">
+                                                                    💡 {calc.empirical.recommendedAdjustment}
+                                                                </div>
+                                                            </div>
+                                                        )}
 
                                                         {/* Alternative Trial Lens Options */}
                                                         {calc.d50.alternativeLenses.length > 0 && (
