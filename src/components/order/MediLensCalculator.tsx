@@ -90,7 +90,6 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                     fk: parsed.od?.fk ? String(parsed.od.fk) : prev.fk,
                     ks: parsed.od?.ks ? String(parsed.od.ks) : prev.ks,
                     ex: parsed.od?.ex ? String(parsed.od.ex) : prev.ex,
-                    hvid: parsed.od?.hvid ? String(parsed.od.hvid) : prev.hvid,
                 }));
                 importedCount++;
             }
@@ -101,7 +100,6 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                     fk: parsed.os?.fk ? String(parsed.os.fk) : prev.fk,
                     ks: parsed.os?.ks ? String(parsed.os.ks) : prev.ks,
                     ex: parsed.os?.ex ? String(parsed.os.ex) : prev.ex,
-                    hvid: parsed.os?.hvid ? String(parsed.os.hvid) : prev.hvid,
                 }));
                 importedCount++;
             }
