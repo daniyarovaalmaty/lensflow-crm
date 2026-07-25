@@ -542,14 +542,18 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                                                     Обучено на базе 231 пациента клиники New Eye | Аналогичный случай: <span className="font-bold text-gray-900">Пациент {calc.empirical.matchedPatient.patientName}</span> (Flat K: {calc.empirical.matchedPatient.flatK.toFixed(2)} D, Steep K: {calc.empirical.matchedPatient.steepK.toFixed(2)} D)
                                                                 </div>
 
-                                                                <div className="grid grid-cols-2 gap-2 mb-3">
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                                                     <div className="bg-white/80 rounded-lg p-2.5 border border-purple-100">
-                                                                        <div className="text-[10px] font-bold uppercase text-purple-600 mb-1">1. Примеренная линза в клинике:</div>
-                                                                        <div className="text-xs font-black text-gray-900">{calc.empirical.recommendedTrialLens}</div>
+                                                                        <div className="text-[10px] font-bold uppercase text-purple-600 mb-1">1. Примеренная линза в клинике (Осмотр 1):</div>
+                                                                        <div className="text-xs font-black text-gray-900 break-words">{calc.empirical.recommendedTrialLens}</div>
                                                                     </div>
-                                                                    <div className="bg-white/95 rounded-lg p-2.5 border border-indigo-300 shadow-sm">
-                                                                        <div className="text-[10px] font-bold uppercase text-indigo-600 mb-1">2. Итоговая подходящая линза:</div>
-                                                                        <div className="text-xs font-black text-indigo-900">{calc.empirical.recommendedFinalLens}</div>
+                                                                    <div className={`rounded-lg p-2.5 border shadow-sm ${calc.empirical.isFromSuitcase ? 'bg-amber-50/80 border-amber-300' : 'bg-white/95 border-indigo-300'}`}>
+                                                                        <div className={`text-[10px] font-bold uppercase mb-1 ${calc.empirical.isFromSuitcase ? 'text-amber-800' : 'text-indigo-600'}`}>
+                                                                            {calc.empirical.isFromSuitcase ? '🧳 Выдана из чемодана (набора):' : '📝 Оформлен заказ:'}
+                                                                        </div>
+                                                                        <div className={`text-xs font-black break-words ${calc.empirical.isFromSuitcase ? 'text-amber-950' : 'text-indigo-900'}`}>
+                                                                            {calc.empirical.recommendedFinalLens}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
 

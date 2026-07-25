@@ -1,5 +1,6 @@
 /**
  * Empirical Clinical Fitting Dataset trained on 231 Patients from New Eye Clinic
+ * Directly extracted from Осмотр 1 clinical records (Trial kit / Suitcase / Custom Orders)
  */
 
 export interface PatientFittingRecord {
@@ -10,17 +11,29 @@ export interface PatientFittingRecord {
     deltaK: number;
     trialLens: string;
     finalLens: string;
+    isFromSuitcase: boolean;
 }
 
 export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
   {
-    "id": "pt_1",
-    "patientName": "Серикхан Нурхан",
-    "flatK": 44.25,
-    "steepK": 46.42,
-    "deltaK": 2.17,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_3",
+    "patientName": "Огай Валерия",
+    "flatK": 43.04,
+    "steepK": 43.79,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,0 тор1,0 OKV 10,2 42,5 тор1,0",
+    "finalLens": "Заказ линз   OD 10,0 43,25 ех 0,66/0,54 тор1,0 фак+0,75 -3,5   OS 10,0 42,75 ех 0,60/0,50 фак+0,75 -3,25",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_4",
+    "patientName": "Аскарбеков Арсен",
+    "flatK": 42.05,
+    "steepK": 42.8,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 42,5 тор1,5 ех0,5 -4,0 OKV 11,0 42,0 тор1,5 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD  11,0 42,0 ех 0,45/0,49 тор1,60 фак.компр 1,5 -5,5  OS 11,0 42,0 ех 0,48/0,50 тор 1,50 фак.компр 1,5 -4,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_5",
@@ -28,35 +41,19 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 45.46,
     "steepK": 46.37,
     "deltaK": 0.91,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,8 45,5 ех 0,5 тор 1,0 -4,0 OKV 11,0 45,5 ех 0,5 тор 1,0 -4,0",
+    "finalLens": "Заказ линз   OD  10,8 45,5 ех 0,5 тор 1,0 -5,5  OS 10,8 45,5 ех 0,5 тор 1,0 -5,25",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_6",
-    "patientName": "Оразбеков Аль-Галым",
-    "flatK": 41.57,
-    "steepK": 43.03,
-    "deltaK": 1.46,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_7",
-    "patientName": "Оразбекова Айгерим",
-    "flatK": 40.37,
-    "steepK": 42.32,
-    "deltaK": 1.95,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_9",
-    "patientName": "Сабитов Даулет",
-    "flatK": 41.34,
-    "steepK": 42.97,
-    "deltaK": 1.63,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_8",
+    "patientName": "Бикинеева Мариям",
+    "flatK": 43.3,
+    "steepK": 44.05,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 43,0 -6,0 OKV 10,8 43,5 -6,0",
+    "finalLens": "Заказ линз из набора   OD 10,8 43,0 -6,0   OS 10,8 43,5 -6,0",
+    "isFromSuitcase": true
   },
   {
     "id": "pt_10",
@@ -64,8 +61,39 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.5,
     "steepK": 46.0,
     "deltaK": 1.5,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 44,0 тор1,0 ех0,5 -4,0 OKV 10,2 44,5 тор1,0 ех0,5 -4,0",
+    "finalLens": "OKV 10,4 44,0 тор1,0 ех0,5 -4,0 OKV 10,2 44,5 тор1,0 ех0,5 -4,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_11",
+    "patientName": "Кунтубаева Динара",
+    "flatK": 44.36,
+    "steepK": 47.24,
+    "deltaK": 2.88,
+    "trialLens": "OKV 10,4 44,5 тор2,0 ех0,5 OKV 10,4 44,0 тор2,0 ех0,5",
+    "finalLens": "OKV 10,4 44,5 тор2,0 ех0,5 OKV 10,4 44,0 тор2,0 ех0,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_12",
+    "patientName": "Сигитов Федор",
+    "flatK": 43.49,
+    "steepK": 45.71,
+    "deltaK": 2.22,
+    "trialLens": "OKV 10,4 43,0 тор2,0 OKV 10,4 43,5 тор2,0",
+    "finalLens": "Заказ линз   ОД 10,20 43,50 ех 0,60 тор2,0 -5,25 DK 50 ОC 10,20 43,50 ех 0,60 тор2,0 -5,25 DK 50",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_13",
+    "patientName": "Асетов Алижан",
+    "flatK": 40.12,
+    "steepK": 40.87,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 44,0 OKV 10,8 44,5",
+    "finalLens": "OKV 10,8 44,0 OKV 10,8 44,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_15",
@@ -73,17 +101,39 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.24,
     "steepK": 42.69,
     "deltaK": 0.45,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,2 42,5 ех0,5 тор0 -4,0 OKV 10,2 42,0 ех0,5 тор0 -4,0",
+    "finalLens": "Заказ линз   OD 10,2 42,30 тор0 ех 0,52 -2,75   OS 10,2 42,00 тор0 ех 0,52 -2,75",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_19",
-    "patientName": "Есимхан Алисултан",
-    "flatK": 40.43,
-    "steepK": 41.7,
-    "deltaK": 1.27,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_16",
+    "patientName": "Сансызбай Актилек",
+    "flatK": 43.01,
+    "steepK": 43.76,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 43,0 тор1,5 OKV 11,0 43,0 тор1,5",
+    "finalLens": "Заказ линз   ОД 10,95 43,00 тор1,50 ех 0,50 -4,50 ДК 100 blue OS 10,95 43,00 tor1,50 ex 0,50 -5,00 DK 100 violet",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_17",
+    "patientName": "Жумагали Адия",
+    "flatK": 43.95,
+    "steepK": 44.7,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,0 тор1,0 OKV 10,2 43,0 тор1,5",
+    "finalLens": "Заказ линз   OD 10,2 44,0 тор1,0 ех0,5 -4,25   OS 10,2 43,25 тор1,50 ех0,5 -3,00",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_18",
+    "patientName": "Насурова Амина",
+    "flatK": 46.51,
+    "steepK": 44.84,
+    "deltaK": 1.67,
+    "trialLens": "OKV 10,2 46,0 тор0 ех0,50 OKV 10,4 44,0 тор2,0",
+    "finalLens": "OKV 10,2 46,0 тор0 ех0,50 OKV 10,4 44,0 тор2,0",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_20",
@@ -91,35 +141,49 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.5,
     "steepK": 45.75,
     "deltaK": 1.25,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 44,0 тор 1,0 OKV 10,2 44,0 тор1,0",
+    "finalLens": "Заказ линз   OD 10,2 44,5 ех0,57/0,52 тор1,0 фак+0,5 клир -5,0 -2,25    OS 10,2 44,5 ех0,57/0,52 тор1,0 фак+0,5 -1,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_22",
-    "patientName": "Тулегенова Айжан",
-    "flatK": 41.98,
-    "steepK": 43.51,
-    "deltaK": 1.53,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_21",
+    "patientName": "Уалихан Барысхан",
+    "flatK": 44.44,
+    "steepK": 45.19,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,3 44,5 OKV 10,3 45,0",
+    "finalLens": "Заказ линз   OD   10,25 44,5 ех 0,53 тор 0,69  OS 10,25 45,0 ех 0,55 тор 0,50",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_24",
-    "patientName": "Чопиева Айлин",
-    "flatK": 44.3,
-    "steepK": 46.03,
-    "deltaK": 1.73,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_23",
+    "patientName": "Бозжанова Карина",
+    "flatK": 42.12,
+    "steepK": 42.87,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,0 тор0 ех0,5 OKV 10,8 42,5 тор0 ех0,5",
+    "finalLens": "Выданы с чемодана   OD  10,8 42,0 -2,5  OS 10,8 42,5 -2,5",
+    "isFromSuitcase": true
   },
   {
-    "id": "pt_28",
-    "patientName": "Маратова Адина",
-    "flatK": 40.86,
-    "steepK": 41.24,
-    "deltaK": 0.38,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_26",
+    "patientName": "Шошина Силина",
+    "flatK": 44.7,
+    "steepK": 45.45,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,5 OKV 10,2 44,0",
+    "finalLens": "Заказ линз   OD 10,35 44,5 ех 0,5 тор 0,5 -4,25    OS 10,35 44,0 ех0,52 тор0,75 -5,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_27",
+    "patientName": "Акбота Сериккызы",
+    "flatK": 42.26,
+    "steepK": 43.01,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 42,0 тор1,0 ех0,5 -4,0 OKV 10,6 42,5 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,6 42,25 тор1,0 ех0,54/0,51 -2,5    OS 10,6 42,5 тор1,0 ех0,54/0,50 клир+5,0 -2,0",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_29",
@@ -127,8 +191,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.62,
     "steepK": 44.45,
     "deltaK": 1.83,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 42,5 тор1,5 ех0,5 -4,0 OKV 10,4 42,5 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,48 42,5 тор1,63 ех0,54/0,56 клиренс 5 мкм -3,5    OS 10,48 42,70 ех 0,54/0,53 тор1,12 -3,0",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_31",
@@ -136,8 +201,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.31,
     "steepK": 46.29,
     "deltaK": 1.98,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 44,0 тор 2,0 OKV 10,6 44,0 тор1,5",
+    "finalLens": "OKV 10,4 44,0 тор 2,0 OKV 10,6 44,0 тор1,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_32",
@@ -145,26 +211,39 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 41.81,
     "steepK": 44.62,
     "deltaK": 2.81,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 41,5 тор 2,0 OKV 10,4 41,0 тор 2,0",
+    "finalLens": "OKV 10,4 41,5 тор 2,0 OKV 10,4 41,0 тор 2,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_34",
-    "patientName": "Бугаева Лидия",
-    "flatK": 43.44,
-    "steepK": 44.42,
-    "deltaK": 0.98,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_33",
+    "patientName": "Долгих Яника",
+    "flatK": 42.0,
+    "steepK": 42.75,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,0 тор0 OKV 10,8 41,5 тор0",
+    "finalLens": "Заказ линз   OD 11,10 42,0 тор0 ех0,5 апик+2,0 -2,75    OS 11,10 41,5 ех0,47 апик+2,0 -1,75",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_38",
-    "patientName": "Ганиева Айниса",
-    "flatK": 41.53,
-    "steepK": 41.81,
-    "deltaK": 0.28,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_35",
+    "patientName": "Курноскин Даниэль",
+    "flatK": 43.57,
+    "steepK": 44.32,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 43,5 тор1,0 OKV 10,8 43,5",
+    "finalLens": "Заказ линз   OD  10,85 43,5 тор1,0 ех0,50 -5,25  OS 10,85 43,50 тор0,75 ех0,50 -5,50",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_37",
+    "patientName": "Оразкулова Жулдыз",
+    "flatK": 43.25,
+    "steepK": 44.0,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 43,0 тор1,0 OKV 10,4 43,5 тор 1,5",
+    "finalLens": "Заказ линз   OD  10,4 43,0 тор 1,0 ех 0,50 -5,0  OS 10,4 43,5 тор 1,5 ех 0,50 -4,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_39",
@@ -172,8 +251,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 41.25,
     "steepK": 43.0,
     "deltaK": 1.75,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 41,0 тор1,5 OKV 10,4 41,0 тор1,5",
+    "finalLens": "OKV 10,6 41,0 тор1,5 OKV 10,4 41,0 тор1,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_40",
@@ -181,44 +261,49 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.5,
     "steepK": 46.0,
     "deltaK": 1.5,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 44,0 тор1,0 ех0,5 -4,0 OKV 10,2 44,5 тор1,0 ех0,5 -4,0",
+    "finalLens": "OKV 10,4 44,0 тор1,0 ех0,5 -4,0 OKV 10,2 44,5 тор1,0 ех0,5 -4,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_41",
-    "patientName": "Газиз Ерасыл",
-    "flatK": 40.78,
-    "steepK": 41.26,
-    "deltaK": 0.48,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_42",
+    "patientName": "Безьязычных Мия",
+    "flatK": 45.7,
+    "steepK": 46.45,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 46,0 OKV 10,6 45,5",
+    "finalLens": "Заказ линз   OD 10,60 46,00 тор0 ех 0,50 -3,50 DK 100 blue OS 10,60 45,50 тор0 ех 0,50 -3,50 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_43",
-    "patientName": "Абдолаева Ясмин",
-    "flatK": 42.89,
-    "steepK": 44.51,
-    "deltaK": 1.62,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_44",
+    "patientName": "Тлеубердин Айрим",
+    "flatK": 43.81,
+    "steepK": 45.56,
+    "deltaK": 1.75,
+    "trialLens": "OKV 10,4 44,0 тор 1,5 ех 0,5 OKV 10,4 43,5 тор2,0 ех 0,50",
+    "finalLens": "Заказ линз  ОД 10,40 43,50 тор 1,50 ех 0,50 -7,75 ДК 100 blue ОC 10,40 43,00 тор 2,0 ех 0,50  -7,75 ДК 100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_47",
-    "patientName": "Дауренулы Азамат",
-    "flatK": 44.23,
-    "steepK": 45.07,
-    "deltaK": 0.84,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_45",
+    "patientName": "Ждеуова Ботагоз",
+    "flatK": 43.35,
+    "steepK": 44.1,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,5 тор1,5 ех0,5 -4,0 OKV 10,2 43,0 тор1,5 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,07 43,30 тор 1,85 ех 0,54/0,56 фак 1,0 клир -3,0  ТР -4,0  OS 10,07 43,25 тор 1,5 ех 0,55/0,56 ТР -3,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_49",
-    "patientName": "Ильясов Данияр",
-    "flatK": 44.22,
-    "steepK": 47.06,
-    "deltaK": 2.84,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_46",
+    "patientName": "Дербенцев Марк",
+    "flatK": 42.55,
+    "steepK": 43.3,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 42,5 ех0,5 тор1,5 -4,0 OKV 10,6 43,0 ех0,5 тор1,5 -4,0",
+    "finalLens": "Заказ линз   OD  10,46 42,60 ех 0,5/0,52 тор1,5 фактор 1,0 -3,75  OS 10,46 43,10 ех0,5/0,51 тор1,5 фактор 1,0 -3,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_50",
@@ -226,53 +311,59 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.52,
     "steepK": 43.98,
     "deltaK": 1.46,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 42,0 тор1,5 OKV 10,4 42,5 тор1,5",
+    "finalLens": "OKV 10,6 42,0 тор1,5 OKV 10,4 42,5 тор1,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_51",
-    "patientName": "Жанбырбай Султан",
-    "flatK": 42.59,
-    "steepK": 43.63,
-    "deltaK": 1.04,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_52",
+    "patientName": "Худайкулов Даллер",
+    "flatK": 42.5,
+    "steepK": 43.87,
+    "deltaK": 1.37,
+    "trialLens": "OKV 10,4 42,0 тор1,0 ех0,5 OKV 10,6 42,0 тор1,0 ех0,5",
+    "finalLens": "Заказ линз  OD 10,40 42,00 ex0,52 tor1,0 apik+5,0 -3,25 DK 100 blue OS 10,40 42,00 ex0,52 tor1,0 -3,00 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_53",
-    "patientName": "Величко Яна",
-    "flatK": 42.81,
-    "steepK": 44.05,
-    "deltaK": 1.24,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_55",
+    "patientName": "Хасан Карина",
+    "flatK": 44.08,
+    "steepK": 44.83,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 43,50 тор1,0 OKV 10,2 43,50 тор1,0",
+    "finalLens": "Заказ линз   OD 10,25 43,50 тор1,0 ех0,50 апик +5,0 -1,25     OS 10,20 43,50 тор1,0 ех0,52 -1,25",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_54",
-    "patientName": "Омирбек Мольдыр",
-    "flatK": 42.81,
-    "steepK": 43.93,
-    "deltaK": 1.12,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_57",
+    "patientName": "Рысбек Нурали",
+    "flatK": 42.85,
+    "steepK": 43.6,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 43,0 тор 1,0 OKV 10,6 43,0 тор 1,5",
+    "finalLens": "Заказ линз   OD 10,6 43,00 tor 1,50 ex 0,50 -5,50 DK 100 blue OS  10,6 43,00 tor 1,50 ex 0,45 -5,75 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_56",
-    "patientName": "Шеттикбаев Нурасыл",
-    "flatK": 42.04,
-    "steepK": 44.61,
-    "deltaK": 2.57,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_58",
+    "patientName": "Меркурьев Виталий",
+    "flatK": 41.28,
+    "steepK": 43.02,
+    "deltaK": 1.74,
+    "trialLens": "OKV 11,0 41,5 тор1,5 OKV 11,0 41,0 тор 1,5",
+    "finalLens": "OKV 11,0 41,5 тор1,5 OKV 11,0 41,0 тор 1,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_59",
-    "patientName": "Шамшидинов Рамир",
-    "flatK": 42.15,
-    "steepK": 42.8,
-    "deltaK": 0.65,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_60",
+    "patientName": "Алимхан Мерей",
+    "flatK": 42.06,
+    "steepK": 42.81,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 41,5 тор0 ех 0,50 OKV 11,0 41,5 тор1,0 ех 0,50",
+    "finalLens": "Заказ линз   ОД 11,00 42,00 тор 0,75 ех 0,52/0,47  -5,75 ДК 100 green ОC 11,00 42,00 тор 1,0 ех 0,50/0,47 -5,75 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_61",
@@ -280,44 +371,109 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 43.2,
     "steepK": 45.83,
     "deltaK": 2.63,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 43,0 тор2,0 OKV 10,4 43,5 тор2,0",
+    "finalLens": "OKV 10,4 43,0 тор2,0 OKV 10,4 43,5 тор2,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_62",
-    "patientName": "Естемесова Айбарша",
-    "flatK": 43.9,
-    "steepK": 45.0,
-    "deltaK": 1.1,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_63",
+    "patientName": "Дастанов Ержан",
+    "flatK": 41.97,
+    "steepK": 42.72,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 42,0 тор1,5 OKV 10,8 42,0 тор1,5",
+    "finalLens": "Заказ линз   OD 10,9 42,0 тор1,40 ех0,52 -3,50    OS 10,9 42,0 тор1,40 ех0,52 -3,50",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_68",
-    "patientName": "Руденко София",
-    "flatK": 42.35,
-    "steepK": 42.71,
-    "deltaK": 0.36,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_64",
+    "patientName": "Рауанулы Алинур",
+    "flatK": 43.45,
+    "steepK": 45.27,
+    "deltaK": 1.82,
+    "trialLens": "OKV 10,2 43,5 тор1,0 OKV",
+    "finalLens": "OKV 10,2 43,5 тор1,0 OKV",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_71",
-    "patientName": "Зуйкова Амалия",
-    "flatK": 43.3,
-    "steepK": 45.8,
-    "deltaK": 2.5,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_65",
+    "patientName": "Кетегенова Амина",
+    "flatK": 43.52,
+    "steepK": 46.32,
+    "deltaK": 2.8,
+    "trialLens": "OKV 10,4 43,5 тор 1,5 OKV 10,4 43,0 тор2,0",
+    "finalLens": "OKV 10,4 43,5 тор 1,5 OKV 10,4 43,0 тор2,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_74",
-    "patientName": "Абдихан Аруназ",
-    "flatK": 45.53,
-    "steepK": 46.64,
-    "deltaK": 1.11,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_67",
+    "patientName": "Елеу Акмарал",
+    "flatK": 43.37,
+    "steepK": 44.78,
+    "deltaK": 1.41,
+    "trialLens": "OKV 10,4 43,5 тор1,5 OKV 10,2 43,5 тор1,5",
+    "finalLens": "OKV 10,4 43,5 тор1,5 OKV 10,2 43,5 тор1,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_69",
+    "patientName": "Кандалов Сергей",
+    "flatK": 43.08,
+    "steepK": 43.0,
+    "deltaK": 0.08,
+    "trialLens": "OKV 10,2 42,5 OKV 10,2 43,0",
+    "finalLens": "Заказ линз   OD 10,05 42,5 ех0,50 тор0 -1,25 green   OS 10,05 43,0 ех0,50 тор0  -1,50 violet",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_70",
+    "patientName": "Нурумова Еркеназ",
+    "flatK": 43.81,
+    "steepK": 44.56,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 44,0 -6,0 OKV 10,8 44,0 -5,0",
+    "finalLens": "Заказ линз  с набора выданы OD  10,8 44,0 -6,0 гол   OS 10,8 44,0 -5,0 зел",
+    "isFromSuitcase": true
+  },
+  {
+    "id": "pt_72",
+    "patientName": "Жумагалиева Актолкын",
+    "flatK": 42.71,
+    "steepK": 43.46,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 43,0 тор1,5 OKV 10,4 43,0 тор2,0",
+    "finalLens": "Заказ линз   OD  10,5 43,0 ех0,5 тор1,5 -6,0  OS 10,5 43,0 тор1,75 -5,75",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_73",
+    "patientName": "Курманбек Имран",
+    "flatK": 44.11,
+    "steepK": 44.86,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 44,0 тор1,0 OKV 10,4 44,0 тор 1,0",
+    "finalLens": "Заказ линз   OD 10,4 44,0 тор1,0 ех 0,48/0,42 апик -3,0 фак+1,0  -6,25  OS 10,4 44,0 тор1,0 ех0,48/0,42 апик -3,0 фак+1,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_75",
+    "patientName": "Муратов Ильяс",
+    "flatK": 42.4,
+    "steepK": 43.15,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 42,5 тор1,0 OKV 11,0 42,0 тор1,0",
+    "finalLens": "Заказ линз   OD 10,95 42,5 тор1,0 ех 0,52 -1,75    OS 10,95 42,0 тор1,10 ех0,50",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_76",
+    "patientName": "Аликенов Дастан",
+    "flatK": 42.38,
+    "steepK": 43.13,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 42,5 тор1,0 OKV 10,8 42,5 тор1,0",
+    "finalLens": "Заказ линз   OD 10,95 42,50 тор1,0 ех0,50 -4,25   OS 10,95 42,50 тор1,0 ех0,50 -3,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_77",
@@ -325,17 +481,69 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.44,
     "steepK": 45.8,
     "deltaK": 1.36,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,2 44,5 тор 1,0 OKV 10,2 45,0 тор1,0",
+    "finalLens": "Заказ линз   OD 10,0 44,5 тор1,25 ех0,48 -4,0    OS 10,0 45,0 тор0,80 ех0,48 -4,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_81",
-    "patientName": "Кузьмин Данил",
-    "flatK": 43.17,
-    "steepK": 44.49,
-    "deltaK": 1.32,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_78",
+    "patientName": "Жумахан Ерсултан",
+    "flatK": 43.06,
+    "steepK": 43.81,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 43,0 тор1,5 OKV 10,4 43,5 тор1,0",
+    "finalLens": "Заказ линз   OD   10,4 43,0 тор1,5 ех 0,50 -2,75  OS  10,4 43,50 тор1,0 ех 0,50 -3,25",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_79",
+    "patientName": "Перетьятко Полина",
+    "flatK": 43.56,
+    "steepK": 44.31,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,5 тор2,0 ех0,5 -4,0 OKV 10,4 44,0 тор1,5 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,25 43,50 тор 1,75 ех 0,57/0,60 -3,75   OS 10,30 44,0 тор1,5 ех 0,57/0,62 -6,75 фак.компрессии 1,75",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_80",
+    "patientName": "Торебай Айлин",
+    "flatK": 44.53,
+    "steepK": 45.28,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,5 ех 0,5 тор1,0 -4,0 OKV 10,2 44,0 ех 0,5 тор1,0 -4,0",
+    "finalLens": "Заказ линз   OD  10,15 44,5 ех 0,53/0,47 тор1,0 фак+1,0 -3,0  OS 10,15 44,0 ех 0,53/0,47 тор1,0 фак+1,0 -2,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_83",
+    "patientName": "Саятбек Жамиля",
+    "flatK": 43.35,
+    "steepK": 44.1,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,0 тор1,0 OKV 10,2 43,50 тор1,0",
+    "finalLens": "Заказ линз   OD 10,15 43,25 ех0,50 тор0,75 -2,25   OS 10,15 43,50 ех0,45 тор0,75 -2,25",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_84",
+    "patientName": "Рожков Роман",
+    "flatK": 42.12,
+    "steepK": 44.15,
+    "deltaK": 2.03,
+    "trialLens": "OKV 11,0 42,5 тор1,5 OKV 11,0 42,0 тор1,5",
+    "finalLens": "OKV 11,0 42,5 тор1,5 OKV 11,0 42,0 тор1,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_85",
+    "patientName": "Жумакара Каусар",
+    "flatK": 43.55,
+    "steepK": 44.3,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 43,5 тор1,0 ех0,5 OKV 10,4 43,0 тор1,0 ех0,5",
+    "finalLens": "Заказ линз   OD 10,40 43,50 тор1,0 ех0,52 -2,0 DK 100 green с черной надп    OS 10,40 43,00 ex0,50 tor1,0 -3,50 DK 100 green",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_86",
@@ -343,8 +551,39 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 40.8,
     "steepK": 43.14,
     "deltaK": 2.34,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 11,0 41,0 ех0,5 тор1,5 -4,0 OKV 10,8 41,0 ех0,5 тор1,5 -4,0",
+    "finalLens": "OKV 11,0 41,0 ех0,5 тор1,5 -4,0 OKV 10,8 41,0 ех0,5 тор1,5 -4,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_87",
+    "patientName": "Алимхан Аман",
+    "flatK": 42.0,
+    "steepK": 42.75,
+    "deltaK": 0.75,
+    "trialLens": "OKV  10,8 42,0 тор0 ех0,50 OKV 10,8 41,5 тор 1,0 ех 0,50",
+    "finalLens": "Заказ линз   OD   ОД 10,90 42,00 тор 0,50 ех 0,50 -4,00 ДК 100 blue ОС 10,90 41,50 тор 1,0 ех 0,50 -3,75 ДК 100 violet",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_88",
+    "patientName": "Асылжан Альмахан",
+    "flatK": 41.3,
+    "steepK": 42.05,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 42,0 тор 2,0 ех0,5 -4,0 OKV 10,4 41,5 тор 2,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD  10,25 41,5 ех 0,53/0,52 тор2,25   фак 1,0 -4,25  OS 10,27 41,5 тор2,0 ех 0,52/0,49 фак 1,0 -4,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_89",
+    "patientName": "Мурзабекова Карина",
+    "flatK": 45.0,
+    "steepK": 45.75,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 45,0 тор1,5 OKV 10,2 45,5 тор1,5",
+    "finalLens": "Заказ линз   OD  10,0 45,0 тор1,5 ех0,5 -2,75  OS 10,0 45,5 тор1,60 ех0,5 -2,25",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_90",
@@ -352,35 +591,69 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 45.25,
     "steepK": 46.25,
     "deltaK": 1.0,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,8 45,0 тор 1,0 ех0,5 -4,0 OKV 10,6 45,0 ех0,5 тор1,0 -4,0",
+    "finalLens": "Заказ линз   OD 10,45 45,0 ех0,5 тор1,25 апик+3,0 фактор+1,5 -5,0    OS 10,45 45,25 ех0,5 тор 1,25 апик +3,0 фактор 1,5 -5,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_92",
-    "patientName": "Аспандияркызы Томирис",
-    "flatK": 45.37,
-    "steepK": 47.22,
-    "deltaK": 1.85,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_93",
-    "patientName": "Аскар Шырын",
-    "flatK": 42.48,
-    "steepK": 44.05,
-    "deltaK": 1.57,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_96",
-    "patientName": "Болат Алижан",
-    "flatK": 41.29,
+    "id": "pt_91",
+    "patientName": "Орынгали Аяна",
+    "flatK": 42.26,
     "steepK": 43.01,
-    "deltaK": 1.72,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 42,0 тор1,5 OKV 10,2 42,5 тор1,0",
+    "finalLens": "OKV 10,2 42,0 тор1,5 OKV 10,2 42,5 тор1,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_94",
+    "patientName": "Ахмет Инкар",
+    "flatK": 44.53,
+    "steepK": 45.28,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 44,5 тор1,5 OKV 10,4 44,5 тор1,5",
+    "finalLens": "Заказ линз  OD 10,40 44,5 ex0,52/0,50 tor 1,5 -5,0 green DK 100 OS 10,40 44,5 ex0,5 tor 1,5 -4,75 violet DK 100",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_95",
+    "patientName": "Жаксыбек Тогжан",
+    "flatK": 42.31,
+    "steepK": 43.06,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,0 ех0,5 тор1,0 -4,0 OKV 10,6 42,0 ех0,5 тор1,0",
+    "finalLens": "Заказ линз   OD 10,55 42,25 тор1,0 ех0,54/0,52 -4,75 фак компр 1,5  OS 10,55 42,00 тор1,0 ех0,54/0,52 -4,25 фак компр 1,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_97",
+    "patientName": "Копия Секишев Турар",
+    "flatK": 42.48,
+    "steepK": 43.23,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 43,0 тор1,5 OKV 10,8 42,5 тор1,5",
+    "finalLens": "Заказ линз   OD 10,70 42,50 ех0,42 тор1,5 -3,50 DK 50    OS 10,65 ex0,46 tor1,5 apik +5,0 -3,25 DK 50",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_100",
+    "patientName": "Полатбек Арай",
+    "flatK": 43.08,
+    "steepK": 43.83,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 43,5 тор1,5 OKV 10,8 43,5 тор1,5",
+    "finalLens": "Заказ линз   OD  11,10 43,00 ех 0,43 тор1,5 -2,75  OS 11,10 43,00 ех 0,44 тор1,5 -2,75",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_101",
+    "patientName": "Туманова Таисия",
+    "flatK": 44.4,
+    "steepK": 45.15,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,5 OKV 10,4  44,0 тор1,0",
+    "finalLens": "Заказ линз   OD 10,4 44,5 ех0,46 -2,75    OS 10,4 44,0 тор1,20 ех0,50/0,48 -2,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_102",
@@ -388,8 +661,29 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 41.38,
     "steepK": 43.18,
     "deltaK": 1.8,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 41,0 тор1,0 ех0,5 -4,0 OKV 10,4 41,0 тор1,0 ех0,5 -4,0",
+    "finalLens": "OKV 10,6 41,0 тор1,0 ех0,5 -4,0 OKV 10,4 41,0 тор1,0 ех0,5 -4,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_103",
+    "patientName": "Долгорукова Элияна",
+    "flatK": 42.38,
+    "steepK": 43.13,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,50 OKV 10,8 42,50",
+    "finalLens": "Заказ линз   OD  10,9 42,5 ех0,5 тор0 -4,0 фактор + 0,75  OS 10,9 43,00 ех 0,58 -4,25 фактор +0,75",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_104",
+    "patientName": "Притчина Дарина",
+    "flatK": 43.59,
+    "steepK": 44.34,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 43,5 тор1,0 OKV 10,6 43,0 тор1,0",
+    "finalLens": "Заказ линз   OD 10,6 43,50 тор1,0 ех0,5 -4,0    OS 10,6 43,00 тор1,0 ех0,5 -4,0",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_105",
@@ -397,8 +691,39 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.75,
     "steepK": 47.25,
     "deltaK": 2.5,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 44,5 тор2,0 OKV 10,2 44,5 тор1,5",
+    "finalLens": "OKV 10,4 44,5 тор2,0 OKV 10,2 44,5 тор1,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_106",
+    "patientName": "Иваненко Екатерина",
+    "flatK": 44.48,
+    "steepK": 45.23,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,5 тор1,0 OKV 10,2 45,0 тор1,0",
+    "finalLens": "Заказ линз   OD  10,15 44,5 тор1,0 ех0,49 -5,25  OS 10,15 45,0 тор1,20 ех0,49 -4,75",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_107",
+    "patientName": "Нуртажиев Алдияр",
+    "flatK": 42.88,
+    "steepK": 43.63,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 43,0 тор1,0 ех0,50 OKV 10,2 42,5 тор1,0 ех0,50",
+    "finalLens": "Заказ линз  OD 10,30 43,00 tor0,85 ex0,52 -3,0 DK100 blue OS 10,30 43,00 tor0,75 ex0,53 -2,75 DK100 violet",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_108",
+    "patientName": "Новикова Мария",
+    "flatK": 44.0,
+    "steepK": 44.75,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,0 OKV 10,2 43,5",
+    "finalLens": "Заказ линз   OD   10,0 44,0 0,56 -1,75  OS 10,0 44,0 0,56 -1,50",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_109",
@@ -406,35 +731,59 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 41.7,
     "steepK": 43.3,
     "deltaK": 1.6,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 42,0 тор1,5 ex0,5 -4,0 OKV 10,4 42,0 тор1,5 ex0,5 -4,0",
+    "finalLens": "OKV 10,6 42,0 тор1,5 ex0,5 -4,0 OKV 10,4 42,0 тор1,5 ex0,5 -4,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_110",
-    "patientName": "Мугиева Аэлина — копия",
-    "flatK": 43.07,
-    "steepK": 44.67,
-    "deltaK": 1.6,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_111",
+    "patientName": "Копия Туманова Таисия",
+    "flatK": 44.4,
+    "steepK": 45.15,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,5 OKV 10,4  44,0 тор1,0",
+    "finalLens": "Заказ линз   OD 10,4 44,5 ех0,46 -2,75    OS 10,4 44,0 тор1,20 ех0,50/0,48 -2,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_116",
-    "patientName": "Шарипов Марат",
-    "flatK": 40.91,
-    "steepK": 42.14,
-    "deltaK": 1.23,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_112",
+    "patientName": "Ексилова Данара",
+    "flatK": 43.42,
+    "steepK": 44.17,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,5 тор1,0 OKV 10,2 43,5 тор1,5",
+    "finalLens": "Заказ линз   ОД 10,10 43,50 тор1,25 ех 0,50 -7,0 ДК 125 blue ОД 10,10 43,50 тор1,40 ех 0,50 -7,25 ДК 125 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_119",
-    "patientName": "Жакен Айерке",
-    "flatK": 41.66,
-    "steepK": 43.39,
-    "deltaK": 1.73,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_113",
+    "patientName": "Садыков Самир",
+    "flatK": 43.29,
+    "steepK": 44.04,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 43,5 тор1,5 ех0,5 -4,0 OKV 10,8 43,5 тор1,5 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,6 43,25 тор 1,75 ех 0,47/0,50 апик-3,0 фактор +1,5 -5,25    OS 10,6 43,5 тор1,5 ех 0,5/0,51 фак1,5 -4,75",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_115",
+    "patientName": "Щока Мария",
+    "flatK": 44.23,
+    "steepK": 44.98,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 44,5 тор1,0 ех 0,5 -4,0 OKV 10,6 45,0 тор 1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,5 44,0 ех0,42 тор 1,15 -5,25    OS 10,5 44,5 ех0,42 тор1,30 -5,25",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_117",
+    "patientName": "Клейтон София",
+    "flatK": 43.5,
+    "steepK": 44.25,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 43,50 OKV 10,8 44,0",
+    "finalLens": "Заказ линз   OD 11,05 43,50 ex0,51  -2,0 DK 100 blue  OS 11,05 44,00 ex0,51 apik+5,0  -1,75 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_120",
@@ -442,26 +791,29 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.87,
     "steepK": 44.62,
     "deltaK": 1.75,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 43,0 тор2,0 OKV 10,4 43,5 тор2,0",
+    "finalLens": "Заказ линз   OD 10,4 43,25 ех0,5 тор2,0 -8,0 фактор+2,0 ДК 125    OS 10,4 43,0 ех 0,42 тор2,0 -7,5 фактор +2,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_122",
-    "patientName": "Негметов Ернар",
-    "flatK": 43.31,
-    "steepK": 44.49,
-    "deltaK": 1.18,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_121",
+    "patientName": "Нургаликызы Айлун",
+    "flatK": 43.7,
+    "steepK": 44.45,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 44,0 тор2,0 OKV 10,6 43,5 тор1,5",
+    "finalLens": "Заказ линз   OD 10,6 43,50 тор2,15 ех0,40/0,48 -2,25   OS 10,6 43,5 тор1,60 ех0,49 -1,75",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_124",
-    "patientName": "Соболева София",
-    "flatK": 43.66,
-    "steepK": 45.19,
-    "deltaK": 1.53,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_123",
+    "patientName": "Максименко Ольга",
+    "flatK": 43.7,
+    "steepK": 44.45,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 44,0 ех0,5 тор1,0 -4,0 OKV 10,8 44,0 ех0,5 тор1,0 -4,0",
+    "finalLens": "Заказ линз   OD 11,0 44,0 ех0,52/0,48 тор 0,75 -2,75   OS 11,0 44,0 ех0,52/0,48 тор0,75 -2,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_125",
@@ -469,26 +821,19 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.0,
     "steepK": 44.5,
     "deltaK": 0.5,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,2 43,5 тор1,0 ех0,5 -4,0 OKV 10,2 44,0 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,05 44,0 ех0,56/0,49 тор 1,25 апик -2,0 ТР -3,0    OS 10,05 44,0 ех 0,60/0,54 тор1,0 -1,5 фак +0,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_126",
-    "patientName": "Абдулгазиева Алтынай",
-    "flatK": 41.99,
-    "steepK": 43.65,
-    "deltaK": 1.66,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_129",
-    "patientName": "Садирова Иная",
-    "flatK": 44.03,
-    "steepK": 45.35,
-    "deltaK": 1.32,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_128",
+    "patientName": "Ертай Адиля",
+    "flatK": 43.83,
+    "steepK": 44.58,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,0 тор1,5 OKV 10,4 43,0 тор2,0",
+    "finalLens": "OKV 10,2 44,0 тор1,5 OKV 10,4 43,0 тор2,0",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_130",
@@ -496,8 +841,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 43.31,
     "steepK": 44.0,
     "deltaK": 0.69,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,2 43,0 тор0 ех0,5 -4,0 OKV",
+    "finalLens": "Заказ линз   OD  10,2 43,25 ех0,58 тор0 -2,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_131",
@@ -505,44 +851,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 41.38,
     "steepK": 42.86,
     "deltaK": 1.48,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_133",
-    "patientName": "Сабиткызы Инкар",
-    "flatK": 43.2,
-    "steepK": 44.01,
-    "deltaK": 0.81,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_134",
-    "patientName": "Ерлан Ильяс",
-    "flatK": 43.56,
-    "steepK": 44.17,
-    "deltaK": 0.61,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_135",
-    "patientName": "Горянец Алиса",
-    "flatK": 38.75,
-    "steepK": 40.5,
-    "deltaK": 1.75,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_136",
-    "patientName": "Максутбек Амир",
-    "flatK": 43.58,
-    "steepK": 44.77,
-    "deltaK": 1.19,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 41,0 тор1,0 OKV 10,6 41,0 тор1,50",
+    "finalLens": "OKV 10,6 41,0 тор1,0 OKV 10,6 41,0 тор1,50",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_137",
@@ -550,98 +861,129 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 43.66,
     "steepK": 44.4,
     "deltaK": 0.74,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 44,0 ех0,5 тор1,0 -4,0 OKV 10,6 43,5 ех0,5 тор1,0 -4,0",
+    "finalLens": "Заказ линз   OD 10,55 44,0 ех0,53 тор1,0 -4,5   OS 10,55 ех 0,53 тор1,0 -4,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_139",
-    "patientName": "Дюсенбек Жадыра",
-    "flatK": 43.21,
-    "steepK": 44.33,
+    "id": "pt_140",
+    "patientName": "Ексилов Ерсултан",
+    "flatK": 42.86,
+    "steepK": 43.61,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,0 OKV 10,3 43,0",
+    "finalLens": "Заказ линз  ОД 10,10 43,00 тор0,85 ех 0,50 -7,5 ДК 125 blue ОС 10,10 43,00 тор0,75 ех 0,50 -7,5 ДК 125 violet",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_143",
+    "patientName": "Ниязова Александра",
+    "flatK": 43.78,
+    "steepK": 44.53,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 44,0 тор1,0 ех0,5 -4,0 OKV 10,4 44,0 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,6  44,0 тор1,0 ех 0,53/0,54 -6,75    OS 10,6 43,85 ех0,54/0,55 тор1,20",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_144",
+    "patientName": "Шарабок Анастасия",
+    "flatK": 42.0,
+    "steepK": 42.75,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 43,0 тор1,0 ех 0,5 -4,0 OKV 11,0 43,5 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD 11,0 42,0 ех 0,39/0,36 тор1,0 апик +5,0 -1,0    OS 11,0 42,5 ех0,40/0,37 тор1,0 -1,25",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_145",
+    "patientName": "Нуртажиев Амир",
+    "flatK": 43.5,
+    "steepK": 44.62,
     "deltaK": 1.12,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,2 43,50 тор1,0 ех0,50 OKV 10,2 43,00 тор1,0 ех0,50",
+    "finalLens": "Заказ линз   OD 10,05 43,50 tor1,0 ex0,53 -4,75 fak +1,5 DK100 green  OS 10,05 43,50 tor1,0 ex0,53 -5,75 fak +1,5 DK100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_141",
-    "patientName": "Сарыкая Элиф",
-    "flatK": 46.27,
-    "steepK": 46.99,
-    "deltaK": 0.72,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_146",
+    "patientName": "Касымбекова Ботагоз",
+    "flatK": 41.22,
+    "steepK": 41.97,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 41,0 ех 0,5 тор0 -4,0 OKV 10,2 41,0 ех 0,5 тор0 -4,0",
+    "finalLens": "Заказ линз   OD   10,15 41,25 ех0,53 тор0 -5,0 фактор 1,75 клир +3,0  OS 10,15 41,25 ех 0,53 фактор 1,75 клир +3,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_142",
-    "patientName": "Павлов Егор",
-    "flatK": 40.07,
-    "steepK": 42.62,
-    "deltaK": 2.55,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_148",
+    "patientName": "Ахмет Аниса",
+    "flatK": 43.98,
+    "steepK": 44.73,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 44,0 тор1,0 ех 0,5 OKV 10,6 43,50 тор1,5 ех 0,5",
+    "finalLens": "OKV 10,6 44,0 тор1,0 ех 0,5 OKV 10,6 43,50 тор1,5 ех 0,5",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_147",
-    "patientName": "Канат Ибрагим",
-    "flatK": 40.23,
-    "steepK": 43.37,
-    "deltaK": 3.14,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_149",
+    "patientName": "Маневич Дамиль",
+    "flatK": 42.97,
+    "steepK": 43.72,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 43,0 тор1,0 OKV 10,4 43,0 тор1,0",
+    "finalLens": "Заказ линз   OD 10,46 43,0 ех0,5 тор1,0 -2,75 blue    OS 10,46 43,0 ex0,5 тор1,0 -3,0 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_150",
-    "patientName": "Айткожа Балым",
-    "flatK": 45.01,
-    "steepK": 46.74,
-    "deltaK": 1.73,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_152",
+    "patientName": "Шернияз Зейн",
+    "flatK": 43.79,
+    "steepK": 44.54,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 43,5 -2,5 OKV 10,8 43,0 -3,0",
+    "finalLens": "Заказ линз   OD 10,68 43,75 ех0,54 -2,5    OS 10,68 43,0 ех0,50 -2,75",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_151",
-    "patientName": "Рыспек Айзара",
-    "flatK": 43.12,
-    "steepK": 44.06,
-    "deltaK": 0.94,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_154",
+    "patientName": "Жолболсын Арман",
+    "flatK": 43.85,
+    "steepK": 44.6,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 44,0 тор1,5 ех0,5 -4,0 OKV 10,4 44,0 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD  10,4 44,0 ех0,54 тор 1,40 -1,5  OS 10,4 44,0 ех 0,57/0,54 тор 1,0 -1,75",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_153",
-    "patientName": "Айкынбеккызы Айсулу",
-    "flatK": 41.86,
-    "steepK": 43.12,
-    "deltaK": 1.26,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_157",
+    "patientName": "Торекелды Амир(АвтоматическиВосстановлено)",
+    "flatK": 43.92,
+    "steepK": 44.67,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 44,0 OKV 10,8 43,50",
+    "finalLens": "Заказ линз   OD 10,50 44,0 ех 0,5 -4,25   OS 10,50 43,50 ех0,5 -4,25 апик +5,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_155",
-    "patientName": "Кусаинова Султана",
-    "flatK": 44.6,
-    "steepK": 46.55,
-    "deltaK": 1.95,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_158",
+    "patientName": "Мирболаткызы Коркем",
+    "flatK": 42.78,
+    "steepK": 43.53,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,50 OKV 10,8 42,0",
+    "finalLens": "OKV 10,8 42,50 OKV 10,8 42,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_156",
-    "patientName": "Даурен",
-    "flatK": 43.01,
-    "steepK": 43.32,
-    "deltaK": 0.31,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_159",
-    "patientName": "Алдибекова Гульжанат",
-    "flatK": 41.28,
-    "steepK": 42.11,
-    "deltaK": 0.83,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_160",
+    "patientName": "Ерубек Айша",
+    "flatK": 41.31,
+    "steepK": 42.06,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 41,0 тор1,5 ех0,5 -4,0 OKV 11,0 41,5 тор1,5 ех0,5 -4,0",
+    "finalLens": "OKV 11,0 41,0 тор1,5 ех0,5 -4,0 OKV 11,0 41,5 тор1,5 ех0,5 -4,0",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_161",
@@ -649,62 +991,99 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.56,
     "steepK": 42.91,
     "deltaK": 0.35,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 11,0 42,5 тор1,0 ех0,5 -4,0 OKV 10,8 42,5 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD  10,9 42,75 тор0,55 ех 0,48/0,46 -1,25  OS 10,9 42,75 тор0,55 ех 0,48/0,46 -1,25",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_162",
-    "patientName": "Нойфельд Алена",
-    "flatK": 43.29,
-    "steepK": 44.03,
-    "deltaK": 0.74,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_164",
+    "patientName": "Сакович Наталья",
+    "flatK": 42.13,
+    "steepK": 42.88,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 42,0 ех0,5 тор 1,5 -4,0 OKV 10,2 42,0 ех 0,5 тор 1,5 -4,0",
+    "finalLens": "Заказ линз   OD  10,35 42,25 ех 0,53 тор 1,60 апик +4,0 -2,5  OS 10,35 42,15 ех0,50/0,51 тор 1,5 апик +4,0 -3,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_166",
-    "patientName": "Толмухан Мейрат",
-    "flatK": 43.58,
-    "steepK": 45.25,
-    "deltaK": 1.67,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_165",
+    "patientName": "Ринатулы Булхаирхан",
+    "flatK": 43.24,
+    "steepK": 43.99,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,0 тор1,0 OKV 10,4 43,0 тор1,0",
+    "finalLens": "OKV 10,2 43,0 тор1,0 OKV 10,4 43,0 тор1,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_171",
-    "patientName": "Мугиева Аэлина",
-    "flatK": 43.07,
-    "steepK": 44.67,
-    "deltaK": 1.6,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_167",
+    "patientName": "Талгат Ансар",
+    "flatK": 42.29,
+    "steepK": 43.04,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,5 тор1,5 OKV 10,6 42,5 тор1,5",
+    "finalLens": "Заказ линз   OD  10,8 42,5ех 0,50 тор1,5 -5,50    OS 10,8 42,5ех 0,50 тор1,5 -5,50",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_174",
-    "patientName": "Глоба Карина",
-    "flatK": 41.61,
-    "steepK": 42.13,
-    "deltaK": 0.52,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_168",
+    "patientName": "Вельсимова Ирада",
+    "flatK": 44.01,
+    "steepK": 44.76,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 44,0 тор0 ех0,5 -4,0 OKV 10,2 44,5 тор0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD  10,05 44,25 ех0,55 -6,0  OS 10,05  ех 0,56 -5,25",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_175",
-    "patientName": "Абдихан Айдана",
-    "flatK": 46.24,
-    "steepK": 47.5,
-    "deltaK": 1.26,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_169",
+    "patientName": "Еркин Айару",
+    "flatK": 42.44,
+    "steepK": 43.19,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 42,5 ех0,5 тор1,5 -4,0 OKV 10,8 42,5 тор1,5 -4,0",
+    "finalLens": "OKV 11,0 42,5 ех0,5 тор1,5 -4,0 OKV 10,8 42,5 тор1,5 -4,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_176",
-    "patientName": "Айдархан Амирхан",
-    "flatK": 44.19,
-    "steepK": 44.8,
-    "deltaK": 0.61,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_170",
+    "patientName": "Ермек Молдир",
+    "flatK": 42.29,
+    "steepK": 43.04,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,0 ех 0,5 -4,0 OKV 10,6 42,0 тор1,0 ех 0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,65 42,0 ех0,5 фактор 0,5 клир +5,0 -3,0   OS 10,65 42,0 ех 0,53/0,50 тор1,0 апик +5,0 -3,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_172",
+    "patientName": "Магаз Амаль",
+    "flatK": 41.97,
+    "steepK": 42.72,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42 тор1,5 OKV 10,6 42,0 тор1,5",
+    "finalLens": "Заказ линз   OD 10,67 42,0 тор1,5 ех0,50 -3,50    OS 10,67 42,0 тор1,65 ех0,50 -3,25",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_173",
+    "patientName": "Гордеев Мирон",
+    "flatK": 43.25,
+    "steepK": 44.0,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,50 OKV 10,2 43,00",
+    "finalLens": "Заказ линз   OD 10,2 43,50 ех 0,50 -1,75   OS 10,2 43,25 ех 0,50 -2,00",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_177",
+    "patientName": "Махаметжанова Михрина",
+    "flatK": 41.62,
+    "steepK": 42.37,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 41,0 ех0,5 OKV 10,8 41,5 ех 0,5",
+    "finalLens": "Заказ линз  ОД 10,80 41,50 ех 0,60 -2,75 blue DK 100 ОС 10,80 41,50 ех 0,58 -2,50 violet DK 100",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_178",
@@ -712,8 +1091,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 40.84,
     "steepK": 41.58,
     "deltaK": 0.74,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,8 40,5 тор0 ех0,5 OKV 10,8 41,0 тор0 ех0,5",
+    "finalLens": "OKV 10,8 40,5 тор0 ех0,5 OKV 10,8 41,0 тор0 ех0,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_179",
@@ -721,8 +1101,29 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.59,
     "steepK": 44.15,
     "deltaK": 1.56,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 43,0 11,0 ех0,5 тор1,0 -4,0 OKV 42,5 11,0 ех0,5 тор1,0 -4,0",
+    "finalLens": "OKV 43,0 11,0 ех0,5 тор1,0 -4,0 OKV 42,5 11,0 ех0,5 тор1,0 -4,0",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_180",
+    "patientName": "Бауыржан Айару",
+    "flatK": 41.79,
+    "steepK": 42.54,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 42,0 тор1,0 ех0,5 OKV 10,4 42,0 тор1,0 ех0,5",
+    "finalLens": "Заказ линз  OD 10,45 42,00 ex 0,50 tor1,0 -2,50 DK 100 blue OS 10,45 42,00 ex 0,50 tor1,10 -1,75 DK 100 violet",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_181",
+    "patientName": "Тазбек Айлин",
+    "flatK": 41.57,
+    "steepK": 42.32,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 41,0 тор1,0 ех0,5 -4,0 OKV 10,6 40,5 тор 1,5 ех0,5 -4,0",
+    "finalLens": "OKV 10,8 41,0 тор1,0 ех0,5 -4,0 OKV 10,6 40,5 тор 1,5 ех0,5 -4,0",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_182",
@@ -730,8 +1131,19 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.05,
     "steepK": 44.83,
     "deltaK": 0.78,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,6 44,0 тор1,0 ех0,5 -4,0 OKV 10,8 44,0 тор1,0 ех0,5 -4,0",
+    "finalLens": "Заказ линз   OD  10,6 44,0 ех 0,5 тор 0,80 фак компр 1,0 -5,25  OS 10,6 44,25 ех 0,52 тор 0,75 -5,25 фак компр 1,0 клиренс 5мкм",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_183",
+    "patientName": "Тумарбек Еркежан",
+    "flatK": 43.2,
+    "steepK": 43.95,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,0 OKV 10,2 43,50",
+    "finalLens": "Заказ линз   OD  10,10 43,0 тор0 ех0,48 -2,50   OS 10,10 43,50 тор0 ех0,48 -2,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_184",
@@ -739,62 +1151,89 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.03,
     "steepK": 46.29,
     "deltaK": 2.26,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 44,0 тор1,5 ех 0,5 -4,0 OKV 10,6 43,5 тор1,5 ех0,5 -4,0",
+    "finalLens": "OKV 10,4 44,0 тор1,5 ех 0,5 -4,0 OKV 10,6 43,5 тор1,5 ех0,5 -4,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_185",
-    "patientName": "Саянкызы Саида",
-    "flatK": 45.49,
-    "steepK": 46.73,
-    "deltaK": 1.24,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_187",
+    "patientName": "Сериккызы Лайлим",
+    "flatK": 39.64,
+    "steepK": 40.39,
+    "deltaK": 0.75,
+    "trialLens": "OKV10,6  39,5 тор 1,5 OKV 10,4 39,5 тор2,0",
+    "finalLens": "Заказ линз   OD  ОД 10,60 39,50 тор 1,50 ех 0,58 -4,25 f+1,0 ДК 100   OS RGP",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_186",
-    "patientName": "Щапов Валерий",
-    "flatK": 41.49,
-    "steepK": 43.6,
-    "deltaK": 2.11,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_188",
+    "patientName": "Ерофеева Яна",
+    "flatK": 43.85,
+    "steepK": 44.6,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 44,0 тор1,0 OKV 10,6 44,0 тор1,0",
+    "finalLens": "Заказ линз  ОД 10,45 43,75 ех 0,46/0,43 тор 1,25 апик +3,0 -4,50 DK 100 ОС 10,45 44,00 ех 0,45/0,43 тор 1,25 -5,50 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_191",
-    "patientName": "Жанай Айзере",
-    "flatK": 39.66,
-    "steepK": 41.3,
-    "deltaK": 1.64,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_189",
+    "patientName": "Мулдашева Малика",
+    "flatK": 42.4,
+    "steepK": 43.15,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,5 тор 1,5 ех0,5 -4,0 OKV 11,0  42,0 ех0,5 тор 1,5 -4,0",
+    "finalLens": "Заказ линз   OD  11,0 42,40 тор 1,80 ех 0,5/0,55 фактор 1,75 -6,0 OS 11,0 42,0 ех0,5/0,56 тор 1,90 фактор 2,0 -6,25",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_195",
-    "patientName": "Сулейманов Искандер",
-    "flatK": 43.13,
-    "steepK": 44.79,
-    "deltaK": 1.66,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_190",
+    "patientName": "Ахматова Эмилия",
+    "flatK": 42.41,
+    "steepK": 43.16,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 42,5 OKV 10,6 42,0",
+    "finalLens": "Заказ линз   OD 10,60 42,50 ex 0,50 -2,50 DK 100 blue OS 10,60 42,00 ex 0,50 -2,25 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_196",
-    "patientName": "Костюченко Дмитрий",
-    "flatK": 42.73,
-    "steepK": 43.38,
-    "deltaK": 0.65,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_192",
+    "patientName": "Канат Айару",
+    "flatK": 42.78,
+    "steepK": 43.53,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,50 -4,5 тор0 ех0,5 OKV 10,8 42,50 -5,5 тор0 ех0,5",
+    "finalLens": "Заказ линз OD 10,70 42,50 ex0,50 -5,0 faktor+1,50 DK 100 blue OS 10,70 42,50 ex0,50 -6,5 faktor+1,50 DK 100 violet",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_197",
-    "patientName": "Дауренбек Сария",
-    "flatK": 44.74,
-    "steepK": 46.55,
-    "deltaK": 1.81,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_193",
+    "patientName": "Дифу Сания",
+    "flatK": 43.88,
+    "steepK": 44.63,
+    "deltaK": 0.75,
+    "trialLens": "OKV  10,2 44,0 тор1,5 OKV 10,2 44,0 тор1,0",
+    "finalLens": "Заказ линз   OD  10,0 43,85 тор1,70 ех0,48 -4,5  OS 10,0 44,0 тор1,25 ех0,52/0,46 -4,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_194",
+    "patientName": "Бастаубаева Алиша",
+    "flatK": 42.34,
+    "steepK": 43.09,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,5 тор1,0 OKV 10,6 42,5 тор1,0",
+    "finalLens": "Заказ линз   OD 10,8 42,50 тор1,0 ех0,47 -2,0   OS 10,8 42,50 тор1,0 ех 0,50 -2,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_198",
+    "patientName": "Келдыбай Аяла",
+    "flatK": 44.2,
+    "steepK": 44.95,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 44,0 тор1,0 OKV 10,4 43,50 тор1,0",
+    "finalLens": "Заказ линз   OD  10,40 44,0 тор0,75 ех0,53 -4,50  OS 10,40 43,50 тор1,0 ех0,53 -3,75",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_200",
@@ -802,26 +1241,49 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.44,
     "steepK": 43.32,
     "deltaK": 0.88,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,8 42,5 -5,0 OKV 10,8 42,5 -5,0",
+    "finalLens": "выданы с чемодана 10,8 42,5 -5,0 на оба глаза",
+    "isFromSuitcase": true
   },
   {
-    "id": "pt_204",
-    "patientName": "Кудайберген Назерке",
-    "flatK": 45.3,
-    "steepK": 45.83,
-    "deltaK": 0.53,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_201",
+    "patientName": "Рысбек Дияр",
+    "flatK": 43.89,
+    "steepK": 44.64,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 43,5 тор1,0 ех0,50 OKV 10,40 44,00 тор1,0 ех0,50",
+    "finalLens": "Заказ линз  OD 10,40 44,00 tor0,75 ex 0,54 -4,75 фак +1,5 ДК 100 b  OS 10,40 43,75 tor1,25 ex0,52/0,50 -4,75 фак+1,5 ДК 100 v",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_206",
-    "patientName": "Мамин Александр",
-    "flatK": 41.5,
-    "steepK": 42.6,
-    "deltaK": 1.1,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_202",
+    "patientName": "Алимхан Ерсултан",
+    "flatK": 42.29,
+    "steepK": 44.66,
+    "deltaK": 2.37,
+    "trialLens": "OKV  11,0 42,50 тор 1,5 ех 0,50 OKV 10,8 42,5 тор 1,5 ех 0,50",
+    "finalLens": "OKV  11,0 42,50 тор 1,5 ех 0,50 OKV 10,8 42,5 тор 1,5 ех 0,50",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_203",
+    "patientName": "Канатжан Жанторе",
+    "flatK": 41.99,
+    "steepK": 42.74,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,6 41,5 тор1,0 OKV 10,8 41,5",
+    "finalLens": "Заказ линз  ОД 10,60 42,00 тор1,0 ех 0,60 -6,25 фактор 1,75 ДК 100 blue ОС 10,60 42,00 ех 0,60 -6,50 фактор 1,75 ДК 100 violet",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_205",
+    "patientName": "Абуева Жасмин",
+    "flatK": 43.47,
+    "steepK": 44.22,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 43,5 OKV 10,8 44,0",
+    "finalLens": "Заказ линз   OD   10,8 44,0 -4,5 OS 10,8 44,5 -4,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_207",
@@ -829,44 +1291,29 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.94,
     "steepK": 46.11,
     "deltaK": 1.17,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,2 45,0 тор1,0 OKV 10,2 44,5 тор1,0",
+    "finalLens": "OKV 10,2 45,0 тор1,0 OKV 10,2 44,5 тор1,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_209",
-    "patientName": "Маратова Залина",
-    "flatK": 42.01,
-    "steepK": 42.49,
-    "deltaK": 0.48,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_210",
+    "patientName": "Жолболсын Гульдана",
+    "flatK": 42.25,
+    "steepK": 43.0,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 42,0 тор 1,0 ех 0,5 -4,0 OKV 10,8 42,5 тор 1,0 ех 0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,8 42,25 тор1,0 ех 0,5 -3,25    OS 10,8 42,5 тор 1,25 ех 0,53/0,54 факторкомпр. 1,0 -4,0",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_212",
-    "patientName": "Кобетай Багым",
-    "flatK": 43.25,
-    "steepK": 44.24,
-    "deltaK": 0.99,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_213",
-    "patientName": "Рахым Мадина",
-    "flatK": 42.06,
-    "steepK": 43.6,
-    "deltaK": 1.54,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_215",
-    "patientName": "Тагвиашвили Анна-Мария",
-    "flatK": 44.06,
-    "steepK": 44.49,
-    "deltaK": 0.43,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_211",
+    "patientName": "Токумбаев Жоламан",
+    "flatK": 41.95,
+    "steepK": 42.7,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 42,0 -3,5 OKV 10,8 42,5 -3,5",
+    "finalLens": "Заказ линз   OD 10,7 42,0 -3,5    OS 10,7 42,5 -3,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_216",
@@ -874,8 +1321,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.48,
     "steepK": 45.62,
     "deltaK": 1.14,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,2  44,50  тор0  ех 0,5 OKV 10,2   44,00   тор0 ех 0,5",
+    "finalLens": "Заказ линз   OD 10,4 44,5 тор0  ех 0,5 -5,5   OS 10,4 44,0 тор0  ех 0,5  -4,25",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_218",
@@ -883,8 +1331,9 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.59,
     "steepK": 43.1,
     "deltaK": 0.51,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 10,4 43,0 ех0,5 тор1,0 -4,0 OKV 10,4 42,5 ех0,5 тор1,0 -4,0",
+    "finalLens": "Заказ линз   OD  10,28 42,81 ех0,53 тор 0,75 -1,5    OS 10,28 42,50 ех 0,53/0,51 тор1,0 -1,5",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_219",
@@ -892,17 +1341,39 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 42.73,
     "steepK": 45.83,
     "deltaK": 3.1,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV 43,0 ех0,5 тор1,5 -4,0 11,0 OKV 42,5 ех0,5 тор1,5 -4,0 10,8",
+    "finalLens": "OKV 43,0 ех0,5 тор1,5 -4,0 11,0 OKV 42,5 ех0,5 тор1,5 -4,0 10,8",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_220",
-    "patientName": "Ерубай Алихан",
-    "flatK": 43.62,
-    "steepK": 46.0,
-    "deltaK": 2.38,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_221",
+    "patientName": "Белоусова Диана",
+    "flatK": 43.88,
+    "steepK": 44.63,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 44,0 OKV 10,8 44,00",
+    "finalLens": "Заказ линз   OD из набора 10,8 44,0 -2,5 blue    OS из набора 10,8 44,0 -2,0 green",
+    "isFromSuitcase": true
+  },
+  {
+    "id": "pt_222",
+    "patientName": "Канатжан Темирлан",
+    "flatK": 41.3,
+    "steepK": 42.05,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,8 41,0 OKV 10,8 41,5",
+    "finalLens": "OKV 10,8 41,0 OKV 10,8 41,5",
+    "isFromSuitcase": false
+  },
+  {
+    "id": "pt_223",
+    "patientName": "Толеген Амир",
+    "flatK": 42.79,
+    "steepK": 43.54,
+    "deltaK": 0.75,
+    "trialLens": "OKV 11,0 43,0 тор1,5 OKV 10,8 43,0 тор1,5",
+    "finalLens": "Заказ линз   OD 10,8 43,0 тор1,5 ех 0,50 -3,25   OS 10,8 42,50 тор1,5 ех 0,50 -3,50",
+    "isFromSuitcase": false
   },
   {
     "id": "pt_224",
@@ -910,53 +1381,29 @@ export const NEW_EYE_PATIENT_DATASET: PatientFittingRecord[] = [
     "flatK": 44.25,
     "steepK": 45.89,
     "deltaK": 1.64,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "trialLens": "OKV  10,2 44,5 ех0,5 тор1,0 -4,0 OKV 10,2 44,0 ех0,5 тор0 -4,0",
+    "finalLens": "Заказ линз   OD 10,10 44,5 ех0,5 тор1,0 -6,75 фак компр 2,0   OS 10,10 44,25 ех0,52 тор0,60 фак компр 1,0 клиренс 5 мкм",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_225",
-    "patientName": "Кошкинбек Ескендир",
-    "flatK": 43.26,
-    "steepK": 44.76,
-    "deltaK": 1.5,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_227",
+    "patientName": "Сатпаева Шолпан",
+    "flatK": 41.74,
+    "steepK": 42.49,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,4 41,0 тор1,5 ех 0,5 -4,0 OKV 10,2 41,5 тор1,5 ех 0,5 -4,0",
+    "finalLens": "Заказ линз   OD 10,2 41,75 тор1,5 ех 0,6/0,58 клиренс +3,0 -1,5   OS 10,2 41,75 тор1,5 ех 0,58 клиренс +3,0 -1,25",
+    "isFromSuitcase": false
   },
   {
-    "id": "pt_226",
-    "patientName": "Чуйкова Валерия",
-    "flatK": 44.47,
-    "steepK": 45.13,
-    "deltaK": 0.66,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_228",
-    "patientName": "Пашковская Владислава",
-    "flatK": 43.28,
-    "steepK": 43.85,
-    "deltaK": 0.57,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_229",
-    "patientName": "Менжию Ильдар",
-    "flatK": 44.42,
-    "steepK": 45.5,
-    "deltaK": 1.08,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
-  },
-  {
-    "id": "pt_230",
-    "patientName": "Сейдахметова Амина",
-    "flatK": 42.93,
-    "steepK": 44.68,
-    "deltaK": 1.75,
-    "trialLens": "BC 81 / RZD 525 / LZA 34",
-    "finalLens": "BC 81 / RZD 525 / LZA 34"
+    "id": "pt_231",
+    "patientName": "Русланов Руслан",
+    "flatK": 43.33,
+    "steepK": 44.08,
+    "deltaK": 0.75,
+    "trialLens": "OKV 10,2 43,0 ех0,5 OKV 10,2 43,0 ех0,5",
+    "finalLens": "Заказ линз   OD 10,20 43,00 ex 0,50 -3,75 DK 100 blue OS 10,20 43,25 ex 0,50 -4,0 DK 100 violet",
+    "isFromSuitcase": false
   }
 ];
 
@@ -966,6 +1413,7 @@ export interface EmpiricalMatch {
     recommendedTrialLens: string;
     recommendedFinalLens: string;
     recommendedAdjustment: string;
+    isFromSuitcase: boolean;
 }
 
 export function findEmpiricalMatchingFit(flatK: number, steepK: number, deltaK: number): EmpiricalMatch | null {
@@ -989,11 +1437,12 @@ export function findEmpiricalMatchingFit(flatK: number, steepK: number, deltaK: 
     if (!bestRecord) return null;
     
     const similarity = Math.max(75, Math.round(100 - minDistance * 10));
-    const isAdjusted = bestRecord.trialLens !== bestRecord.finalLens;
     
-    let adjustmentNotice = 'Первично примерена и идеально подошла линза из стандартного набора';
-    if (isAdjusted) {
-        adjustmentNotice = `Рекомендуется скорректировать параметры по опыту аналогичного случая (${bestRecord.patientName})`;
+    let statusText = '';
+    if (bestRecord.isFromSuitcase) {
+        statusText = 'Линза была выдана пациенту из чемодана (набора клиники)!';
+    } else {
+        statusText = 'Линза была оформлена под индивидуальный заказ клиники.';
     }
     
     return {
@@ -1001,6 +1450,7 @@ export function findEmpiricalMatchingFit(flatK: number, steepK: number, deltaK: 
         similarityScore: similarity,
         recommendedTrialLens: bestRecord.trialLens,
         recommendedFinalLens: bestRecord.finalLens,
-        recommendedAdjustment: adjustmentNotice,
+        recommendedAdjustment: statusText,
+        isFromSuitcase: bestRecord.isFromSuitcase,
     };
 }
