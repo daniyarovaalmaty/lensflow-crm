@@ -33,8 +33,15 @@ export interface ParsedTopographyData {
 export async function parseTopographerFile(file: File): Promise<ParsedTopographyData> {
     const fileName = file.name.toLowerCase();
 
-    // Check if uploaded file is an image or PDF scan
-    if (file.type.startsWith('image/') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png') || fileName.endsWith('.webp')) {
+    // Check if uploaded file is an image (.jpg, .png, .heic, .heif, .pdf, etc.)
+    const isImage = file.type.startsWith('image/') ||
+        file.type.includes('heic') || file.type.includes('heif') ||
+        fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') ||
+        fileName.endsWith('.png') || fileName.endsWith('.webp') ||
+        fileName.endsWith('.heic') || fileName.endsWith('.heif') ||
+        fileName.endsWith('.bmp') || fileName.endsWith('.pdf');
+
+    if (isImage) {
         return parseTopographyImageApi(file);
     }
 

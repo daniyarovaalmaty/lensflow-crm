@@ -2,6 +2,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { createWorker } from 'tesseract.js';
 
+import convert from 'heic-convert';
+
 export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
@@ -11,7 +13,22 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
+        let buffer = Buffer.from(await file.arrayBuffer());
+        const fileNameLower = file.name.toLowerCase();
+
+        // Convert Apple iPhone HEIC/HEIF photos to JPEG
+        if (fileNameLower.endsWith('.heic') || fileNameLower.endsWith('.heif') || file.type.includes('heic') || file.type.includes('heif')) {
+            try {
+                const converted = await convert({
+                    buffer: buffer,
+                    format: 'JPEG',
+                    quality: 0.85,
+                });
+                buffer = Buffer.from(converted);
+            } catch (err) {
+                console.error('HEIC image conversion failed:', err);
+            }
+        }
 
         // Perform fast OCR on image buffer
         const worker = await createWorker('eng');

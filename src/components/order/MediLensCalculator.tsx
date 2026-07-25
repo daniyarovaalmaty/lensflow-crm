@@ -274,7 +274,7 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                         <span>Загрузить фото / скан</span>
                                         <input
                                             type="file"
-                                            accept="image/*,.des,.csv,.txt,.xml,.pdf"
+                                            accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.des,.csv,.txt,.xml"
                                             onChange={handleFileUpload}
                                             className="hidden"
                                         />
