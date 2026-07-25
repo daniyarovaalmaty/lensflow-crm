@@ -60,8 +60,26 @@ export async function parseTopographerFile(file: File): Promise<ParsedTopography
  * Fast client-side image resizing & compression to max 1200px width (~80KB)
  */
 export async function compressImageForOcr(file: File): Promise<Blob> {
+    let sourceBlob: Blob = file;
+    const fileName = file.name.toLowerCase();
+
+    // Dynamically convert HEIC/HEIF on client side if needed
+    if (typeof window !== 'undefined' && (fileName.endsWith('.heic') || fileName.endsWith('.heif') || file.type.includes('heic') || file.type.includes('heif'))) {
+        try {
+            const heic2any = (await import('heic2any')).default;
+            const converted = await heic2any({
+                blob: file,
+                toType: 'image/jpeg',
+                quality: 0.8,
+            });
+            sourceBlob = Array.isArray(converted) ? converted[0] : converted;
+        } catch (err) {
+            console.error('Client HEIC conversion error:', err);
+        }
+    }
+
     return new Promise((resolve) => {
-        if (typeof window === 'undefined' || !file.type.startsWith('image/')) return resolve(file);
+        if (typeof window === 'undefined') return resolve(sourceBlob);
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -88,20 +106,20 @@ export async function compressImageForOcr(file: File): Promise<Blob> {
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
-                if (!ctx) return resolve(file);
+                if (!ctx) return resolve(sourceBlob);
 
                 ctx.drawImage(img, 0, 0, width, height);
                 canvas.toBlob(
-                    (blob) => resolve(blob || file),
+                    (blob) => resolve(blob || sourceBlob),
                     'image/jpeg',
                     0.80
                 );
             };
-            img.onerror = () => resolve(file);
+            img.onerror = () => resolve(sourceBlob);
             img.src = e.target?.result as string;
         };
-        reader.onerror = () => resolve(file);
-        reader.readAsDataURL(file);
+        reader.onerror = () => resolve(sourceBlob);
+        reader.readAsDataURL(sourceBlob);
     });
 }
 
