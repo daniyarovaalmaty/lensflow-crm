@@ -30,10 +30,12 @@ const SortLabels: Record<SortOption, string> = {
 export default function OpticDashboard() {
     const { data: session } = useSession();
     const router = useRouter();
-    const subRole = (session?.user?.subRole || 'optic_manager') as SubRole;
+    const userSubRole = (session?.user?.subRole || '') as string;
+    const subRole = (userSubRole || 'optic_manager') as SubRole;
     const perms = getPermissions(subRole);
-    const isDoctor = subRole === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole);
-    const canSeeInvoices = perms.canViewPayments && !isDoctor;
+    const isDoctor = ['doctor', 'optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(userSubRole);
+    const isCommercialRole = ['sales_manager', 'optic_manager', 'optic_accountant', 'lab_accountant', 'dist_accountant', 'optic_procurement', 'dist_head', 'dist_admin'].includes(userSubRole);
+    const canSeeInvoices = Boolean(session?.user) && isCommercialRole && !isDoctor;
     
     // Dynamic clinic permissions override
     const clinicPerms = getEffectiveClinicPermissions({
