@@ -944,16 +944,16 @@ export default function OpticDashboard() {
 
                                         {/* out_for_delivery: prominent confirmation button */}
                                         {order.status === 'out_for_delivery' && (
-                                            <div className="mb-3">
-                                                <div className="flex items-center gap-2 text-xs text-purple-700 bg-purple-50 rounded-lg px-3 py-2 mb-2">
-                                                    <Truck className="w-3.5 h-3.5" />
+                                            <div className="flex items-center gap-2 flex-wrap ml-2">
+                                                <span className="inline-flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-200/80 rounded-lg px-2.5 py-1.5 font-medium">
+                                                    <Truck className="w-3.5 h-3.5 text-purple-600" />
                                                     Курьер доставляет ваш заказ
-                                                </div>
+                                                </span>
                                                 <button
                                                     onClick={() => confirmDelivery(order.order_id)}
-                                                    className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                                                    className="inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-1.5 px-3.5 rounded-lg transition-all shadow-sm hover:shadow active:scale-95 cursor-pointer"
                                                 >
-                                                    <CheckCircle className="w-4 h-4" />
+                                                    <CheckCircle className="w-3.5 h-3.5" />
                                                     Подтвердить получение
                                                 </button>
                                             </div>
@@ -961,13 +961,13 @@ export default function OpticDashboard() {
 
                                         {/* delivered: confirmation banner */}
                                         {order.status === 'delivered' && (
-                                            <div className="flex items-center gap-2 text-xs text-teal-700 bg-teal-50 rounded-lg px-3 py-2 mb-3">
-                                                <CheckCircle className="w-3.5 h-3.5" />
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-teal-700 bg-teal-50 border border-teal-200/80 rounded-lg px-2.5 py-1.5 font-medium ml-2">
+                                                <CheckCircle className="w-3.5 h-3.5 text-teal-600" />
                                                 <span>Доставлен — вы подтвердили получение</span>
                                                 {order.delivered_at && (
-                                                    <span className="ml-auto text-teal-500">{formatDate(order.delivered_at)}</span>
+                                                    <span className="ml-1 opacity-75">({formatDate(order.delivered_at)})</span>
                                                 )}
-                                            </div>
+                                            </span>
                                         )}
 
                                         {/* Edit window indicator (native MediLens orders only — ITIGRIS orders are read-only) */}
