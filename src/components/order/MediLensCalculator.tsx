@@ -525,13 +525,13 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                                             </button>
                                                         </div>
 
-                                                        {/* EMPIRICAL RECOMMENDATION TRAINED ON 231 NEW EYE PATIENTS */}
+                                                        {/* EMPIRICAL RECOMMENDATION FROM DR. AIGERIM SHORAEVA (NEW EYE) */}
                                                         {calc.empirical && (
                                                             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 shadow-sm relative">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <span className="text-xs font-black uppercase text-purple-800 tracking-wider flex items-center gap-1.5">
                                                                         <Sparkles className="w-4 h-4 text-purple-600 animate-pulse" />
-                                                                        Опыт New Eye (Обучен на 231 пациенте)
+                                                                        Рекомендация от Айгерим Шораевой (New Eye)
                                                                     </span>
                                                                     <span className="bg-purple-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full">
                                                                         {calc.empirical.similarityScore}% Совпадение
@@ -539,7 +539,7 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                                                 </div>
 
                                                                 <div className="text-xs text-gray-700 font-medium mb-3">
-                                                                    Аналогичный клинический случай: <span className="font-bold text-gray-900">Пациент {calc.empirical.matchedPatient.patientName}</span> (Flat K: {calc.empirical.matchedPatient.flatK.toFixed(2)} D, Steep K: {calc.empirical.matchedPatient.steepK.toFixed(2)} D)
+                                                                    Обучено на базе 231 пациента клиники New Eye | Аналогичный случай: <span className="font-bold text-gray-900">Пациент {calc.empirical.matchedPatient.patientName}</span> (Flat K: {calc.empirical.matchedPatient.flatK.toFixed(2)} D, Steep K: {calc.empirical.matchedPatient.steepK.toFixed(2)} D)
                                                                 </div>
 
                                                                 <div className="grid grid-cols-2 gap-2 mb-3">
