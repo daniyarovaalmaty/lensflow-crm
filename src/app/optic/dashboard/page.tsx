@@ -819,7 +819,7 @@ export default function OpticDashboard() {
                                                         <Zap className="w-3 h-3" /> СРОЧНО
                                                     </span>
                                                 )}
-                                                {(perms.canViewPayments || clinicPerms.canViewFinance) && (() => {
+                                                {!isItigris && (() => {
                                                     const ps = (order as any).payment_status || 'unpaid';
                                                     
                                                     if (perms.canChangePayments) {
@@ -1163,7 +1163,7 @@ export default function OpticDashboard() {
                                             </div>
                                         )}
 
-                                        {(perms.canViewPayments || clinicPerms.canViewFinance) && (
+                                        {!isItigris && (
                                             <div className="flex items-center gap-4 ml-auto">
                                                 <button
                                                     onClick={() => handlePrintInvoice(order)}
