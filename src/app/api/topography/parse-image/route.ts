@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Method 1: OpenAI GPT-4o-mini Vision API (Explicit OD / OS Eye Detection)
+        // Method 1: OpenAI GPT-4o-mini Vision API (Explicit OD / OS Eye Detection + em/KS Mapping)
         const apiKey = process.env.OPENAI_API_KEY;
         if (apiKey) {
             try {
@@ -49,15 +49,16 @@ export async function POST(req: NextRequest) {
                                         type: 'text',
                                         text: `You are an expert corneal topography OCR system. Analyze this topographer screen photo or printed report.
 
-CRITICAL STEP 1: Determine which eye is depicted on this photo:
+CRITICAL EYE DETECTION RULE:
 - Look for markers like "OD", "Right", "R", "Правый", "Пр" -> detectedEye: "OD"
 - Look for markers like "OS", "Left", "L", "Левый", "Лев" -> detectedEye: "OS"
 - If both eyes are shown -> detectedEye: "BOTH"
 
-CRITICAL STEP 2: Extract numeric values for the detected eye(s):
-- Flat K (Fk / K1 in Diopters D, 35.0-55.0. If given in mm like 7.94mm, convert to D: K = 337.5 / R)
-- Steep K (Ks / K2 in Diopters D, 35.0-55.0)
-- Flat Ex (eccentricity ex / e1 / e, range 0.20-0.85)
+CRITICAL PARAMETER MAPPING RULES:
+1. "em" or "Em" or "ex" or "e" on screen is ALWAYS Flat Ex (eccentricity, e.g. 0.52).
+2. "KS" or "Ks" or "K2" or "Kr" or "Steep" on screen is ALWAYS Steep K (in Diopters D, e.g. 43.75).
+3. "KM" or "Km" or "FK" or "Fk" or "K1" or "Flat" on screen is ALWAYS Flat K (in Diopters D, e.g. 42.50).
+- If K values are in mm (e.g. R1=7.94mm, R2=7.71mm), convert to D: K = 337.5 / R.
 
 Return STRICT RAW JSON only (no markdown, no codeblock):
 {
@@ -130,19 +131,22 @@ Return STRICT RAW JSON only (no markdown, no codeblock):
             return null;
         };
 
+        // Flat K
         const fkMatches = [...normalizedText.matchAll(/(?:Flat\s*K|Fk|Kf|Km|K1|Flat|SimK1|R1|r1|Флат|К1)[^\d]*(\d{1,2}\.\d{1,3})/gi)];
         if (fkMatches.length > 0) {
             const v = parseKVal(fkMatches[0][1]);
             if (v) targetEye.fk = v;
         }
 
-        const ksMatches = [...normalizedText.matchAll(/(?:Steep\s*K|Ks|Kr|K2|Steep|SimK2|R2|r2|Стип|К2)[^\d]*(\d{1,2}\.\d{1,3})/gi)];
+        // Steep K (KS)
+        const ksMatches = [...normalizedText.matchAll(/(?:Steep\s*K|KS|Ks|Kr|K2|Steep|SimK2|R2|r2|Стип|К2)[^\d]*(\d{1,2}\.\d{1,3})/gi)];
         if (ksMatches.length > 0) {
             const v = parseKVal(ksMatches[0][1]);
             if (v) targetEye.ks = v;
         }
 
-        const exMatches = [...normalizedText.matchAll(/(?:Ecc\s*flat|ex|e1|Em|Eccentricity|e_x|e\b|экс)[^\d]*(\d{1}\.\d{2,3})/gi)];
+        // Flat Ex (Em / em / ex)
+        const exMatches = [...normalizedText.matchAll(/(?:em|Em|Ecc\s*flat|ex|e1|Em|Eccentricity|e_x|e\b|экс)[^\d]*(\d{1}\.\d{2,3})/gi)];
         if (exMatches.length > 0) {
             const v = parseFloat(exMatches[0][1]);
             if (v >= 0.15 && v <= 0.95) targetEye.ex = v;
