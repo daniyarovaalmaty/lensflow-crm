@@ -22,6 +22,7 @@ interface EyeState {
     cyl: string;
     fk: string;
     ks: string;
+    tor: string; // Toricity / Peripheral Astigmatism
     ex: string;
     hvid: string;
 
@@ -36,6 +37,7 @@ const defaultEyeState: EyeState = {
     cyl: '',
     fk: '',
     ks: '',
+    tor: '',
     ex: '',
     hvid: '',
     fitAssessment: 'optimal',
@@ -113,13 +115,15 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
         const sph = parseFloat(state.sph) || 0;
         const cyl = parseFloat(state.cyl) || 0;
         const fk = parseFloat(state.fk);
-        const ks = parseFloat(state.ks) || fk;
+        const torVal = parseFloat(state.tor);
+        const tor = (!isNaN(torVal) && torVal > 0) ? torVal : undefined;
+        const ks = parseFloat(state.ks) || (tor !== undefined ? fk + tor : fk);
         const ex = parseFloat(state.ex);
         const hvid = parseFloat(state.hvid) || 11.6;
 
         if (isNaN(fk) || isNaN(ex)) return null;
 
-        const input: PatientEyeInput = { sph, cyl, fk, ks, ex, hvid };
+        const input: PatientEyeInput = { sph, cyl, fk, ks, tor, ex, hvid };
         const mountfordRes = calculateMountfordPrimary(input);
         const d50Recommendation = recommendD50TrialLens({ fk, ks, ex, hvid });
 
@@ -148,11 +152,13 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
     const osCalc = getEyeCalculation(osState);
 
     const applyLensToOrder = (eye: 'od' | 'os', lensSpec: TrialLensSpec, calcData: any) => {
+        const torVal = lensSpec.toricity === 'T0.0' ? null : (lensSpec.toricityVal ? String(lensSpec.toricityVal) : String(calcData.mountford.cornealAstigmatism || 1.0));
         const payload = {
             characteristic: lensSpec.toricity === 'T0.0' ? 'spherical' : 'toric',
             base_curve: String(lensSpec.fk),
             target_power: String(calcData.mountford.spheroEquivalent),
             toricity: lensSpec.toricity,
+            tor: torVal,
             diameter: String(lensSpec.dia),
             eccentricity: String(lensSpec.ex),
             trial_code: lensSpec.code,
@@ -171,6 +177,7 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
             base_curve: String(adj.adjustedFk),
             target_power: String(adj.adjustedTargetPower),
             toricity: tor,
+            tor: tor === 'T0.0' ? null : String(calcData.d50.primaryLens.toricityVal || 1.0),
             diameter: String(adj.adjustedDia),
             eccentricity: String(adj.adjustedEx),
         };
@@ -342,6 +349,17 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                                             onChange={e => handleInputChange(eye, 'ks', e.target.value)}
                                                             className="input text-sm h-9"
                                                             placeholder="43.75"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-xs font-bold text-violet-600">Tor (Периф. астигм.)</label>
+                                                        <input
+                                                            type="number"
+                                                            step="any"
+                                                            value={state.tor}
+                                                            onChange={e => handleInputChange(eye, 'tor', e.target.value)}
+                                                            className="input border-violet-300 focus:border-violet-600 text-sm h-9 font-semibold"
+                                                            placeholder="1.68"
                                                         />
                                                     </div>
                                                     <div>

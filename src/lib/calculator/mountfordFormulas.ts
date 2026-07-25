@@ -7,7 +7,8 @@ export interface PatientEyeInput {
     sph: number;  // Sphere (D)
     cyl: number;  // Cylinder (D)
     fk: number;   // Flat Keratometry / Flat K (D)
-    ks: number;   // Steep Keratometry / Steep K (D)
+    ks?: number;  // Steep Keratometry / Steep K (D)
+    tor?: number; // Toricity / Peripheral Astigmatism ΔK (D)
     ex: number;   // Flat Eccentricity (e_x)
     ey?: number;  // Steep Eccentricity (e_y)
     hvid: number; // Corneal diameter / White-to-White (mm)
@@ -15,7 +16,7 @@ export interface PatientEyeInput {
 
 export interface MountfordCalculatedResult {
     spheroEquivalent: number; // SE = Sph + Cyl / 2 (D)
-    cornealAstigmatism: number; // ΔK = Ks - Fk (D)
+    cornealAstigmatism: number; // ΔK = Ks - Fk or Tor (D)
     recommendedToricity: 'T0.0' | 'T1.0' | 'T1.5' | 'T2.0';
     recommendedToricityValue: number; // 0.0, 1.0, 1.5, 2.0
     targetDiameter: number; // DIA = HVID - 1.0 (mm)
@@ -70,10 +71,12 @@ export function calculateBozr(fk: number, se: number, compressionFactor: number 
 }
 
 /**
- * Evaluates Toricity Step based on Corneal Astigmatism ΔK = Ks - Fk
+ * Evaluates Toricity Step based on Corneal Astigmatism ΔK = Ks - Fk or direct Tor
  */
-export function calculateToricity(ks: number, fk: number): { toricity: 'T0.0' | 'T1.0' | 'T1.5' | 'T2.0'; value: number; type: 'spherical' | 'toric' } {
-    const deltaK = Math.max(0, Math.round((ks - fk) * 100) / 100);
+export function calculateToricity(ks: number, fk: number, torInput?: number): { toricity: 'T0.0' | 'T1.0' | 'T1.5' | 'T2.0'; value: number; type: 'spherical' | 'toric' } {
+    const deltaK = (torInput !== undefined && !isNaN(torInput) && torInput > 0)
+        ? Math.round(torInput * 100) / 100
+        : Math.max(0, Math.round((ks - fk) * 100) / 100);
 
     if (deltaK < 1.25) {
         return { toricity: 'T0.0', value: 0.0, type: 'spherical' };
@@ -91,8 +94,12 @@ export function calculateToricity(ks: number, fk: number): { toricity: 'T0.0' | 
  */
 export function calculateMountfordPrimary(input: PatientEyeInput): MountfordCalculatedResult {
     const se = calculateSpheroEquivalent(input.sph, input.cyl);
-    const deltaK = Math.max(0, Math.round((input.ks - input.fk) * 100) / 100);
-    const torRes = calculateToricity(input.ks, input.fk);
+    const effectiveKs = (input.ks !== undefined && !isNaN(input.ks)) ? input.ks : (input.fk + (input.tor || 0));
+    const deltaK = (input.tor !== undefined && !isNaN(input.tor) && input.tor > 0)
+        ? Math.round(input.tor * 100) / 100
+        : Math.max(0, Math.round((effectiveKs - input.fk) * 100) / 100);
+
+    const torRes = calculateToricity(effectiveKs, input.fk, input.tor);
     const dia = Math.round(Math.max(9.5, Math.min(11.5, input.hvid - 1.0)) * 10) / 10;
     const bozr = calculateBozr(input.fk, se);
     const sagMm = calculateSagCornea(input.fk, input.ex, input.hvid);
