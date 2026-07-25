@@ -50,12 +50,62 @@ export async function parseTopographerFile(file: File): Promise<ParsedTopography
 }
 
 /**
+ * Fast client-side image resizing & compression to max 1200px width (~80KB)
+ */
+export async function compressImageForOcr(file: File): Promise<Blob> {
+    return new Promise((resolve) => {
+        if (typeof window === 'undefined' || !file.type.startsWith('image/')) return resolve(file);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 1200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width = Math.round((width * MAX_HEIGHT) / height);
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return resolve(file);
+
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob(
+                    (blob) => resolve(blob || file),
+                    'image/jpeg',
+                    0.80
+                );
+            };
+            img.onerror = () => resolve(file);
+            img.src = e.target?.result as string;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+}
+
+/**
  * Sends photo/image to Server OCR API Route `/api/topography/parse-image`
  */
 export async function parseTopographyImageApi(file: File): Promise<ParsedTopographyData> {
     try {
+        const compressedBlob = await compressImageForOcr(file);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', compressedBlob, file.name || 'topography.jpg');
 
         const res = await fetch('/api/topography/parse-image', {
             method: 'POST',

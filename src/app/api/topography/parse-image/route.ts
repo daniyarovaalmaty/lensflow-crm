@@ -13,8 +13,11 @@ export async function POST(req: NextRequest) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
-        // Perform OCR on image buffer
-        const worker = await createWorker('rus+eng');
+        // Perform fast OCR on image buffer
+        const worker = await createWorker('eng');
+        await worker.setParameters({
+            tessedit_char_whitelist: '0123456789.,-+abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:;=/() ',
+        });
         const ret = await worker.recognize(buffer);
         await worker.terminate();
 
