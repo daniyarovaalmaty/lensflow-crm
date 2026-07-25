@@ -9,6 +9,10 @@ export interface PatientEyeInput {
     fk: number;   // Flat Keratometry / Flat K (D)
     ks?: number;  // Steep Keratometry / Steep K (D)
     tor?: number; // Toricity / Peripheral Astigmatism ΔK (D)
+    v1?: number;  // Top vertical peripheral value
+    v2?: number;  // Bottom vertical peripheral value
+    h1?: number;  // Left horizontal peripheral value
+    h2?: number;  // Right horizontal peripheral value
     ex: number;   // Flat Eccentricity (e_x)
     ey?: number;  // Steep Eccentricity (e_y)
     hvid: number; // Corneal diameter / White-to-White (mm)
@@ -25,6 +29,22 @@ export interface MountfordCalculatedResult {
     sagCorneaMm: number; // Sagittal height of cornea in mm
     sagCorneaMicrons: number; // Sagittal height of cornea in μm
     recommendedType: 'spherical' | 'toric';
+    computedTorDetail?: {
+        vAvg: number;
+        hAvg: number;
+        tor: number;
+    };
+}
+
+/**
+ * Calculates TOR from peripheral meridian values:
+ * TOR = ((V1 + V2) / 2) - ((H1 + H2) / 2)
+ */
+export function calculateTorFromPeriphery(v1: number, v2: number, h1: number, h2: number): { vAvg: number; hAvg: number; tor: number } {
+    const vAvg = Math.round(((v1 + v2) / 2) * 100) / 100;
+    const hAvg = Math.round(((h1 + h2) / 2) * 100) / 100;
+    const tor = Math.round((vAvg - hAvg) * 100) / 100;
+    return { vAvg, hAvg, tor };
 }
 
 /**
@@ -94,12 +114,26 @@ export function calculateToricity(ks: number, fk: number, torInput?: number): { 
  */
 export function calculateMountfordPrimary(input: PatientEyeInput): MountfordCalculatedResult {
     const se = calculateSpheroEquivalent(input.sph, input.cyl);
-    const effectiveKs = (input.ks !== undefined && !isNaN(input.ks)) ? input.ks : (input.fk + (input.tor || 0));
-    const deltaK = (input.tor !== undefined && !isNaN(input.tor) && input.tor > 0)
-        ? Math.round(input.tor * 100) / 100
+
+    let computedTorDetail: { vAvg: number; hAvg: number; tor: number } | undefined;
+    let effectiveTor = input.tor;
+
+    if (input.v1 !== undefined && !isNaN(input.v1) &&
+        input.v2 !== undefined && !isNaN(input.v2) &&
+        input.h1 !== undefined && !isNaN(input.h1) &&
+        input.h2 !== undefined && !isNaN(input.h2)) {
+        computedTorDetail = calculateTorFromPeriphery(input.v1, input.v2, input.h1, input.h2);
+        if (effectiveTor === undefined || isNaN(effectiveTor)) {
+            effectiveTor = computedTorDetail.tor;
+        }
+    }
+
+    const effectiveKs = (input.ks !== undefined && !isNaN(input.ks)) ? input.ks : (input.fk + (effectiveTor || 0));
+    const deltaK = (effectiveTor !== undefined && !isNaN(effectiveTor) && effectiveTor > 0)
+        ? Math.round(effectiveTor * 100) / 100
         : Math.max(0, Math.round((effectiveKs - input.fk) * 100) / 100);
 
-    const torRes = calculateToricity(effectiveKs, input.fk, input.tor);
+    const torRes = calculateToricity(effectiveKs, input.fk, effectiveTor);
     const dia = Math.round(Math.max(9.5, Math.min(11.5, input.hvid - 1.0)) * 10) / 10;
     const bozr = calculateBozr(input.fk, se);
     const sagMm = calculateSagCornea(input.fk, input.ex, input.hvid);
@@ -115,6 +149,7 @@ export function calculateMountfordPrimary(input: PatientEyeInput): MountfordCalc
         sagCorneaMm: sagMm,
         sagCorneaMicrons: Math.round(sagMm * 1000),
         recommendedType: torRes.type,
+        computedTorDetail,
     };
 }
 

@@ -22,7 +22,11 @@ interface EyeState {
     cyl: string;
     fk: string;
     ks: string;
-    tor: string; // Toricity / Peripheral Astigmatism
+    tor: string; // Direct TOR or computed TOR
+    v1: string;  // Vertical Top
+    v2: string;  // Vertical Bottom
+    h1: string;  // Horizontal Left
+    h2: string;  // Horizontal Right
     ex: string;
     hvid: string;
 
@@ -38,6 +42,10 @@ const defaultEyeState: EyeState = {
     fk: '',
     ks: '',
     tor: '',
+    v1: '',
+    v2: '',
+    h1: '',
+    h2: '',
     ex: '',
     hvid: '',
     fitAssessment: 'optimal',
@@ -117,15 +125,27 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
         const fk = parseFloat(state.fk);
         const torVal = parseFloat(state.tor);
         const tor = (!isNaN(torVal) && torVal > 0) ? torVal : undefined;
+        const v1 = parseFloat(state.v1);
+        const v2 = parseFloat(state.v2);
+        const h1 = parseFloat(state.h1);
+        const h2 = parseFloat(state.h2);
+
         const ks = parseFloat(state.ks) || (tor !== undefined ? fk + tor : fk);
         const ex = parseFloat(state.ex);
         const hvid = parseFloat(state.hvid) || 11.6;
 
         if (isNaN(fk) || isNaN(ex)) return null;
 
-        const input: PatientEyeInput = { sph, cyl, fk, ks, tor, ex, hvid };
+        const input: PatientEyeInput = {
+            sph, cyl, fk, ks, tor,
+            v1: !isNaN(v1) ? v1 : undefined,
+            v2: !isNaN(v2) ? v2 : undefined,
+            h1: !isNaN(h1) ? h1 : undefined,
+            h2: !isNaN(h2) ? h2 : undefined,
+            ex, hvid
+        };
         const mountfordRes = calculateMountfordPrimary(input);
-        const d50Recommendation = recommendD50TrialLens({ fk, ks, ex, hvid });
+        const d50Recommendation = recommendD50TrialLens({ fk, ks: mountfordRes.cornealAstigmatism + fk, ex, hvid });
 
         // Evaluate fit adjustment if fitAssessment != optimal or overrefraction entered
         const overSph = parseFloat(state.overSph) || 0;
@@ -385,6 +405,75 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                                                         />
                                                     </div>
                                                 </div>
+
+                                                 {/* 4-Point Peripheral Meridian TOR Calculator */}
+                                                 <div className="mb-5 bg-violet-50/50 border border-violet-100 rounded-xl p-3">
+                                                     <div className="flex items-center justify-between mb-2">
+                                                         <span className="text-xs font-bold text-violet-900 flex items-center gap-1">
+                                                             <Calculator className="w-3.5 h-3.5 text-violet-600" />
+                                                             Расчет TOR по крайним точкам роговицы (Меридианы)
+                                                         </span>
+                                                         <span className="text-[10px] text-violet-600 font-semibold bg-violet-100 px-2 py-0.5 rounded-full">
+                                                             ((V1+V2)/2) - ((H1+H2)/2)
+                                                         </span>
+                                                     </div>
+
+                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                                                         <div>
+                                                             <label className="text-[11px] font-medium text-gray-600">⬆️ Верт. Верх (V1)</label>
+                                                             <input
+                                                                 type="number"
+                                                                 step="any"
+                                                                 value={state.v1}
+                                                                 onChange={e => handleInputChange(eye, 'v1', e.target.value)}
+                                                                 className="input text-xs h-8 bg-white border-violet-200"
+                                                                 placeholder="43.50"
+                                                             />
+                                                         </div>
+                                                         <div>
+                                                             <label className="text-[11px] font-medium text-gray-600">⬇️ Верт. Низ (V2)</label>
+                                                             <input
+                                                                 type="number"
+                                                                 step="any"
+                                                                 value={state.v2}
+                                                                 onChange={e => handleInputChange(eye, 'v2', e.target.value)}
+                                                                 className="input text-xs h-8 bg-white border-violet-200"
+                                                                 placeholder="43.70"
+                                                             />
+                                                         </div>
+                                                         <div>
+                                                             <label className="text-[11px] font-medium text-gray-600">⬅️ Гориз. Лево (H1)</label>
+                                                             <input
+                                                                 type="number"
+                                                                 step="any"
+                                                                 value={state.h1}
+                                                                 onChange={e => handleInputChange(eye, 'h1', e.target.value)}
+                                                                 className="input text-xs h-8 bg-white border-violet-200"
+                                                                 placeholder="42.00"
+                                                             />
+                                                         </div>
+                                                         <div>
+                                                             <label className="text-[11px] font-medium text-gray-600">➡️ Гориз. Право (H2)</label>
+                                                             <input
+                                                                 type="number"
+                                                                 step="any"
+                                                                 value={state.h2}
+                                                                 onChange={e => handleInputChange(eye, 'h2', e.target.value)}
+                                                                 className="input text-xs h-8 bg-white border-violet-200"
+                                                                 placeholder="41.80"
+                                                             />
+                                                         </div>
+                                                     </div>
+
+                                                     {calc?.mountford.computedTorDetail && (
+                                                         <div className="text-xs bg-white rounded-lg p-2 border border-violet-200 text-violet-900 font-bold flex items-center justify-between">
+                                                             <span>Верт. ср: {calc.mountford.computedTorDetail.vAvg.toFixed(2)} D | Гориз. ср: {calc.mountford.computedTorDetail.hAvg.toFixed(2)} D</span>
+                                                             <span className="bg-violet-600 text-white px-2 py-0.5 rounded text-xs font-black">
+                                                                 TOR = {calc.mountford.computedTorDetail.tor.toFixed(2)} D
+                                                             </span>
+                                                         </div>
+                                                     )}
+                                                 </div>
 
                                                 {/* Calculated Results & D50 Matrix Recommendation */}
                                                 {calc ? (
