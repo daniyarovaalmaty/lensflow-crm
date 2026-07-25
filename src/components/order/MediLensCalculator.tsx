@@ -84,7 +84,9 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
             const parsed = await parseTopographerFile(file);
             let importedCount = 0;
 
-            if (parsed.od && (parsed.od.fk || parsed.od.ex)) {
+            const detectedEye = (parsed as any).detectedEye;
+
+            if ((!detectedEye || detectedEye === 'OD' || detectedEye === 'BOTH') && parsed.od && (parsed.od.fk || parsed.od.ex)) {
                 setOdState(prev => ({
                     ...prev,
                     fk: parsed.od?.fk ? String(parsed.od.fk) : prev.fk,
@@ -94,7 +96,7 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                 importedCount++;
             }
 
-            if (parsed.os && (parsed.os.fk || parsed.os.ex)) {
+            if ((!detectedEye || detectedEye === 'OS' || detectedEye === 'BOTH') && parsed.os && (parsed.os.fk || parsed.os.ex)) {
                 setOsState(prev => ({
                     ...prev,
                     fk: parsed.os?.fk ? String(parsed.os.fk) : prev.fk,

@@ -217,20 +217,6 @@ export function parseTopographyText(text: string, fileName: string): ParsedTopog
         if (eFloats.length > 0) od.ex = eFloats[0];
     }
 
-    // Fallback for HVID (10.4 - 13.0)
-    if (!od.hvid) {
-        const hvidFloats = (normalizedText.match(/\b(1[0-2]\.[0-9]{1,2})\b/g) || [])
-            .map(v => parseFloat(v))
-            .filter(v => v >= 10.4 && v <= 13.0);
-        if (hvidFloats.length > 0) od.hvid = hvidFloats[0];
-    }
-
-    // Auto mirror OD to OS
-    if (!os.fk && od.fk) os.fk = od.fk;
-    if (!os.ks && od.ks) os.ks = od.ks;
-    if (!os.ex && od.ex) os.ex = od.ex;
-    if (!os.hvid && od.hvid) os.hvid = od.hvid;
-
     return {
         od,
         os,
