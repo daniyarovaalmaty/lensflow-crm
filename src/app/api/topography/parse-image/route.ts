@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Perform fast OCR on image buffer
-        const worker = await createWorker('eng+rus');
+        // Perform fast OCR on image buffer using lightweight 'eng' worker
+        const worker = await createWorker('eng');
         const ret = await worker.recognize(buffer);
         await worker.terminate();
 
