@@ -1,0 +1,4630 @@
+
+
+=== PAGE 71 ===
+
+70 ORTHOKERATOLOGY
+lens designs and one another, but also why the
+results can differ depending on the design used.
+A complete understanding of all these factors is
+required in order to produce effective outcomes
+with orthokeratology.
+BASIC LENS FITTING PRINCIPLES
+nlill
+The traditional approach to the fitting and design
+of rigid contact lenses is to choose the BOZR
+based on its desired relationship to the flattest
+corneal meridian (K). This led to the terminology
+of "flat," "on-K," and "steep" as a means of de­
+scribing the actual fitting, and eventually became
+the commonly accepted description of the fitting
+philosophy.
+However, standard lens designs do not have
+a steeper BPRj (commonly referred to as the
+reverse curve or RC), as is the case with all forms
+of reverse geometry lenses. The addition of the
+RC curve to the lens design radically alters the
+complexity of the fitting process, as the corneal
+curvature changes induced are dependent not
+only on the accuracyof the lens fit, but also on the
+BOZR/RC combinations used. The RC forms
+the tear reservoir (TR) which radically alters the
+efficacy of the procedure, as will be described
+later.
+Therefore, the simple "flatter-than-K" philo­
+sophy used when fitting standard contour lenses
+has severe limitations when applied to reverse
+geometry lenses, and a more accurate approach is
+required.
+SAG PHILOSOPHY
+Any description of lens design and fitting must
+first start with a definition of the shape of
+the cornea that the lens is expected to fit. As
+described in Chapter 2, the corneal shape is most
+commonly described in terms of a prolate ellipse
+in that the apical radius (Ro) flattens in curvature
+at a relatively constant rate from the center to the
+periphery of the cornea (Fig. 4.1). The rate of
+flattening is termed the eccentricity value (e),
+with the mean e-value being 0.50. Population­
+based stu dies (Kieley et al 1982, Guillon et al
+1986) have shown that approximately 95% of
+corneas have e-values in the range of 0.30-0.70.
+Figure 4.1 Schematicshowing differencesbetween
+spheroidal,prolate,and oblateellipsoidalsurfaces.The
+apical radius (RQ) is theradius of curvatureat the center
+of the surface.For prolatesurfaces,the radius of
+curvatureincreases(flattens)from the centerto the
+periphery,whereasthe radius decreases(steepens)in the
+case of an oblate.The radius remainsconstantfor
+sphericalsurfaces.
+The same studies also showed that over 90% of
+eyes exhibited a prolate asphericity, with the
+remaining eyes being either spherical (e = 0) or
+oblate, in that the corneal radius steepens as the
+peripheral cornea is approached. .
+However, the use of eccentricity as a descnptor
+of corneal shape is limited by an inability properly
+to describe oblate surfaces (Lindsay et al 1997).
+The other descriptors used are shape factor (p) or
+asphericity (Q), which are related to e by the
+following formulae:
+p = (1 - (2 )
+where p is shape factor and
+Q=-e 2
+where Q is asphericity.
+The main attraction for using Q as a definition
+is that it can describe either prolate (positive
+Q-value) or oblate (negative Q-value) corneal
+shapes. Most of the currently available :ideo­
+keratoscopes give both e and Q-values, With the
+former being quite acceptable when used to cal­
+culate corneal sag and lens design. Q, however, is
+preferred when describing corneal shape for
+scientific analysis. The common values for normal
+prolate corneal shapes are:
+e = 0 (spherical) or e > 0 and < 1 (prolate)
+p = 1 (spherical) or p < 1 and> 0 (prolate)
+
+
+=== PAGE 72 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 71
+Q= 0 (spherical) or Q< and> 0 (positive values
+are prolate, and negative values oblate).
+Keratometry measures the axial radius of the
+cornea at a distance of approximately 1.50 mm
+from the apex. The flat-K reading is the mean
+value of the two radii along that meridian, with
+the same average radius value for the steeper
+meridian, usually set at 90° to the flattest meri­
+dian. The cornea is assumed to be spherical (e= 0)
+for the derivation of keratometry values. K read­
+ings, therefore, do not supply information as to
+the actual shape and asphericity of the cornea.
+Methods for deriving Ro and e-values from
+keratometry have been developed by Wilms &
+Rabbetts (1977), Oouthwaite (1991), and Lam &
+Oouthwaite (1994). These techniques require
+the use of either a two-position keratometer
+(Rodenstock C-BES; Wilms & Rabbetts 1977) or a
+modified one-position keratometer (Lam &
+Oouthwaite 1994). The keratometry readings,
+both central and peripheral, are fed into a specific
+computer program in order to convert the K read­
+ings into Ro and e-values that are then used to
+calculate the desired lens BOZR.
+As stated above, the common traditional fitting
+philosophies are based on describing the BOZR
+as a function of its relationship to the flat
+keratometry (Kf ). This method works quite well
+for small total diameter (TO) lenses (9.00 mm and
+less) and relatively normal eye shapes. However,
+the accuracy of the lens fit decreases as the TO
+increases or if the cornea exhibits a steep or flat Ro
+associated with either a high or low eccentricity.
+If the cornea is steep centrally with a high eccen­
+tricity, then the lens designed purely on kera­
+tometry will result in a BOZR that is usually too
+steep. Similarly, if the cornea is relatively flat cen­
+trally with a low eccentricity, the indicated BOZR
+from keratometry is usually too flat (see later).
+The problems associated with these fitting
+inconsistencies were investigated by Bibby (1979),
+Atkinson (1984, 1985), and Guillon et al (1983)
+and the concepts of tear layer thickness and
+cornea and lens sags evolved. Put simply, sag­
+based fitting philosophy describes a situation
+where the sagittal height of the contact lens is
+equal to the sag of the cornea plus an allowance
+for tear layer thickness (TLT) at the apex of the
+Figure 4.2 The conceptof sag fitting is that the lens
+andcornea come into contact at the inneredge of the
+first back peripheraldiameter(BPD,).The lens sag is
+thereforethe corneal sag at BPD1 plus the apical tear
+layerthickness(TLT). BOZO, back optic zone diameter;
+AEC, axial edge clearance;AEL, axial edge lift. From
+Phillips(1997) with permission.
+cornea over the common chord at the point of
+contact between the two (Fig. 4.2). The lens is
+fitted to the flattest corneal meridian. This gives
+the optimal BOZR when the corneal asphericity is
+taken into account, especially in the presence of
+astigmatism (Young 1998).
+The lens is assumed to touch the cornea at the
+junction of the BOZR and BPR,. An alternative
+is that BrR, is in alignment with the corneal
+surface, thereby creating a better distribution of
+pressure at the point of contact (see later). The
+thickness of the TLT is deepest at the corneal apex
+and reduces to zero at the BOZO !BPO, interface
+(junction of the optic zone and first peripheral
+curve).
+The existence of a tear layer between the cor­
+neal surface and the posterior surface of the lens is
+essential for three reasons: firstly, for the purpose
+of promoting effective tear exchange for the main­
+tenance of corneal physiology and secondly, the
+variations in the positive and negative fluid forces
+help control lens movement and centration.
+Finally, a tear layer between the lens and cornea is
+essential for preventing damage to the epithelium.
+The ideal TLT for contour-designed lenses is
+assumed to be approximately 15-25 J.1m.
+Guillon & Sammons (1994) also point out that
+the alignment of the lens to the peripheral area of
+the cornea is of prime importance in maintaining
+the correct balance of tear exchange, lens move­
+ment, centration, and fluid dynamics. For this
+reason, the design of lenses fitted according to the
+sag philosophy should be primarily based on
+
+
+=== PAGE 73 ===
+
+72 ORTHOKERATOLOGY
+calculations derived from corneal shape, with the
+central parameters of the lens constructed from a
+correct alignment or area of touch with the
+peripheral cornea. The addition of the final
+peripheral curve has little bearing on the fitting
+behavior of the lens, but is essential for providing
+the Venturi effects that promote proper tear circu­
+lation around the edge of the lens.
+The normal method of evaluating the fit of a
+rigid contact lens is by assessing the thickness of
+the postlens tear film thickness by the use of
+sodium fluorescein. Depending on both the con­
+centration of fluorescein used and the degree of
+tear mixing present, the generally agreed min­
+imum thickness of the postlens tear layer required
+to render fluorescein visible is in the order of
+15-20 I-Lm (Young 1988). This is of major impor­
+tance when interpreting fluorescein patterns of
+lenses with central TLTs of 20 I-Lm or less, and
+particularly reverse geometry lenses.
+FORMULAE USED IN LENS
+CONSTRUCTION
+The formula described above states:
+Lens sag = Corneal sag + TLT (I-Lm) over the
+chord of common contact between
+the two surfaces.
+The sagittal height of the cornea is given by:
+z = Ro- -JRoz - yZ p/ p
+where z = corneal sag, R o= apical radius, y = half­
+chord and p = shape factor or 1- eZ or 1- Q.
+The sag of the cornea is therefore dependent
+not only on the apical radius and eccentricity
+values, but also the chord over which the sag is
+measured.
+The calculation for spherical multicurve lenses
+is more complex, with the sag of all component
+curves needing to be added to the sag of the
+BOZR over the back optic zone diameter (BOZO).
+The basic formula for a tricurve lens is:
+p = Xo + Xj +Xz
+where Xo = primary sag of the BOZR at the BOZO,
+Xl = sag of BPR j at the BPO j - sag of BPR j at the
+BOZO and Xz = sag of BPR2 at the TO - sag BPRz
+at the BPO,.
+The same general principles also apply to lenses
+of greater than three curves. The final formula is:
+Sag = Rj + -J[RjZ- (OJ/2)2] + !(Rz)-
+-J[Rl- (Oz/2)Z]- Rz- -JRzz - (OJ /2)2} +
+IR3 - -JRi - (03 / 2)Z}-IR 3 -
+-JRi - (Oz/ 2)Z}
+where Rj = BOZR, OJ = BOZO, R; = BPRlt Oz =
+BPOz, R3 = BPR3, and 0 3 = BP0 3.
+A useful extension to this form of mathemati­
+cal construction is to calculate the sags of the lens
+and cornea over small (0.10 mm) chord incre­
+ments and subtract the corneal sag from the lens
+sag. These values are then represented on the
+y-axis of a graph. The r-axis represents the half­
+chord lengths from the center of the cornea to the
+edge of the lens. Such a graph then represents
+the tear layer profile of the lens, or, put more
+simply, the shape of the tear layer under the lens.
+Figure 4.3A represents the tear layer profile of a
+Figure 4.3 (A) The tear layer profileof a contour lens
+showing 20 I-Lm of apical clearance and corneal contact
+at the junction of backoptic zone diameter and first back
+peripheralradius. Notethat there is a relativelysharp
+pointof contact between the two surfaces.(B) The same
+lens as shown inFigure4.3 (A), but with a change in the
+radiusof curvature of first backperipheralradiussuch
+that the lens makes contact with the cornealsurface in
+alignment withBPR1•
+
+
+=== PAGE 74 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 73
+BOZR, back opticzone radius.
+BOZR for the actual corneal shape is achieved. If
+the patient had a low-eccentricity cornea, then the
+keratometry-based choice of a BOZR of 7.85
+would have led to a flat-fitting lens. Alternatively,
+the use of the 7.85 mm BOZR lens (fitted 0.05 mm
+flatter than Kf) on a cornea with an eccentricity of
+0.70 would result in the lens being relatively steep
+compared to the calculated BOZR of 7.95 mm
+(Young 1998).
+Chan et al (1998) compared the accuracy of the
+fit of rigid gas-permeable (RGP) lenses by fluores­
+cein analysis with two methods of determining
+the BOZR. In the first the BOZR was determined
+by using the simulated keratometric readings and
+in the second it was calculated from the apical
+radius and eccentricity values given by the video­
+keratoscope. The definitive method of assessment
+was the masked choice of the correct BOZR
+based purely on fluorescein fit analysis. The
+mean differences in BOZR between the simulated
+keratometry values and the correct BOZR was
+0.11 ± 0.05 mm, and for the fluorescein assess­
+ment and correct BOZR -0.01 ± 0.04 mm. The
+authors concluded that knowledge of the eccen­
+tricity from videokeratoscopy provided a more
+accurate prediction of the BOZR! cornea relation­
+ship than that derived from central keratometry
+measurements.
+As previously stated, fluorescein is rendered
+visible when mixed in the postlens tear film at a
+thickness of approximately 20 urn, By drawing
+a line across a tear layer profile graph at the
+20 urn point on the y-axis, the probable zones of
+fluorescein visibility can be made evident. For
+contour lens with the point of contact between
+the lens and the corneal surface at the edge of the
+BOZD. Figure 4.3B, on the other hand, represents
+a modification of the parameters of the previous
+lens to allow for the common point of contact to
+lie along the BPRj at the first back peripheral
+diameter (BPDj ) .
+These lenses exhibit a central TLT of 20 p.m,
+tapering to corneal contact at the desired point.
+For general lens designs, the TLT graph is
+assumed to show the profile along the flattest
+corneal meridian (Young 1998).
+Manipulation of the lens design and fit can
+then be made by altering the lens parameters
+either to increase or decrease the central TLT or
+change the axial edge clearance to the desired
+amount. Decreasing the central TLT effectively
+involves flattening the BOZR or decreasing the
+BOZD, leading to a flatter-fitting lens. Conversely,
+increasing the central TLT involves steepening
+the BOZR or increasing the BOZD, leading to a
+tighter fit. As a general rule, changes of 0.05 mm
+to the BOZR lead to an alteration of 10 urn to
+the central TLT if the BOZD is kept constant.
+Similarly, changes of 0.5 mm to the BOZD will
+result in a change of approximately 5 urn in the
+TLTif the BOZR is kept constant.
+By the use of lens design programs it is theo­
+retically possible to design lenses of any appro­
+priate combination of BOZR!BOZD to give the
+ideal tear layer profile at any lens diameter
+specified. This model of designing lenses based
+on the concept of an ideal tear layer profile forms
+the basis of most of the contact lens fitting
+modules in the currently available videokerato­
+scopes. The relative accuracy of the method can
+be shown by the following example.
+Assuming a cornea has an apical radius of
+7.80 mm, and the lens diameter is 9.60 mm with a
+BOZD of 8.30 mm, the indicated BOZR using
+keratometric values and the accepted rule of
+thumb of Kf + 0.05 mm would be approximately
+7.85 mm. However, if the same BOZD value is
+kept constant, and the eccentricity of the cornea is
+varied, then the calculated BOZR assuming a
+central TLT of 20 urn would be as shown in
+Table 4.1.
+Therefore, if the eccentricity is taken into
+account, a more accurate indication of the correct
+Table 4.1
+Eccentricity
+0.70
+0.60
+0.50
+0.40
+0.30
+0.20
+0.10
+0.0
+BOZR (mm)
+7.95
+7.90
+7.83
+7.78
+7.74
+7.71
+7.69
+7.69
+
+=== PAGE 75 ===
+
+74 ORTHOKERATOLOGY
+example, the TLT profile of the lenses shown in
+Figure 4.3 would indicate a light glow of fluores­
+cein centrally, with a large mid-peripheral band
+of apparent alignment with the cornea until the
+TLT increased above the 20 urn level in the edge
+lift area. This concept of analyzing the tear layer
+profile and TLT takes on major importance when
+assessing the design and fit of reverse geometry
+lenses.
+In conclusion, the design of lenses based on the
+correct sagittal relationship between the lens and
+the actual corneal shape described in terms of
+apical radius and eccentricity results in a more
+accurate and dependable relationship between
+the BOZR and the corneal shape. The use of tear
+layer profile graphs is an excellent method of
+visualizing the fit of the lens on the eye and the
+likely appearance of the fluorescein pattern.
+However, as stated previously, the construction of
+the peripheral curves also plays a very important
+part in the overall design of the lens and its
+behavior on the eye.
+PERIPHERALCURVE DESIGN
+The second curve of a tricurve lens design has
+two major functions. It can be used either as
+a "blend" between the BOZR and the point of
+contact with the peripheral cornea, or if the
+primary design criterion is to have the BOZR
+align with the peripheral cornea, the secondary
+curve becomes part of the construction of the
+edge lift of the lens. As can be seen in Figure 4.3A,
+the point of contact of the BOZR with the corneal
+surface appears to be just that - a pointof contact.
+Such apparently sharp points apply relatively
+high degrees of pressure over a small area, and
+can result in discomfort and adverse effects on
+lens centration.
+Alternatively, the area of contact shown in
+Figure 4.3B shows a more even alignment with
+the peripheral cornea, thus distributing the pres­
+sure of contact over a larger area. The differences
+between the two types of peripheral contact
+were described in mechanical terms by Sammons
+(1984), who used the terms "conformal" and
+"counterforrnal" to describe the pressure effects of
+the two. Conformal mid-peripheral curves meet
+the corneal surface such that the two curves
+Figure 4.4 The differencebetweena conformaland
+counterformaledge design.The conformalsurface has the
+curve orientedin the same direction asthe common
+tangent,whereasthe counterformalsurfacehasthe curve
+in the oppositedirection.From Guillon& Sammons
+(1994) with permission.
+(BOZR and BPR1) are similarly oriented to their
+common tangent. Counterformal mid-peripheral
+curves arise when the two curves lie in the oppo­
+site orientation to their common tangent (Fig. 4.4).
+The major difference between the two lies in
+the degree of concentrated pressure exerted on
+the peripheral cornea. Conformal curves are in
+closer alignment with the peripheral cornea and
+therefore spread the pressure over a larger area.
+Counterformal curves result in a point of heavy
+pressure over a small area.
+Thomas (1967)was the first to consider the pres­
+sure distribution of the peripheral area of
+the contact lens and introduced the concept of
+tangential peripheral "curves" as a means of con­
+trolling both the peripheral pressure and of max­
+imizing lens centration. Tangent peripheries are not
+curves as such, but more an optical flat that meets
+the peripheral cornea at an approximate tangent to
+the surface at the point of contact (Fig. 4.5). Other
+conformal peripheral curves commonly used are
+either aspheric or parabolic (Guillen et al 1983).
+The major advantage of conformal peripheral
+curves over counterformal is enhanced centration
+and better pressure distribution at the lens / cornea
+interface. The effect that these types of alignment
+mid-peripheries have on the overall sag calcula­
+tions must also be taken into account when con­
+structing tear layer profiles and determining
+central TLT, and will be dealt with in greater detail
+when discussing reverse geometry lenses.
+
+
+=== PAGE 76 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 75
+Figure 4.5 A tangent conformalperiphery.Notethat
+the "curve" is a straight line thatmeets the corneal
+surfaceat a tangent to the point ofcontact.This results
+in agradientof pressureacross the surface.
+The accurate fitting of rigid lenses is dependent
+on being able to design lenses based on the shape
+of the individual cornea to be fitted. Furthermore,
+the construction of the mid-peripheral curve plays
+a vital role in distributing the pressure at the point
+of contact between the two surfaces and in centra­
+tion control. The incorporation of the different lens
+variables into a tear layer profile graph allows for a
+better assessment of the lens design and also
+provides valuable information as to the likely
+fluorescein pattern. The importance of a clear
+understanding of these principles makes the intri­
+cate interrelationships of the variables in reverse
+geometry lens design easier to comprehend, and
+this is vital if a successful fitting is to occur.
+REVERSE GEOMETRY LENSES
+General backgroundand history
+Reverse geometry lenses differ from standard
+lens designs in that the BPR 1 is steeper than the
+BOZR. There are three basic designs of reverse
+geometry lenses, comprising three-, four- and
+five-zone lenses. It is the intention in this section
+to explain the differences in design and fitting
+methods using the sag philosophy. If a lens is to
+have an optimal fitting relationship to the cornea,
+the only method that is common to all designs is
+that the lens sag must be equal to the corneal sag
+over the common chord of contact between the
+two, plus an allowance for apical TLT. This rule
+applies whether there are three or 30 curves on
+the back surface of the lens.
+All orthokeratology lenses have "proprietary
+curves" that are used by the manufacturer to
+differentiate their design from all others. How­
+ever, as will be shown in the following sections,
+there are basic underlying principles that are
+inherent to all the different designs, with the
+major variation being the fitting philosophy or
+the assumptions made regarding corneal shape.
+The first patent for a reverse geometry lens
+was granted to Nick Siviglia in 1988. The lens was
+designed to fit postradial keratotomy and pene­
+trating keratoplasty cases. No reference to ortho­
+keratology appears in the patent documents. The
+lens had a nominal BOZO of 6.00 mm, with the
+reverse curve a nominal 1.50 0 steeper than
+the BOZR, and between 0.50 and 1.50 mm wide.
+The periphery of the lens was spherical. The
+patent has been assigned to Paragon as the basis
+for the CRT lens.
+Wlodyga and Stoyan are credited with the
+original design and fitting philosophy of reverse
+geometry lenses for use in orthokeratology in
+1986. The terminology "reverse geometry" was
+originally applied to the design as a means of
+differentiating between lenses where the second
+curve (BPR1) is steeper than the BOZR and stan­
+dard lens designs where the peripheral curves are
+flatter than the base curve (Winkler & Kame
+1995). Fontana (1972) has been credited by some
+with the invention of the lens with his "bifocal"
+orthokeratology lens.
+However, the description of the lens, which
+has a 6.00 mm BOZO with the BOZR 1.00 0
+flatter than the periphery of the lens (which is
+fitted "on-K"), seems to intimate that the central
+zone was actually a "recessed optic" which was
+cut into the lens after the peripheral curves were
+worked. It is worthwhile remembering that it has
+only been the introduction of computer numeric­
+controlled (CNC) lathes that has allowed for the
+manufacture of true reverse geometry lenses. This
+was not possible with the older single-axis lathes.
+The first patent for reverse geometry lenses for
+orthokeratology was granted to Stoyan.
+Three-zonelenses (ContexOK series)
+The description of three-zone fitting is based on
+the Contex lenses, but the same comments apply
+
+
+=== PAGE 77 ===
+
+76 ORTHOKERATOlOGY
+to all other three-zone lenses. The original con­
+cept of the lens was to avoid the chronic problems
+of induced with-the-rule astigmatism caused by
+the flat-fitting, poorly centering lenses that were
+commonplace with the traditional orthokera­
+tology techniques. This was to be achieved by
+using a steeper secondary curve in order to max­
+imize centration. However, an unforeseen effect
+was the apparent increase in both the degree of
+myopia reduction when compared to the older
+techniques and a reduction in the time taken to
+obtain the results (Wlodyga & Bryla 1989).
+In general, it was stated that the lenses caused
+"twice the reduction in half the time" and the term
+"accelerated orthokeratology" was applied to the
+process of fitting. The original design consisted
+of a 6.00 mm BOZO, 3.00 0 steeper secondary
+curve (the RC that forms the TR), an aspheric
+peripheral curve 0.50 mm wide and an overall TO
+of 9.60 mm, and was marketed under the name
+OK-3 (Contex, Sherman Oaks, CA). Wlodyga clin­
+ically assessed numerous lens design variations
+over the next few years, but the most commonly
+used lens remained the OK-3. By 1998, therange of
+lens parameters was expanded to include any
+combination of BOZOs from 6.00 to 8.00 mm in
+0.50-mm steps and RC curves of 1.00-15.00 0
+steeper than the BOZR in 1.00-0 increments, in
+both spherical and aspheric forms. The earlier OK
+series has been largely superseded by the four­
+and five-curve designs.
+Traditionalthree-zonefitting philosophy
+The original fitting philosophy was to fit the
+initial OK-3 1.50 0 flatter than the flattest kerato­
+metry reading (Kf ), and modify the fit until
+an area of approximately 3.00-3.50 mm central
+"touch" and good centration was achieved. There
+was no predetermined refractive change or target
+outcome. The practitioner simply ordered the
+initial lens 1.50 0 flatter than Kf and an extra two
+sets of lenses, each 0.500 flatter than the preced­
+ing. The course of treatment was considered over
+when the corneal flattening ceased.
+The fitting was complicated by the introduc­
+tion of an entire range of different TR curves. The
+use of a steeper RC meant that the BOZR needed
+to be flatter than that used for the 3.00 0 RC lens,
+and a steeper BOZR if a flatter RC lens was used.
+Also, if a diameter larger than the standard
+9.60 mm were required, then the RC curve band
+would be wider, since the BOZO and BP02 were
+fixed. This led to the larger lens being relatively
+steeper than the 9.60-mm TO lens, so a flatter
+BOZR was required in order to maintain the
+correct fitting relationship. With over 150 differ­
+ent design variables available, it is no wonder
+that there were reports of inconsistent fitting and
+results reported by practitioners using the lenses.
+It was the inconsistency of results that led
+Mountford to attempt to standardize the fitting
+by adopting the sag philosophy to the choice of
+initial trial lens.
+The use of a very flat BOZR leads to the
+presence of heavy central touch and peripheral
+clearance when combined with a standard
+contour fitting philosophy. This invariably leads
+to lens decentration. Guillon & Sammons (1994)
+defined the pressure developed by the postlens
+tear layer as the tear fluid squeeze pressure
+(TFSP), the force of which is directly proportional
+to the thickness of the tear film at any point on
+the corneal surface. The TFSP maintains lens cen­
+tration by opposing the gravity and eyelid forces
+that cause lens decentration (Hayashi 1977). If the
+lens fit is flat enough, then the central TLT is zero,
+and the TFSP plays no role in the maintenance of
+lens centration. The lid force then becomes domi­
+nant, usually causing superior decentration. The
+lid-induced decentration causes a redistribution
+of the tear volume under the lens, and the final
+resting position of the lens is then dependent on
+the balance of forces developed in the postlens
+tear layer by the TFSP.
+The inclusion of a steeper secondary curve
+reduces the peripheral clearance such that the
+lens is assumed to rest on the peripheral cornea at
+the junction of the TR/RC curve and the edge lift
+curve. The TLT therefore varies from a minimum
+at the corneal apex to a maximum at the BOZO /
+RC junction. Since the TFSP is directly propor­
+tional to the thickness of the tear layer, there will
+be a variation in the pressure as the TLT increases
+from the central to the TR area. The decentration
+due to the lack of a viable TFSP with a flat BOZR
+is then compensated by the increased TFSP
+induced by the deeper TLT of the reverse curve.
+
+=== PAGE 78 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 71
+In this way, a flat BOZR can be combined with a
+steeper secondary curve and still maintain lens
+centration.
+In sag philosophy terms, the sag of an ideally
+fitting reverse geometry lens is equal to the sag of
+the BOZR at the BOZO plus the sag of the RC
+curve at BP02• This should equal the sag of the
+cornea at the point of contact (BP0 2) plus an
+allowance for central TLT. This is the same
+concept described earlier for the fitting of contour
+lenses in that:
+Sag OK lens = corneal sag + TLTover the
+common chord of contact
+Figure 4.6 shows the relation of the lens with the
+various curves and the fluorescein pattern.
+The apical TLT for contour lenses is assumed
+to be approximately 20 urn. However, this is not
+the case with reverse geometry lenses, where the
+typical TLT is assumed to be less than 10 urn or,
+in some cases, zero. When the initial calculations
+for the OK-3 lens using the sag fitting philosophy
+were carried out, it was found that the variation
+in apical TLT was extremely sensitive to alter­
+ations in BOZR. If a central TLTof zero was used,
+Figure 4.6 The sag philosophyappliedto reverse
+geometrylenses. (Top) The lens and cornea come into
+contactat the outer edge of the alignmentcurve.
+(Bottom)The fluoresceinpatternshows the common
+areas (1 Band 2Bthe reverse curve, and 1C and 2Cthe
+alignmentcurve). Courtesyof ChristinaEglund, Polymer
+TechnologyCorporation.
+there was no peripheral contact with the cornea
+at the edge of the TR curve. The minimal central
+TLT that provided peripheral contact was 10 urn.
+A central TLT of zero is possible, but only if the
+TR radius or diameter is varied. Furthermore, a
+TLT of 10 urn was felt to be more acceptable from
+a clinical viewpoint, as a TLT of zero would mean
+direct lens contact on the surface epithelium,
+which could result in unwanted trauma.
+The advantage of fitting reverse geometry
+lenses according to the sag philosophy is that any
+combination of BOZR/BOZO and RC can be cal­
+culated to give the correct fitting relationship to
+the cornea. The tear layer profiles of a group of
+lenses with varying BOZR/RC combinations are
+shown in Figure 4.7. Note that, even though the
+shape of the tear layer profiles differ, all lenses
+exhibit the correct sagittal relationship to the
+cornea in that the central TLT is 10 urn, and the
+lens rests on the peripheral cornea at the junction
+of the RC and BPR2• Mountford (1997a) has
+shown that the use of sag calculations based on
+corneal shape and lens sag results in a more accu­
+rate choice of initial BOZR than the traditional
+"1.500 flatter than K" technique.
+For a given cornea of Ro 7.80 mm and an eccen­
+tricity (e) of 0.50, the indicated BOZR using the
+1.500 rule would be 8.10 mm. However, if the
+Tearlayerprofile
+Figure 4.7 The tear layerprofilesof various reverse
+geometrylenses having an equivalentsagittal
+relationshipto the cornea.The variablesarethe back
+optic zone radius (BOlR) and tear reservoir(TR) curves
+that are2, 3, 4, 5,and 6.00D steeperthan the BOlR. The
+2.00D TR curve hasa tear layerthickness(TLT) of 40 um
+at the back optic zone diameter(BOlD),whilst the 6.00D
+lenshas a TLT of 80 urn at the BOlD.
+
+
+=== PAGE 79 ===
+
+78 ORTHOKERATOLOGY
+BOZR, back opticzone radius.
+eccentricity of the cornea were specified, the cal­
+culated BOZR using the sag fitting concepts for
+an apical radius of 7.80 mm and a lens diameter
+of 9.80 mm would be as shown in Table 4.2.
+As can be seen from the analysis in Table 4.2,
+the use of the "rule of thumb" would result in a
+steep or tight-fitting lens unless the cornea was
+basically spherical (e= 0) in shape. Furthermore, a
+study involving two subject groups fitted with
+the same-diameter OK603, but with the BOZR
+chosen by the two different techniques, showed
+that the refractive change measured was signi­
+ficantly different between the groups over a 6-h
+period (Mountford 1997a). Group 1 (13 eyes)
+wore lenses fitted 1.50 0 flatter than Kf and exhi­
+bited a mean refractive change of 0.91 ± 0.360
+following the trial wear period. Group 2 (10 eyes)
+were fitted according to the sag philosophy
+and showed a mean change of 1.38 ± 0.58 O.
+The differences were statistically significant
+(F = 10.373, P = 0.0024 analysis of variance), indi­
+cating that the accuracy of the fit had an effect on
+the efficacy of the lens with respect to the refract­
+ive change achieved.
+There are over 150 different combinations of
+BOZO/TR available with the standard OK series
+lenses, so a logical approach to the determination
+of the most effective design is required in order
+to reduce the number of trial lenses necessary to
+carry out the fitting procedure. The ideal-fitting
+lens exhibits a fluorescein pattern that shows an
+area of approximately 3.00-3.50 mm of central
+"touch" surrounded by a wide and deep annulus
+Table 4.2
+Eccentricity
+0.80
+0.70
+0.60
+0.50
+0.40
+0.30
+0.20
+0.10
+0.00
+BOZR in mm (OK603)
+8.45
+8.40
+8.35
+8.30
+8.25
+8.20
+8.15
+8.10
+8.10
+of tears that tapers to the peripheral contact band
+(Fig. 4.8). Assuming that fluorescein becomes
+visible at a TLT of 20 urn, then a line drawn paral­
+lel to the x-axis in Figure 4.7 will indicate the
+relative areas of "touch" and clearance under the
+lens. Areas of "touch" may be determined by
+drawing a line from the point of intersection of
+the 20 urn line and the tear layer profile to the
+x-axis. The diameter of the apparent touch can
+then be read off the x-axis.
+The only lenses that satisfy the requirement of
+3.00-3.50 mm of central touch are the 3.00 0 and
+4.00 0 RC lenses. The 5.00 0 RC lens shows an
+approximate touch diameter of 2.5 mm, and the
+shallow RC lenses (1.000 and 2.00 0) show diam­
+eters larger than 3.50 mm. Bara (2000) has shown
+that the degree of corneal flattening is significantly
+greater with the steeper RC lenses than the
+shallow RC lenses. The main problem is that, as
+the relative area of central touch is reduced, the
+area of flattening is also reduced, which can lead to
+significant ghosting and haloes in dim illumina­
+tion. As the pupil dilates in poor illumination, the
+area of corneal flattening is effectively smaller than
+the pupil zone, thus causing a reduction in low­
+contrast vision, which is made considerably worse
+if the lens decenters (see later).
+The optimal OK design used in the author's
+practice was the OK704, which has an optic
+zone of 7.00 mm and a secondary curve 40
+steeper than the base curve. Since this RC was
+preset to the BOZR, the only alteration in fit
+possible was to flatten and steepen the BOZR.
+There is a significant drawback in using this
+type of approach, and that is that the TLT
+profile varies depending on the shape of the
+cornea being fitted. In Figure 4.7, the tear layer
+profiles of a group of reverse geometry lenses
+are shown. The variables are the BOZR and the
+TR curve, but, significantly, both are totally con­
+trolled by the differences in sag between the
+area of central clearance and the depth of the
+tear layer at the edge of the BOZO. Noack (per­
+sonal communication) has termed this differ­
+ence the "clearance factor" (CF), and for any
+given clearance factor, there can only be one
+single combination of BOZR and TR that will
+satisfy the requirements of the sag fitting
+philosophy. The CF is defined as the difference
+
+=== PAGE 80 ===
+
+DESIGN VARIABLES AND FITTING PHilOSOPHIES OF REVERSE GEOMETRY lENSES 79
+Figure4.8 An ideal­
+fitting three-zonelens
+(Contex704C). Note that
+the apical "touch" is
+3.00-3.50 mm wide,and is
+surroundedbya wide and
+deep annulusof tears
+trapped in the reverse curve
+area.
+between the TLT at the corneal apex and the
+TLT at the edge of the BOZO.
+The variations in clearance factors for 10.6 mm
+diameter OK704T lenses over an apical radius
+range of 7.20-8.50 mm, and corneal eccentricities
+of 0.0, 0.30, 0.50,and 0.70, are shown in Figure 4.9.
+Note that the CFs are greatest for steep corneas
+with high eccentricities, and lowest for flat
+corneas with low eccentricities. The TLTs of two
+11.2-mm diameter OK704Ts on corneas of R o
+Relationshipbetweenclearancefactor,apicalradiusand eccentricity
+Figure 4.9 Variationin clearancefactor with varying
+apical radii and eccentricities.
+7.20 mm and eccentricity of 0.80, and Ro 8.40 mm
+and 0.30 eccentricity are shown in Figure 4.10.
+The BOZR for the steeper cornea is 8.00 mm and
+the TLT at the edge of the BOZO is approximately
+73 urn, The indicated area of central touch is
+approximately 2.60 mm in diameter. The BOZR
+for the flatter cornea is 8.86 mm and the TLT at
+the BOZO is 49 urn, with an indicated central
+touch diameter is 3.50 mm. These differences
+between tear layer profiles for different corneal
+Figure 4.10 The tear layerthicknessesof two" .2-mm
+diameterOK704Tson corneasof apical radii 7.20 mm and
+eccentricity0.80 (top line), and apical radius 8.40 mm
+and0.30 eccentricity(bottom line).
+
+
+=== PAGE 81 ===
+
+80 ORTHOKERATOLOGY
+Figure 4.11 Tear layer profile of aContex reverse
+geometrylens.
+shapes are responsible for some of the marked
+variations in corneal response to the lens (see
+Ch. 10), and are a major limitation of fixed reverse
+curve designs.
+The major problem with the early three-zone
+lenses was decentration. Variations in lens diam­
+eter still led to the common problem of lens
+decentration, often superiorly, with the accompa­
+nying off-center corneal flattening and induced
+astigmatism. Since modifications of both the TLT
+and lens diameter were generally unsuccessful at
+controlling centration, the only other logical
+approach was to modify the peripheral curve
+design.
+Contex reverse geometry lenses have a
+standard aspheric peripheral curve that is, in
+effect, a counterformal curve that bears a constant
+relationship to the BOZR (Fig. 4.11). If the BOZR
+is steepened in an attempt to improve centration,
+the RC and the peripheral curve are also steep­
+ened proportionally. This leads to marked peri­
+pheral compression at the TR/peripheral curve
+interface and an increase in the central TLT,
+resulting in a tight lens fit that can limit or reduce
+the corneal shape change (Mountford 1997a). The
+logical alternative is to modify the peripheral
+curve design so that it becomes conformal.
+Three-zone lenses were limited by the direct
+relationship between the BOZR and RCs. This led
+to a minimum variation in apical TLT of 10 urn,
+and some restrictions in the efficacy of the lens
+with respect to refractive change. However, the
+major problem continued to be decentration, and
+this led to the development of four-zone lenses.
+Four- and five-zonelenses
+There are numerous variations on the theme of
+four-zone lenses. The common structure of the
+lenses is a central optic zone, an RC, an alignment
+curve, and an edge lift. The five-zone lenses
+divide the alignment curve into two separate
+curves in order to produce a conformal periphery.
+A brief description of the main designs is outlined
+below.
+The £1 Hage "asphericmold" concept
+In 1997, EI Hage applied for and was granted a
+patent describing continuous aspheric molds for
+reshaping the surface of the cornea having an
+inner concave surface matched to the topography
+of the cornea (El Hage 1997a). The underlying
+concept was to modify a lens curve adapted from
+topographical data that would "include a flat­
+tened pressure zone applying relative pressure
+and thereby displacing underlying corneal tissue,
+a steepened relief zone raised away from the
+surface of the cornea to receive displaced corneal
+tissue, and a flattened anchor zone to control and
+direct movement of displaced corneal tissue into
+the relief zones." In effect, the lens consisted of a
+central optic zone, a second curve that was flatter
+than the BOZR, an RC, and an alignment curve.
+The central, second, and third curves were de­
+scribed in terms of a polynomial (Fig. 4.12). The
+peripheral curve is then designed to give an axial
+edge lift of between 80 and 100 urn.
+The lens construction is designed such that the
+central optic zone (pressure zone) can vary with
+the degree of refractive error correction required,
+with the BOZR based on Jessen's concept of
+0.20 mm flattening of the BOZR for each 1.00 D of
+refractive change required (the Jessen factor). A
+Figure4.12
+The controlled
+keratoreforma­
+tion (CKR) lens
+(from EI Hage
+1997a).
+
+
+=== PAGE 82 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 81
+Table 4.3 Design variablesof EI Hage lenses
+cornea with a central radius of 7.80 mm and a
+refractive error of 3.00 0 would therefore require
+a BOZR of 8.40 mm (7.80 mm + [0.20 x 3.00 OJ).
+Also, the pressure zone is varied with the cor­
+rection required. High corrections (3.50-6.000)
+have a pressure zone of 4.00-5.00 mm, and low
+corrections (1.00-3.000) a zone of 6.00-6.50 mm
+(Table 4.3).
+The proposed mode of action is that the pres­
+sure zone, which is separated from the corneal
+surface by the tear film, provides a force that
+moves corneal tissue towards the relief curve
+zone. The anchor zone then limits the movement
+of tissue any further, and has a secondary func­
+tion of maximizing lens centration. The induced
+redistribution of corneal tissue is then responsible
+for the corneal curvature and refractive change.
+Corneal topography data supply the central
+radius (Ro), which is the mean corneal curvature
+over the central 2.00 mm chord. Note that this
+definition of R o differs from that of the usual
+definition, where Ro represents a singularity at
+the corneal apex. The shape factor of the cornea is
+calculated as a mean of the eccentricity values of
+up to 360 meridians at the pressure zone diameter
+of choice, which is predetermined by the initial
+refractive error. The sagittal height of the cornea
+over this chord is then calculated using the
+derived Roand shape factor values. The sag of the
+indicated BOZR in millimeters (Ro + 0.20 Rx) is
+also calculated over the same chord. The differ­
+ence between the two is then assumed to be the
+sag change induced in the cornea by the effect of
+the lens. For a cornea of Ro 8.00 and BOZR of 8.60,
+assuming a 3.00 0 refractive change, the differ­
+ence in sag is 29 urn over the 5.00-mm chord of
+the pressure zone. This is roughly equated to
+10 urn per diopter of refractive change.
+Refraction(D)
+5.50-6.00
+4.00-5.00
+3.00-4.00
+1.00-3.00
+Pressurezone
+diameter(mm)
+4.00-5.00
+5.00-5.50
+5.50-6.00
+6.00-6.50
+d (mm)
+1.20
+0.80-1.00
+0.60-0.80
+0.20-0.60
+The movement of the centrally displaced
+corneal tissue is towards the relief zone, which is
+"preferably raised above the reformed corneal
+surface by about 12 urn per diopter of correc­
+tion." In the above example, this equals a sag
+difference of 36 urn. This is then added to the
+29 urn of central sag change, resulting in a TLT of
+65 urn at the edge of the relief curve. It is unclear
+why a sag change of 10 urn per diopter of refrac­
+tive change is used for the central calculations
+and 12 urn per diopter in the relief zone.
+El Hage obviously studied the final postortho­
+keratology corneal topography in detail, as the
+lens parameters are actually based on the altered
+or final corneal shape. The controlled kerato­
+reformation (CKR) lens was the first orthokerato­
+logy lens design and fitting philosophy based on
+topography data.
+The Dreimlens
+The other major development or modification of
+reverse geometry lenses is the Oreimlens, de­
+signed by Thomas Reim. The impetus for the lens
+design was a requirement for enhanced control of
+lens centration and the corneal response to the
+lens. Reim (personal communication) describes
+the lens in terms of it being a "dual TR" design, in
+that there are two reverse curves on the lens back
+surface. The basic design consists of a 10.00 mm
+TO with a 6.00 mm BOZO. The first peripheral
+curve forms a TR that is 0.60 mm wide, sur­
+rounded by the second peripheral curve that
+forms a TR that is 1.00 mm wide. The final
+peripheral curve is 0.40 mm wide and is designed
+to give an adequate axial edge lift. The real
+difference, however, is in the relative steepness
+of the two RCs. The depth and width of the TR
+are intrinsically tied to the BOZR and BOZO and
+their fitting relationship to the cornea, and this is
+where the Oreimlens bears a major difference to
+the Contex designs.
+The second TR (as described by Reim) is in
+effect an alignment zone designed primarily as an
+aid to centration. The first RC, being 0.60 mm
+wide, is therefore necessarily much steeper than
+the BOZR in order to maintain sagittal equiva­
+lency with the cornea. Reim applied for, and was
+granted, a patent (1999) for the lens due to the
+
+=== PAGE 83 ===
+
+82 ORTHOKERATOlOGY
+construction of the peripheral alignment curve to
+control centration. The design was altered by
+splitting the alignment curves in two, resulting in
+a five-curve lens. In those cases where lens cen­
+tration could not be adequately controlled, the
+diameter was increased to 10.6 mm, with the
+alignment curves being made wider.
+The fitting philosophy is a variant of the Jessen
+factor, where the BOZR is defined initially by the
+refractive change required. To this, Reim adds a
+further 0.750 flattening as a "compression fac­
+tor," so that, for an initial central K of 44.00 0 and
+refractive error of 3.00 0, the indicated BOZR
+would be 44.00 - 3.00 - 0.75 or 40.25 0 (8.38 mm).
+Once the BOZR has been chosen, the corneal
+elevation (sag) data at the point of contact of the
+alignment curve are read from the corneal
+topographer. The other lens parameters can then
+be calculated from the standard formulas dis­
+cussed previously. The alignment curve is
+designed such that it meets the corneal surface at
+a chord of 9.20 mm for the 10.00 mm lens, with a
+nominal TLT of 10 urn at the junction of the align­
+ment curve and the reverse curve. The apical
+clearance is set at zero.
+The lens fitting is usually based on the flat-K
+value and an assumed corneal eccentricity of 0.50.
+The exact specifications of the Oreimlens are
+unknown, but an approximation of the TLT can be
+constructed using the formulas described pre­
+viously. Reim intimates that there are blend zones
+between TR} and the alignment curve that are not
+shown in the following model. However, such
+small variations would have a minimal effect on
+the sag relationship of the lens and the cornea, and
+the model can therefore still be considered a useful
+example. The approximate TLT of a 10.00 mm
+Oreimlens for a patient with an apical radius of
+7.65 mm (44.000), an eccentricity of 0.50 and a
+refractive error of 3.000, is shown in Figure 4.13.
+If the 20 urn line is drawn across the TLT graph
+in Figure 4.13, the apparent central touch diame­
+ter is approximately 4.00 mm, surrounded by a
+thin, deep annulus of fluorescein. The peripheral
+alignment curve is approximately 1.00 mm wide.
+The resemblance between the calculated TLT
+profile analysis interpretation of the probable
+fluorescein pattern and the actual pattern appear­
+ance (Fig. 4.14) is obvious.
+Figure 4.13 The approximatetear layerthicknessof a
+10.00-mmOreimlensfor a patient with anapical radius
+of 7.65 mm(44.00 OJ. an eccentricityof 0.50, and a
+refractiveerror of 3.00O.
+Figure 4.14 An ideal-fitting Oreimlens.Note the wide
+area of central "touch"and the narrowand deep tear
+annulusat the back optic zone diameter/reversecurve
+area. There is a wide alignmentzone. The area of "touch"
+and clearanceline up with theareas below and above the
+20 um line in Figure 4.13.
+The tear layer profiles of the Oreimlens for
+3.00 0 refractive change on three different corneal
+shapes are shown in Figure 4.15. Note that, in
+contrast to the Contex three-zone design, where
+the reverse curve was fixed with respect to the
+BOZR, the differences in CF between the three
+lens fits is minimal. In the case of the cornea
+having an apical radius of 7.80 and an eccentricity
+
+
+=== PAGE 84 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 83
+of 0.50 (a 7.80/0.50 cornea), the CF is 49.7 IJ..m,
+followed by 41.7 IJ..m for the steep (7.20/0.70)
+cornea and 53.2 IJ..m for the flat (8.20/0.30) cornea.
+When the Oreimlens was first released, it created a
+lot of interest, as the results achieved were more
+predictable than those of the Contex lenses. The
+reason for this was probably the enhanced centra­
+tion, but the fact that the variation in CF was much
+better controlled also plays a part (see Ch. 10).
+The alignment curve is thought to cause a
+second compression zone (the first being the BOZR
+and area of central touch) that limits the movement
+of tissue away from the center, and also provides a
+peripheral "push" in towards the center.
+Reim states that the BOZR is usually limited to
+4.750 flatter than K, or a maximum refractive
+change of 4.00 0, due to early problems with
+corneal staining. However, he also states that
+this could have been caused by edema, as the
+incidence of staining appears to have resolved
+with the use of a higher-Ok material. The lens
+is currently made from Boston XO (Ok = 100
+International Standards Organization (ISO).
+Practitioners interested in fitting the Oreimlens
+can either supply the manufacturer with topo­
+graphical or keratometric and refractive data and
+allow the laboratory to design the lens, or use a
+trial lens set to determine the optimal fit. The
+prime factors when assessing the lens are centra­
+tion and active tear exchange. Modifications to
+centration are usually effected by altering
+the alignment curve, or by small changes in
+BOZR.
+Other four- and five-curvedesigns
+Figure 4.15 The tear layer profilesof the Dreimlensfor
+3.00 0 refractivechange on three differentcorneal
+shapes. (A) Cornea with an apical radius of 8.20and an
+eccentricityof 0.3;(B) cornea with an apical radius of
+7.80 and eccentricity0.50;and (C) apical radius 7.20,
+eccentricity0.70.
+There are marked similarities between the
+Oreimlens and all other four- and five-curve
+designs. The Fargo lens (Jim Day) has the same
+basic construction, except the BOZO and RC
+widths are variable. Also the hyperbolic align­
+ment curve is calculated from topography data.
+A compression factor of 1.00 0 is used. The
+Nightmove lens (Tabb) has a basically aspheric
+alignment curve. The Orthofocus, R&R, Euclid
+Jade and Emerald, ABBA Optical, Contex E and
+Correctech designs, apart from minor differences
+in fitting philosophy and curve band width, are
+very similar to the Oreimlens.
+
+
+=== PAGE 85 ===
+
+84 ORTHOKERATOLOGY
+The SciopticElM (GelflexVMCj lens
+This lens was designed by Mountford, who com­
+bined the BOZO f TR construction of the original
+three-zone Contex lens with the Thomas concept
+of a tangential peripheral curve in an attempt to
+maximize lens centration. The initial design was
+based on the original Conoid 9.00 mm TO and
+6.50 mm BOZO lens increased to a total diameter
+of 10.5 mm. The standard 10.5 mm Conoid has a
+BOZO of 8.30 mm, so the 7.00 mm BOZO of the
+Contex 704 was combined with a 4.00 0 reverse
+curve such that the combined BOZO fTR dia­
+meter became 8.40 mm. The addition of the stan­
+dard 1.10 mm tangential periphery gives a TO of
+10.6 mm. Based on simple sag equivalent calcula­
+tions, the tangent cone angle for the lens was
+determined by using the cone angle of the stan­
+dard Conoid based on a BOZR that was 2.50 0
+steeper than the BOZR of the OK704, as the calcu­
+lated BOZR for the OK lens was 2.50 0 flatter
+than the sagittal equivalent Conoid. The com­
+puter program for calculating the initial trial
+lens based on corneal data supplied from video­
+keratoscopy was written by Michael Vincent.
+The trial lens is worn overnight, and the results
+of the trial were used to refine the final lens
+parameters. The main limitation is that the sag
+variation with this design is restricted to 10 urn
+(0.05 mm) steps. It was the first fenestrated
+orthokeratology lens, having three 0.25 mm fen­
+estrations placed at the BOZO fTR junction at
+120° intervals. The practice of fenestrating reverse
+geometry lenses is also done by Contex and is
+standard for BE lenses.
+The WAVE design
+Jim Edwards based the design of the WAVE lens
+on Keratron topography data. The lens has a
+6.50 mm BOZO and a reverse zone width of
+0.80 mm. The BOZR is based on the refractive
+change required. The alignment zone is approx­
+imately 1.00 mm wide, and the TO is 1.67 times
+the BOZO, resulting in a common diameter of
+11.00mm. The topography data are downloaded
+into the WAVE software, and the tear layer profile
+of the lens is generated. The design utilizes some
+very sophisticated computing to match the tear
+layer profile of the lens to the corneal shape. The
+Figure 4.16 The constructionof the Corneal Refractive
+Therapy (CRT) sigmoid proximity curve.The sag
+differencesbetween the threepreset curves are0.10 mm
+or approximately25 um overthe length of the curve. The
+sigmoid curve "blends"the back optic zone radius to the
+reversecurve (RC), and the RC to the tangent.RZD, return
+zone depth.
+alignment zone and RCs include aspheric curves
+that are designed to control surface tension forces
+at the periphery of the lens in order to enhance
+centration. A more detailed description of the
+WAVE design is included in Chapter 8, covering
+computer-aided lens design.
+ParagonCRT
+The CRT lens could be considered as a three-curve
+lens, consisting of a spherical BOZR, a "sigmoid
+proximity" RC and a tangential periphery. The
+BOZO is 6.00 mm, with the reverse zone being
+1.00 mm wide. However, the "sigmoid proximity
+curve" is a polynomial curve that in effect
+"blends" the BOZR to the RC, and the RC to the
+tangent (Fig. 4.16). The BOZR is based on the
+Jessen formula, with an added 0.500 as a com­
+pression factor. There are five tangent angles avail­
+able (see section on construction and design of
+tangential peripheries, below). The TO of the lens
+is set at 90% of horizontal visible iris diameter
+(HVID), or commonly 10.50 mm. A 100 lens inven­
+tory is used to determine the correct lens based on
+fluorescein pattern analysis, with the first trial lens
+being selected by recourse to a slide rule that uses
+the flattest keratometry reading in dioptres and the
+refractive change required to suggest an initial
+lens. A computer program is also available that can
+
+
+=== PAGE 86 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 85
+Figure 4.17 Constructionof a sigmoid proximitycurve.
+The curve (1) is theblend between the back optic zone
+radius and the reverse curve (2).Curve 3 representsthe
+limit of the sigmoid curve for a given sag depth. If the sag
+of the reverse zone is increased(4), the sigmoid curve is
+lengthened.In bothcases, the tangent(5) remains
+unaltered.In all cases, the distancein the x-axisbetween
+the two sigmoidcurves is constant,and only thedistance
+in the y-axis is altered in orderto control overall lens sag.
+import data from the Zeiss Humphrey Topo­
+grapher and select the initial lens.
+The utilization of a sigmoid proximity curve to
+blend the central and mid-peripheral zones of the
+lens is a unique design concept, but the major
+contribution it makes to the lens is that it is used
+to control variations in elevation. As shown pre­
+viously with three-zone lenses, the RC is the
+major determinant of overall lens sag. Since the
+BOZR is determined by the refractive change
+required, and the tangents are limited to five
+angles, the only other means of varying the lens
+sag is to vary the RC. The concept of the sigmoid
+curve is shown in Figure 4.17. Note that, as the
+reverse zone is constant, changes to sag are made
+by altering the vertical depth of the curve. This
+therefore gives a far greater control of the sag
+variations than is usually possible with fixed
+reverse zone designs. The three most commonly
+used return or reverse zone depths are 0.525,
+0.550 and 0.575mm. Variations of 0.10 mm in
+BOZR lead to a change of 7 urn in lens sag, whilst
+a 1° change in cone angle effects a further 12.5 urn
+variation in sag. The depth of the reverse zone is
+rounded off to the closest 25 urn.
+What differentiates the fitting philosophy is the
+assumptions made concerning the movement of
+epithelial tissue and how the lens design is
+derived based on those assumptions. CRT uses a
+variation of the Munnerlyn formula for refractive
+surgery as a basis for the assumptions regarding
+epithelial movement. The hypothesis is that, as
+positive pressure is applied by the BOZR of the
+lens to the corneal apex, epithelial tissue will be
+redistributed towards the mid-periphery, near the
+tangent area of the lens. The central corneal
+epithelium is assumed to thin down by 6 urn per
+diopter of refractive change required, and that the
+peripheral epithelium will increase by approx­
+imately the same amount. The "landing zone" or
+tangent is therefore initially designed with a TLT
+of 6 uru/D, or a degree of clearance determined
+by the refractive change.
+As the cornea changes shape, the peripheral
+epithelial thickening increases to the extent that
+the TLT in this area is reduced to zero. In effect,
+this means that the lens is initially fitted with less
+than zero apical clearance, and up to 24 urn of
+clearance in the peripheral alignment zone. The
+published studies of Lui & Edwards (2000) and
+Mountford (1997b) show that the peripheral
+cornea is not affected by orthokeratology lens
+wear. Swarbrick et al (1998) have also shown that
+the increase in corneal thickness occurs at the
+edge of the BOZO, and not in the alignment
+curve area. It therefore appears, at least from the
+information to hand, that the underlying fitting
+philosophy is not in accordance with the pub­
+lished findings made about the redistribution of
+epithelium.
+The most commonly used tangent angle is 35°
+(55° ISO). A cornea of R o 7.80, eccentricity 0.50
+will change to a final shape of R o 8.176, eccen­
+tricity zero following treatment. The cone angle
+prefitting is 54.96°, and 55.14° postwear. The 55°
+cone angle is the closest match to the pre- and
+postwear corneal shapes.
+The Paragon CRT was the first reverse geome­
+try lens to receive Food and Drug Administration
+(FDA) approval for overnight orthokeratology.
+
+
+=== PAGE 87 ===
+
+86 ORTHOKERATOlOGY
+BE lens (Mountford andNoack)
+The BE lens is a five-zone lens comprising a vari­
+able BOZO varying between 6.00 and 7.00 mm.
+The first RC is 0.50 mm wide; the second RC varies
+between 0.45 and 0.7 mm in width. The final two
+sections are the tangent and a reverse perioptic
+edge lift. The BOZO is variable in order to create a
+wider treatment zone diameter for patients with
+large pupils. The first RC is designed to maintain
+the squeeze film force generated at the edge of the
+BOZO and hold it constant. The second RC is
+steeper than the first, and simply returns the lens
+back surface to meet the tangent. The tangent is
+designed according to the axial radius of the
+cornea at the point of contact with the tangent. The
+reverse perioptic curve has its radius of curvature
+in the opposite direction to the optic axis of the
+lens, and simply imparts the required degree of
+axial edge lift based on the cone angle.
+The BOZR is not based on the Jessen factor, as
+control of the refractive change required is based
+on manipulation of the modeled squeeze film
+forces in the postlens tear film.
+The fitting procedure is totally based on topo­
+graphical data, trial lens fitting and refinement of
+the final lens parameters based on the evaluation
+of postwear topography. The lens has three fenes­
+trations at the midpoint of the first RC at 120
+0
+intervals. The fenestrations do not prevent lens
+binding, but are present as an aid to tear
+exchange and "freeing up" of bound lenses in the
+morning. The preferred material for the lens is
+Boston XO. A more detailed description of BE
+fitting is included in the computer-aided design
+and fitting section later (Ch. 8).
+Alignmentcurve variationsfor reverse
+geometrylenses
+The major difference between three- and four- /
+five-zone lenses is the alignment curve or curves.
+Instead of a simple counterformal curve, the
+modern four- and five-curve lenses use conformal
+and tangent designs to control centration. The
+EZM, Paragon CRT, and BE designs all use tan­
+gents as the alignment curve. Tangents are not
+curves and do not have a radius of curvature, but
+are, in effect, "flats." The following section deals
+with the construction of tangents.
+Figure 4.18 Constructionof a tangent.See text for
+details.
+Constructionand design of tangential
+peripheries
+The basic concept of a tangential peripheral curve
+is that it meets the corneal surface at a tangent to
+the surface at the point of contact. This then
+fulfills the requirements of a conformal curve,
+and theoretically distributes the pressure effects
+over a wider area. Thomas (1967) also postulated
+that there was a gradual increase in the applied
+pressure, being maximal at the center of the
+tangent (the point of contact) and decreasing as
+the edge of the tangent curve was reached.
+A true tangent is not a curve, but a straight
+line that represents a cross-section of a conic
+section. The concept is shown in Figure 4.18. A
+point P on the peripheral cornea is met at its
+tangent by a line (A-B). The intersection between
+the line A-B and the optic axis is designated the
+cone angle (0 degrees), and is used as the
+common form of specification in writing the lens
+prescription. The point of contact on the corneal
+surface is the tangent to the axial radius of the
+cornea at that point, and is specified in terms of
+R, and y, the half-chord from the optic axis to the
+corneal surface. In Figure 4.18, R; is represented
+by the line P-R and the half-chord y by the line
+P-X.
+
+
+=== PAGE 88 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 87
+Tearlayerprofile
+Figure 4.19 The variationsin cone angle for different
+lens diameters.
+The axial radius is calculated using the formula:
+RII =-VR02 + y2 _ y2p
+The cone angle can then be calculated by the
+formula;
+Cone angle (0) = 90 - arcsine y/ RII
+In order to specify the cone angle and RII correctly,
+the half-chord y must be specified. In general, the
+chord is equal to;
+(BOZO + BPOI + 1/2 BP02)/2 or, more simply:
+TO - 2(1/2 BP02), where BP02is the width of
+the tangent curve, commonly 1.10 mm.
+Therefore, for a lens with a TO of 11.20 mm,
+the chord of contact will be 10.10 mm, yielding a
+half-chord (y) of 5.05 mm. The cone angle is
+dependent on the individual RII of the cornea, and
+also the diameter of the lens to be used.
+Figure 4.19 shows the variation in cone angle for
+variations in lens diameter. As the diameter of the
+lens is increased, the cone angle decreases in
+numeric value, in that the angle actually steepens
+with increased diameters. However, there are two
+further factors that must be taken into considera­
+tion when calculating tangential peripheries for
+contact lenses. Firstly, the elliptical model of
+Figure 4.20 The tear layer profile of a tangential
+peripheryreverse geometrylens with the point of surface
+contact set atvarying pointsalongthe width of the
+curve. (A) '/,tangent,(8) '/,tangent.(e) '/.tangent.
+corneal shape decreases in accuracy as the chord is
+increased. Mandell et al (1998)have shown that the
+peripheral cornea is in effect flatter than that
+described by the aspheric algorithm used in the
+elliptical corneal model. In practice, this means that
+the RII value calculated from the above formula is
+in effect steeper than the actual corneal value and
+will result in a steeper cone angle than that actually
+required. Secondly, the axial edge clearance of the
+lens is determined by the cone angle.
+Figure 4.20 shows the tear layer profile of a
+tangential periphery reverse geometry lens with
+the point of surface contact set at varying points
+along the width of the curve. The axial edge clear­
+ance (AEC) of the lens with the contact point
+midway along the width of the tangent is approx­
+imately 38 urn, with a cone angle of 51.98°. Most
+practitioners would consider this to be an
+insufficient edge lift.
+Alteration of the edge clearance is achieved by
+manipulation of the point of contact of the
+tangent with the peripheral cornea. The same
+figure shows the lens with the contact varied to
+1/3 and 1/4 the width of the tangent band. With the
+tangent set at a 1/3 point of contact, the cone angle
+becomes 53.47° and the AEC approximately
+62 urn, and at 1/4 tangent the cone angle flattens
+to 54.17° with an AEC of 78 urn.
+
+
+=== PAGE 89 ===
+
+88 ORTHOKERATOLOGY
+Tearlayerprofile
+Table 4.4 Cone anglesof BE and EZM lensesover
+the back optic zone radius (BOZR) range
+The BElens uses the tangent design as outlined
+above. The EZM, on the other hand, uses cone
+angles based on a relationship to the BOZR of the
+lens. The point of contact with the cornea occurs
+at approximately 1/4 the width of the tangent,
+which, like the BE, is 1.10 mm wide. The cone
+angles for the EZM and BE trial lenses are shown
+in Table 4.4.
+The Paragon CRT lens also utilizes a tangential
+periphery. However, unlike the BE and EZM, the
+angle given as the tangent is not the angle that
+the tangent makes with the optic axis, but its
+opposite. CRT lenses have preset cone angles of
+29 (61), 30 (60),31 (59),32 (58), 33 (57), 34 (56), 35
+(55), 36 (54) and 37 (53). The values in brackets
+are the ISO standard cone angles for comparison
+with the other lenses. The cone angle is 35 (55), is
+the tangent for the mean corneal shape of RO 7.80
+and eccentricity 0.5. A 2
+0
+difference in cone angles
+for the CRT equates to a difference of 25 urn in
+Figure 4.21 The standard Contexcounterformal
+asphericedge and three tangents,with 1/4, 1/3, and 1/2
+pointsof contact.
+As a general rule, the use of the 1/2 tangent on
+lenses with a TO of 11.00mm or greater leads to a
+tight-fitting lens, due primarily to the greater
+corneal flattening than that assumed by the ellip­
+tical formula. The 1/4 tangent gives a greater
+degree of freedom when trying to compensate for
+this effect and is preferred for the larger TO
+lenses. If the TO is 10.60 mm or less, however, the
+1/2 tangent is preferred, as the R, and cone angle
+are theoretically more accurate, and the centra­
+tion effect of the 1/2 tangent is maximized.
+Finally, the point of contact of the tangent has
+a direct bearing on the sag calculations for the
+lens/ cornea fitting relationship. Figure 4.21
+shows the standard Contex counterformal
+aspheric edge and three tangents, with Ih 1/3
+and 1/2 points of contact. Note how the sag dif­
+ference between the lens and the cornea is
+affected by the edge design used. This will cause
+a change in the apical clearance of the lens. If the
+standard edge represents the ideal fit, with
+10 urn of apical clearance, then the clearance will
+be increased by 7.5 urn if the 1/2 tangent is used,
+resulting in a steep or tight lens fit, which will
+adversely affect the corneal response to the lens
+(see Ch. 5). As a result, the accurate fitting of the
+lens is dependent on calculating the initial lens,
+rather than using a different design and simply
+adding a tangent to the prescription. As a general
+rule, each change in cone angle of 1
+0
+causes a
+change in sag of 9 urn.
+BOZR
+7.85
+7.90
+7.95
+8.00
+8.05
+8.10
+8.15
+8.20
+8.25
+8.30
+8.35
+8.40
+8.45
+8.50
+8.55
+8.60
+8.65
+8.70
+8.75
+8.80
+8.85
+8.90
+8.95
+9.00
+Cone angle BE
+53.16
+53.26
+53.36
+53.49
+53.63
+53.76
+53.87
+54.01
+54.16
+54.27
+54.42
+54.57
+54.69
+54.84
+54.96
+55.12
+55.24
+55.40
+55.52
+55.68
+55.81
+55.97
+56.10
+56.26
+Cone angle EZM
+55.62
+55.89
+56.15
+56.40
+56.66
+56.90
+57.15
+57.39
+57.62
+57.86
+58.08
+58.31
+58.53
+58.75
+58.97
+59.18
+59.39
+59.60
+59.80
+60.00
+60.20
+60.39
+60.59
+60.78
+
+
+=== PAGE 90 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 89
+DESIGN AND CONSTRUCTIONOF
+ALIGNMENT PERIPHERALCURVES
+Table 4.5 Comparisonof alignment curves(AC)
+based on rule-of-thumb approach and calculation
+assuminga tear layerthickness of 10 IJ.m at the
+junction of the reversecurve and the alignment
+curve
+The most common form of alignment curve is
+either spherical or aspheric. The splitting of the
+four-zone lens alignment curve into two results
+in a five-zone lens. As with tangents, the accu­
+racy of the alignment curve is essential if the rest
+of the lens construction is to be correct. There are
+currently two methods of calculating alignment
+curves for four-zone lenses. The first bases the
+alignment curve radius on the flat-K reading,
+whilst the other uses topography data to calcu­
+late the curve at the point of contact with the
+cornea.
+sag between lenses of identical curves except for
+the tangent. Each change of 2° is also related to a
+change of eccentricity of approximately 0.30. The
+range of cone angles is therefore designed to
+cover a wide variation in corneal shapes. The
+CRT system does not depend on the tangent to
+control the sag of the lens, but instead alters the
+sigmoid proximity curve to control the TLT at the
+BOZD.
+The difference in sag change per degree of
+cone angle change between the BE and the CRT
+lens is due to the placement of the point of
+contact with the corneal surface.
+Luk et al (2001) describe the following rela­
+tionship between corneal eccentricity and the
+alignment curve for four-zone designs based on
+information supplied by various manufacturers:
+1. If the eccentricity is between zero and 0.3, the
+alignment curve is equal to the flat-K.
+2. If eccentricity is between 0.31 and 0.55, the
+alignment curve should be 0.05 mm (0.25 D)
+flatter than flat-K.
+3. If eccentricity is between 0.56 and 0.70, the
+alignment curve should be 0.10 mm (0.50 D)
+flatter than flat-K.
+However, this is a gross simplification of the
+curves required. Assuming a TLT of 10 IJ.m at
+the junction of the RC and the alignment curve,
+the actual values for the alignment curves in
+order to satisfy sag fitting are shown in Table 4.5.
+Note that, in all cases, the rule-of-thumb align­
+ment curves are much steeper than those calcu­
+lated from the eccentricity values.
+The relationship between the degree of flat­
+tening of the alignment curve with respect to
+the central flat-K and corneal eccentricity is as
+follows:
+y = - 3.465x2 - 0.3396x+ 0.26 (r2 = 0.999)
+where y is the amount flatter than flat-K for the
+alignment curve, and x is corneal eccentricity.
+For example, if flat-K is 44.00 D, and the
+corneal eccentricity is 0.56, the RC needs to be
+(-3.465 x 0.56 2) - 0.3396 x 0.56 + 0.26 or 0.93 D
+flatter than flat-K or 43.07 D.
+Figure 4.22 represents a four-zone lens on a
+cornea of flat-K 43.50 D (7.76 mm) and eccentricity
+of 0.50. The correct alignment curve is 7.901 mm. If
+the assumed alignment curve of 7.81 (Kf - 0.25 D)
+is fitted, the tear layer profile changes to that of
+Figure 4.23. Note that the lens is effectively too
+steep. In order to satisfy sagittal equivalency, the
+RC must be flattened to 7.17 mm. In general, steep­
+ening or flattening the RC by 0.15 mm (0.75 D)
+alters the apical clearance by 10 IJ.m.
+Some other designs assume that the corneal
+eccentricity is 0.50 unless advised otherwise. In
+general, for each variation of 0.10 in eccentricity
+away from 0.50, the alignment curve will alter by
+approximately 0.15 mm. If the eccentricity is less
+than 0.50, the alignment curve will require steep-
+-0.25773
+-0.29996
+-0.4259
+-0.6334
+-0.66895
+-1.02788
+-1.20456
+-1.69261
+-2.23517
+-2.8251
+Error (D)
+43.5 0.0 43.50 43.24227
+43.5 0.1 43.50 43.20004
+43.5 0.2 43.50 43.0741
+43.5 0.3 43.50 42.8666
+43.5 0.4 43.25 42.58105
+43.5 0.5 43.25 42.22212
+43.5 0.6 43.00 41.79544
+43.5 0.7 43.00 41.30739
+43.5 0.8 43.00 40.76483
+43.5 0.9 43.00 40.1749
+General Calculated
+Kf (D) Eccentricity rule AC (D) AC (D)
+
+=== PAGE 91 ===
+
+90 ORTHOKERATOLOGY
+Figure 4.22 Four-zonelens on a cornea of flat-K
+43.500 (7.76 mm) and eccentricity of 0.50.
+Figure 4.23 Same cornea as Figure4.22 with the
+assumed alignment curve of 7.81 (Kr- 0.25 0).
+Figure 4.24 Tearlayer profileof a model Dreimlens.Note that apical clearance is 5 I-Lm, with a 10 I-Lm clearance at the
+reversecurve/alignmentcurvejunction.
+ening, and conversely, flattening if the eccen­
+tricity is greater than the assumed 0.5.
+Figure 4.24 shows the tear layer profile of an
+ideal-fitting four-zone lens. Note that in this
+example, the apical clearance is 5 I-Lm, and the
+alignment curve meets the corneal surface at the
+edge of the reverse curve and the edge lift curve.
+How sensitive is this curve to change, and how
+do those changes affect the final fit?
+In Figure 4.25 the effect of steepening or
+flattening the alignment curve by as small an
+amount as 0.05 mm (0.25 D) is shown. In effect,
+flattening the alignment curve by 0.05 mm results
+in a decrease of central clearance of 5 I-Lm, and
+
+
+=== PAGE 92 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 91
+B
+Figure 4.25 (A) The effect of flattening the alignmentcurve by0.05 mm(0.25 0). The apical clearanceis nowclose to
+zero. (B) The effect of steepeningthe alignmentcurve by0.05 mm (0.250).The apical clearanceis now 10urn, and the
+clearanceat the reverse curve/alignmentcurvejunction 15 urn. This small change in alignmentcurve could cause a
+steep fit and associatedcentral island,or a lackof refractivechange.
+steepening the curve by the same amount adds
+5 urn to the apical clearance.
+The above examples give some basic rules with
+respect to alterations to alignment curves and RC.
+1. If the alignment curve is flattened by 0.05 mm
+(0.250), the apical clearance decreasesby 5 urn.
+2. If the alignment curve is steepened by 0.05 mm
+(0.250), the apical clearance increasesby 5 um.
+
+
+=== PAGE 93 ===
+
+92 ORTHOKERATOLOGY
+3. If the RC is flattened by 0.15 mm (0.750), the
+apical clearance is decreasedby 10 I-Lm.
+4. If the RC is steepened by 0.15 mm (0.75 0), the
+apical clearance is increasedby 10 I-Lm.
+These rules only apply if one curve is changed. If
+both curves are changed at the same time, the
+results are additive.
+In the case of five-zone lenses, the second
+alignment curve acts as a fulcrum, and is less
+sensitive to change than the four-zone lens. For
+example Figure 4.26A shows an ideal fit, whilst
+Figure 4.26B shows that flattening the curve by as
+much as 0.20 mm (1.00 0) has no effect on the
+apical clearance. Steepening the second alignment
+curve by 0.05 mm (0.25 0) increases the apical
+Figure 4.26 (A) Tear layer profileof an ideal-fitting
+five-zonelens. (8) Effectof flattening the second
+alignmentcurve by0.20 mm (1.00 D). Note that the
+apical clearanceremainsunaltered,but the contact point
+is now counterformal.(C) Effectof steepeningthe second
+alignmentcurve by0.05 mm (0.25 D). The apical
+clearanceis increasedbyapproximately5 I-Lm.
+clearance by approximately 5 I-Lm (Figure 4.26C).
+If the final curve is flattened too much, a counter­
+formal periphery results.
+The major problem with counterformal peri­
+phery lenses is that the control of centration is lost,
+and discomfort levels increase due to the heavy
+point of contact between the lens and the cornea.
+The most important thing to note about these
+apparently minor changes to the alignment
+curves is that they all have a major effect on the
+apical clearance of the lens andare not detectableby
+fluorescein pattern analysis. As stated previously,
+the accepted minimum TLT at which fluorescein
+becomes visible is in the range of 15-20 I-Lm. All
+the changes used in the examples above have an
+effect of changing the clearance in the alignment
+
+
+=== PAGE 94 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 93
+zone by approximately 10 urn at a maximum, and
+as a result, these changes would not be seen in
+the fluorescein pattern. The same changes would
+occur when aspheric alignment curves are used,
+as the corneal eccentricity controls the eccentricity
+of the alignment curve. If an aspheric alignment
+curve is too steep or flat, the point of contact
+between the lens and the cornea will move,
+resulting in a change in the apical clearance. A flat
+aspheric curve would decrease apical clearance as
+the point of contact would move further in
+towards the BOZO of the lens. A tight or steep
+aspheric alignment curve would increase apical
+clearance.
+The use of a simple rule to determine the
+curvature of the alignment curve based on a rela­
+tionship to the flat-K is shown to be highly in­
+accurate. However, errors also occur in using
+topography data, as different instruments will
+give different eccentricity values for the same
+cornea, resulting in different alignment curves
+depending on which instrument is used. The
+method of analyzing these inaccuracies and
+their correction is covered in greater detail in
+Chapter 6.
+Other design variables
+There are three approaches that can be used to
+design and fit reverse geometry lenses. The first
+takes the Jessen (1962) concept of using the liquid
+lens as the correcting factor. The original "ortho­
+focus" technique basically consisted of choosing
+the BOZR of the lens such that the liquid lens
+provided the refractive correction, resulting in all
+lenses having a plano power. In effect, if the
+patient had a refractive error of 2.00 0 myopia,
+the BOZR was fitted 2.000 flatter than the Kf.
+This invariably led to unstable fitting, especially
+as the degree of myopia increased.
+The efficacy of this approach to fitting has not
+been subjected to proper analysis, as Jessen never
+published the results of his studies. However, the
+concept has been applied to the fitting of reverse
+geometry lenses by EI Hage et al (1997), Reim
+(Oreimlens), Day (Fargo), Tabb (Nightmove),
+Stoyan (Contex BB), Breece (Correctech), Gladys
+(Euclid Jade and Emerald), Blackburn (Ortho­
+focus), Legerton (CRT), and Reinhart (R&R) such
+that the refractive correction required is once
+again the liquid lens, plus an allowance for a
+compression factor of between 0.00 and 1.00 O.
+The second curve chosen is the alignment curve,
+with the RC being calculated to achieve the
+correct sagittal fitting relationship to the cornea.
+This can be summarized as follows:
+1. Choose a BOZR based on the initial refractive
+error and modify the alignment curve and TR
+to adjust the fit.
+The second concept is to use a constant TR curve
+and BOZO, as in the Contex OK and EZM, and
+modify the BOZR until the correct sag relation­
+ship between the lens and the cornea is achieved.
+This approach makes no predictions as to the
+refractive change that will be induced by the
+choice of the BOZR. This can be summarized as:
+2. Keep the BOZO and TR constant, and modify
+the BOZR.
+As has been shown previously, this concept is
+limited by the inability to control the variations in
+CF for different corneal shapes, with a resultant
+variability in results.
+The third and final method of lens design is to
+standardize the fitting by making the tear layer
+profile constant for all eye shapes. This can be
+summarized as follows:
+3. The lens is specified in terms of TLT at the
+corneal apex and the edge of the BOZO. A
+computer program then calculates the
+BOZR/TR combination that will fulfill the
+specification.
+This is the basic concept behind the BE design.
+A common question is: why use a constant tear
+layer profile? The answer can be best described in
+a single word: standardization. The development
+of the sag fitting philosophy was based on the
+simple concept that different lens designs
+behaved differently on corneas of varying shapes,
+and that the "ideal" contact lens fit should have a
+fluorescein pattern, movement, and centration
+properties that could be duplicated irrespective of
+corneal shape.
+As a result, the shape of the tear layer profile
+became the method of standardizing the design
+
+=== PAGE 95 ===
+
+94 ORTHOKERATOLOGY
+1. The BOZR is the first curve chosen due to the
+required refractive change (Fig. 4.27A).
+2. The second curve chosen is the alignment
+curve, as the overall sag of the lens must equal
+the corneal sag at the point of contact with the
+alignment curve (Fig. 4.27B).
+3. The final curve chosen is the RC. Note that the
+RC is responsible for joining the BOZR to the
+alignment curve in order that the require­
+ments of sag fitting are fulfilled (Fig. 4.27C).
+Figure 4.27 The constructionof afour-zonelens based
+on theJessen factor.The back optic zone radius (BOZR) is
+determinedfirst, dependingon therefractivechange
+required.This is shown in (A). The second curve chosen is
+the alignmentcurve (AC), shown in (B). The reverse curve
+(C) isthe final curve chosen to bringaboutsagittal
+equivalencyand join the BOZR to the AC. Courtesyof
+PatrickCaroline.
+and the fit of the lens. With the BE design, the
+TLT at the BOZO is constant irrespective of
+corneal shape. The refractive change is controlled
+by manipulating the apical clearance. The BOZR
+is not based on the Jessen concept, but still has an
+effect on the refractive change due to the change
+in BOZR with apical clearance.
+If a lens is constructed using the first philo­
+sophy stated above, the choice of curves is as
+follows.
+In the case of three-curve lenses, the BOZR can
+still be fitted according to the Jessen factor, but
+the RC will then be dependent on the corneal
+eccentricity. If the two are linked, as with the
+Contex lenses, then the sag of both curves needs
+to be equal to the corneal sag at the edge of
+the RC.
+When a lens is constructed using the constant
+tear layer profile technique, the order of curve
+choice is reversed. The construction is as follows:
+1. The alignment curve or tangent is derived
+from the axial radius of curvature of the
+cornea at the point of contact with the surface
+(Fig. 4.28A).
+2. The RC is chosen to give the required TLT at
+the edge of the BOZO (Fig. 4.28A).
+3. The BOZR is then calculated so that the curve
+meets the requirements of the apical clearance
+and the depth of the tear layer at the BOZO
+(Fig.4.28B).
+At first glance, these different techniques may
+appear to have little in common, except that they
+are all based on sag fitting and must obey the
+same rules in order for the fit to be correct.
+This is the simple point that needs to be
+remembered. All reverse geometry lenses, irre-
+A B
+Figure 4.28 Constructionof a lens based on tearlayer thickness.(A) The alignmentcurve or tangent ischosen first,
+based on corneal data. The reverse curve is thencalculatedto givea specifictear layerthicknessat the back optic zone
+diameter.The back optic zone radius is the finalcurve calculatedbased on the apical clearancerequired and is shown in
+(B). Courtesyof PatrickCaroline.
+
+
+=== PAGE 96 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 95
+RelationshipbetweenBOZR and clearancefactor
+Relationshipbetweenflatnessof fit (Fa- BOZR) andTRcurve
+Figure 4.29 Relationshipbetween flatnessof fit of back
+optic zone radius (BOZRj to the clearancefactor of OK
+704T lenses.The corneal data isRo 7.80, eccentricity0.50.
+spective of fitting philosophy or design varia­
+tions, have the same basic construction and must
+be fitted according to sag philosophy if the fit of
+the lens is to be optimal. Where much of the
+variation in fitting success with the lenses occurs
+is in the assumptions made by various manufac­
+turers as to the underlying corneal shape. If the
+lenses are empirically fitted from K readings and
+refraction, then the assumed corneal shape will
+be a prime area for inaccuracy when compared to
+the actual corneal shape. These variations are
+covered in Chapter 6.
+As shown above, all reverse geometry lenses
+follow the same pattern of construction that is
+primarily based on the lens having a sagittal
+relationship to the cornea. The difference in
+TLT at the corneal apex and the edge of the
+BOZO (the CF) can therefore be used to exam­
+ine further the similarities and differences in
+designs.
+The definition of lens design based on the CF
+concept can be used to find the relationship
+between the fit of the lens with respect to the
+corneal curve and the associated steepening of
+the RC that is required to maintain sagittal
+equivalency with the cornea. In the case of the
+Contex lenses, if the BOZO of the lens is kept con­
+stant and the TO varied, the width of the TR
+curve is altered, as the peripheral curve width of
+all the OK series is constant depending on the
+design used. The Oreimlens has a constant TR
+width of 0.60 mrn, and the El Hage TR curve
+varies with the TO of the lens and the BOZO
+Figure 4.30 Relationshipbetweenflatnessof fit and
+reversecurve steepening.TR, tear reservoir;BOZR, back
+optic zone radius.
+chosen. In the case of a cornea of Ro 7.80 mm and
+e 0.50 fitted with a 10.60 mm diameter Contex
+OK704T, the relationship between the CF and the
+difference between the BOZR and corneal curve
+(Ro) is shown in Figure 4.29. For the sake of sim­
+plicity, the difference between the BOZR and Ro
+will be described in terms of "flatness of fit" and
+converted to diopters. As the CF is increased, the
+BOZR is flattened in a linear relationship to the
+clearance factor.
+Figure 4.30 shows the same relationship,
+except the steepening of the RC with respect to
+the BOZR (in diopters) is used instead of the CF.
+Once again, there is a linear relationship between
+the two in that, if a specific BOZR is chosen for
+an individual eye, it must have a specific RC in
+order to maintain sagittal equivalency of fit.
+However, the relationship between these two
+factors also varies depending on the width of the
+RC that forms the TR. Figure 4.31 shows the vari­
+ation in steepening of the TR curve with three
+different RC widths, 0.30, 0.60, and 0.90 mm. If
+the BOZR is predetermined, then the steepening
+of the TR curve is also linked linearly to the
+width of the TR curve.
+The effect of variations in CF on corneal shape
+and refractive change has been studied in a con­
+trolled experiment by fitting a group of six sub­
+jects with lenses of varying CFs (Bara 2000). Each
+of the subjects wore a lens with a specific change
+in CF for a period of 6 h, with a J-week interval
+
+
+=== PAGE 97 ===
+
+96 ORTHOKERATOlOGY
+Relationshipbetweenflatnessof fit (Fo- BOZRI and TR curve(TR·BOZRj
+fordifferentTR curve widths
+Figure 4.31 Relationshipbetween back optic zone
+radius and reverse curve (RC) for varying RC band widths.
+TR, tear reservoir,BOZR, back optic zone radius.
+between episodes. A control group was used for
+comparison. The CF variations were 30, 50, and
+80 urn, with a BOZO of 7.00 mm and a tangential
+peripheral curve. The TO was varied during the
+trial wear periods to maximize centration. The
+changes in apical radius, eccentricity, visual
+acuity (log minimum angle of resolution or
+logMAR) and apical corneal power were meas­
+ured at 'l-h intervals during the 6-h wear period.
+The change in apical radius for the treatment
+and control groups for the different CF lenses is
+shown in Figure 4.32A. The relationships between
+the lens design and change in eccentricity and
+visual acuity are shown in Figure 4.32B and C.
+The lens with the deepest CF (6.000 reverse
+curve) showed the greater and faster effect when
+compared to the other designs and the control
+group. The interesting fact to note with the results
+is that the refractive change appears to be related
+Figure 4.32 The change in (A) apical radius Ro' (B)
+eccentricity,and (C) log minimum angle of resolution
+(logMAR) vision for a group of subjectsfitted with lenses
+where the RC is 2.00, 4.00, and 6.00Dsteeperthan the
+BOZR. All lenses arefitted accordingto sag philosophy.
+The lens that caused the greatestchange whencompared
+to the controlsis the6.00 D lens. The 2.00D lens changes
+were not statistically different to thecontrols.Courtesyof
+Christa Sara.
+to the BOZR, in that greater CF values are asso­
+ciated with a flatter BOZR.
+This is the single factor that all reverse geo­
+metry designs have in common, irrespective of
+the fitting philosophy used. The EI Hage, Reim,
+
+
+=== PAGE 98 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 97
+RelationshipbetweenBOZR and TR curvesfor10.00mm Orelmlens
+Figure 4.33 Relationshipbetween back optic zone
+radius (0) and reverse curve (0) for Oreimlens.The corneal
+data are Ro 7.80, eccentricity0.50. TR, tear reservoir;FTK
+flatter than K.
+and other philosophies are based on the selection
+of the BOZR as determined by the initial refract­
+ive error. The only difference between them is the
+amount of extra flattening used as a compression
+factor. However, most designs are also based on
+a peripheral alignment curve that contacts the
+peripheral cornea and are based on corneal
+shape, indicating constancy in the sag relation­
+ship between the lens and cornea.
+In the following examples, the standard cornea
+of R o 7.80 mm and e 0.50 is fitted using both
+philosophies. The refractive error range is from
+1.00 0 to 4.00 0 in 0.50 0 steps. Both lenses are
+assumed to touch the cornea centrally, with a TLT
+of zero.
+In the case of the Oreimlens, the BOZR is equal
+to (F o - Rx) - 0.75 0, with a 6.00 mm BOZO,
+0.60 mm TR width, and 10.00 mm TO. The rela­
+tionship between the BOZR (in effect, flatness of fit
+in diopters) and TR curves for the different refrac­
+tive error corrections is shown in Figure 4.33. Note
+that, once again, there is a linear relationship
+between the BOZR and the TR curves. Similarly,
+there is a linear relationship between the BOZR
+and the clearance factor (Fig. 4.34).
+El Hage's BOZR is equal to (Ro- 0.2) x Rx, with
+the CF at the edge of the TR calculated by adding
+the difference in sag between the initial prefit cor­
+neal shape and the BOZR of the lens over the same
+chord. The CF is determined by adding an allow-
+RelationshipbetweenBOZR and clearancefactorfor10.00mm Orelmlens
+Figure 4.34 Relationshipbetween lens fit (back optic
+zone radius) and clearancefactor.
+RelationshipbetweenBOZR and clearancefactorfor EI Hage lens
+(10.00mm TO)
+Figure 4.35 Relationshipbetween back optic zone
+radius (BOZR) and clearancefactor for EI Hage's lens.
+ance of 12 urn per diopter of refractive change at
+the 7.00 mm zone. Figure 4.35 shows the relation­
+ship between flatness of fit and the CF for a
+10.0 mm diameter lens. As with the other reverse
+geometry lenses, the relationship is linear.
+In effect, the main difference between the two
+designs is that the clearance factor per diopter of
+flattening is 13 j.Lm/1.00D for the Oreimlens, and
+21 j.Lm/1.000 for the El Hage design. The dis­
+parity in the two is due to the difference in TR
+curve widths and the flatter BOZR used by Reim,
+but regression analysis shows a linear relation­
+ship between the two (Fig. 4.36).
+
+
+=== PAGE 99 ===
+
+98 ORTHOKERATOlOGY
+Relationshipbetween clearancefactorsfor the
+EIHage andDreimlens
+Clearancefactor(um) EIHage
+Figure 4.36 The relationshipbetween the clearance
+factors(Cfs]of the Dreimlensand EI Hage lenses is linear.
+The differencebetween the two is dueto the extra
+compressionfactor of 0.75 Dused in the Reim design.
+The above analysis shows that, irrespective of
+the fitting philosophy or the basic lens design,
+there is a direct and essential relationship
+between the flatness of fit of the lens and the
+degree of steepening of TR curve, and both
+factors are dependent on the CF. In effect, for any
+given BOZR, there will only be one TR curve
+at a specific CF that will fulfill the sag fitting
+requirements for an individual corneal shape.
+It is this constancy of the relationship between
+the BOZR and the RC that led to the assump­
+tion of a "dose-response" RC relationship
+between the refractive change and the CF at the
+BOZD.
+In effect this is a circular argument. The rea­
+soning is that the BOZR is directly related to the
+required refractive change. For any given corneal
+shape, a lens fitted x D flatter than the cornea will
+have a specific tear layer depth (CF) at a BOZD of
+6.00 mm. The depth of the tear layer determines
+the curvature of the RC in order to maintain
+sagittal equivalency. This will therefore yield
+a linear relationship between the RC and the
+refractive change, but since the argument is based
+on the initial supposition that the BOZR controls
+the refractive change, the whole concept becomes
+a circular argument. As Bara has shown, the CF
+appears to control the refractive change. The CF
+also determines the RC if the BOZR is preset, and
+the BOZR if the RC is preset.
+Does the BOZR control the refractive
+change?
+The controlled studies of the traditional ortho­
+keratology techniques (Kerns 1976, Brand et al
+1983, Coon 1984) all found no correlation
+between the BOZR of the lens and the refractive
+error correction or the final corneal shape.
+However, with the introduction of the four- and
+five-zone lens designs, the Jessen factor once
+again became the dominant means of program­
+ming the refractive change required. However, to
+date there have been no controlled studies that
+prove that such a relationship exists. The
+assumption is that the epithelium will mold itself
+in a 1:1 relationship to the BOZR of the lens.
+Therefore, if the BOZR is set at the required
+refractive change, the cornea will mold to it. This
+concept appears to have some variations in that
+different lens designs will use different "com­
+pression factors" added to the initial Jessen
+factor. The Reim design has an extra 0.75 D
+flattening, whereas the R&R design is 0.50 D and
+the Fargo 1.00 D.
+If the BOZR of the lenses used had a direct
+"molding effect" on the cornea, there should be a
+good correlation between the base curve of the
+lens used and the change in refraction induced by
+the lens. To test this hypothesis, the correlation
+between change in apical corneal power and
+"flatness of fit" (Fa - BOZR in diopters) and the
+calculated BOZR for four lens designs were
+analyzed using regression analysis. The lens used
+in the study was the Contex OK704T, but since it
+is assumed that the primary influence on refrac­
+tive change is the BOZR, an assumption could be
+made that any lens that met the requirements of a
+correct sagittal relationship to the cornea would
+produce the same result. The results are shown in
+Figure 4.37.
+There is a high correlation (r2 = 0.80, P < 0.0001,
+df 59) for the relationship between the constant
+tear layer profile fit (IDEAL) and a poorer relation­
+ship for the 704T fit (r2 = 0.50, P < 0.0001, df 59).
+However, the correlation is definitely not 1:1.If the
+BOZR had a direct molding effect on the epithe-
+
+
+=== PAGE 100 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 99
+RelationshipbetweenchangeInapicalcornealpowerand lens fit (EI Hage)
+A
+RelationshipbetweenchangeInapical cornealpowerand lens fit IDEAL
+Relationshipbetweenchangein apicalcornealpowerand
+lens fit (Drelmlens)
+B
+RelationshipbetweenchangeInapicalcornealpowerand lensfit (OK704T)
+C 0
+Figure 4.37 (A) Relationshipbetween back optic zone radius (BOZR) and refractivechange using the EI Hage model.
+(B) Relationshipbetween BOZR and refractivechange using the Reim model. (C) Relationshipbetween BOZR and
+refractivechange using a constanttear layer model. (D) Relationshipbetween BOZR and refractivechange using the
+OK704.
+lium, the regression line would be at a 45° angle
+between the x- and y-axes. The correlation for the
+fitting philosophies based on a predetermined
+BOZR is much poorer: Reim (r2 = 0.19, P = 0.0004,
+df 59) and El Hage (r2 = 0.24, P = 0.Q1, df 59). Once
+again, there appears to be no direct molding effect.
+The results of fitting a group of subjects with the
+aim of a 4.00 0 reduction in myopia is shown in
+Figure 4.38. As can be seen from the results, there
+is a wide variation in outcome with respect to the
+final refraction, indicating that there is some
+unpredictability in the approach.
+
+
+=== PAGE 101 ===
+
+100 ORTHOKERATOlOGY
+Differencebetweenaimed forandachievedRxchange(4.000Aim)
+Figure 4.38 The achieved refractivechangescomparedto the aim of 4.00 Dfor agroup of 131 subjects.The refractive
+change was based on theback optic zone radiusof the lens. Courtesyof Tom Reim.
+~elatlonshlp betweenchangeInapicalcornealpowerandrefractivechange
+(Munnerlynsmodel)
+Relationshipbetweenchange Inapicalcornealpowerandchange
+Incornealsag (5.00 mm chord)
+A B
+Figure 4.39 (A) Relationshipbetweenchange in corneal sag (5.00 mm chord) and refractivechange. (B) Relationship
+between refractivechange and that calculatedfrom Munnerlyn'sformula overthe central 5.00mm chord.
+EI Hage assumes a 10 f.LID difference in corneal
+sag per diopter of refractive change. Is this correct?
+Essentially, the answer is "yes." In Chapter 8, the
+mathematical modeling of orthokeratology is
+approached from the viewpoint of epithelial
+changes researched by Swarbrick et al (1998). As
+part of her analysis, Swarbrick utilized a sugges­
+tion by Patrick Caroline that Munnerlyn's formula
+
+
+=== PAGE 102 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 101
+RelationshipbetweenchangeInapicalcornealpowerandpost-wearcornea/lenstearlayervolume
+A
+Relationshipbetweenchangeinapicalcornealpowerandpost-wearcornea/lenstearlayervolume
+B
+Figure 4.40 (A) Relationshipbetweenchange in tear layervolume and refractivechange using the Reim and EI Hage
+model. (B) The relationshipbetween refractivechange and tear layervolume for the constantTLT model and the EZM
+and 704models.The correlationisgood for the constantTLT model.
+(Munnerlyn et a11988)for refractive surgery could
+be used as a means of assessing refractive changes
+in orthokeratology. Munnerlyn's formula states:
+Ablation depth = (Rx D2)/8 (n -1)
+where Rx is the refractive change required, D the
+diameter of the ablation zone, and n the refractive
+index of the cornea (1.377). From the orthokera­
+tology context, ablation depth can be interpreted
+as sag change from the initial corneal shape to the
+
+
+=== PAGE 103 ===
+
+102 ORTHOKERATOLOGY
+final corneal shape, and D the area of corneal
+flattening induced by the lens.
+The change in corneal sag over a 5.00 mm chord
+as a result of orthokeratologic treatment was cal­
+culated for a group of 60 patients. The difference in
+sag was calculated using the initial Roand e values
+taken from corneal topographical data and sub­
+tracting the final, posttreatment sag using the
+"final" Ro value and an eccentricity of zero. The
+relationship between refractive change and sag
+change is shown in Figure 4.39a. There is a high
+correlation between the two (r2 = 0.98, P < 0.0001,
+df 59), with the regression form indicating a sag
+change of 8 urn per diopter of refractive change.
+This is relatively close to the 10 urn assumed by El
+Hage. Similarly, the relationship between actual
+measured change in apical corneal power and the
+predicted change using Munnerlyn's model is
+highly statistically significant (r2 = 0.98, P < 0.0001,
+df 59), and is shown in Figure 4.39B.
+Finally, a further refinement of the model can
+be used to determine if there is any "molding con­
+stant" based on the different fitting philosophies.
+If it is assumed that the choice of BOZR in some
+way determines the final corneal shape induced
+by the lens, then there should be a correlation
+between the final volume relationshipbetween the
+tear volume under the lens and the altered corneal
+shape, and the refractive change induced. The
+Relationshipbetweenchangeinapicalcornealpowerand
+cornealvolumeInorlhokeratology
+change in apical corneal power represents the
+refractive change induced by the shape or volume
+change in the cornea over the 5.00 mm chord.
+The regression analysis of the calculated
+volume differences between the cornea and the
+El Hage and Dreimlens postlens tear volumes
+and the measured change in apical corneal power
+is shown in Figure 4.40A. The results are quite
+surprising, as there is no correlation between
+corneal power change and the volume differences
+with the El Hage (r2 = 0.09, P = 0, df 59) and Reim
+(r2 = 0.08, P = 0, df 59) models, indicating that the
+choice of BOZR does not induce a predetermined
+degree of corneal power change. However, the
+correlations between the change in apical corneal
+power and the postwear tear volume difference
+for the constant TLT lens and the OK704 are
+shown in Figure 4.40B. The correlation is surpris­
+ingly good (r2 = 0.90, P < 0.0001, df 59) for the
+constant TLT lens, and poor for the 704 (r2 = 0.03,
+P = 0, df 59). The OK704 result is similar to the
+El Hage and Reim relationship, indicating a basic
+flaw in the concept of the lens/ cornea fitting rela­
+tionship. The difference between the constant TLT
+fitting concept and the others is the use of a
+constant tear layer profile irrespective of initial
+corneal shape. El Hage and Reim set the BOZR as
+the basis of lens construction, whilst the OK704
+and EZM set the TR curve as the fixed basis of
+Relationshipbetweenchangeincornealeccentricityandchangein
+cornealvolumeinorlhokeratology(5.00 mm chord)
+A B
+Figure 4.41 (A) The relationshipbetween corneal volume change and eccentricity.(B) The relationshipbetween
+refractivechange and corneal volume. .
+
+
+=== PAGE 104 ===
+
+DESIGN VARIABLES AND FITTING PHILOSOPHIESOF REVERSE GEOMETRY LENSES 103
+lens design. In all of these cases, the CF will vary
+with the corneal shape.
+The BOZR of the constant TLT lens is based on
+the relationship between the tear layer profile and
+the corneal shape remaining constant. The rela­
+tionship between the final corneal shape, which
+causes the refractive changes, and the tear layer
+volume difference between the lens and the
+cornea is governed by the change in corneal
+shape, which is dependent on the change in
+eccentricity from a prolate ellipse to a sphere. The
+unifying factor between the tear layer volume
+pre- and postwear is the change in corneal eccen­
+tricity.
+The relationship between corneal eccentricity
+change and corneal volume change (Fig. 4.41A) is
+statistically significant (r2 = 0.86, P < 0.0001, df 59),
+as is the relationship between refractive change
+and tear volume change (r 2 = 0.96, P < 0.0001,
+df 59), as shown in Figure 4.41B.
+The analysis shows that there is no direct rela­
+tionship between the BOZR of the lens and the
+induced refractive change, meaning that the
+fitting concepts of El Hage, Reim, Mountford,
+and others of either a predetermined BOZR
+or TR curve are flawed. There is, however, a
+good correlation between the BOZR based on the
+constant tear layer profile concept and the refrac­
+.tive changes seen. This does not mean that lenses
+fitted according to the Jessen factor do not work:
+it simply means that the fitting concept is not
+validated by the analysis of the data. The reason
+why the choice of a BOZR based on the refractive
+change required actually does work as an ortho­
+keratology lens will be discussed in greater detail
+in Chapter lf), but the results of the above analy­
+sis show that the margin for error of assuming a
+1:1 molding relationship between the BOZR of
+the lens and the final corneal shape,. or a
+modification of it, is high.
+The constant-surface-areaconcept
+Both the Fargo and Euclid lenses base the lens
+design on the assumption that the corneal surface
+area remains constant and is not altered by ortho­
+keratology treatment. Smolek & Klyce (1998)
+have shown by topographical analysis that
+corneal surface area is in fact constant for all
+corneal conditions except keratoglobus. However,
+it appears that the constant-surface-area concept
+is applied to orthokeratology as a reflection of the
+law of the conservation of corneal power argu­
+ment, as proposed by Caroline & Campbell
+(1991).
+The Fargo and Euclid lenses derive the BOZR
+of the lens based on the Jessen factor, with a mild
+difference between compression factors. The
+reverse curve is then calculated such that the
+surface area (SA) of the pretreatment cornea is
+equal to the surface area of the BOZR and RCs.
+Day et al (1997) use the example of a cornea
+with 46.00 0 apical power and an eccentricity of
+0.47 having a surface area of 59.00 mm- over a
+treatment diameter of 8.30 mm (BOZO plus BP0 1) .
+The surface area of the BOZO of the lens used is
+then subtracted from the initial corneal surface
+area. The difference is then the surface area of the
+RC. The example given is that 42.50 0 BOZR over
+a 6.00 mm BOZO has a surface area of 29.36 mm-.
+In order for the surface area to remain constant, the
+RC must have a surface area of 29.64 mm-, or a
+curve of 45.50 0 or 3.00 0 steeper than the BOZR.
+Kwok (1984) gives the formula for the surface
+area of a rotationally symmetrical aspheric
+surface as:
+S = (II/1 + Q){R2- (R-s-sQ)[(R-sQ)2 + S2QJ1/2­
+[(R2I (-Q-Q2)1/2][sin-1- QI/2 (R-s-sQ) IR­
+sirr ' _ Q1/2]}
+where R is the apical radius, s is sag, and Q is
+asphericity.
+The surface area of a spherical surface is:
+SA= 211 Rs
+where R is the radius and s is the sag of the sphere.
+If the data of Day are used (Ro = 7.33 and
+Q = 0.211), the calculated corneal surface area
+over a chord of 8.30 mm is 59.00 mm-. The total
+surface area of the lens follows the same mathe­
+matical rules as the sag calculations in that:
+Total SA = SA R1I0 1+ (SA R21O2- SA R210 1)+
+(SA R3/ 0 3 - SA R31O2 )
+The original concept was developed for use with
+three-zone lenses, such that the RC came into
+contact with the corneal surface at a.total chord of
+8.30 mm. The total surface area of the lens was then
+
+=== PAGE 105 ===
+
+104 ORTHOKERATOLOGY
+Figure 4.42 The tear layerprofileof a four-zone lens on
+a standard cornea with a back optic zone radius (BOZRj
+fitted 3.50 Dflatter than flat- K.
+29.36 mm- (surface area of BOZO) plus 29.63mm­
+(surface area of the RC zone), giving a total lens
+surface area of 58.99mm-. The calculations show
+that the surface areas match within the limitations
+of the figures used (two decimal places).
+Figure 4.42 shows the tear layer profile of a
+four-zone lens on a standard cornea with a BOZR
+fitted 3.500 flatter than flat-K. In this case, the
+lens is assumed to have zero apical clearance, and
+the RC meets the corneal surface at the junction
+of the RC and alignment curve. The SA of the
+cornea at a chord of 7.20 mm is 42.34 mm-, and
+the SA of the lens is 43.38 mm-. Once again, given
+the limitations of the calculations, the results are
+in close agreement.
+In Figure 4.43, a generic four-zone lens is
+shown fitted to the standard cornea. The common
+area of contact is now over a chord of 9.20 mm,
+and the SA of the cornea is 79.55 mm-. The total
+SA of the lens is 80.75 mm- over the same chord.
+The technique shows close agreement for basi­
+cally all correct combinations of back surface
+geometry if the lens is constructed using sag
+calculations.
+However, the choice of RC and alignment
+curves is once again secondary to the selection of
+the BOZR based on variations of the Jessen factor.
+As has been shown previously, for any given
+corneal shape there is only one combination of
+RC and alignment curve that will satisfy the
+Figure 4.43 A genericfour-zone lens is shown fitted to
+the standardcornea.
+requirements of sag fitting. SA calculations are a
+complex extension to the sag philosophy, and
+both are totally dependent on corneal shape.
+The fact that the SAs of the cornea and the lens
+match is a derivative of the sags matching, and
+not, as one would tend to assume, due to a 1:1
+molding relationship between the lens and the
+cornea.
+ACCURACY OF SAG FITTING
+Bara (2000)noticed during the course of her study
+that there appeared to be a relationship between
+the apical radius and eccentricity value and the
+BOZR of the lens, in that the BOZR was approx­
+imately equal to the R o in millimeters and the
+numeric value of the eccentricity. If Ro was 7.80
+and e 0.50, the BOZR was approximately 8.30 mm.
+This led to the systematic evaluation of the sag
+philosophy and the traditional "flatter-than-K"
+fitting technique and the relationship to the Ro + e
+methods for predicting the correct BOZR. The
+data used for analysis had been previously pub­
+lished (Mountford 1997b), where a group of
+60 patients who had successfully completed a
+course of orthokeratology were fitted with
+OK704T lenses. The differences in the final lens
+parameters used were compared to the BOZR
+indicated by the sag calculations, the flatter­
+than-K approach, and the Ro+ e approximation.
+
+
+=== PAGE 140 ===
+
+140 ORTHOKERATOLOGY
+systems based solely on this technique are the BE
+and EZM designs.
+It is generally acknowledged that fitting ortho­
+keratology lenses is fairly complex and requires a
+high degree of accuracy and skill. The assessment
+of the three techniques will be considered with
+this in mind.
+EMPIRICAL FITTING
+Maruna et al (1989) found that approximately
+50% of all contact lens practitioners order rigid
+gas-permeable (RGP) lenses empirically, i.e.,
+with no trial lens fitting. The difference in
+success rates between empirical and trial lens
+fitting was studied by Bennett et al (1989), with
+results that are especially relevant to orthokera­
+tology fitting. They found a much higher first-fit
+success rate with trial lens fitting, with the
+reorder rate for empirically fitted lenses being
+twice that of the trial lens group. Bennett &
+Sorbara (2000) make the following strong recom­
+mendations to practitioners who prefer to fit
+empirically:
+1. The use of the manufacturer's recommended
+fitting guide in combination with having a
+sound knowledge of lens design to make an
+educated decision is essential. Sufficientexperi­
+ence with spherical RGP fitting should be
+obtained initially before empirically ordering
+lenses. Specialtyfits, including bifocal,toric and
+irregular cornea lens designs (and orthokerato­
+logy?)shouldalwaysbediagnosticallyfitted. [Italics
+are authors.]
+2. As the cornea is aspheric and complex in its
+topography and because it varies in shape
+from patient to patient, the use of videokerato­
+graphy is important if empirical fitting is to be
+performed.
+There are two major points in Bennett & Sorbara's
+list that require some expansion with respect to
+reverse geometry lens (RGL) fitting. Firstly, they
+recommend a thorough knowledge of the manu­
+facturer's design, so that some logical decisions
+can be made in order to rectify the fit if it is not
+ideal. This is simply not possible with the major­
+ity of RGLs, as the reverse and alignment curves
+are considered by the manufacturer to be "pro-
+prietary" information. If the practitioner doesn't
+know the curves, then the decisions as to what
+curves need to be modified in order to correct a
+problem are left to the manufacturer.
+Secondly, if empirical fitting is to be carried
+out, then Bennett & Sorbara recommend that
+corneal topography is essential. This is valid
+assuming that the manufacturer knows anything
+about topography, and how to use the data to
+design a lens more accurately. In most cases,
+according to the author's experience with empiri­
+cally fitted RGLs, the only topography data used
+by the manufacturer are the simulated K read­
+ings, thereby negating any value that the topogra­
+phy data may give with respect to the real corneal
+shape.
+Guillon & Sammons (1994) place major empha­
+sis on three factors that are essential to the lens
+design process: safety, comfort, and vision. Safety
+is measured in terms of the ability of the lens to
+supply adequate oxygen to the cornea, and also
+in the use of design criteria that limit areas of
+concentrated mechanical stress on the corneal
+surface. Comfort is determined by the fitting rela­
+tionship of the lens curves to the corneal surface,
+as well as the quality of lens finish with respect to
+edge and transition blending. Vision is the
+product of the relationship between the lens
+design, tear lens power, and the patient's refract­
+ive error.
+RGL fitting is even more complex due to the
+lens design and accuracy required for a successful
+outcome (Bara 2000). This therefore seems to
+indicate that the first-fit success rate with em­
+pirically prescribed lenses would be even lower
+than that achieved with standard lenses. Poorly
+fitting spherical lenses may, at worst, cause dis­
+comfort and irritation, but a poorly fitting RGL
+can cause either marked central corneal staining
+if fitted too flat, or, conversely, major binding if
+fitted too tight (see later). The increased risk of
+serious corneal infection from corneal staining, as
+demonstrated by the high incidence of problems
+in China (11 cases), should be of major concern to
+all those who try to fit orthokeratology lenses
+empirically (Lu et aI2001).
+There are basically three methods used by
+manufacturers to design lenses empirically for
+orthokeratology.
+
+=== PAGE 141 ===
+
+TRIAL LENS FITTING 141
+Table 6.1 The variationin apical radiusvalue with
+changingeccentricityassumingaf1at-Kvalue of
+7.76 mm (43.50 D)
+the flat-K value and an assumed eccentricity will
+be examined in detail in the following example.
+A practitioner sends the laboratory the follow­
+ing data and asks for a lens to be made. The
+manufacturer designs the lens on the following
+basis. The BOZR of the lens is assumed to be
+equal to the refractive change required plus an
+extra 0.50 0 as a compression factor. The design is
+a four-curve lens, with a back optic zone diameter
+(BOZO) of 6.00 mm, a reverse curve width of
+0.60 mm, an alignment curve that is 1.00 mm
+wide that meets the reverse curve with a tear
+layer thickness of 10 urn. The edge lift is a simple
+10.00 mm curve 0.40 mm wide. The apical clear­
+ance of the lens is presumed to be 5 urn.
+The data supplied to the lab are Flat-K 43.500,
+and the refractive change required -3.00 O.
+Since the corneal eccentricity was not specified,
+the manufacturer automatically assumes that it is
+0.50 for the sake of calculations. The lens would
+therefore have the following specifications:
+BOZR =43.50 0 - 3.00 0 - 0.50 0 =40.00 0 =
+8.43 mm
+This equates to the flat-K minus the Rx change
+required (3.00 D) minus the compression factor
+of 0.50 0, leaving a final BOZR of 40.00 0 or
+8.43 mm. The exact lens specifications and the
+tear layer profile of the lens are shown in
+Figure 6.1, and are based on an assumption that
+flat-K is equal to RD.
+1. The lens has standard curves, with the back
+optic zone radius (BOZR) fitted 1.50-2.50 0
+flatter than the flat-K (Contex OK series).
+2. The BOZR is based on the basis of the change
+in refraction required with an allowance for an
+extra "compression factor" of between 0.50
+and 1.00 O. If the laboratory is only supplied
+with K readings, the eccentricity is assumed to
+be 0.50 (Oreimlens, CRT, Correctech, Emerald,
+Contex BB, Fargo).
+3. The results of one topography reading are sent
+to the lab, and a lens design based on the data
+is made (Euclid Jade). Alternatively, the practi­
+tioner uses a specific computer program
+linked directly to the topographer as an aid to
+lens design (WAVE).
+The sag-based fitting approach, as outlined in
+Chapter 4, as well as the work of Bara (2000)
+shows the inaccuracies that can occur if the first
+method is used. Mountford et al (2002) have
+shown that basing a lens design on the flat-K and
+an assumed eccentricity of 0.5 also leads to inac­
+curacies. The two values needed to design a lens
+based on the sag philosophy are the apical radius
+(Ro) and the eccentricity (e) or elevation at the
+common chord of contact between the lens and
+the cornea. The flat-K is not equal to the apical
+radius. The apical radius is the instantaneous
+radius of curvature at the corneal apex, and
+contains elements of both the steep and flat
+meridian. Depending on the degree of corneal
+astigmatism, and the eccentricity of the cornea, Ro
+can be significantly steeper than flat-K. Table 6.1
+shows the difference between Ro and flat-K with
+varying eccentricities, assuming a nonastigmatic
+cornea. If astigmatism is present, the difference is
+greater for increasing degrees of astigmatism.
+If the flat-K is used, and the eccentricity is
+known, the apical radius for nonastigmatic sur­
+faces is calculated from the following formula
+(Oouthwaite 1995):
+Ro= --JR/ + y2p_ y2
+where Ro is apical radius, R, axial radius at the
+nominated chord, y is the half-chord (1.5 mm for
+the keratometer), and p is (1- e2 ) .
+The accuracy of the assumptions used to gen­
+erate an empirical lens design simply based on
+Eccentricity
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+Flat-K(R.)
+7.76
+7.76
+7.76
+7.76
+7.76
+7.76
+7.76
+7.76
+7.76
+7.76
+Apical radius (Ro)
+7.76000
+7.75855
+7.754199
+7.746941
+7.736769
+7.723671
+7.707633
+7.688634
+7.666655
+7.641669
+
+=== PAGE 142 ===
+
+142 ORTHOKERATOLOGY
+As can be seen from Table 6.1 Ro is only equal
+to flat-K if the eccentricity is zero. The actual
+value for Ro when flat-K is 7.76 mm and the
+eccentricity is 0.5 is 7.72 mm. If the same lens
+details are then fitted to the cornea with the Roset
+at 7.72 and an eccentricity of 0.5, the tear layer
+profile and the fit of the lens will vary. The tear
+layer profile of the original lens parameters on
+the actual corneal shape is shown in Figure 6.2.
+Note that the calculated lens parameters result in
+a lens that is too flat, with zero apical clearance
+and no peripheral touch in the alignment curve
+zone. This lens will commonly decenter super­
+iorly until a tear layer under the lens is formed
+that causes the appropriate squeeze film and
+Figure 6.1 Lens parameters
+andtear layerprofile for a
+lenswhere Ro is assumed to
+beequal to flat-K.
+Figure 6.2 The lens
+calculatedin the example
+fitted to the eye with the
+actual Ro value of 7.72 mm
+instead of flat-K 7.76mm.
+Note that the lens is too flat,
+with zero apical clearance,
+and noperipheralcontact.
+This lens would decenter
+superiorlyand cause a
+smiley-facepostwear
+topographyplot.
+surface tension forces required for a stable fit
+(Hayashi 1977, Guillon & Sammons 1994).
+The mean corneal eccentricity in the popula­
+tion is approximately 0.50, with a standard devia­
+tion of 0.15, so as a comparison in the above
+example, it will be assumed that the patient did
+not have an eccentricity of 0.5, but either 0.35 or
+0.65, one standard deviation either side of the
+norm. The tear layer profile of the initial calcu­
+lated lens on the 0.35 eccentricity cornea is shown
+in Figure 6.3. As with the example above, the lens
+design arrived at by the laboratory is too flat for
+the corneal shape and will decenter. In both of
+these cases, a smiley-face topography plot will
+result from wearing the lens (see later), with
+
+
+=== PAGE 143 ===
+
+induced with-the-rule astigmatism and poor
+unaided acuity.
+Finally, the eccentricity is assumed to be 0.65,
+with a resultant change of apical radius to
+7.69 mm. The ordered lens on this cornea will be
+far too steep, with approximately 14 urn of apical
+clearance and a steep alignment curve (Fig. 6.4).
+Steep or tight lenses result in central island post­
+wear topography plots, with poor unaided visual
+acuity that is usually worse than the initial
+unaided visual acuity. The differences between
+the reverse curve and alignment curve values and
+those supplied by the manufacturer are shown in
+Table 6.2. Note that in all cases there are signi­
+ficant differences in the curves, and that none of
+the lenses are interchangeable.
+TRIAL lENS FITTING 143
+Figure 6.3 The original lens
+parametersfitted to a cornea
+with eccentricity0.35. The Ro
+of the cornea is 7.74mm,
+whereasflat-Kis 7.76mm.
+This lens is even flatter than
+the last example.There is zero
+apical clearance,and
+approximately15 um of
+clearanceat the alignment
+zone. This lens would also
+decenter.
+Figure 6.4 The original lens on
+a cornea with an eccentricityof
+0.65. Ro is now7.69 mm. Note
+that the apical clearanceis
+17 urn, and not the required
+5 urn. This lens is toosteep, and
+will cause a "centralisland."
+If the practitioner is faced with these less than
+ideal responses to the lens that was sent, the only
+course of action is to contact the laboratory with
+the results and ask them to redesign the lens. The
+usual method of rectification with most of the
+empirically designed lenses is to alter the align­
+ment curve. The alignment curve with most four­
+curve designs is based on the axial radius of
+curvature of the cornea at a chord of 4.60 mm, or
+the start of the alignment curve zone. The tear
+layer of such a lens is shown in Figure 6.5.
+Clinical experience showed that this curve was
+too flat, so the value was changed to allow for a
+tear layer thickness (TLT)of 10 urn at the junction
+of the reverse and alignment curves (Reim 2000).
+This, in effect, results in the alignment curve
+
+
+=== PAGE 144 ===
+
+144 ORTHOKERATOLOGY
+Table 6.2 The effect of the actualcorneal shape on
+the values for the reverse and alignmentcurves.
+Note that in all cases the valuesdiffer significantly
+from the curves used, assumingthat Kf is equal to Ro
+and that eccentricity is astandard0.50
+Corneal BOZR Reverse Alignment Peripheral
+data (6.00 mm) curve curve curve
+(0.6 mm) (1.0 mm) (0.4 mm)
+Kf= 7.76, 8.492 7.034 7.936 10.00
+e= 0.5
+Ro = 7.72 8.494 7.007 7.898 10.00
+e= 0.5
+Ro = 7.74 8.494 6.890 7.780 10.00
+e =0.35
+Ro = 7.69 8.494 7.045 8.047 10.00
+e =0.65
+BOZR, back opticzone radius.
+being approximately 0.05 mm or 0.25 0 steeper
+than the calculated Ra• The effect this has on the
+tear layer profile is shown in Figure 6.6.
+Luk et al (2001) cite various manufacturers'
+data and give the following description of the
+alignment curve construction. These data have
+already been presented in Chapter 4, but warrant
+repeating due to the importance in lens fitting.
+• If the corneal eccentricity is between 0 and 0.3,
+the alignment curve should be equal to the
+central flat-K value.
+• If the corneal eccentricity is between 0.31 and
+0.55, the alignment curve should be 0.25 0
+flatter than the flat-K value.
+• If the corneal eccentricity is between 0.56 and
+0.80, the alignment curve should be 0.50 0
+flatter than the flat-K.
+These generic values lead to gross errors, as
+shown in Table 6.3. Assuming a flat-K of 43.50 0,
+and varying eccentricities, the Ra value can be
+calculated at a chord of 4.60 mm. The value is
+then steepened by a further 0.250, as shown
+above. The resultant calculated values of the
+alignment curve vary dramatically with chang­
+ing eccentricity.
+So, what actually happens when the laboratory
+alters the alignment curve? In the case of the
+cornea with an eccentricity of 0.35 (Fig. 6.3), the
+advice would be that the lens was too flat, so
+the alignment curve would be steepened. !~e
+closest alteration is shown in Figure 6.7. ThIS IS
+still not an ideal situation as the depth of the tear
+layer at the reverse curve / alignment curve inter­
+section is 20 urn, instead of the required 10 urn,
+and the alignment curve is in effect too steep. The
+practitioner would then try this lens, which may
+result in edge compression and binding, or a
+central island. The laboratory would be requested
+to alter the fit again. This time, since the alter­
+ations to the alignment curve didn't work, the
+reverse curve and the alignment curve would be
+altered. The result is shown in Figure 6.8. At this
+Figure 6.5 Tear layer
+profileof the lens when
+the alignmentcurve is
+equal to the apical radius
+at achord of 9.20 mm.
+Note that the apical
+clearanceis0.6 urn, and
+that the tearlayer
+thicknessat the chord of
+9.20 mm is
+approximately5 urn,
+
+
+=== PAGE 145 ===
+
+Table 6.3 The flat-K andcalculatedalignmentcurve
++0.25D are shown.The differencebetween the two
+isshown in the third column.The valuescalculated
+from corneal data differ markedlyfrom the generic
+valuesof the alignmentcurves
+Flat-K(D) Alignmentcurve (D) Difference(D)
+43.5 43.74227 0.242268
+43.5 43.70004 0.200042
+43.5 43.5741 0.074097
+43.5 43.3666 -0.1334
+43.5 43.08105 -0.41895
+43.5 42.72212 -0.77788
+43.5 42.29544 -1.20456
+43.5 41.80739 -1.69261
+43.5 41.26483 -2.23517
+43.5 40.6749 -2.8251
+stage, the tear layer profile is almost exactly
+what is required, and the final lens curves are
+very similar to those arrived at by calculation
+(Table 6.3). However, it has taken three different
+lenses to arrive at a lens with similar parameters
+to the lens based on actual corneal data.
+A similar course of events would occur if the
+initial lens was fitted to the 0.65 eccentricity
+cornea. The laboratory would be advised that the
+lens was too tight, so the first alteration would be
+made by flattening the alignment curve. The
+result of this is shown in Figure 6.9. In this case,
+the alignment curve has been flattened from
+TRIAL LENS FITTING 145
+Figure 6.6 The effectof
+steepeningthe alignmentcurve
+by0.05 mm is toincreasethe
+apical clearanceto 5 urn, as
+well as increasingthe tearlayer
+thicknessat the7.20 mm chord
+to 10 um,
+7.936 mm to 8.05 mm. The usual change in align­
+ment curve is 0.25 0 at a time, so once again,
+three lenses would be required to arrive at the
+correct result that could have been achieved if the
+original corneal data were used. Note that in
+none of the cases outlined has the BOZR been
+altered. The entire fitting philosophy of the lens
+is based on a relationship between the BOZR and
+the refractive change required, so in effect the
+BOZR remains constant.
+The preceding examples illustrate that empiri­
+cal fitting that is based solely on keratometry data
+is inherently inaccurate due to the false assump­
+tions made with respect to flat-K being equal to
+apical radius and the assumption of a mean eccen­
+tricity value of 0.50. Those practitioners who prefer
+empirical fitting ought to make certain that they
+follow the suggestions of Bennett & Sorbara (2000),
+in that the laboratory must be supplied with accu­
+rate topography data on which to base the calcula­
+tions. The practitioner must also ensure that the
+manufacturer uses the data to design the lens, and
+not simply the flat-K values and a nominal eccen­
+tricity. Even if the lens design and fitting are based
+on topography (WAVE, Euclid Jade), errors are still
+inherent due to two main factors. Firstly, the lens
+fit is usually based on the data from a single topo­
+graphy reading, and secondly, errors due to the
+reconstruction algorithms used by the topographer
+are not taken into account. These factors will
+be examined in greater detail in the section on
+topography-based fitting (see later).
+
+
+=== PAGE 146 ===
+
+146 ORTHOKERATOLOGY
+Figure 6.7 The effect of
+changing(steepening)the
+alignmentcurve of the lens
+shown in Figure 6.3 to
+7.70 mm whilst keeping all
+the other curves constant.
+This is still a less than
+optimal fit, as the alignment
+curve is slightly too tight.
+Figure 6.8 The reverse
+curve has now been
+steepenedto 6.85 mm,
+and the alignmentcurve
+flattened to 7.80 mm. The
+lens is nowmuch closer
+to the lens caleulated
+from actualcorneal data.
+Figure 6.9 The lens shown in
+Figure 6.4 (eccentricity0.50) has
+been altered by flattening the
+alignmentcurve from 7.936 to
+8.05 mm.
+
+
+=== PAGE 147 ===
+
+To date, there has been only one report in the
+literature comparing the outcomes of empirical
+versus trial lens fitting. Fedders et al (1999) meas­
+ured the changes in refraction, corneal shape, and
+fluorescein pattern appearance in a small group
+of subjects (3) following 4 h wear of OK-3 lenses.
+The first set of lenses were fitted by supplying the
+manufacturer with the K readings and the specta­
+cle refraction. The second set were trial-lens-fitted
+and the fit altered until an optimal fluorescein
+pattern was achieved. The empirical lenses
+tended to be flatter in BOZR than the trial-fitted
+lenses, and caused less refractive change. The
+fluorescein patterns between the lens fits were
+very similar, leading to the conclusion that
+between fitting methods subtle differences occur
+that are not apparent with fluorescein pattern
+analysis. Further research into the differences
+between the first-fit success rate and corneal
+response to the different fitting methods is
+required.
+Empirical fitting is potentially inefficient, time­
+consuming, and expensive when compared to
+trial lens fitting with standard spherical RGP
+fitting (Bennett et al 1989). It is even less efficient
+when applied to reverse geometry fitting.
+TRIAL LENS FITTING
+The basics of trial lens fitting with RGLs for
+orthokeratology is essentially the same as for
+normal lens fitting. The practitioner is given a
+fitting nomogram by the manufacturer in order to
+select the BOZR (base curve) of the initial trial
+lens. The nomogram is usually based on a pre­
+determined relationship between the BOZR of the
+lens and the flat-K reading. The trial lens is then
+inserted and the usual tests of fluorescein pattern
+analysis and lens movement and centration
+carried out. From these data, the practitioner is
+then able to prescribe a lens for the patient.
+RGLs exhibit a totally different fluorescein
+pattern to that of a conventional lens. All current
+orthokeratology lenses show essentially the same
+fluorescein pattern, an area of "central touch"
+that is approximately 3-4 mm in diameter, a
+narrow and deep ring of fluorescein (the tear
+reservoir) approximately 0.5-1.00 mm wide, a
+wide alignment curve (1.00 mrn), and an edge
+TRIAL LENS FITTING 147
+clearance. It is the appearance of the fluorescein
+pattern that has led to the totally false assump­
+tion of heavy central bearing with the lenses.
+Central bearing is always associated with epithe­
+lial insult and the formation of corneal scarring
+(Korb et al 1982), or lens decentration. RGLs are
+fitted with apical clearance. It is the limitations of
+fluorescein pattern analysis that give the appear­
+ance of touch.
+This has been succinctly stated by UK practi­
+tioner Basil Bloom as follows:
+At no time during the orthokeratology process
+should a properly fitting lens come into direct
+contact with the corneal epithelium at the apex.
+Such contact will result in epithelial insult
+(Bloomunpublished).
+TRIAL LENS SETS
+There are many different designs of RGL avail­
+able, but, as shown in Chapter 4, the basic mathe­
+matical relationship between all the designs
+means that the fluorescein patterns will all appear
+similar. The important factors to take into account
+before ordering a trial lens set are:
+1. the design
+2. the material from which the trial lens set is
+made. Is the oxygen transmissibility (Ok/f)
+high enough to use for a safe overnight trial?
+3. the dimensional stability of the material.
+How often will the lenses need to be checked
+for warpage and steepening, necessitating
+replacement?
+4. the cost of the lenses and replacements
+5. quality and accuracy of manufacture
+6. engraving of the lens or color differences so
+the BOZRs are not mixed up
+7. Does the set come with complete fitting in­
+structions and / or a computer program to aid
+in lens selection and design variables?
+8. the sagittal difference between successive
+lenses in the set.
+Various manufacturers offer different combina­
+tions of the above variables, but of prime impor­
+tance are the quality and accuracy of the trial
+lenses, and the dimensional stability of the mate­
+rial. For example, trial lenses made from Boston
+XO have a higher Dk and appear to be more
+
+=== PAGE 148 ===
+
+148 ORTHOKERATOlOGY
+dimensionally stable than those made from
+Equalens 2. Mid-Dk materials can produce un­
+acceptable degrees of corneal swelling on over­
+night trials and should be avoided for use as trial
+lenses.
+The other important factor to consider is the
+logic and thought that have gone into the trial lens
+set design. As shown previously, the alignment
+curve or tangent is the major means of controlling
+lens centration, and varies considerably with
+corneal eccentricity. Since the trial lens will be
+required to fit a large range of different corneal
+shapes, the thought that has gone into varying the
+alignment curves or tangents in the set is of major
+importance. It is of little value having a trial lens
+set where the inaccuracies induced by too great a
+difference in relative sag between one lens and the
+next steepest or flattest lens renders the trial wear
+period invalid. Finally, the trial lens set should
+come with a complete set of instructions outlining
+lens design variations in order to modify the fit,
+and preferably a computer program that the prac­
+titioner can use to help choose the initial trial lens
+and then modify as necessary.
+The corneal response to the lens is totally
+dependent on the accuracy of the lens fit, as this is
+what determines the tear layer squeeze film pres­
+sure and forces that initiate and control the
+response (see Ch. 10).If the trial lens set parameter
+EqUIvalentsagsfO(eoandeccentrlCitycombinationsaleChOrd of9.20 mm
+variables limit the change in tear layer profile to a
+minimum of 20 urn (or 0.10 mm BOZR steps), the
+results can be - and will be - quite variable.
+However, designing a trial lens set for RGLs is
+a major task. As stated previously, the common
+corneal shape varies in apical radius and eccen­
+tricity. Most eyes have an eccentricity in the range
+of 0.30-0.70, so the problem with designing a trial
+lens set begins with having enough lenses in the
+set to fit the range of eccentricities adequately, let
+alone the variations in apical radius. Figure 6.10
+shows the total combinations of corneal sags at a
+chord of 9.20 mm with eccentricities ranging from
+0.30 to 0.70 and a range of steep to flat apical
+radius values. The colored bands represent differ­
+ences in sag of 10 um. Note that for any given
+combination of Roand e there is a range of sagittal
+equivalent eye shapes. In order to cover this
+range of corneal shapes, a 49-piece trial lens set
+with a sagittal difference of 10 urn between lenses
+would be required.
+However, matters are complicated by the addi­
+tion of the alignment curve. If an alignment curve
+that is 1.00 mm wide and contacts the cornea at a
+chord of 9.20 mm with a TLT of 10 urn at the
+junction of the reverse curve is required, the
+range of lenses increases. The variation in align­
+ment curve radius for the range of corneal shapes
+is shown in Figure 6.11. Note that there are
+Figure 6.10 The range of equivalentsags for
+combinationsof Roand eccentricityfrom 7.00
+to 8.50 mm. The bands of equal color are
+sagittal equivalents.
+
+
+=== PAGE 149 ===
+
+TRIAL LENS FITTING 149
+Relationshipof alignmentcurve radiusto apicalradiusfor
+Table 6.4 The parameters of a trial lens set designeddifferenteccentricities
+on the alignment curve radius based on the mean
+eccentricity value of 0.5. The back optical zone
+radius (BOZRj can be preset to a nominal 3.50 D
+flatter than Ro•and the reverse curves calculated for
+sagittal equivalency.
+Ro Trial Alignment Reverse Lens
+BOZR curve curve sag
+7.00 7.70 7.23 6.400 1.6624
+7.05 7.75 7.27 6.425 1.6499
+7.10 7.80 7.32 6.450 1.6375
+7.15 7.85 7.37 6.475 1.6247
+7.20 7.90 7.42 6.500 1.6122
+7.25 7.95 7.46 6.525
+1.6011
+7.30 8.00 7.51 6.550 1.5890
+7.35 8.05 7.56 6.575 1.5771
+7.40 8.10 7.61 6.600 1.5654
+7.45 8.15 7.66 6.625 1.5539
+7.50 8.20 7.70 6.650 1.5437
+7.55 8.25 7.75 6.675 1.5326
+Figure 6.11 The alignmentcurve radius is dependent on 7.60 8.30 7.80 6.700 1.5216
+the apical radiusand eccentricity.Alinedrawn parallelto 7.65 8.35 7.85 6.725 1.5109
+the x-axisat any alignmentcurvevalueshowsthe Ro and 7.70 8.40 7.90 6.750 1.5003
+eccentricityvaluesthat it will fit. 7.75 8.45 7.94 6.775 1.4909
+7.80 8.50 7.99 6.800 1.4806
+7.85 8.55 8.04 6.825 1.4705
+common alignment curves for various eccentrici- 7.90 8.60 8.09 6.850 1.4605
+ties. The design of a trial set can be simplified if 7.95 8.65 8.13 6.875 1.4517
+the alignment curve radius is based on the mean 8.00 8.70 8.18 6.900 1.4421
+eccentricity value of 0.5. The BOZR can be preset 8.05 8.75 8.23 6.925 1.4325
+to a nominal 3.50 0 flatter than Ro, and the 8.10 8.80 8.28 6.950 1.4232
+reverse curves calculated for sagittal equivalency. 8.15 8.85 8.33 6.975 1.4139
+8.20 8.90 8.38 7.000 1.4048The parameters of a trial lens set based on these 8.25 8.95 8.42 7.025 1.3967
+assumptions are shown in Table 6.4. Note that 8.30 9.00 8.47 7.050 1.3879
+there is an approximate sag difference of 12 urn 8.35 9.05 8.51 7.075 1.3800
+between each lens in the series. 8.40 9.10 8.57 7.100 1.3705
+In order to fit the closest correct trial lens, the 8.45 9.15 8.62 7.125 1.3620
+practitioner simply needs either to extract the 8.50 9.20 8.67 7.150 1.3537
+corneal elevation value at a chord of 9.20 mm 8.55 9.25 8.71 7.175 1.3462
+from the topographer, or alternatively calculate 8.60 9.30 8.76 7.200 1.3381
+the value from the apical radius and eccentricity
+values. Once the corneal sag is known, the lens
+with the closest matching sag in the set is found. sag of 1.4605 mm that will give an apical clear-
+The trial lens sag should always be greater than ance of 4.8 urn. The reverse curve is 6.85 mm
+the corneal sag to allow for apical clearance. and the alignment curve 8.09 mm. The tear layer
+For example, assuming an apical radius of profile of the trial lens is shown in Figure 6.12.
+7.43 mm and an eccentricity of 0.62, the corneal The analysis of the fit of the lens can then be
+sag over the 9.20 mm chord is 1.4524 mm. The refined by following the steps outlined in the
+closest lens in the set is the 8.60 BOZR lens with a section on topography-based fitting.
+
+
+=== PAGE 150 ===
+
+150 ORTHOKERATOlOGY
+The Dreimlens, R&R, CRT, EZM, and BE trial
+lens sets are designed on this type of basis, with
+sag differences between lenses of approximately
+10 11m. Trial lens sets that have a BOZR difference
+of 0.10 mm (20 11m) between lenses will have a
+limited range of applications.
+The Dreimlenstrial set
+The Dreimlens is not usually fitted by means of
+trial lenses in the USA, but this is the preferred
+method of fitting in Asia. The trial set was origi­
+nally designed for use in Hong Kong. This is a
+large (56-lens) set. It is a four-zone design with a
+6.00 mm BOZD, 0.60 mm wide reverse curve,
+1.00 mm wide alignment curve, and a 0.40 mm
+wide peripheral curve. The BOZR is set at a target
+of 3.00 D refractive change, and the alignment
+curves are standard, +10 11m, -10 11m, and -20 11m.
+As shown in Chapter 4, variations of 10 11m in
+alignment curve mean that the TLT at the
+reverse curve / alignment curve intersection is
+initially 10 11m (standard lens), and is then
+varied in 0.05 mm radius steps either steeper
+(+10 11m) or flatter (-10 and -20 11m). The BOZR
+of the trial lens is 3.75 D flatter than flat-K, but is
+labeled as the flat-K value. The initial trial lens
+selected is based on the flat-K value and the
+standard alignment curve. If the lens is too steep
+or flat, a lens with a looser or tighter alignment
+curve is used.
+Figure 6.12 The tear
+layerprofile for a lens
+designedfor an apical
+radius of 7.43 mmand an
+eccentricityof 0.62,
+where the corneal sag
+overthe 9.20 mmchord is
+1.4524mm. The closest
+lens in the set is the 8.60
+back optic zone radius
+lens with a sag of
+1.4605mm that will give
+an apical clearanceof
+4.8 11m. The reverse curve
+is 6.85mm and the
+alignmentcurve 8.09 mm.
+Alterations to the reverse curve are made by
+changing the BOZR. A change of 0.10 mm in
+BOZR alters the sag of the reverse curve by 4 11m
+and the alignment curve by 10 11m. The assess­
+ment of the trial lens is based on the fluorescein
+pattern and lens movement and centration.
+Lenses that decenter superiorly are considered to
+be too loose, and those that decenter inferiorly
+too tight. Lateral decentration is resolved by
+increasing the diameter to 10.6 mm and using a
+five-zone lens. Once the preferred fit is achieved,
+overrefraction is performed and the lens ordered.
+Overnight trial wear periods are not performed.
+Paragon CRT trial set
+This is also a large set, consisting of over
+100 lenses. There are 20 base curves at 0.1 mm
+intervals and four return or reverse zone depths
+with three different tangential peripheries.
+Further custom lenses are available for patients
+with corneal topographies that fall outside the
+80% of corneas that can be fitted from the inven­
+tory. The available return zone depths range
+from 350 to 750 microns in steps of 25 microns.
+These values represent the sag difference
+between the BOZD and the tangent. The cone
+angles range from 27° to 37° in 1 ° intervals. All
+trial lenses in the set have one of three preset
+cone angles. The BOZD is a constant 6.00 mm
+and the reverse zone and tangent are each
+
+
+=== PAGE 151 ===
+
+1.00 mm wide, including the sigmoid proximity
+blends. The common diameter is 10.50 mm. A
+lens with the BOZR and return zone depth and
+cone angle suggested by use of the slide rule
+lens selector is inserted and the fluorescein
+pattern assessed. If the centration and fitting
+pattern are not ideal the return zone depth is
+altered first to achieve the appropriate width of
+the central apparent contact zone and then the
+tangential periphery is altered to give the correct
+peripheral clearance and optimize centration.
+The BE lens
+The set consists of a minimum of 25 lenses, of
+either 11.00or 10.6 mm diameter. There is a sepa­
+rate design and trial set for Asian eyes (A-BE).
+BOZRs range from 7.85 to 9.10 mm in 0.05-mm
+steps. The cone angles vary with each lens, and
+are based on an arithmetic mean of the common
+ranges of eccentricities for each value of Ro. The
+eccentricities are weighted towards the lower end
+of the range for flatter corneas, and the higher
+range for steeper corneas. The initial corneal
+shape data are entered into the computer
+program, and the closest matching trial lens with
+a BOZR that gives apical clearance calculated and
+displayed. There is a sag difference of 8 J.1m
+between each consecutive lens in the set. The trial
+lens is inserted, the fluorescein pattern checked,
+and the patient advised to trial-wear the lens
+overnight. Any alterations to the final lens param­
+eters are then made using the postwear diagnos­
+tic software.
+R&R lens set
+The R&R set consists of a BOZR range of
+7.85-9.25 mm in 0.10-mm steps. A larger set in
+0.05-mm steps is also available. The diameters are
+10.00or 10.60 mm. Assessment of fit is carried out
+by fluorescein pattern analysis, and the BOZR
+based on the Jessen factor with a compression
+factor of an extra 0.50 D.
+The Contex E set
+There is no set limit to the number of lenses in
+this set. It can range from as few as 10 lenses to
+89 lenses. The common diameter is 10.6, and lens
+TRIAL LENS FITTING 151
+fit is based on the BOZR being 3.75 D flatter than
+Kf and fluorescein pattern analysis. At the time of
+writing, no further information on the set or
+fitting principles was available.
+The Euclid Emerald set
+There are 56 lenses in the set, with BOZR ranges
+from 40.00 D to 45.50 D based on the BOZR being
+3.75 D flatter than Kf' All lenses are + 0.75 D in
+power, and the BOZR changes in O.lO-mm steps
+over a refractive range of 1.00 to 4.00 D. The
+alignment curves are linked to the BOZR, such
+that each lens in the series has an alignment curve
+that is 0.10 mm flatter or steeper than the next.
+The choice of trial lens is similar to that used for
+the Dreimlens, with fluorescein pattern analysis
+used to determine the correct fit.
+GelflexEZM lenses
+The common diameters are 10.6 or 11.2 mm, with
+BOZRs ranging from 7.80 to 9.00 mm. As stated
+in Chapter 3, the cone angles vary with the
+BOZR. All lenses are plano-powered, with three
+fenestrations in at the BOZD / reverse curve junc­
+tion at 120 0 intervals. A computer program is
+used to determine the correct BOZR based on
+inputted topography data.
+Other lens designs also have trial lens sets
+available, but details were not available at the
+time of writing.
+The descriptions of the various lens designs given
+in this section should allow the practitioner to
+make informed decisions as to what trial lens set
+is best suited to the type of fitting philosophy pre­
+ferred. It is then a simple matter of approaching
+the manufacturer to find out what type of tech­
+nical support is available for that design.
+CARE AND MAINTENANCE OF TRIAL
+LENSES
+Unlike most RGP lenses, orthokeratology lenses
+are preferably stored dry. This is primarily due to
+the possibility that dried wetting solution can bind
+to the lens back surface and form a rough film that
+is difficult to remove, but, more importantly, can
+cause marked central corneal staining. Following a
+
+=== PAGE 152 ===
+
+152 ORTHOKERATOLOGY
+trial lens period, the lenses should be thoroughly
+cleaned and then gently dried with a soft tissue
+and stored dry. Care must be taken to avoid dust
+and contaminant accumulation in the storage case,
+as this can cause scratching of the lens surface. If
+there is concern regarding the transmission of
+prion-related disease like variant Creutzfeldt­
+Jakob disease (v-CJD), then best practice dictates
+that the current disinfection guidelines using 2%
+sodium hypochlorite (Milton) are followed.
+FLUORESCEIN PATTERN ANALYSIS
+with spherical RGP fitting, the appearance of the
+fluorescein pattern is of major importance in deter­
+mining the accuracy of the fit but this is not the
+case in contemporary reverse geometry fitting.
+Orthokeratology lenses are fitted with a specific
+outcome in mind, the controlled reformation of
+corneal shape, and the appearance of the fluores­
+cein pattern of the lens gives little useful informa­
+tion as to the likely effect the lens has on corneal
+shape, other than excluding lenses with grossly
+inaccurate fitting patterns. Both Reim (2000) and
+Mountford & Noack (2001) have questioned the
+relative accuracy and value of fluorescein pattern
+analysis with RGLs. Fluorescein fitting assessment
+serves solely to exclude lenses showing a gross
+misfitting to the underlying cornea.
+Fluorescein pattern analysis is a time-honored
+part of contact lens practice, and has been shown
+to be an accurate method of assessing the fit of
+a conventional lens (Brungardt 1961, Mandell
+1974, Osborne et al 1989). Studies have shown
+that, with training, practitioners are capable of
+determining the fit of a lens to a tolerance of
+0.05 mm in BOZR. Does this apply to RGLs for
+orthokeratology?
+Figure 6.13 shows a range of "ideal" fluores­
+cein patterns of different lens designs. The first
+thing to note is that a lot of the lenses have identi­
+cal fluorescein patterns, irrespective of the BOZR
+chosen. There are commonalities in the assess­
+ment of the patterns in that the following "rules"
+apply to most of the designs:
+1. The lens must center.
+2. There should be an area of apparent "touch"
+over the pupil zone.
+C
+Figure 6.13 (Al The ContextElens; (B) the Emerald
+lens; (Cl the CKR lens.
+
+
+=== PAGE 153 ===
+
+TRIAL LENS FITTING 153
+F I
+Figure 6.13 (0) the ReinhartReeves lens; (E) the Dreimlens;(F) the BE lens; (G) the Nightmovelens; (H) the Fargo lens;
+(I) the Paragon CRT lens.
+
+
+=== PAGE 154 ===
+
+154 ORTHOKERATOLOGY
+3. The alignment zone should appear as a wide
+band of close alignment or touch.
+4. The reverse zone should be either narrow
+and deep (four- and five-zone) or wide and
+tapered (EZM and BE).
+The one variant to this accepted appearance is the
+Contex E design, which is apparently optimally
+fitted with a relatively loose mid-peripheral align­
+ment zone and some decentration acceptable.
+Fluorescein dissolves in the tear film, with its con­
+centration and fluorescence dependent on the
+thickness of the tear film under the lens. Steep­
+fitting lenses exhibit greater fluorescence under
+the central area of the lens due to the relative con­
+centration of fluorescein molecules present and
+the deeper tear layer present centrally than in the
+more peripheral areas. The minimum TLT
+required for fluorescein to become visible given
+the concentrations commonly used in clinical
+practice is in the order of 20 urn (Carney 1972,
+Guillon & Sammons 1994).
+The tear layer profile of a four-curve lens is
+shown in Figure 6.14. If a line is drawn at the
+20 urn point on the y-axis parallel to the x-axis,
+then all points above the line will appear as visible
+fluorescein, and all points below the line will
+appear as areas of touch. The fluorescein pattern of
+the lens is shown in Figure 6.15, with the areas of
+Figure 6.15 Fluoresceinpattern of a four-zonelens.
+Notethat the areas of touch and clearanceare similarin
+area to the tear graph shown in Figure 6.14.
+touch and visible fluorescein reflecting that shown
+in the tear layer profile graph. Theoretically, for
+each increase in central TLT of 10 urn, the BOZR
+would need to be steepened by 0.05 mm, so at
+best, fluorescein pattern analysis would only be
+sensitive to changes of ± 0.10 mm in BOZR of
+RGLs. This is not the case in practice, as quite large
+changes in BOZR often occur before distinct
+changes in fluorescein pattern become obvious.
+Mountford et al (2003) fitted two patients,
+one Caucasian and one Asian, with both the
+Dreimlens and the BE lens, as well as standard
+Figure 6.14 Tear layerprofile of
+a four-curvelens. Parts of the
+profile above the 20 urn line will
+appearasclearance,or visible
+fluorescein,whilst thoseareas
+underthe line will appearas
+"touch."
+
+
+=== PAGE 155 ===
+
+spherical lenses (Menicon design). The lenses
+were fitted according to the designer's nomo­
+grams following repeated topography readings.
+Each patient then had lenses fitted 0.05 mm
+steeper or flatter than the ideal BOZR to a
+maximum of 0.10 mm variation in fitting. The
+fluorescein patterns were photographed with a
+charge-coupled device (CCO) slit-lamp system
+until an optimal representation of each lens fit
+was achieved. The photos were then transferred
+to PowerPoint and their position on the slide ran­
+domized. A letter from A to E was then randomly
+applied to each photo. Two groups of practi-
+TRIAL LENS FITTING 155
+tioners, 11 experienced orthokeratologists (OK),
+and 21 nonorthokeratologists (NOK), were then
+shown the slides and asked to choose the ideal­
+fitting spherical and RGL and then nominate the
+next steepest and flattest lens in sequence. The rele­
+vant BE fluorescein patterns are shown in Figure
+6.16. Forced choice was applied. Nonparametric
+(chi-square and Fisher's exact test) analysis was
+used to determine the significance of the results.
+Both groups could recognize the ideal contour
+fit on the Caucasian eye (64% and 64%), but
+differed with the Asian eye, as both groups
+tended to choose the flatter lens as the ideal fit
+Figure 6.16 The
+fluoresceinpatternsof a
+range of BE lenses on the
+same eye areshown with
+calculatedtear layer
+thicknessunderthe apex of
+the lens. Even with such a
+wide variation inback optic
+zone radius (BOZRj, the
+patternsall appearsimilar.
+The ideal fit is the 8.65 mm
+BOZR.
+
+
+=== PAGE 156 ===
+
+156 ORTHOKERATOLOGY
+Percentageof correctchoicesof lensfit
+(64% OK, 52% NOK). The rest of the lens choices
+for the alignment lenses were no better than that
+expected by chance. However, neither group
+could correctly identify the correct, flatter, or
+Figure 6.17 Distributionof correctlens choicesfor
+orthokeratologist(OK) practitionerand
+nonorthokeratologists(NOK). Both groupscould accurately
+determinethe correctalignmentlens, but neithergroup
+could determinethe correctreverse geometrylens.To do
+betterthan chance,the score needsto be greaterthan
+19%;however,the NOK Dreimlensbarshown at the top of
+the graph was not statisticallysignificant.
+steeper RGLs. All choices were less than that
+expected by chance. Surprisingly, the NOKs rou­
+tinely did better than the OKs in this part of the
+study, but the differences were not statistically
+significant (Fig. 6.17). Also, there was no differ­
+ence in the OKs' ability to choose a lens they were
+familiar with (the Dreimlens) from one to which
+they had no previous exposure (BE).
+The lenses fitted resulted in a spread of
+± 20 urn in apical clearance from the ideal fit. In
+effect, the results show that the TLT could vary
+from -15 um to +25 urn at the apex of the cornea
+and that the difference could not be determined
+Figure 6.18 A groupof Dreim
+lenses on thesame eye. Asin
+Figure 6.17, a lackof
+differentiation between
+successivelens fits occurs.
+Courtesyof Tom Reim.
+
+
+=== PAGE 157 ===
+
+by either the experienced OKs or the novices. The
+results of the study found that fluorescein pattern
+analysis of RGLs was not sufficiently accurate,
+and that the ability to determine the correct lens
+did not improve with experience.
+The reason for this appears to be related to the
+forces acting in the postlens tear film. RGLs apply
+positive (compressive) force centrally and negat­
+ive (tension) forces at the BOZO (see Ch. 10). This
+can be visualized in the old adage that flat lenses
+flatten the cornea and steep lenses steepen it.
+RGLs are the only designs that have elements of
+both forces acting under them. Engineers use the
+"surf and sand" metaphor to explain how parti­
+cles move away from areas of positive force. If a
+wave (positive force) moves across the beach
+surface, the sand (particles) moves away from the
+advancing force.
+Fluorescein is in solution in the tear film;
+however, the molecular weight of the fluorescein
+molecule is 346, whereas the molecular weight of
+the aqueous phase of the tear film is similar to that
+of saline (54). The difference in the molecular
+weights means that the heavier fluorescein mole­
+cule is the "sand" responding to the positive force
+under the center of
+the lens. The force "moves" the
+fluorescein molecules away from the center of the
+lens and into the deeper TLT at the edge of the
+BOZO. This will lead to an increased concentration
+of fluorescein in this area, with a resultant in­
+creased fluorescence. Conversely, the relative lack
+of fluorescein in the central area will lead to a rela­
+tive hypofluorescence and the appearance of
+central touch. Reim makes a special point of high­
+lighting the inability of fluorescein pattern analysis
+to determine the correct Oreimlens accurately
+(Fig.6.18).
+Also, the response appears to be time­
+dependent, with the visibility of the fluorescein in
+the reverse curve area becoming greater with
+time (Fig. 6.19). Experiments with BE lenses show
+that the first appearance of apical clearance occurs
+with central TLTs in the range of 45-50 urn.
+Some lens designs are totally dependent on
+the "correct" interpretation of the trial lens fluores­
+cein pattern in order to generate data for the correct
+prescription lens. From the results of the above
+study, it appears that reliance on the fluorescein
+may be misguided, unless, of course, a series of
+trial lens fits were photographed and the results ex-
+TRIAL LENS FITTING 157
+Figure 6.19 Sequenceof imagesshowing the change in
+fluoresceinpattern overtime. Note how thefluorescence
+appearsto increasein the reverse curve area. The lens has
+approximately39 um of apical clearance.
+posed to intense scrutiny in order to determine the
+optimal pattern. Even with such an approach, the
+fluorescein pattern itself will not supply any valid
+information as to the corneal response to the lens.
+However, it is extremely worthwhile assessing
+the fitting using fluorescein for the following
+reasons:
+1. Gross misfits due to poor topographical data
+are immediately apparent.
+
+
+=== PAGE 158 ===
+
+158 ORTHOKERATOLOGY
+2. The practitioner can be certain that there is
+adequate peripheral clearance and therefore
+that the lens is not impinging on the cornea.
+3. The presence of some degree of movement can
+be discerned.
+4. The lens position can be assessed. With the
+lens in place, the patient is asked to close the
+eyes and pretend to be asleep. The eyes are
+left closed for approximately 20 s, and the
+patient is asked to open them again without
+consciously looking at anything. The position
+of the lens immediately on eye opening gives
+an accurate assessment of where it will center
+during eye closure. Lenses that are grossly off­
+center can be refitted immediately.
+Cho et al (2002) interviewed 12 experienced
+orthokeratologists in Hong Kong in order to
+determine the type of lenses used and the
+general mode of practice of orthokeratology. All
+practitioners used trial lens fitting, with most
+requiring two sets of lenses to achieve the refrac­
+tive goal. In general, the higher the refractive
+change required, the greater the number of lenses
+needed. The most commonly fitted lenses were
+the Dreimlens, Fargo 6, and Conte x designs.
+It is extremely important to assess the fluores­
+cein pattern using a barrier filter. This is a yellow
+Wratten 14 filter held in front of the observation
+system of the slit-lamp microscope. Figure 6.20
+shows a lens imaged with and without a barrier
+filter in place.
+TOPOGRAPHY-BASEDFITTING
+As set out in Chapter 2, topographers show a
+very high degree of accuracy and repeatability
+when measuring different spherical and aspheric
+test surfaces (Applegate et al 1995, Hilmantel
+et al 1999, Tang et al 2000). The accuracy and
+repeatability of topographers are poorer, how­
+ever, when human eyes are measured (Jeandervin
+& Barr 1998, Hough & Edwards 1999). There is
+one simple fact that must be understood with
+regard to the reported accuracy of a particular
+topographer on human eyes, and that is it is
+impossible to know what an accurate reading is,
+as the exact shape of the eye is unknown. Topo­
+graphers determine the model of corneal shape
+using reconstruction algorithms to interpret
+the reflections of the mires from the corneal sur­
+face, so the "picture" will vary depending on the
+following factors:
+1. the reconstruction algorithms used
+2. the accuracy of the capture method (automatic
+or manual)
+3. the stability of the patient (movement,
+fixation, tear layer stability)
+4. the state of the instrument's calibration
+5. the variation of the corneal profile from that of
+the model aspheric or spherical surface.
+In routine clinical practice, it is common for one
+single topography plot to be taken of each eye,
+and the fit of the lens to be based on the data.
+However, for any given single topography plot,
+there are four possible outcomes with respect to
+the accuracy of the data, especially as regards
+elevation.
+1. The data are accurate.
+2. The topographer overestimatedthe elevation.
+3. The topographer underestimatedthe elevation.
+4. The data are totally inaccurate.
+Figure 6.20 Lens imaged
+with (A) and without (B) a
+barrier filter in place.
+A B
+
+
+=== PAGE 159 ===
+
+The real problem with doing one single reading is
+that the practitioner does not know which of the
+above outcomes applies.
+The ideal solution to this dilemma is to take
+four to six repeated readings of the eye and
+determine the degree of error or the repeatability
+of the instrument for both apical radius and
+eccentricity or elevation. The concept of applying
+statistical methods to repeated readings was
+introduced by Lowe (unpublished), as a means of
+refining the fit of the lens, and gaining greater
+accuracy with the final lens parameters.
+Assuming that four plots are taken, the method
+is as follows:
+1. Compare the left and right eye maps for
+similarities in apical radius and eccentricity.
+They should be similar. Marked differences
+between the two eyes usually indicate that one
+of the plots is invalid. An example is shown in
+Figure 6.21. Place all four maps on the screen
+and assess them for any gross problems like
+excessive brow or nose shadow, stray eye­
+lashes, or gross discrepancies in apical radius
+or eccentricity values. The "rogue" readings
+should be discarded and a replacement plot
+TRIAL LENS FITTING 159
+taken. Figure 6.22 shows repeated readings of
+the left eye shown in Figure 6.21. The con­
+siderable variation in apical radius values
+and the poor repeatability were due to a very
+unstable tear film. The eye was lubricated and
+the readings retaken.
+2. Record the apical radius (in mm) and eccen­
+tricity values in different columns of a spread­
+sheet. If elevation data are given by the
+topographer, use those in preference to the
+eccentricity values. Make sure that the eccen­
+tricity or elevation is recorded at the chord of
+contact between the lens and the cornea.
+3. If only Ro and eccentricity are available, calcu­
+late the elevation or sag using the formula:
+Sag (elevation) = (Ro- '-'Ro2 - y2p) /p
+where Ro is apical radius, y is half the chord of
+contact between the lens and the cornea, and p
+the shape factor or (1 - e2) . Table 6.5 details the
+spreadsheet set-up and formulas required for the
+calculations.
+Once the elevations are calculated, the mean
+and standard deviations are derived using the
+function wizard. This is a time-consuming task.
+Hough & Edwards (1999) have recommended
+Figure 6.21 A comparison
+between the topography
+plots of two eyes. Note that
+the left is not similar to the
+right.
+
+
+=== PAGE 160 ===
+
+160 ORTHOKERATOLOGY
+Figure 6.22 Repeated
+readingsof the left eye
+shown in Figure 6.20. Note
+the variation in apical radius
+values and the poor
+repeatability.The patient
+had a veryunstabletear
+film. The eye should be
+lubricatedand the readings
+retaken.
+Table 6.5 An Excel spreadsheetfor determining the corneal sag. Input the relevant details and formulas so that
+column Econtains the sag value. If a group of readingsare taken, put each into column Fand then usethe
+function wizard to calculate the mean and standarddeviation.
+Column A1 (Ro) Column 81 (p) Column C1 Column D1 (1/2 chord) Column E1 (corneal sag)
+(eccentricity)
+A2 = Ro 82 = P C2 = Eccentricity D2 = 1/2chord (mm) E2 =cornealsag
+Formula: Value =9.20 for Formula= (A2-(sqrt A2·2-
+=(1 - C2"2) 10.00 mm lens (D2·2*82)))/82
+that the different topography companies incor­
+porate this type of statistical tool in their respec­
+tive software. To date this has only been done by
+Medmont, who include a program that calculates
+the mean and standard deviation of the apical
+radius, eccentricity, elevation, and keratometry
+readings at any chord or axis chosen by the practi­
+tioner for up to four repeated readings (Fig. 6.23).
+If the above seems too time-consuming, an
+alternative is to determine what the standard
+deviation of the topographer is in the measure­
+ment of the elevation data for 10 repeated meas­
+ures on the same normal eye using the method
+set out above. Then, when measuring the corneas
+of the individual patient, perform two repeat
+measurements and only perform a third if
+the first two differ by more than one standard
+deviation. The readings that fall within one stand­
+ard deviation of one another are then averaged
+and these data are used. This practical approach
+was suggested by Bloom (unpublished).
+Additionally, if topography data are to be used
+in order to fit a contact lens to a specified accuracy,
+a degree of tolerance must be set that is rigorous
+enough to allow for proper clinical decisions. If,
+for example, it is required to fit the BOZR to a
+tolerance of 0.05 mm, then the measurement toler­
+ance of the topographer has to be ± 0.025 mm.
+Similarly, if the lens needs to be fitted with an
+apical clearance tolerance of 5 urn, then the instru­
+ment measurement tolerance for elevation must
+not exceed ± 2.5 urn (Hough & Edwards 1999).
+The stated tolerance for lens manufacture with
+computer numeric-controlled (CNC) lathes is in
+
+
+=== PAGE 161 ===
+
+Figure 6.23 The mean and standarddeviationsof the
+range of corneal data valuesfrom the Medmont
+topographer.Notethat the chord over which the
+measurementsare taken is variable,as is theaxis.
+the order of ± 0.01 mm or ± 2 urn. Depending on
+the topographer used and the experience of the
+practitioner, the common range of error when
+measuring the elevation of human corneas can be
+from ± 2 urn to ± 15 urn (Cho et al 2002). The
+important question, then, is how many repeated
+readings are required in order to achieve a
+repeatability standard deviation of ± 2 urn?
+Hough & Edwards (1999) give the following
+relationship that is used to determine the number
+of repeated readings that would fulfill the
+requirements set out above:
+N =(S,/sy
+where N is the number of readings required,S, is
+the reproducibility standard deviation, and S, is
+the repeatability standard deviation.
+Cho et al (2002) measured the repeatability and
+reproducibility of four different topographers on
+a group of Asian subjects, and determined the
+number of readings required from each instru­
+ment with the S, limit set to 2 urn. The Medmont
+E300 had the best performance with only two
+repeat readings required. The Humphrey Atlas
+required 12, the Dicon 64, and the Orbscan 552.
+However, this degree of accuracy in fitting is
+only required to determine the final lens para­
+meters, and not the trial lens. Since the difference
+in trial lens sag between successive lenses is in
+TRIAL LENS FITTING 161
+the range of 10 urn, the tolerance for topographi­
+cal elevation should be in the range of ± 5 urn.
+HOW TO USE THE TOPOGRAPHYDATA
+There are now two known facts that the practi­
+tioner must understand. Firstly, the accuracy of
+the topography data is unknown, but the stan­
+dard deviation of error is known. Secondly, the
+accuracy of the sag height of the contact lens is
+known to a tolerance of ± 2 urn.
+The concept with topography fitting is to
+compare that which is known (the sag of the trial
+lens) to that which is not known (the sag of the
+cornea) and use the corneal response to the trial
+lens to refine the fit.
+For example, if the topographer gives a corneal
+elevation value of 1500 urn with a standard de­
+viation of ± 10 urn, then the range of possible
+corneal elevations to the 95% confidence level
+is 1480-1520 urn, which is based on the 95%
+confidence level being equal to twice the standard
+deviation.
+The sag philosophy states that lens sag is equal
+to corneal sag (elevation) plus the TLT. Taking the
+mean elevation value and adding 5 urn for TL1~
+the required sag of the trial lens is 1505 urn. In
+other words, the mean value is always used as
+the basis for determining the initial trial lens.
+Once the mean and standard deviation of error
+of the instrument for the individual patient
+are recorded, the practitioner will have a good
+idea of the range of trial lenses that may be
+required to achieve an optimal fit. For example,
+in the above case where the corneal elevation
+range is from 1480 to 1520 urn, the number of
+possible trial lenses, assuming a sag difference of
+10 urn between lenses, is four.
+The important fact to remember is that the
+topographer may have a standard deviation of
+error of ± 10 urn, but the lens has an error of
+±2fLm.
+The trial lens based on the mean value is
+then inserted and the fluorescein pattern assessed
+mainly for lens centration. If the fluorescein pattern
+is either grossly too steep or flat, then the initial
+indications are that the topography data are hope­
+lessly inaccurate, and should be repeated. In most
+cases, however, the fluorescein pattern will show
+the typical reverse geometry appearance. The
+
+
+=== PAGE 162 ===
+
+162 ORTHOKERATOLOGY
+patient is then taught insertion and removal and
+advised to sleep in the lenses that night and return
+in the morning with the lenses in situ for assess­
+ment. A full description of the postwear clinical
+assessment is given in Chapter 9.
+ASSESSINGTHE POST-TRIALTOPOGRAPHY
+The next step is to perform corneal topography
+measurements. This is probably the most valu­
+able tool in assessing the accuracy of the corneal
+response to the lens, and provides invaluable
+information for refining the fit of the final lens
+design. The plot is taken and then a subtractive
+plot of the prefit and postwear generated.
+Topographical analysis shows that there are
+four common outcomes from an overnight trial: a
+bull's-eye pattern, smiley face, smiley face with
+fake central island, and central islands.
+Bull's eye
+If the corneal data from the topographer were
+accurate, the trial lens will be an ideal fit, and will
+result in a bull's-eye postwear plot (Fig. 6.24). The
+diagnosis of the bull's eye is always done using
+the axial, tangential, and refractive power sub­
+tractive maps. The axial difference map shows the
+refractive change achieved at the corneal apex,
+and has a high correlation with the change in
+subjective refraction (Mountford 1997, Soni &
+Nguyen 2002). The refractive change achieved
+after the first night's wear is dependent on
+the number of hours the lens has been worn
+(Sridharan 2001) and the actualapical clearance of
+the lens (Mountford & Noack 2001). If the fit is
+ideal, and the apical clearance correct, the refrac­
+tive change achieved in the first night of wear
+will be approximately 70% of the total change
+required (Swarbrick & Alharbi unpublished).
+However, the assessment of a successful over­
+night trial is not based on refractive change, but
+on the centration of the treatment zone.
+The tangential power map is ideal for assess­
+ing the accuracy of centration of the treatment
+zone (Fig. 6.24B). Note that the "red ring" is per­
+fectly centered around the pupil zone.
+Refractive power maps also playa part in the
+postwear assessment of the changes. The treat­
+ment zone diameter is overestimated with the
+Figure 6.24 The axial (Al.
+tangential (B), and
+refractive power(e) maps
+of a bull's-eyetopography
+plot taken after an
+overnight-wear period.The
+axial mapshows the
+refractivechange, the
+tangential the centration of
+the effect, and the
+refractive mapthe
+treatment zone diameter.
+Note the excellent
+centration.
+
+
+=== PAGE 163 ===
+
+c
+axial map and underestimated with the tangen­
+tial map. The refractive power map gives a more
+accurate measure of the actual zone (Fig. 6.24C).
+TRIAL LENS FITTING 163
+Figure 6.24 Cont'd.
+The cursor is moved from the center of the map
+nasally and temporally until the point of zero
+change between the pre- and postwear maps is
+
+
+=== PAGE 164 ===
+
+164 ORTHOKERATOLOGY
+reached. The addition of the two values gives the
+treatment zone diameter. Also, in cases where it is
+difficult to make a final decision as to small
+degrees of decentration due to the corneal apex
+being decentered, the pre- and postwear refrac­
+tive power maps can be used to see if the refrac­
+tive change is central with respect to the initial
+corneal power distribution.
+In cases where the initial corneal eccentricity is
+high, but only a low refractive change is required,
+the appearance of the bull's eye will not be as dis­
+tinctive. Also, since the treatment zone diameter
+increases in diameter over the first week of wear,
+it is not uncommon to see incomplete bull's-eye
+pattern formation after the first overnight trial
+(Fig. 6.25). The single most important factor is the
+cent ration of the effect. Bull's-eye patterns are
+the only acceptable result of a trial lens fitting.
+The resulting corneal shape changes are well­
+centered and even in appearance, with little or no
+distortion in the central zone, resulting in good
+unaided visual acuity.
+Smiley-facepattern
+Smiley-face patterns (Fig. 6.26) are indicative of a
+flat-fitting lens that has decentered superiorly,
+typically due to instrument underestimationof the
+corneal elevation or sag. Underestimation of
+the elevation is equivalent to an overestimation
+of the eccentricity. If the eccentricity is over­
+estimated, the alignment curve or tangent of the
+lens will be too flat. When the rest of the lens con­
+struction is based on this value, the result is a
+flat-fitting lens. Also, the apical clearance will
+theoretically be less than zero, and the lens back
+surface will come into direct contact with the
+corneal apex. The force of the lid, combined with
+a redistribution of the tear film squeeze forces
+behind the lens will make the lens move superior­
+temporally in order for equilibrium to occur.
+When the lens decenters in this manner, the
+topography shows an area of flattening superior to
+the pupil, with a crescent of inferior steepening in
+the pupil zone. This is the classical smiley-face
+pattern. Figure 6.26A shows the axial power
+change. Refraction in theses cases usually yields a
+moderate decrease in myopia, but an increase in
+with-the-rule astigmatism. Unaided high-contrast
+acuity is also usually good, but associated with
+symptoms of ghosting and flare. Confirmation of
+the decentration is best done with the tangential
+power map (Fig. 6.26B).Note that the "red ring" is
+decentered superiorly. The degree of decentration
+is related to the underestimation of the corneal ele­
+vation, in that the greater the decentration, the
+greater the underestimation of the elevation.
+Smiley-face patterns are an unacceptable out­
+come for an overnight trial, as the resulting topog­
+raphy has induced corneal distortion. The patient
+should return for a further overnight trial with a
+steeper lens until a bull's-eye plot is achieved.
+Smiley face with fake central island
+Smiley faces with fake central islands (Fig. 6.27)
+represent an even greater underestimation of the
+corneal sag than a normal smiley face. In these
+cases, the lens sag is much less than the corneal sag,
+leading to heavy central touch that results in
+epithelial damage. The disruption of the surface
+causes distortion and linkage of the reflected mires,
+which the instrument then reconstructs as an area
+of steepening. The key diagnosis is made by the
+tangential power difference map (Fig. 6.278) and
+the appearance of central corneal staining. Further
+confirmation can be made by deleting the color
+map from the image and inspecting the central
+mires for distortion (Fig. 6.28). Once again, this is a
+totally unacceptable outcome, and the patient must
+be scheduled for a further overnight trial with a
+steeper lens until a bull's-eye plot is achieved.
+Central island pattern
+Central islands (Fig. 6.29) are usually caused by
+a steep or tight lens as a result of instrument
+overestimation of the corneal sag or elevation.
+Since the development of the dual RGLs such as
+the Dreimlens and the BE, or lenses of larger total
+diameter, central islands have become the more
+common postwear plot, as compared to smiley
+faces, which are more common with the three­
+curve RGLs. The classic hallmarks of a central
+island are an area of relative steepening centrally,
+surrounded by an annulus of marked corneal
+flattening. The central island itself can be either
+steeper than the original cornea, or simply steeper
+than the surrounding annulus of corneal flattening.
+
+=== PAGE 165 ===
+
+B
+Clinical experience shows that small central
+islands (0.500 or less) that are flatter than
+the original cornea, but still steeper than the
+TRIAL LENS FITTING 165
+Figure 6.25 The change
+in bull's-eyepattern
+appearancebetweenthe
+first overnightwear (A), and
+that after 8 days later (8).
+Note theincreasein
+treatment zone with time.
+surrounding area, will resolve within 1 week of
+lens wear. However, central islands greater than
+this degree, or those where the apical corneal
+
+
+=== PAGE 166 ===
+
+166 ORTHOKERATOLOGY
+B
+power is steeper than the original value, will not
+resolve. The difference is that a small island
+indicates a small degree of inaccuracy in the
+Figure 6.26 (A) Axial and
+(B) tangential maps of a
+smiley-facepattern.The
+tangential maphighlights
+the decentrationof the lens.
+initial fit, whereas a steep island indicates a large
+degree of initial fitting error. The BOZR of the
+lens is usually not at fault in these cases. An
+
+
+=== PAGE 167 ===
+
+B
+overestimation of the corneal sag will also result
+in a tighter cone angle or alignment curve in the
+periphery, and it may well be the compression
+caused by the tight periphery of the lens that is
+TRIAL LENS FITTING 167
+Figure 6.27 (Aand B)
+A smileyface with a fake
+central island.
+responsible for the formation of central
+islands.
+The diagnosis of the central island is again the
+tangential power subtractive map. The centration
+
+
+=== PAGE 168 ===
+
+168 ORTHOKERATOLOGY
+with central islands is always perfect. When a
+central island occurs, unaided visual acuity is
+usually worse than the prefit values. Also, over­
+refraction leads to no clear endpoint, and the best
+corrected visual acuity is usually two lines or
+more less than normal. The refraction data from a
+central island are of no clinical importance.
+It should be appreciated that some topo­
+graphers, particularly the Keratron, can give false
+central island maps due to the reconstruction
+algorithm used. The Keratron does not apply
+smoothing to the central data, so as the arc-step
+method approaches the tangent normal to the
+optic axis, the value of the apical corneal power
+becomes unpredictable. Keratron users are ad­
+vised to compare the refractive power maps
+before and after, and not subtractive, to deter­
+mine if a true central island is present.
+OTHER POSTWEAR RESULTS
+There are two other possible outcomes from an
+overnight trial that occur rarely. The first is a
+frowny face (Fig. 6.30), where the lens appears to
+Figure 6.28 If the color
+mapis removed,the
+distortion of the Placido
+mires becomesvisible.This
+leads to invalid central
+data and the appearance
+of a central divot (see
+Figure 6.31).
+be decentered either inferiorly or laterally. The
+cause is the same in either case: overestimation of
+elevation leading to a tight alignment curve, or a
+lens diameter that is too small. The second is
+termed a "central divot" (Fig. 6.31), and is caused
+by apical touch leading to epithelial disruption cen­
+trally. The mires of the placido become linked, and
+the reconstruction algorithm represents the data as
+a small area of gross central flattening. They can
+also occur if the tear layer is disrupted from
+a bound lens. Simply instilling a drop of lens lubri­
+cant and repeating the capture can resolve the
+differences. If the divot is due to tear layer instabil­
+ity, it will not be present on the second plot.
+However, if epithelial compromise did occur, the
+divot will still be present. Other types of abnormal
+topography outcomes also occur, and are discussed
+in greater detail in Chapter 9.
+REFINING THE FIT USING POSTWEAR
+TOPOGRAPHYDATA
+The major force responsible for the corneal shape
+changes seen in orthokeratology is the squeeze film
+
+
+=== PAGE 169 ===
+
+B
+force generated by the postlens tear layer (see
+Ch. 10).The squeeze film force is dependent on the
+variation in TLT between the apex and the periph-
+TRIAL LENS FITTING 169
+Figure 6.29 (A) Axial and
+(8) tangential power maps
+of a central island.Notethe
+excellentcentration.The
+steep central area is
+surroundedby anannulus
+of flattening.The unaided
+vision will be poor.
+ery of the lens. The accuracy of the lens fit is there­
+fore dependent on the actual TLT under the trial
+lens compared to the calculated TLT from the
+
+
+=== PAGE 170 ===
+
+170 ORTHOKERATOLOGY
+Figure 6.30 A frowny­
+facepattern from a tight
+lens. If the lens decenters
+laterally,this is because the
+total diameteris toosmall.
+Figure 6.31 Central divot
+caused by tearlayer
+disruptionof the Placido
+mires. If lubricant is
+instilled and a further map
+is taken, the resultsare
+normal.
+
+
+=== PAGE 171 ===
+
+topography data. When the trial lens is calculated
+from the initial topography data, an assumption is
+made that the corneal sag is correct. The trial lens
+sag is therefore equal to the corneal sag plus the
+designated apical clearance, or as close to this value
+as possible due to the limitations in trial lens set
+design. Under normal circumstances, the trial lens
+set will need to be in 0.05 mm BOZR increments, as
+this will provide a sag difference of approximately
+8-10 urn between each successive lens in the set.
+So, there are three important factors to consider:
+1. The accuracy of the topography data is limited
+to approximately ± 10 urn over the common
+chord of the lens and cornea.
+2. The accuracy of trial lens manufacture will
+result in an error of approximately ± 2.0 urn in
+the sag of the lens.
+3. The nominal sag difference between success­
+ive trial lenses is 8-10 urn for each 0.05 mm
+difference in BOZR depending on the lens
+design.
+The trial lens set or the accompanying computer
+program should give the sag values of the lenses in
+the range provided. The margin of error for the
+trial lens set is smaller than the error of the topo­
+grapher, so it is a logical argument to compare the
+known value of the trial lens against the assumed
+value of corneal sag developed by the topography
+data.
+The original sag formula states:
+Lens sag = corneal sag + apical clearance (TLT)
+The alternative perspective is:
+Corneal sag = lens sag - apical clearance
+So, if the subtractive plot shows a bull's-eye
+pattern, irrespective of the refractive change
+achieved, then it can be assumed that the calcu­
+lated topography corneal sag value is relatively
+accurate. If a smiley-face pattern is evident, then
+the calculated corneal sag value is equal to or less
+than that of the indicated trial lens to a degree
+somewhere near the standard deviation of error
+of the instrument. A central island indicates that
+the calculated corneal sag has been overestimated
+by the topographer, as the sag value is greater
+than the difference between the lens sag and the
+apical clearance value.
+TRIAL lENS FITTING 171
+The practitioner now has two logical choices as
+to which lens should next be tried if the postwear
+topography plots gave unacceptable results:
+1. Alter the corneal sag by a value equal to the
+standard deviation of error of the instrument,
+and recalculate a new trial lens.
+2. Trial fit the next flattest or steepest lens in the
+trial set until the best fluorescein pattern is
+attained. Find the difference in sag between
+the correct trial lens and the initial trial lens
+and adjust the calculated corneal sag value
+accordingly.
+If the initial corneal sag is assumed to be 1500 urn
+and a trial lens of 8.45 mm BOZR and sag of
+1505 urn was tried and resulted in a central
+island, the two choices are:
+1. Reduce the corneal sag by the standard devia­
+tion of the instrument (say 10 urn), resulting in
+a corneal sag of 1490 urn, and a trial lens
+of 1495 urn assuming an apical clearance of
+5 urn. The next closest trial lens has a sag of
+1494 urn and a BOZR of 8.50 mm.
+2. Flatten the BOZR by an amount similar to the
+standard deviation of error of the instrument.
+Assuming an 8 urn sag difference in each trial
+lens, the next alternate lens would be an
+8.50 mm BOZR.
+The same approach applies in the case of smiley
+faces, except that the corneal sag value must be
+increased and the sag value of the trial lens
+increased by steepening the BOZR.
+These changes are encapsulated in the FAST
+rule (Bloom unpublished). The acronym stands for
+"flat add, steep take-away." If the corneal elevation
+is underestimated, the lens will be flat, so alter­
+ations are made by adding to the initial sag value.
+Conversely, a steep lens will require the subtrac­
+tion of the standard deviation of error of the instru­
+ment or the sag difference between trial lenses.
+If the above steps are taken, and the results still
+show a central island or a smiley face on retrial,
+then the error of the initial topography data must
+be assumed to be within the range of two standard
+deviations of the instrument error. If a retrial with
+these corrections is performed, and a poor result is
+still evident, then the logical assumption is that the
+original topography data were totally inaccurate.
+
+=== PAGE 172 ===
+
+172 ORTHOKERATOLOGY
+The patient should then return for further corneal
+topography and trial lens fitting. Furthermore, if
+the initial indicated trial lens is obviously too steep
+or flat, then it has to be assumed that the topo­
+graphy data are highly inaccurate.
+There are two approaches to this problem. The
+first is to repeat the topography and take the mean
+Ro and e or elevation values of four or five repeated
+measurements and recalculate the trial lens. The
+second is to depend on fluorescein pattern analysis
+and alter the corneal sag value by the amount of
+difference in trial lens sags between the initial cal­
+culated trial lens and the one that gave the optimal
+pattern. This approach is fraught with inaccuracies,
+as it firstly makes the assumption that an ideal
+fluorescein pattern will give an ideal response,
+which is simply not the case. Secondly, it makes the
+assumption that the R o value of the original
+reading was accurate, and that the elevation or
+eccentricity values were at fault.
+No currently available corneal topographer
+can measure Ro. All systems use algorithms to
+extrapolate from the measured area into the
+center to give a value for Ro. However, in order to
+calculate a BOZR for the trial lens, the R o value
+has to be used. If the original topography read­
+ings are within 1 SO of producing a good result,
+then it is acceptable to assume that the Ro value is
+correct, and that the eccentricity or elevation is at
+fault and make corrections to improve the corneal
+response. However, postwear plots that produce
+repeated central islands or smiley faces when cor­
+rections are made indicate highly inaccurate Ro
+and e values, necessitating repetition of the
+topography plots.
+Finally, lenses that decenter laterally cause
+decentered treatment zones. The resolution of this
+problem is to recalculate for a larger total dia­
+meter. It must be emphasized that trial lens fitting
+in orthokeratology is primarily performed in
+order to validate the original topography data,
+especially with respect to the elevation or sag
+values. The corneal response to the lens is totally
+dependent on the accuracy of the lens fit, where
+the apical clearance, in particular, is of vital
+importance in generating the required degree of
+squeeze film force under the lens. The accuracy
+of the corneal data will determine directly the
+accuracy of the lens fit and the degree of apical
+clearance, and hence the corneal response.
+These factors are dealt with in greater detail in
+Chapter 10.
+The question as to the time required between
+trial wear periods has been answered by Sridharan
+(2001), who showed that it could take up to
+72 h for a cornea to return to baseline following
+overnight wear. If a further trial wear is initiated
+before the cornea returns to baseline, the results
+could be unduly influenced by the previous dis­
+tortion still present in the cornea. It would be
+appropriate, therefore, to wait at least 72 h before
+performing a retrial, with a further prefit topo­
+graphy being done to ensure return to baseline.
+In conclusion, it must be emphasized that the
+only acceptable outcome from an overnight trial
+is a bull's-eye pattern. Improvements in unaided
+acuity occur with both bull's-eye and smiley-face
+patterns, but the quality of the visual acuity is
+better with a bull's eye. Unaided visual acuity
+is not the standard by which an outcome is
+assessed, but rather the quality of the postwear
+topography change.
+Practitioners who prefer empirical fitting should
+insist on knowing the design and curves on the
+lenses they are using, and those who judge the
+fitting on fluorescein pattern analysis should know
+the difference in sag between the lenses in the set.
+Orthokeratology, as stated previously, differs from
+standard lens fitting, as it is not the appearance of
+the lens that determines success, but the effect the
+lens has on visual acuity and the quality of the
+postwear corneal topography. The only fitting
+method that gives the practitioner total control
+over lens changes is the topography-based system.
+At the time of writing, there have been no con­
+trolled studies into the differences in efficacy of the
+three different methods of fitting orthokeratology
+lenses. Such a study would have a direct practical
+benefit, in that practitioners would be better able
+to determine the best and most cost-effective
+means of fitting the lenses. As with all other types
+of contact lens practice, the fitting requires skill
+and knowledge, and should not be conducted in a
+hit-and-miss manner. The aim should be to get the
+right fit first time, all the time. This may, in prac­
+tice, be unlikely due to the degree of accuracy
+required and the limitations of topography, but
+nevertheless, it should still be the aim.
+
+=== PAGE 173 ===
+
+REFERENCES
+Applegate R A, Nunez R, Beuttener J, Howland H C (1995)
+How accurately can videokeratographic systems measure
+surface elevation? Optometry and Vision Science 72:
+785-792
+Bara C (2000)Mechanism of action of the reverse geometry
+gas permeable contact lens in orthokeratology. M Sc
+thesis, University of Melbourne
+Bennett E 5, Sorbara L (2000)Lens design, fitting and
+evaluation. In: Bennett ES, Henry VA(eds) Clinical
+manual of contact lenses, 2nd edn. Philadelphia,
+Lippincott Williams & Wilkins, ch. 4
+Bennett E S, Henry V A, Davis LJ, Kirby S (1989)Comparing
+empirical and diagnostic fitting of daily wear fluoro­
+silicone acrylate contact lenses. Contact Lens Forum 14:
+38-44
+Brungardt T F (1961)Fluorescein patterns; they are accurate
+and they can be mastered. Journal of the American
+Optometric Association 32: 973-974
+Carney LG (1972) Luminance of fluorescein solutions.
+American Journal of Optometry and Archives of the
+American Academy of Optometry 3: 200-204
+Cho P, Lam A, Mountford J, Ng L (2002a)The performance of
+four different corneal topographers on normal human
+corneas and its impact on orthokeratology lens fitting.
+Optometry and Vision Science (in press)
+Cho P, Cheung S W, Edwards M (2002b) Practice of
+orthokeratology by a group of contact lens practitioners
+in Hong Kong. Part 2. Clinical and Experimental
+Optometry 86(1): 42-46
+Douthwaite W A (1995) Eyesyscorneal topography
+measurement applied to calibrated ellipsoidal convex
+surfaces. British Journal of Ophthalmology 79: 797-801
+Fedders K, Gultranson BS, Nair B S, Horner D G, Soni S
+(1999)Orthokeratology: to fit empirically or use
+diagnostic lenses? Optometry and Vision Science 76(125):
+170
+Guillon M, Sammons W A (1994)Contact lens design. In:
+Ruben M, Guillon M (eds) Contact lens practice. London,
+Chapman and Hall Medical, ch. 5
+Hayashi T (1977) Mechanics of contact lens motion. PhD
+thesis. University Of California, Berkeley
+Hilrnantel G, Blunt R J, Garrett B P,Howland H C,
+Applegate R A (1999)Accuracy of the Tomey topographic
+modeling system in measuring surface elevations of
+asymmetric objects. Optometry and Vision Science 76:
+108-114
+Hough T, Edwards K (1999)The reproducibility of
+videokeratoscope measurements as applied to the human
+cornea. Contact Lens and Anterior Eye 22(3):91-99
+Jeandervin M, Barr J T (1998)Comparison of repeat
+videokeratography: repeatability and accuracy.
+Optometry and Vision Science 75: 663--669
+TRIAL LENS FITTING 173
+Korb D R, Finnemore V N, Herman J P (1982)Apical changes
+and scarring in keratoconus related to contact lens fitting
+techniques. Journal of the American Optometric
+Association 53: 199-205
+Lu L, Zhou L H, Wang Z G, Zhang W H (2001)
+Orthokeratology induced infective corneal ulcer.
+Investigative Ophthalmology and Vision Science 42(4):
+s34
+Luk BMW, Bennett E S, Barr J T (2001)Fitting
+orthokeratology contact lenses. Contact Lens Spectrum
+16(10):30-35
+Mandell R B (1974)How valid is the fluorescein test?
+International Contact Lens Clinic 1: 25-27
+Maruna C, Yoder M, Andrasko G J (1989)Attitudes towards
+RGPs among optometrists. Contact Lens Spectrum 4:
+25-32
+Mountford J A (1997)Orthokeratology. In: Phillips A J,
+Speedwell L (eds) Contact lenses: a textbook for
+students and practitioner, vol. 4. London, Butterworths,
+pp.30-35
+Mountford J A, Noack D B (2001)The BE instruction manual.
+Brisbane, Australia
+Mountford J A, Caroline P, Noack D (2002) Corneal
+topography and orthokeratology - pre-fitting evaluation.
+Contact Lens Spectrum 17(4):29-35
+Mountford J A, Cho P,Chui W S (2003) Is fluorescein pattern
+analysis a valid method of assessing the accuracy of
+reverse geometry lenses for orthokeratology? Clinical and
+Experimental Optometry (in press)
+Osborne G N, Zantos S G, Godio L B, Jones W F,Barr JT
+(1989)Aspheric rigid gas permeable contact lenses;
+practitioner discrimination of base curve increments
+using fluorescein pattern evaluation. Optometry and
+Vision Science 66(4): 209-213
+Rah M J (2002)Patient selection and preliminary results of
+the lenses and overnight orthokeratology study. SECO,
+March 2002 (abstract)
+Reim T (2000)The Dreimlens instruction manual. Dreimlens
+International, Alhambra, USA
+Soni P, Nguyen T (2002) Which corneal parameter, anterior
+corneal curvature, posterior corneal curvature or corneal
+thickness is most sensitive to acute changes with reverse
+geometry orthokeratology lenses? ARVO Abstracts 3086.
+Investigative Ophthalmology and Visual Science
+Sridharan R (2001) Response and regression of the cornea
+with short-term orthokeratology lens wear. Masters
+thesis. University of New South Wales, Sydney,
+Australia
+Tang W, Collins M, Carney L C, Davis B (2000) Theaccuracy
+and precision performance of four videokeratoscopes in
+measuring test surfaces. Optometry and Vision Science
+77(9):483-491
