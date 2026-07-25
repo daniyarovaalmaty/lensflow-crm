@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Calculator, ChevronDown, ChevronUp, ArrowRight, Check,
-    Upload, FileText, Sparkles, AlertCircle, Info, ShieldCheck, RefreshCw, Eye
+    Upload, FileText, Sparkles, AlertCircle, Info, ShieldCheck, RefreshCw, Eye, Camera
 } from 'lucide-react';
 import {
     calculateMountfordPrimary, evaluateMountfordAdjustment,
@@ -219,37 +219,44 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
                     >
                         <div className="p-4 sm:p-6 border-t border-gray-100 bg-gray-50/30">
 
-                            {/* File Upload Banner */}
-                            <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-4 sm:p-5 text-white mb-6 shadow-md shadow-indigo-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            {/* File & Photo Upload Banner */}
+                            <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600 rounded-2xl p-4 sm:p-5 text-white mb-6 shadow-md shadow-indigo-100 flex flex-col md:flex-row items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-                                        <Upload className="w-5 h-5 text-white" />
+                                    <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+                                        <Camera className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-sm sm:text-base">Загрузить карту с роговичного топографа</h3>
-                                        <p className="text-xs text-indigo-100">
-                                            Поддерживаются файлы топографов EyeTop, Antares, Medmont (.des, .csv, .txt, .xml)
+                                        <h3 className="font-bold text-sm sm:text-base flex items-center gap-2">
+                                            <span>Загрузить фото или файл с топографа</span>
+                                            <span className="bg-white/20 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
+                                                AI OCR Сканер
+                                            </span>
+                                        </h3>
+                                        <p className="text-xs text-indigo-100 mt-0.5">
+                                            Сделайте фото экрана топографа на телефон или загрузите файл (.jpg, .png, .des, .csv, .txt)
                                         </p>
                                     </div>
                                 </div>
-                                <label className="cursor-pointer bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 shrink-0">
-                                    {isParsingFile ? (
-                                        <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
-                                    ) : (
-                                        <FileText className="w-4 h-4 text-indigo-600" />
-                                    )}
-                                    <span>Выбрать файл топографа</span>
-                                    <input
-                                        type="file"
-                                        accept=".des,.csv,.txt,.xml"
-                                        onChange={handleFileUpload}
-                                        className="hidden"
-                                    />
-                                </label>
+                                <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
+                                    <label className="cursor-pointer bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 flex-1 md:flex-none">
+                                        {isParsingFile ? (
+                                            <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
+                                        ) : (
+                                            <Camera className="w-4 h-4 text-indigo-600" />
+                                        )}
+                                        <span>Загрузить фото / скан</span>
+                                        <input
+                                            type="file"
+                                            accept="image/*,.des,.csv,.txt,.xml,.pdf"
+                                            onChange={handleFileUpload}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                </div>
                             </div>
 
                             {topographerFileStatus && (
-                                <div className={`p-3 rounded-xl mb-6 text-xs font-semibold flex items-center gap-2 ${topographerFileStatus.includes('успешно') ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
+                                <div className={`p-3.5 rounded-xl mb-6 text-xs font-semibold flex items-center gap-2 shadow-sm ${topographerFileStatus.includes('успешно') || topographerFileStatus.includes('Распознано') ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
                                     <Info className="w-4 h-4 shrink-0" />
                                     <span>{topographerFileStatus}</span>
                                 </div>
