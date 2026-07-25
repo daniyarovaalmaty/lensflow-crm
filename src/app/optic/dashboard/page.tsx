@@ -32,6 +32,8 @@ export default function OpticDashboard() {
     const router = useRouter();
     const subRole = (session?.user?.subRole || 'optic_manager') as SubRole;
     const perms = getPermissions(subRole);
+    const isDoctor = subRole === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(subRole);
+    const canSeeInvoices = perms.canViewPayments && !isDoctor;
     
     // Dynamic clinic permissions override
     const clinicPerms = getEffectiveClinicPermissions({
@@ -819,7 +821,7 @@ export default function OpticDashboard() {
                                                         <Zap className="w-3 h-3" /> СРОЧНО
                                                     </span>
                                                 )}
-                                                {!isItigris && (() => {
+                                                {!isItigris && canSeeInvoices && (() => {
                                                     const ps = (order as any).payment_status || 'unpaid';
                                                     
                                                     if (perms.canChangePayments) {
@@ -1163,7 +1165,7 @@ export default function OpticDashboard() {
                                             </div>
                                         )}
 
-                                        {!isItigris && (
+                                        {!isItigris && canSeeInvoices && (
                                             <div className="flex items-center gap-4 ml-auto">
                                                 <button
                                                     onClick={() => handlePrintInvoice(order)}
