@@ -944,8 +944,8 @@ export default function OpticDashboard() {
 
                                         {/* out_for_delivery: prominent confirmation button */}
                                         {order.status === 'out_for_delivery' && (
-                                            <div className="flex items-center gap-2 flex-wrap ml-2">
-                                                <span className="inline-flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-200/80 rounded-lg px-2.5 py-1.5 font-medium">
+                                            <div className="flex items-center gap-2 shrink-0 whitespace-nowrap ml-auto sm:ml-2">
+                                                <span className="inline-flex items-center gap-1.5 text-xs text-purple-700 bg-purple-50 border border-purple-200/80 rounded-lg px-2.5 py-1.5 font-medium whitespace-nowrap">
                                                     <Truck className="w-3.5 h-3.5 text-purple-600" />
                                                     Курьер доставляет ваш заказ
                                                 </span>
