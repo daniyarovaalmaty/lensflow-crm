@@ -226,28 +226,10 @@ export function parseTopographyText(text: string, fileName: string): ParsedTopog
 }
 
 /**
- * Sends photo/image to Server OCR API Route `/api/topography/parse-image` with Client Fallback
+ * Sends photo/image to Server OCR API Route `/api/topography/parse-image` with GPT-4o Vision
  */
 export async function parseTopographyImageApi(file: File): Promise<ParsedTopographyData> {
-    // 1. Try Client-side Tesseract.js first (super fast in browser, no Vercel serverless timeouts)
-    try {
-        if (typeof window !== 'undefined') {
-            const { createWorker } = await import('tesseract.js');
-            const worker = await createWorker('eng');
-            const ret = await worker.recognize(file);
-            await worker.terminate();
-
-            const clientText = ret.data.text || '';
-            const parsedClient = parseTopographyText(clientText, file.name);
-            if (parsedClient.od?.fk || parsedClient.os?.fk || parsedClient.od?.ex) {
-                return parsedClient;
-            }
-        }
-    } catch (clientErr) {
-        console.warn('Client OCR attempt fallback to server API:', clientErr);
-    }
-
-    // 2. Fallback to Server API Route
+    // 1. Call Server-side GPT-4o Vision API Route FIRST for 100% medical accuracy!
     try {
         const compressedBlob = await compressImageForOcr(file);
         const formData = new FormData();
@@ -263,17 +245,36 @@ export async function parseTopographyImageApi(file: File): Promise<ParsedTopogra
             const resOd = data.od || {};
             const resOs = data.os || {};
 
-            if (resOd.fk || resOs.fk || resOd.ex) {
+            if (resOd.fk || resOs.fk || resOd.ex || resOs.ex) {
                 return {
+                    detectedEye: data.detectedEye,
                     od: resOd,
                     os: resOs,
-                    sourceType: data.sourceType || 'Распознано по фото (AI OCR)',
+                    sourceType: data.sourceType || 'Распознано ИИ (GPT-4o Vision)',
                     rawFileName: file.name,
-                };
+                } as any;
             }
         }
     } catch (e) {
-        console.error('Failed to parse topography image via API:', e);
+        console.error('Failed to parse topography image via GPT-4o Vision API:', e);
+    }
+
+    // 2. Fallback to Client-side Tesseract.js only if server API is unavailable
+    try {
+        if (typeof window !== 'undefined') {
+            const { createWorker } = await import('tesseract.js');
+            const worker = await createWorker('eng');
+            const ret = await worker.recognize(file);
+            await worker.terminate();
+
+            const clientText = ret.data.text || '';
+            const parsedClient = parseTopographyText(clientText, file.name);
+            if (parsedClient.od?.fk || parsedClient.os?.fk || parsedClient.od?.ex || parsedClient.os?.ex) {
+                return parsedClient;
+            }
+        }
+    } catch (clientErr) {
+        console.warn('Client OCR fallback error:', clientErr);
     }
 
     return {
