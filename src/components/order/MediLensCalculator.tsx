@@ -176,15 +176,22 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
     const osCalc = getEyeCalculation(osState);
 
     const applyLensToOrder = (eye: 'od' | 'os', lensSpec: TrialLensSpec, calcData: any) => {
-        const torVal = lensSpec.toricity === 'T0.0' ? null : (lensSpec.toricityVal ? String(lensSpec.toricityVal) : String(calcData.mountford.cornealAstigmatism || 1.0));
+        const isSph = lensSpec.toricity === 'T0.0';
+        const torVal = isSph ? null : (lensSpec.toricityVal || 1.0);
+
         const payload = {
-            characteristic: lensSpec.toricity === 'T0.0' ? 'spherical' : 'toric',
+            characteristic: isSph ? 'spherical' : 'toric',
+            km: lensSpec.fk,
             base_curve: String(lensSpec.fk),
+            tp: calcData.mountford.spheroEquivalent,
             target_power: String(calcData.mountford.spheroEquivalent),
             toricity: lensSpec.toricity,
             tor: torVal,
+            dia: lensSpec.dia,
             diameter: String(lensSpec.dia),
+            e1: lensSpec.ex,
             eccentricity: String(lensSpec.ex),
+            dk: '50',
             trial_code: lensSpec.code,
         };
 
@@ -195,15 +202,22 @@ export function MediLensCalculator({ onApplyToEye }: MediLensCalculatorProps) {
 
     const applyAdjustedToOrder = (eye: 'od' | 'os', calcData: any) => {
         const adj = calcData.adjustment;
-        const tor = calcData.d50.primaryLens.toricity;
+        const isSph = calcData.d50.primaryLens.toricity === 'T0.0';
+        const torVal = isSph ? null : (calcData.d50.primaryLens.toricityVal || 1.0);
+
         const payload = {
-            characteristic: tor === 'T0.0' ? 'spherical' : 'toric',
+            characteristic: isSph ? 'spherical' : 'toric',
+            km: adj.adjustedFk,
             base_curve: String(adj.adjustedFk),
+            tp: adj.adjustedTargetPower,
             target_power: String(adj.adjustedTargetPower),
-            toricity: tor,
-            tor: tor === 'T0.0' ? null : String(calcData.d50.primaryLens.toricityVal || 1.0),
+            toricity: calcData.d50.primaryLens.toricity,
+            tor: torVal,
+            dia: adj.adjustedDia,
             diameter: String(adj.adjustedDia),
+            e1: adj.adjustedEx,
             eccentricity: String(adj.adjustedEx),
+            dk: '100',
         };
 
         onApplyToEye(eye, payload);
