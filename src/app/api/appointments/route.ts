@@ -132,13 +132,65 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { date, duration, patientId, patientName, patientPhone, type, notes } = body;
+        const { date, duration, patientId, patientName, patientPhone, type, notes, isChild, parentName, parentPhone, city } = body;
 
-        let doctorId = body.doctorId || session.user.id; // manager can specify doctorId, doctor uses their own
-
-        // validate that doctor can only create for themselves unless manager
+        let doctorId = body.doctorId || session.user.id;
         if (session.user.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session.user.subRole as string)) {
             doctorId = session.user.id;
+        }
+
+        let finalPatientId = patientId || null;
+
+        // If no patientId provided, create a patient record automatically
+        if (!finalPatientId && (patientName || parentName) && (patientPhone || parentPhone)) {
+            const isChildBool = Boolean(isChild);
+            const pPhone = (isChildBool ? parentPhone : patientPhone) || patientPhone;
+            const pName = (isChildBool ? parentName : patientName) || patientName;
+            const cName = patientName || pName;
+
+            let parentIdToLink: string | null = null;
+
+            if (isChildBool && pPhone) {
+                let parentObj = await prisma.patient.findFirst({
+                    where: {
+                        phone: { contains: pPhone.slice(-9) },
+                        OR: [
+                            { organizationId: session.user.organizationId || 'none' },
+                            { doctorId: session.user.id }
+                        ]
+                    }
+                });
+
+                if (!parentObj) {
+                    parentObj = await prisma.patient.create({
+                        data: {
+                            name: pName,
+                            phone: pPhone,
+                            isChild: false,
+                            city: city || null,
+                            organizationId: session.user.organizationId || null,
+                            doctorId: doctorId || session.user.id || null,
+                        }
+                    });
+                }
+                parentIdToLink = parentObj.id;
+            }
+
+            const newPatient = await prisma.patient.create({
+                data: {
+                    name: cName,
+                    phone: pPhone,
+                    isChild: isChildBool,
+                    parentName: parentName || null,
+                    parentPhone: parentPhone || null,
+                    city: city || null,
+                    parentId: parentIdToLink,
+                    organizationId: session.user.organizationId || null,
+                    doctorId: doctorId || session.user.id || null,
+                }
+            });
+
+            finalPatientId = newPatient.id;
         }
 
         const appointment = await prisma.appointment.create({
@@ -148,9 +200,9 @@ export async function POST(request: NextRequest) {
                 status: 'scheduled',
                 type: type || 'consultation',
                 notes: notes,
-                patientId: patientId || null,
-                patientName: !patientId ? patientName : null,
-                patientPhone: !patientId ? patientPhone : null,
+                patientId: finalPatientId,
+                patientName: patientName || null,
+                patientPhone: patientPhone || parentPhone || null,
                 doctorId: doctorId,
                 clinicId: session.user.organizationId,
                 createdById: session.user.id,

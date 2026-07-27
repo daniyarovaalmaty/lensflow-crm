@@ -271,7 +271,11 @@ model Patient {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   doctorId       String?
   doctor         User?    @relation("DoctorPatients", fields: [doctorId], references: [id])
-  // Family relations
+  // Family relations & Classification
+  isChild        Boolean  @default(false)
+  parentName     String?
+  parentPhone    String?
+  city           String?
   parentId       String?
   parent         Patient?   @relation("Family", fields: [parentId], references: [id])
   children       Patient[]  @relation("Family")
@@ -412,6 +416,9 @@ model Consultation {
   anamnesisDisease String?   @db.Text
   biomicroscopy    String?   @db.Text
   pzo              String?   @db.Text
+
+  // Structured Primary Examination Details (JSON)
+  primaryExamDetails Json?
 
   notes       String?  @db.Text
   createdAt   DateTime @default(now())

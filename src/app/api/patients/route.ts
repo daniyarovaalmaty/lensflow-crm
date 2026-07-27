@@ -116,6 +116,8 @@ export async function GET(request: Request) {
             skip: (page - 1) * limit,
             take: limit,
             include: {
+                parent: true,
+                children: true,
                 _count: { select: { orders: true, prescriptions: true, consultations: true } },
                 prescriptions: {
                     orderBy: { prescribedAt: 'desc' },
@@ -137,45 +139,56 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { 
         name, phone, email, birthDate, gender, notes, doctorId, parentId,
+        isChild, parentName, parentPhone, city,
         iin, address, profession, complaints, anamnesisDisease, anamnesisLife,
         allergies, heredity, medications, dispensary, surgeries, lastCorrection
     } = body;
 
-    if (!name || !phone) {
+    const isChildBool = Boolean(isChild);
+    const effectivePhone = (isChildBool ? parentPhone : phone) || phone;
+    const effectiveName = name || (isChildBool ? 'Ребенок' : 'Пациент');
+
+    if (!effectiveName || !effectivePhone) {
         return NextResponse.json({ error: 'ФИО и телефон обязательны' }, { status: 400 });
     }
 
-    // Deduplication check: if a patient with the exact same normalized phone AND matching name exists, return it
-    const normalizedPhone = phone.replace(/\D/g, '');
-    if (normalizedPhone.length >= 9) {
-        const existing = await prisma.patient.findFirst({
+    let finalParentId = parentId || null;
+
+    // Automatic Parent Linkage if isChild
+    if (isChildBool && parentPhone && !finalParentId) {
+        const normalizedParentPhone = parentPhone.replace(/\D/g, '');
+        let parentObj = await prisma.patient.findFirst({
             where: {
-                phone: { contains: normalizedPhone.slice(-9) },
+                phone: { contains: normalizedParentPhone.slice(-9) },
                 OR: [
                     { organizationId: session.user.organizationId || 'none' },
                     { doctorId: session.user.id }
                 ]
             }
         });
-        
-        if (existing) {
-            // Check if name is somewhat similar (e.g. at least one word matches)
-            const nameWords = name.trim().toLowerCase().split(' ');
-            const existingName = existing.name.toLowerCase();
-            const matchesName = nameWords.some((w: string) => w.length > 2 && existingName.includes(w));
-            
-            if (matchesName || nameWords.length === 0 || name.trim().toLowerCase() === 'неизвестный пациент') {
-                return NextResponse.json(existing, { status: 200 }); // Return existing instead of duplicate
-            }
+
+        if (!parentObj) {
+            parentObj = await prisma.patient.create({
+                data: {
+                    name: parentName || 'Родитель',
+                    phone: parentPhone,
+                    isChild: false,
+                    city: city || address || null,
+                    organizationId: session.user.organizationId || null,
+                    doctorId: doctorId || session.user.id || null,
+                },
+            });
         }
+
+        finalParentId = parentObj.id;
     }
 
-    // Push to MedMundus first to get their ID
+    // Try MedMundus sync first
     let medmundusId: number | null = null;
     try {
         medmundusId = await mmCreatePatient({
-            name: name.trim(),
-            phone: phone.trim(),
+            fullName: name.trim(),
+            phone: effectivePhone,
             email: email?.trim() || undefined,
             birthDate: birthDate || undefined,
             gender: gender || undefined,
@@ -189,14 +202,18 @@ export async function POST(request: Request) {
         data: {
             medmundusId: medmundusId || undefined,
             name: name.trim(),
-            phone: phone.trim(),
+            phone: effectivePhone,
             email: email?.trim() || null,
             birthDate: birthDate ? new Date(birthDate) : null,
             gender: gender || null,
             notes: notes || null,
+            isChild: isChildBool,
+            parentName: parentName?.trim() || null,
+            parentPhone: parentPhone?.trim() || null,
+            city: city?.trim() || address?.trim() || null,
             organizationId: session.user.organizationId || null,
             doctorId: doctorId || session.user.id || null,
-            parentId: parentId || null,
+            parentId: finalParentId,
             iin: iin || null,
             address: address || null,
             profession: profession || null,
@@ -209,6 +226,10 @@ export async function POST(request: Request) {
             dispensary: dispensary || null,
             surgeries: surgeries || null,
             lastCorrection: lastCorrection || null,
+        },
+        include: {
+            parent: true,
+            children: true,
         },
     });
 

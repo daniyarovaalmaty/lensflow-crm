@@ -53,6 +53,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
             refractionOS: body.refractionOS,
             biomicroscopy: body.biomicroscopy,
             notes: body.notes,
+            primaryExamDetails: body.primaryExamDetails || undefined,
         },
     });
     return NextResponse.json(updated);

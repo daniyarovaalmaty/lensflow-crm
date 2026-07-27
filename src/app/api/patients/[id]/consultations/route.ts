@@ -54,6 +54,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
             refractionOS: refractionOS || null,
             biomicroscopy: body.biomicroscopy || null,
             notes: notes || null,
+            primaryExamDetails: body.primaryExamDetails || null,
         },
         include: { doctor: { select: { fullName: true } } },
     });
