@@ -57,9 +57,10 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
     if (!patient || !prescription) return notFound();
 
     const fmt = (val: number | string | null | undefined, plus = true) => {
-        if (val == null || val === '') return '—';
-        if (typeof val !== 'number') return val;
-        return (plus && val > 0 ? '+' : '') + val.toFixed(2);
+        if (val == null || val === '' || val === '—') return '—';
+        const num = typeof val === 'string' ? parseFloat(val) : val;
+        if (isNaN(num)) return String(val);
+        return (plus && num > 0 ? '+' : '') + num.toFixed(2);
     };
 
     const typeLabels: Record<string, string> = {
@@ -72,7 +73,7 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
     const clinicName = org?.name || profile.opticName || profile.clinic || 'Бала Vision';
     const clinicAddress = cleanClinicAddress(org?.actualAddress || org?.address);
     const clinicBin = org?.inn ? `БИН: ${org.inn}` : '';
-    const doctorName = prescription.doctor?.fullName || profile.fullName || 'Врач не указан';
+    const doctorName = prescription.doctor?.fullName || profile.fullName || 'Врач-офтальмолог';
 
     const formattedBirthDate = patient.birthDate 
         ? `${new Date(patient.birthDate).toLocaleDateString('ru-RU')} ${calculateAge(patient.birthDate)}` 
@@ -87,120 +88,126 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
         <div className="bg-white p-4 sm:p-8 max-w-4xl mx-auto min-h-screen text-slate-900 print:p-0 print:m-0 print:max-w-none font-sans">
             <style>{`
                 @media print {
-                    @page { margin: 1.2cm; size: A4; }
-                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+                    @page { margin: 8mm 10mm; size: A4 portrait; }
+                    * { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; }
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; font-size: 11px !important; line-height: 1.4 !important; color: #0f172a !important; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; }
+                    .print-table th, .print-table td { padding: 4px 8px !important; font-size: 10.5px !important; }
                 }
             `}</style>
 
-            {/* Header: Left Blue Vertical Line, No Circular Icon */}
-            <div className="flex justify-between items-start border-l-[5px] border-blue-600 pl-4 py-2 mb-6 bg-slate-50/70 p-4 rounded-r-xl border-y border-r border-slate-200">
+            {/* Шапка организации (Округлые края) */}
+            <div className="bg-slate-50/90 border-l-4 border-blue-600 p-4 sm:p-5 mb-6 rounded-2xl border-y border-r border-slate-200 flex justify-between items-center font-sans">
                 <div>
-                    <h1 className="text-xl font-bold uppercase tracking-wider text-blue-900 leading-none">
+                    <h1 className="text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">
                         РЕЦЕПТ НА {typeLabels[prescription.type] || 'ОПТИКУ'}
                     </h1>
-                    <p className="text-sm font-semibold text-blue-600 mt-1">{clinicName}</p>
+                    <p className="text-blue-600 font-semibold text-sm mt-1 font-sans">{clinicName}</p>
                 </div>
-                <div className="text-right text-xs text-slate-600 space-y-0.5 max-w-[60%]">
-                    <p className="font-medium text-slate-800 leading-snug">
-                        📍 {clinicAddress}
-                    </p>
+                <div className="text-right text-xs text-slate-600 max-w-[60%] space-y-0.5 font-sans">
+                    <p className="font-medium text-slate-800 leading-snug">📍 {clinicAddress}</p>
                     {clinicBin && <p className="font-mono text-slate-600">{clinicBin}</p>}
-                    {org?.phone && <p>Тел: {org.phone}</p>}
                 </div>
             </div>
 
-            {/* Patient Block */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
-                <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-3">
-                    <span className="text-blue-600 text-sm">👤</span>
-                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">ПАЦИЕНТ</h2>
+            {/* Данные пациента (Паспортная часть - округлые формы) */}
+            <div className="mb-6 bg-slate-50/70 rounded-2xl p-4 sm:p-6 border border-slate-200 font-sans">
+                <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/80">
+                    <span className="text-blue-600 text-base">👤</span>
+                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide font-sans">Паспортная часть</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs sm:text-sm font-sans">
                     <div>
-                        <p className="text-xs text-slate-500 uppercase font-semibold">ФИО</p>
-                        <p className="font-bold text-slate-900 text-base">{patient.name}</p>
+                        <span className="font-medium text-slate-500 uppercase text-[9.5px] block">ФИО пациента:</span> 
+                        <strong className="text-base text-slate-950 font-bold">{patient.name}</strong>
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500 uppercase font-semibold">ДАТА РОЖДЕНИЯ</p>
-                        <p className="font-semibold text-slate-800">{formattedBirthDate}</p>
+                        <span className="font-medium text-slate-500 uppercase text-[9.5px] block">Дата рождения (возраст):</span> 
+                        <strong className="text-sm text-slate-900 font-bold">{formattedBirthDate}</strong>
                     </div>
+                    {patient.city && (
+                        <div>
+                            <span className="font-medium text-slate-500 uppercase text-[9.5px] block">Город:</span> 
+                            <strong className="text-xs text-slate-900 font-semibold">{patient.city}</strong>
+                        </div>
+                    )}
                     <div>
-                        <p className="text-xs text-slate-500 uppercase font-semibold">ИИН</p>
-                        <p className="font-mono text-slate-800">{patient.iin || '—'}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-slate-500 uppercase font-semibold">ДАТА ВЫПИСКИ РЕЦЕПТА</p>
-                        <p className="font-semibold text-blue-900">
+                        <span className="font-medium text-slate-500 uppercase text-[9.5px] block">Дата выписки рецепта:</span> 
+                        <strong className="text-xs text-blue-900 font-bold">
                             {new Date(prescription.prescribedAt).toLocaleDateString('ru-RU')}
-                        </p>
+                        </strong>
                     </div>
                 </div>
             </div>
 
-            {/* Prescription Optical Grid Table */}
-            <div className="border border-slate-200 rounded-xl p-4 mb-6 avoid-break bg-white shadow-xs">
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-2 mb-3">
-                    ПАРАМЕТРЫ ОПТИЧЕСКОЙ КОРРЕКЦИИ
-                </h3>
-                <table className="w-full text-xs text-left border-collapse mb-4">
-                    <thead>
-                        <tr className="bg-slate-100 text-slate-700 border-y border-slate-300">
-                            <th className="py-2.5 px-2 font-bold">Глаз</th>
-                            <th className="py-2.5 px-2 font-bold text-center">Sph (Сфера)</th>
-                            <th className="py-2.5 px-2 font-bold text-center">Cyl (Цилиндр)</th>
-                            <th className="py-2.5 px-2 font-bold text-center">Ax (Ось °)</th>
-                            <th className="py-2.5 px-2 font-bold text-center">Add (Адд)</th>
-                            <th className="py-2.5 px-2 font-bold text-center">DP (РЦ мм)</th>
-                            <th className="py-2.5 px-2 font-bold text-center">BC (База)</th>
-                            <th className="py-2.5 px-2 font-bold text-center">DIA (Диам.)</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 font-mono text-sm">
-                        <tr>
-                            <td className="py-3 px-2 font-sans font-bold text-blue-900">OD (Правый)</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.odSph)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.odCyl)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.odAx, false)}°</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.odAdd)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.odPd, false)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.odBc, false)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.odDia, false)}</td>
-                        </tr>
-                        <tr>
-                            <td className="py-3 px-2 font-sans font-bold text-purple-900">OS (Левый)</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.osSph)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.osCyl)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.osAx, false)}°</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.osAdd)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.osPd, false)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.osBc, false)}</td>
-                            <td className="py-3 px-2 text-center">{fmt(prescription.osDia, false)}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
+            {/* Параметры оптической коррекции */}
+            <div className="mb-6 font-sans">
+                <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-slate-200/80">
+                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide font-sans">Параметры оптической коррекции</h2>
+                </div>
+                <div className="rounded-xl overflow-hidden border border-slate-200">
+                    <table className="w-full text-center border-collapse print-table text-xs font-sans">
+                        <thead>
+                            <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                <th className="border-r border-b border-slate-200 p-1.5 uppercase">Глаз</th>
+                                <th className="border-r border-b border-slate-200 p-1.5 uppercase">Sph (Сфера)</th>
+                                <th className="border-r border-b border-slate-200 p-1.5 uppercase">Cyl (Цилиндр)</th>
+                                <th className="border-r border-b border-slate-200 p-1.5 uppercase">Ax (Ось °)</th>
+                                <th className="border-r border-b border-slate-200 p-1.5 uppercase">Add (Адд)</th>
+                                <th className="border-r border-b border-slate-200 p-1.5 uppercase">DP (РЦ мм)</th>
+                                <th className="border-r border-b border-slate-200 p-1.5 uppercase">BC (База)</th>
+                                <th className="border-b border-slate-200 p-1.5 uppercase">DIA (Диам.)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td className="border-r border-b border-slate-200 p-1.5 font-bold text-blue-700">OD (Правый)</td>
+                                <td className="border-r border-b border-slate-200 p-1.5 font-semibold">{fmt(prescription.odSph)}</td>
+                                <td className="border-r border-b border-slate-200 p-1.5 font-semibold">{fmt(prescription.odCyl)}</td>
+                                <td className="border-r border-b border-slate-200 p-1.5 font-semibold">{prescription.odAx ? `${prescription.odAx}°` : '—'}</td>
+                                <td className="border-r border-b border-slate-200 p-1.5 font-semibold">{fmt(prescription.odAdd)}</td>
+                                <td className="border-r border-b border-slate-200 p-1.5 font-semibold">{fmt(prescription.odPd, false)}</td>
+                                <td className="border-r border-b border-slate-200 p-1.5 font-semibold">{fmt(prescription.odBc, false)}</td>
+                                <td className="border-b border-slate-200 p-1.5 font-semibold">{fmt(prescription.odDia, false)}</td>
+                            </tr>
+                            <tr>
+                                <td className="border-r border-slate-200 p-1.5 font-bold text-teal-700">OS (Левый)</td>
+                                <td className="border-r border-slate-200 p-1.5 font-semibold">{fmt(prescription.osSph)}</td>
+                                <td className="border-r border-slate-200 p-1.5 font-semibold">{fmt(prescription.osCyl)}</td>
+                                <td className="border-r border-slate-200 p-1.5 font-semibold">{prescription.osAx ? `${prescription.osAx}°` : '—'}</td>
+                                <td className="border-r border-slate-200 p-1.5 font-semibold">{fmt(prescription.osAdd)}</td>
+                                <td className="border-r border-slate-200 p-1.5 font-semibold">{fmt(prescription.osPd, false)}</td>
+                                <td className="border-r border-slate-200 p-1.5 font-semibold">{fmt(prescription.osBc, false)}</td>
+                                <td className="p-1.5 font-semibold">{fmt(prescription.osDia, false)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 {prescription.notes && (
-                    <div className="mt-2 text-xs">
-                        <span className="font-bold text-slate-900 uppercase">Особые примечания:</span>
-                        <span className="ml-1 text-slate-800">{prescription.notes}</span>
+                    <div className="mt-3 p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs">
+                        <strong className="text-slate-900 uppercase text-[9.5px] block">Особые примечания:</strong>
+                        <p className="text-slate-800 font-medium mt-0.5">{prescription.notes}</p>
                     </div>
                 )}
             </div>
 
-            {/* Document Timestamp & Signature Block */}
-            <div className="mt-8 pt-6 border-t-2 border-slate-200 flex justify-between items-end avoid-break">
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
-                    <p className="text-slate-500 uppercase font-semibold text-[10px]">ДОКУМЕНТ СФОРМИРОВАН</p>
-                    <p className="font-bold text-slate-900 text-sm mt-0.5">{nowFormatted}</p>
-                    <p className="text-[10px] text-slate-400 mt-1 font-medium">Сформировано в медицинской системе LensFlow CRM</p>
+            {/* Подписи врача (Лаконичный вид) */}
+            <div className="mt-8 pt-4 border-t border-slate-200 flex justify-between items-end text-xs font-sans">
+                <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200">
+                    <p className="font-bold text-slate-800 text-[10px]">Сформирован: {nowFormatted}</p>
+                    <p className="text-[9px] text-slate-500 font-medium mt-0.5">Медицинская система LensFlow CRM</p>
                 </div>
-
-                <div className="text-right">
-                    <p className="text-xs text-slate-500 uppercase font-semibold mb-6">ВРАЧ (ФИО, ПОДПИСЬ)</p>
-                    <div className="flex items-center gap-3">
-                        <div className="w-48 border-b-2 border-slate-400"></div>
-                        <span className="font-bold text-sm text-slate-900">/ {doctorName}</span>
+                <div className="text-right font-sans">
+                    <div className="flex gap-4 items-end">
+                        <div className="text-center min-w-[150px]">
+                            <span className="font-semibold text-slate-900 text-xs block pb-0.5 border-b border-slate-300">
+                                {doctorName}
+                            </span>
+                            <span className="text-[8.5px] text-slate-500 uppercase tracking-wider block mt-0.5 font-medium">Врач (ФИО)</span>
+                        </div>
+                        <div className="text-center w-24">
+                            <span className="block pb-0.5 border-b border-slate-300 min-h-[16px]"></span>
+                            <span className="text-[8.5px] text-slate-500 uppercase tracking-wider block mt-0.5 font-medium">Подпись</span>
+                        </div>
                     </div>
                 </div>
             </div>
