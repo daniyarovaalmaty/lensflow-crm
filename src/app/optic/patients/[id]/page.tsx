@@ -387,7 +387,13 @@ export default function PatientDetailPage() {
     const loadPatient = () => {
         fetch(`/api/patients/${id}`)
             .then(r => r.json())
-            .then(data => { setPatient(data); setEditForm(data); })
+            .then(data => { 
+                setPatient(data); 
+                setEditForm(data); 
+                if (data?.metadata?.primaryExam) {
+                    setPrimaryExamState(data.metadata.primaryExam);
+                }
+            })
             .finally(() => setIsLoading(false));
     };
 
@@ -972,44 +978,44 @@ export default function PatientDetailPage() {
                             || (patient as any)?.complaints 
                             || (Array.isArray((patient as any)?.complaints) ? (patient as any).complaints.join(', ') : '')
                             || latestConsult?.notes
-                            || 'на низкое зрение вдаль',
+                            || '',
                         anamnesisDisease: rawSavedExam?.anamnesisDisease 
                             || (patient as any)?.anamnesisDisease 
                             || (Array.isArray((patient as any)?.anamnesisDisease) ? (patient as any).anamnesisDisease.join(', ') : '')
-                            || 'Носит очки для дали. Пришел/шла на подбор ОКЛ.',
+                            || '',
                         anamnesisLife: (rawSavedExam?.anamnesisLife && Object.values(rawSavedExam.anamnesisLife).some(Boolean))
                             ? rawSavedExam.anamnesisLife
-                            : { allergyChecked: false, allergyText: 'не переносит — пищевая, поллиноз', heredityChecked: false, heredityText: '', medicationChecked: false, medicationText: '', dispensaryChecked: false, dispensaryText: '', surgeryChecked: false, surgeryText: '' },
+                            : { allergyChecked: false, allergyText: '', heredityChecked: false, heredityText: '', medicationChecked: false, medicationText: '', dispensaryChecked: false, dispensaryText: '', surgeryChecked: false, surgeryText: '' },
                         lastCorrection: (rawSavedExam?.lastCorrection && hasTableData(rawSavedExam.lastCorrection))
                             ? rawSavedExam.lastCorrection
-                            : { odGlasses: '-3.50 D', odContacts: '-3.25 D, BC 8.6', osGlasses: '-3.75 D', osContacts: '-3.50 D, BC 8.6' },
+                            : { odGlasses: '', odContacts: '', osGlasses: '', osContacts: '' },
                         refraction: (rawSavedExam?.refraction && hasTableData(rawSavedExam.refraction))
                             ? rawSavedExam.refraction
-                            : { odSph: '-3.87', odCyl: '-0.62', odAx: '168', osSph: '-4.00', osCyl: '-0.75', osAx: '16' },
+                            : { odSph: '', odCyl: '', odAx: '', osSph: '', osCyl: '', osAx: '' },
                         cycloplegia: rawSavedExam?.cycloplegia || {},
                         keratometry: (rawSavedExam?.keratometry && hasTableData(rawSavedExam.keratometry))
                             ? rawSavedExam.keratometry
                             : (latestConsult?.k1OD || latestConsult?.k1OS ? {
-                                odK1: latestConsult.k1OD ? String(latestConsult.k1OD) : '42.29',
-                                odK2: latestConsult.k2OD ? String(latestConsult.k2OD) : '43.92',
-                                osK1: latestConsult.k1OS ? String(latestConsult.k1OS) : '42.61',
-                                osK2: latestConsult.k2OS ? String(latestConsult.k2OS) : '44.50',
-                            } : { odK1: '42.29', odK2: '43.92', osK1: '42.61', osK2: '44.50' }),
+                                odK1: latestConsult.k1OD ? String(latestConsult.k1OD) : '',
+                                odK2: latestConsult.k2OD ? String(latestConsult.k2OD) : '',
+                                osK1: latestConsult.k1OS ? String(latestConsult.k1OS) : '',
+                                osK2: latestConsult.k2OS ? String(latestConsult.k2OS) : '',
+                            } : { odK1: '', odK2: '', osK1: '', osK2: '' }),
                         visUncorrected: (rawSavedExam?.visUncorrected && hasTableData(rawSavedExam.visUncorrected))
                             ? rawSavedExam.visUncorrected
-                            : { odDistance: latestConsult?.visualAcuityOD ? String(latestConsult.visualAcuityOD) : '0.1', osDistance: latestConsult?.visualAcuityOS ? String(latestConsult.visualAcuityOS) : '0.1', dominantEye: 'OD' },
+                            : { odDistance: latestConsult?.visualAcuityOD ? String(latestConsult.visualAcuityOD) : '', osDistance: latestConsult?.visualAcuityOS ? String(latestConsult.visualAcuityOS) : '', dominantEye: '' },
                         visCorrected: rawSavedExam?.visCorrected || {},
                         eccentricity: (rawSavedExam?.eccentricity && hasTableData(rawSavedExam.eccentricity))
                             ? rawSavedExam.eccentricity
-                            : { odHoriz: latestConsult?.eccentricityOD ? String(latestConsult.eccentricityOD) : '0.61', odVert: '0.68', osHoriz: latestConsult?.eccentricityOS ? String(latestConsult.eccentricityOS) : '0.55', osVert: '0.69' },
+                            : { odHoriz: latestConsult?.eccentricityOD ? String(latestConsult.eccentricityOD) : '', odVert: '', osHoriz: latestConsult?.eccentricityOS ? String(latestConsult.eccentricityOS) : '', osVert: '' },
                         pzo: (rawSavedExam?.pzo && hasTableData(rawSavedExam.pzo))
                             ? rawSavedExam.pzo
-                            : { od: '24.15', os: '24.38' },
+                            : { od: '', os: '' },
                         biomicroscopy: typeof rawSavedExam?.biomicroscopy === 'string' && rawSavedExam.biomicroscopy.trim()
                             ? rawSavedExam.biomicroscopy
-                            : ((latestConsult as any)?.biomicroscopy || DEFAULT_BIOMICROSCOPY),
-                        diagnosis: rawSavedExam?.diagnosis || latestConsult?.diagnosis || 'OU - Миопия средней степени. Сложный миопический астигматизм.',
-                        recommendations: rawSavedExam?.recommendations || latestConsult?.treatment || 'Циклоскопия 1 раз в год. Оптическая биометрия раз в 6 месяцев.'
+                            : ((latestConsult as any)?.biomicroscopy || ''),
+                        diagnosis: rawSavedExam?.diagnosis || latestConsult?.diagnosis || '',
+                        recommendations: rawSavedExam?.recommendations || latestConsult?.treatment || ''
                     };
 
                     const complaints = savedExam.complaints;
