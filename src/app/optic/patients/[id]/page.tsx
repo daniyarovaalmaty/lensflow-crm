@@ -13,6 +13,7 @@ import MedicalTextarea from '@/components/ui/MedicalTextarea';
 import TagsInput from '@/components/ui/TagsInput';
 import CheckboxAnamnesisField from '@/components/ui/CheckboxAnamnesisField';
 import PrimaryExamForm, { PrimaryExamData } from '@/components/consultation/PrimaryExamForm';
+import PhoneInputWithMask from '@/components/ui/PhoneInputWithMask';
 
 // Helper to remove payment-related text (kaspi, ckk, terminals, etc) for doctors
 const filterMedicalText = (text: string | null | undefined, userRole?: string) => {
@@ -395,16 +396,37 @@ export default function PatientDetailPage() {
     }, [id]);
 
     const handleSave = async () => {
+        const fullPatientName = editForm.name?.trim() || [editForm.lastName, editForm.firstName].filter(Boolean).join(' ').trim();
+        const effectivePhone = editForm.isChild ? editForm.parentPhone : editForm.phone;
+
+        if (!fullPatientName || !effectivePhone) {
+            alert('Фамилия, Имя и Номер телефона обязательны для заполнения!');
+            return;
+        }
+
+        if (editForm.isChild && (!editForm.parentName?.trim() || !editForm.parentPhone?.trim())) {
+            alert('Для карточки ребёнка укажите ФИО и телефон родителя!');
+            return;
+        }
+
         setSaving(true);
+        const payload = {
+            ...editForm,
+            name: fullPatientName,
+            phone: effectivePhone,
+        };
         const res = await fetch(`/api/patients/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(editForm),
+            body: JSON.stringify(payload),
         });
         if (res.ok) {
             const updated = await res.json();
             setPatient(p => p ? { ...p, ...updated } : p);
             setIsEditing(false);
+        } else {
+            const errData = await res.json();
+            alert(errData.error || 'Ошибка при сохранении');
         }
         setSaving(false);
     };
@@ -1151,12 +1173,10 @@ export default function PatientDetailPage() {
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Телефон родителя</label>
-                                                    <input
-                                                        type="tel"
+                                                    <PhoneInputWithMask
                                                         value={editForm.parentPhone || ''}
-                                                        onChange={e => setEditForm((f: any) => ({ ...f, parentPhone: e.target.value }))}
+                                                        onChange={val => setEditForm((f: any) => ({ ...f, parentPhone: val }))}
                                                         className="input text-xs w-full h-8"
-                                                        placeholder="+7 700 000 0000"
                                                     />
                                                 </div>
                                             </>
@@ -1180,7 +1200,7 @@ export default function PatientDetailPage() {
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
                                     {isEditing ? (
-                                        <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
+                                        <PhoneInputWithMask value={editForm.phone || ''} onChange={val => setEditForm((f: any) => ({ ...f, phone: val }))} className="input text-sm w-full" />
                                     ) : (
                                         <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone || '—'}</p>
                                     )}

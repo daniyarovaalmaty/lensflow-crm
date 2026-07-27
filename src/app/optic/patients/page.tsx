@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
 import QuickNav from '@/components/ui/QuickNav';
+import PhoneInputWithMask from '@/components/ui/PhoneInputWithMask';
 
 interface Patient {
     id: string;
@@ -46,7 +47,6 @@ export default function PatientsPage() {
     const { data: session } = useSession();
     const router = useRouter();
 
-    // permissions visibility check
     const clinicPerms = session?.user ? getEffectiveClinicPermissions({
         subRole: session.user.subRole,
         permissions: session.user.permissions,
@@ -63,7 +63,11 @@ export default function PatientsPage() {
     const [showModal, setShowModal] = useState(false);
     const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', city: '', profession: '', parentId: '' as string, isChild: false, parentName: '', parentPhone: '' });
+    const [form, setForm] = useState({ 
+        name: '', lastName: '', firstName: '', middleName: '', 
+        phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', city: '', profession: '', parentId: '' as string, 
+        isChild: false, parentName: '', parentLastName: '', parentFirstName: '', parentPhone: '' 
+    });
     const [saving, setSaving] = useState(false);
     const [dedupMsg, setDedupMsg] = useState('');
 
@@ -129,18 +133,46 @@ export default function PatientsPage() {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const fullPatientName = form.name.trim() || [form.lastName, form.firstName, form.middleName].filter(Boolean).join(' ').trim();
+        const fullParentName = form.parentName.trim() || [form.parentLastName, form.parentFirstName].filter(Boolean).join(' ').trim();
+        const effectivePhone = form.isChild ? form.parentPhone : form.phone;
+
+        if (!form.lastName.trim() || !form.firstName.trim() || !effectivePhone.trim()) {
+            alert('Фамилия, Имя и Номер телефона обязательны для заполнения!');
+            return;
+        }
+
+        if (form.isChild && (!form.parentLastName.trim() || !form.parentFirstName.trim() || !form.parentPhone.trim())) {
+            alert('Для карточки ребёнка обязательно заполните Фамилию, Имя и Телефон родителя!');
+            return;
+        }
+
         setSaving(true);
         try {
+            const payload = {
+                ...form,
+                name: fullPatientName,
+                parentName: fullParentName,
+                phone: effectivePhone,
+            };
             const res = await fetch('/api/patients', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify(payload),
             });
             if (res.ok) {
                 const patient = await res.json();
                 setShowModal(false);
-                setForm({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', city: '', profession: '', parentId: '', isChild: false, parentName: '', parentPhone: '' });
+                setForm({ 
+                    name: '', lastName: '', firstName: '', middleName: '', 
+                    phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', city: '', profession: '', parentId: '', 
+                    isChild: false, parentName: '', parentLastName: '', parentFirstName: '', parentPhone: '' 
+                });
                 router.push(`/optic/patients/${patient.id}`);
+            } else {
+                const errData = await res.json();
+                alert(errData.error || 'Ошибка при создании пациента');
             }
         } finally {
             setSaving(false);
@@ -389,11 +421,19 @@ export default function PatientsPage() {
                                     {/* Поля для Ребёнка */}
                                     <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3">
                                         <span className="text-xs font-bold text-blue-800 uppercase tracking-wider block">Данные Ребёнка</span>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-700 mb-1">ФИ Ребёнка *</label>
-                                            <input type="text" required value={form.name}
-                                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                                className="input w-full" placeholder="Фамилия Имя ребенка" />
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 mb-1">Фамилия ребёнка *</label>
+                                                <input type="text" required value={form.lastName}
+                                                    onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                                                    className="input w-full" placeholder="Фамилия" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 mb-1">Имя ребёнка *</label>
+                                                <input type="text" required value={form.firstName}
+                                                    onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                                                    className="input w-full" placeholder="Имя" />
+                                            </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
@@ -415,17 +455,28 @@ export default function PatientsPage() {
                                     {/* Поля для Родителя */}
                                     <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 space-y-3">
                                         <span className="text-xs font-bold text-amber-800 uppercase tracking-wider block">Данные Родителя (Опекуна)</span>
-                                        <div>
-                                            <label className="block text-xs font-bold text-gray-700 mb-1">ФИО Родителя *</label>
-                                            <input type="text" required value={form.parentName}
-                                                onChange={e => setForm(f => ({ ...f, parentName: e.target.value }))}
-                                                className="input w-full" placeholder="Фамилия Имя Отчество родителя" />
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 mb-1">Фамилия родителя *</label>
+                                                <input type="text" required value={form.parentLastName}
+                                                    onChange={e => setForm(f => ({ ...f, parentLastName: e.target.value }))}
+                                                    className="input w-full" placeholder="Фамилия" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 mb-1">Имя родителя *</label>
+                                                <input type="text" required value={form.parentFirstName}
+                                                    onChange={e => setForm(f => ({ ...f, parentFirstName: e.target.value }))}
+                                                    className="input w-full" placeholder="Имя" />
+                                            </div>
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-700 mb-1">Номер телефона родителя *</label>
-                                            <input type="tel" required value={form.parentPhone}
-                                                onChange={e => setForm(f => ({ ...f, parentPhone: e.target.value, phone: e.target.value }))}
-                                                className="input w-full" placeholder="+7 701 000 00 00" />
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Телефон родителя *</label>
+                                            <PhoneInputWithMask
+                                                required
+                                                value={form.parentPhone}
+                                                onChange={val => setForm(f => ({ ...f, parentPhone: val, phone: val }))}
+                                                placeholder="+7 (701) 000-00-00"
+                                            />
                                             <p className="text-[10px] text-gray-500 mt-1">Все дети одного родителя автоматически связываются по этому номеру.</p>
                                         </div>
                                     </div>
@@ -433,18 +484,29 @@ export default function PatientsPage() {
                             ) : (
                                 <>
                                     {/* Поля для Взрослого */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-700 mb-1">ФИО Пациента *</label>
-                                        <input type="text" required value={form.name}
-                                            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                            className="input w-full" placeholder="Фамилия Имя Отчество" />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Фамилия *</label>
+                                            <input type="text" required value={form.lastName}
+                                                onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                                                className="input w-full" placeholder="Фамилия" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Имя *</label>
+                                            <input type="text" required value={form.firstName}
+                                                onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                                                className="input w-full" placeholder="Имя" />
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-700 mb-1">Телефон Пациента *</label>
-                                            <input type="tel" required value={form.phone}
-                                                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                                                className="input w-full" placeholder="+7 701 000 00 00" />
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Телефон *</label>
+                                            <PhoneInputWithMask
+                                                required
+                                                value={form.phone}
+                                                onChange={val => setForm(f => ({ ...f, phone: val }))}
+                                                placeholder="+7 (701) 000-00-00"
+                                            />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-700 mb-1">Пол</label>
