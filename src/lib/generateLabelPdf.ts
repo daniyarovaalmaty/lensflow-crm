@@ -188,8 +188,8 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.line(0, 7, W, 7);
 
     // ===== PATIENT ROW =====
-    // Order ID (Left, Extra Large & Bold: 13pt)
-    doc.setFont('Roboto', 'bold');
+    // Order ID (Left, Regular font: 13pt)
+    doc.setFont('Roboto', 'normal');
     doc.setTextColor(0, 0, 0);
     let orderIdFontSize = 13;
     doc.setFontSize(orderIdFontSize);
