@@ -238,8 +238,11 @@ export class OneCClient {
   /** Create exchange node for LensFlow.
    *  Parameters is a Structure type — we pass it as serialized XML. */
   async createExchangeNode(
-    parameters: string,
+    exchangePlanName: string,
+    nodeCode: string = 'LENSFLOW',
+    nodeDescription: string = 'LensFlow CRM',
   ): Promise<string> {
+    const parameters = `<tns:ExchangePlan>${exchangePlanName}</tns:ExchangePlan><tns:NodeCode>${nodeCode}</tns:NodeCode><tns:NodeDescription>${nodeDescription}</tns:NodeDescription>`;
     const res = await this.callSoap('Exchange_3_0_2_1', 'CreateExchangeNode',
       '<tns:CreateExchangeNode>' +
       `<tns:Parameters>${parameters}</tns:Parameters>` +
