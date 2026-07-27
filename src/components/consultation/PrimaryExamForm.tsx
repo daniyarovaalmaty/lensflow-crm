@@ -146,8 +146,13 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
         },
         biomicroscopy: initialData?.biomicroscopy ?? DEFAULT_BIOMICROSCOPY,
         diagnosis: initialData?.diagnosis ?? 'OU - Миопия средней степени. Сложный миопический астигматизм.',
-        recommendations: initialData?.recommendations ?? 'Циклоскопия 1 раз в год. Оптическая биометрия раз в 6 мес.',
     }));
+
+    useEffect(() => {
+        if (onChange) {
+            onChange(data);
+        }
+    }, []);
 
     const updateField = (path: string, val: any) => {
         if (readOnly) return;
