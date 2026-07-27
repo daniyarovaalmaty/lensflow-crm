@@ -5,6 +5,7 @@ export const fetchCache = 'force-no-store';
 import { notFound } from 'next/navigation';
 import prisma from '@/lib/db/prisma';
 import { auth } from '@/auth';
+import { PrimaryExamData } from '@/components/consultation/PrimaryExamForm';
 
 function cleanClinicAddress(rawAddress: string | null | undefined): string {
     if (!rawAddress) return 'г. Алматы, Райымбека 217';
@@ -49,7 +50,13 @@ const fmt = (v: any, plus = true) => {
 
 const hasTableData = (obj: any): boolean => {
     if (!obj || typeof obj !== 'object') return false;
-    return Object.values(obj).some(val => val != null && typeof val === 'string' && val.trim() !== '' && val.trim() !== '—');
+    return Object.values(obj).some(val => {
+        if (val == null) return false;
+        if (typeof val === 'number') return true;
+        if (typeof val === 'boolean') return val;
+        if (typeof val === 'string') return val.trim() !== '' && val.trim() !== '—';
+        return false;
+    });
 };
 
 export default async function ConsultationPrintPage({ params }: { params: { id: string, consultId: string } }) {
@@ -88,19 +95,45 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
         hour: '2-digit', minute: '2-digit'
     });
 
-    const savedExam = (consultation as any)?.primaryExamDetails || ((patient as any).metadata as any)?.primaryExam;
+    const rawSavedExam = (consultation as any)?.primaryExamDetails || ((patient as any).metadata as any)?.primaryExam || {};
     const rx = patient.prescriptions[0];
-    const visCorr = savedExam?.visCorrected;
-    const lastCorr = savedExam?.lastCorrection;
-    const hasRxData = rx || visCorr?.odSph || visCorr?.osSph || lastCorr?.odGlasses || lastCorr?.osGlasses;
-
-    const complaints = savedExam?.complaints || consultation.notes || patient.complaints || '';
-    const anamnesisDisease = savedExam?.anamnesisDisease || patient.anamnesisDisease || '';
-    
     const DEFAULT_BIOMICROSCOPY = 'OU- веки и слезные органы без изменений, конъюнктива бледно-розовая, склера - белая, роговица - прозрачная, блестящая, передняя камера - средней глубины, равномерная, влага ПК прозрачная, радужка - структурна, зрачок - правильной округлой формы, реакция на свет – живая, хрусталик – прозрачный.';
-    const biomicroscopyText = typeof savedExam?.biomicroscopy === 'string' && savedExam.biomicroscopy.trim()
-        ? savedExam.biomicroscopy
-        : ((consultation as any)?.biomicroscopy || DEFAULT_BIOMICROSCOPY);
+
+    const savedExam: PrimaryExamData = {
+        complaints: rawSavedExam.complaints || consultation.notes || patient.complaints || '',
+        anamnesisDisease: rawSavedExam.anamnesisDisease || patient.anamnesisDisease || '',
+        anamnesisLife: rawSavedExam.anamnesisLife || {},
+        lastCorrection: rawSavedExam.lastCorrection || {},
+        refraction: rawSavedExam.refraction || {},
+        cycloplegia: rawSavedExam.cycloplegia || {},
+        keratometry: rawSavedExam.keratometry || (consultation?.k1OD || consultation?.k1OS ? {
+            odK1: consultation.k1OD ? String(consultation.k1OD) : '',
+            odK2: consultation.k2OD ? String(consultation.k2OD) : '',
+            osK1: consultation.k1OS ? String(consultation.k1OS) : '',
+            osK2: consultation.k2OS ? String(consultation.k2OS) : '',
+        } : {}),
+        visUncorrected: rawSavedExam.visUncorrected || (consultation?.visualAcuityOD || consultation?.visualAcuityOS ? {
+            odDistance: consultation.visualAcuityOD ? String(consultation.visualAcuityOD) : '',
+            osDistance: consultation.visualAcuityOS ? String(consultation.visualAcuityOS) : '',
+        } : {}),
+        visCorrected: rawSavedExam.visCorrected || {},
+        eccentricity: rawSavedExam.eccentricity || (consultation?.eccentricityOD || consultation?.eccentricityOS ? {
+            odHoriz: consultation.eccentricityOD ? String(consultation.eccentricityOD) : '',
+            osHoriz: consultation.eccentricityOS ? String(consultation.eccentricityOS) : '',
+        } : {}),
+        pzo: rawSavedExam.pzo || {},
+        biomicroscopy: typeof rawSavedExam.biomicroscopy === 'string' && rawSavedExam.biomicroscopy.trim()
+            ? rawSavedExam.biomicroscopy
+            : ((consultation as any)?.biomicroscopy || DEFAULT_BIOMICROSCOPY),
+        diagnosis: rawSavedExam.diagnosis || consultation.diagnosis || '',
+        recommendations: rawSavedExam.recommendations || consultation.treatment || ''
+    };
+    const complaints = savedExam.complaints;
+    const anamnesisDisease = savedExam.anamnesisDisease;
+    const biomicroscopyText = savedExam.biomicroscopy;
+    const visCorr = savedExam.visCorrected;
+    const lastCorr = savedExam.lastCorrection;
+    const hasRxData = rx || visCorr?.odSph || visCorr?.osSph || lastCorr?.odGlasses || lastCorr?.osGlasses;
 
     const hasAnamnesisLife = savedExam?.anamnesisLife && (
         savedExam.anamnesisLife.allergyChecked || 
