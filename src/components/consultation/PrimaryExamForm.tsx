@@ -211,7 +211,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                             onChange={e => updateField('complaints', e.target.value)}
                             className="w-full border border-gray-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
                             rows={2}
-                            placeholder="Например: на низкое зрение вдаль..."
+                            
                         />
                     </div>
                 </div>
@@ -226,7 +226,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                             onChange={e => updateField('anamnesisDisease', e.target.value)}
                             className="w-full border border-gray-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"
                             rows={2}
-                            placeholder="Например: Носит очки для дали. Пришел на подбор ОКЛ..."
+                            
                         />
                     </div>
                 </div>
@@ -265,7 +265,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                                     disabled={readOnly || !data.anamnesisLife?.allergyChecked}
                                     value={data.anamnesisLife?.allergyText || ''}
                                     onChange={e => updateField('anamnesisLife.allergyText', e.target.value)}
-                                    placeholder="не переносит - пищевая, поллиноз..."
+                                    
                                     className={inputCls}
                                 />
                             </label>
@@ -298,7 +298,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                                     disabled={readOnly || !data.anamnesisLife?.heredityChecked}
                                     value={data.anamnesisLife?.heredityText || ''}
                                     onChange={e => updateField('anamnesisLife.heredityText', e.target.value)}
-                                    placeholder="миопия у родителей..."
+                                    
                                     className={inputCls}
                                 />
                             </label>
@@ -331,7 +331,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                                     disabled={readOnly || !data.anamnesisLife?.medicationChecked}
                                     value={data.anamnesisLife?.medicationText || ''}
                                     onChange={e => updateField('anamnesisLife.medicationText', e.target.value)}
-                                    placeholder="что, когда, длительность..."
+                                    
                                     className={inputCls}
                                 />
                             </label>
@@ -364,7 +364,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                                     disabled={readOnly || !data.anamnesisLife?.dispensaryChecked}
                                     value={data.anamnesisLife?.dispensaryText || ''}
                                     onChange={e => updateField('anamnesisLife.dispensaryText', e.target.value)}
-                                    placeholder="у офтальмолога / педиатра..."
+                                    
                                     className={inputCls}
                                 />
                             </label>
@@ -397,7 +397,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                                     disabled={readOnly || !data.anamnesisLife?.surgeryChecked}
                                     value={data.anamnesisLife?.surgeryText || ''}
                                     onChange={e => updateField('anamnesisLife.surgeryText', e.target.value)}
-                                    placeholder="название операции, год..."
+                                    
                                     className={inputCls}
                                 />
                             </label>
@@ -424,25 +424,25 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                                 <tr>
                                     <td className={`${cellCls} font-bold text-blue-600 bg-blue-50/40 w-20`}>OD</td>
                                     <td className={cellCls}>
-                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.odGlasses || ''} onChange={e => updateField('lastCorrection.odGlasses', e.target.value)} placeholder="-3.50 D" className={inputCls} />
+                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.odGlasses || ''} onChange={e => updateField('lastCorrection.odGlasses', e.target.value)}  className={inputCls} />
                                     </td>
                                     <td className={cellCls}>
-                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.odContacts || ''} onChange={e => updateField('lastCorrection.odContacts', e.target.value)} placeholder="-3.25 D, BC 8.6" className={inputCls} />
+                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.odContacts || ''} onChange={e => updateField('lastCorrection.odContacts', e.target.value)}  className={inputCls} />
                                     </td>
                                     <td className={cellCls}>
-                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.odNear || ''} onChange={e => updateField('lastCorrection.odNear', e.target.value)} placeholder="Sph / Add" className={inputCls} />
+                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.odNear || ''} onChange={e => updateField('lastCorrection.odNear', e.target.value)}  className={inputCls} />
                                     </td>
                                 </tr>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-teal-600 bg-teal-50/40 w-20`}>OS</td>
                                     <td className={cellCls}>
-                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.osGlasses || ''} onChange={e => updateField('lastCorrection.osGlasses', e.target.value)} placeholder="-3.75 D" className={inputCls} />
+                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.osGlasses || ''} onChange={e => updateField('lastCorrection.osGlasses', e.target.value)}  className={inputCls} />
                                     </td>
                                     <td className={cellCls}>
-                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.osContacts || ''} onChange={e => updateField('lastCorrection.osContacts', e.target.value)} placeholder="-3.50 D, BC 8.6" className={inputCls} />
+                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.osContacts || ''} onChange={e => updateField('lastCorrection.osContacts', e.target.value)}  className={inputCls} />
                                     </td>
                                     <td className={cellCls}>
-                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.osNear || ''} onChange={e => updateField('lastCorrection.osNear', e.target.value)} placeholder="Sph / Add" className={inputCls} />
+                                        <input disabled={readOnly} type="text" value={data.lastCorrection?.osNear || ''} onChange={e => updateField('lastCorrection.osNear', e.target.value)}  className={inputCls} />
                                     </td>
                                 </tr>
                             </tbody>
@@ -469,15 +469,15 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                             <tbody>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-blue-600 bg-blue-50/40 w-16`}>OD</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.odSph || ''} onChange={e => updateField('refraction.odSph', e.target.value)} placeholder="-3.87" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.odCyl || ''} onChange={e => updateField('refraction.odCyl', e.target.value)} placeholder="-0.62" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.odAx || ''} onChange={e => updateField('refraction.odAx', e.target.value)} placeholder="168" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.odSph || ''} onChange={e => updateField('refraction.odSph', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.odCyl || ''} onChange={e => updateField('refraction.odCyl', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.odAx || ''} onChange={e => updateField('refraction.odAx', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-teal-600 bg-teal-50/40 w-16`}>OS</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.osSph || ''} onChange={e => updateField('refraction.osSph', e.target.value)} placeholder="-4.00" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.osCyl || ''} onChange={e => updateField('refraction.osCyl', e.target.value)} placeholder="-0.75" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.osAx || ''} onChange={e => updateField('refraction.osAx', e.target.value)} placeholder="16" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.osSph || ''} onChange={e => updateField('refraction.osSph', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.osCyl || ''} onChange={e => updateField('refraction.osCyl', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.refraction?.osAx || ''} onChange={e => updateField('refraction.osAx', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -500,15 +500,15 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                             <tbody>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-blue-600 bg-blue-50/40 w-16`}>OD</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.odSph || ''} onChange={e => updateField('cycloplegia.odSph', e.target.value)} placeholder="Dsph" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.odCyl || ''} onChange={e => updateField('cycloplegia.odCyl', e.target.value)} placeholder="Dcyl" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.odAx || ''} onChange={e => updateField('cycloplegia.odAx', e.target.value)} placeholder="axis" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.odSph || ''} onChange={e => updateField('cycloplegia.odSph', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.odCyl || ''} onChange={e => updateField('cycloplegia.odCyl', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.odAx || ''} onChange={e => updateField('cycloplegia.odAx', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-teal-600 bg-teal-50/40 w-16`}>OS</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.osSph || ''} onChange={e => updateField('cycloplegia.osSph', e.target.value)} placeholder="Dsph" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.osCyl || ''} onChange={e => updateField('cycloplegia.osCyl', e.target.value)} placeholder="Dcyl" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.osAx || ''} onChange={e => updateField('cycloplegia.osAx', e.target.value)} placeholder="axis" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.osSph || ''} onChange={e => updateField('cycloplegia.osSph', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.osCyl || ''} onChange={e => updateField('cycloplegia.osCyl', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.cycloplegia?.osAx || ''} onChange={e => updateField('cycloplegia.osAx', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -534,19 +534,19 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                         <tbody>
                             <tr>
                                 <td className={cellCls}>
-                                    <input disabled={readOnly} type="text" value={data.keratometry?.odK1 || ''} onChange={e => updateField('keratometry.odK1', e.target.value)} placeholder="42.29" className={inputCls} />
+                                    <input disabled={readOnly} type="text" value={data.keratometry?.odK1 || ''} onChange={e => updateField('keratometry.odK1', e.target.value)}  className={inputCls} />
                                 </td>
                                 <td className={cellCls}>
-                                    <input disabled={readOnly} type="text" value={data.keratometry?.odK2 || ''} onChange={e => updateField('keratometry.odK2', e.target.value)} placeholder="43.92" className={inputCls} />
+                                    <input disabled={readOnly} type="text" value={data.keratometry?.odK2 || ''} onChange={e => updateField('keratometry.odK2', e.target.value)}  className={inputCls} />
                                 </td>
                                 <td className={`${cellCls} font-bold text-blue-700 bg-blue-50/50`}>
                                     {calcKDiff(data.keratometry?.odK1, data.keratometry?.odK2)}
                                 </td>
                                 <td className={cellCls}>
-                                    <input disabled={readOnly} type="text" value={data.keratometry?.osK1 || ''} onChange={e => updateField('keratometry.osK1', e.target.value)} placeholder="42.61" className={inputCls} />
+                                    <input disabled={readOnly} type="text" value={data.keratometry?.osK1 || ''} onChange={e => updateField('keratometry.osK1', e.target.value)}  className={inputCls} />
                                 </td>
                                 <td className={cellCls}>
-                                    <input disabled={readOnly} type="text" value={data.keratometry?.osK2 || ''} onChange={e => updateField('keratometry.osK2', e.target.value)} placeholder="44.50" className={inputCls} />
+                                    <input disabled={readOnly} type="text" value={data.keratometry?.osK2 || ''} onChange={e => updateField('keratometry.osK2', e.target.value)}  className={inputCls} />
                                 </td>
                                 <td className={`${cellCls} font-bold text-teal-700 bg-teal-50/50`}>
                                     {calcKDiff(data.keratometry?.osK1, data.keratometry?.osK2)}
@@ -575,8 +575,8 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                             <tbody>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-blue-600 bg-blue-50/40 w-16`}>OD</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.odDistance || ''} onChange={e => updateField('visUncorrected.odDistance', e.target.value)} placeholder="0.1" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.odNear || ''} onChange={e => updateField('visUncorrected.odNear', e.target.value)} placeholder="вблизи" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.odDistance || ''} onChange={e => updateField('visUncorrected.odDistance', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.odNear || ''} onChange={e => updateField('visUncorrected.odNear', e.target.value)}  className={inputCls} /></td>
                                     <td className={cellCls}>
                                         <input
                                             type="radio"
@@ -590,8 +590,8 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                                 </tr>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-teal-600 bg-teal-50/40 w-16`}>OS</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.osDistance || ''} onChange={e => updateField('visUncorrected.osDistance', e.target.value)} placeholder="0.1" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.osNear || ''} onChange={e => updateField('visUncorrected.osNear', e.target.value)} placeholder="вблизи" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.osDistance || ''} onChange={e => updateField('visUncorrected.osDistance', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.visUncorrected?.osNear || ''} onChange={e => updateField('visUncorrected.osNear', e.target.value)}  className={inputCls} /></td>
                                     <td className={cellCls}>
                                         <input
                                             type="radio"
@@ -663,13 +663,13 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                             <tbody>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-blue-600 bg-blue-50/40 w-16`}>OD</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.odHoriz || ''} onChange={e => updateField('eccentricity.odHoriz', e.target.value)} placeholder="0.61" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.odVert || ''} onChange={e => updateField('eccentricity.odVert', e.target.value)} placeholder="0.68" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.odHoriz || ''} onChange={e => updateField('eccentricity.odHoriz', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.odVert || ''} onChange={e => updateField('eccentricity.odVert', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-teal-600 bg-teal-50/40 w-16`}>OS</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.osHoriz || ''} onChange={e => updateField('eccentricity.osHoriz', e.target.value)} placeholder="0.55" className={inputCls} /></td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.osVert || ''} onChange={e => updateField('eccentricity.osVert', e.target.value)} placeholder="0.69" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.osHoriz || ''} onChange={e => updateField('eccentricity.osHoriz', e.target.value)}  className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.eccentricity?.osVert || ''} onChange={e => updateField('eccentricity.osVert', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -690,11 +690,11 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                             <tbody>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-blue-600 bg-blue-50/40 w-16`}>OD</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.pzo?.od || ''} onChange={e => updateField('pzo.od', e.target.value)} placeholder="24.15 мм" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.pzo?.od || ''} onChange={e => updateField('pzo.od', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                                 <tr>
                                     <td className={`${cellCls} font-bold text-teal-600 bg-teal-50/40 w-16`}>OS</td>
-                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.pzo?.os || ''} onChange={e => updateField('pzo.os', e.target.value)} placeholder="24.30 мм" className={inputCls} /></td>
+                                    <td className={cellCls}><input disabled={readOnly} type="text" value={data.pzo?.os || ''} onChange={e => updateField('pzo.os', e.target.value)}  className={inputCls} /></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -733,7 +733,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                         onChange={e => updateField('diagnosis', e.target.value)}
                         className="w-full border border-red-200 bg-red-50/30 rounded-xl p-3 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none resize-none"
                         rows={2}
-                        placeholder="Например: OU - Миопия средней степени. Сложный миопический астигматизм."
+                        
                     />
                 </div>
 
@@ -746,7 +746,7 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
                         onChange={e => updateField('recommendations', e.target.value)}
                         className="w-full border border-emerald-200 bg-emerald-50/30 rounded-xl p-3 text-xs text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none resize-none"
                         rows={2}
-                        placeholder="Например: Циклоскопия 1 раз в год. Оптическая биометрия раз в 6 мес."
+                        
                     />
                 </div>
             </div>

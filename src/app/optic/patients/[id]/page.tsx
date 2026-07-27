@@ -1905,11 +1905,11 @@ export default function PatientDetailPage() {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OD — Правый</label>
-                                                    <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                                    <input type="text" value={consultForm.refractionOD || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOD: e.target.value }))} className="input w-full text-sm h-8" />
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] text-purple-600 font-semibold block mb-0.5">OS — Левый</label>
-                                                    <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" placeholder="Sph / Cyl / Ax" />
+                                                    <input type="text" value={consultForm.refractionOS || ''} onChange={e => setConsultForm((f: any) => ({ ...f, refractionOS: e.target.value }))} className="input w-full text-sm h-8" />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-4 gap-2 pt-2 border-t border-purple-100">
@@ -1933,8 +1933,8 @@ export default function PatientDetailPage() {
                                         placeholder="Описание состояния переднего отрезка глаза..." 
                                         quickTags={['Роговица прозрачная', 'Влага передней камеры прозрачная', 'Зрачок круглый', 'Хрусталик прозрачный', 'Глазное дно в норме', 'ДЗН бледно-розовый', 'Сосуды сетчатки без особенностей', 'Макулярная зона без патологии']}
                                     />
-                                    <MedicalTextarea category="diagnosis" label="Диагноз / Клинические данные" value={consultForm.diagnosis || ''} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, diagnosis: val }))} className="input text-sm" rows={2} placeholder="Миопия высокой степени, прогрессирующая..." />
-                                    <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} placeholder="Подобраны орто-К линзы, курс 3 месяца..." />
+                                    <MedicalTextarea category="diagnosis" label="Диагноз / Клинические данные" value={consultForm.diagnosis || ''} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, diagnosis: val }))} className="input text-sm" rows={2} />
+                                    <MedicalTextarea category="treatment" label="План лечения / Рекомендации" value={consultForm.treatment} onValueChange={(val) => setConsultForm((f: any) => ({ ...f, treatment: val }))} className="input text-sm" rows={2} />
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1">Следующий визит (в календарь)</label>
