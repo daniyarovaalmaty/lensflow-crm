@@ -47,7 +47,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { name, phone, email, birthDate, gender, notes, doctorId, attachments, parentId } = body;
+    const { 
+        name, phone, email, birthDate, gender, notes, doctorId, attachments, parentId,
+        isChild, parentName, parentPhone, city, complaints, anamnesisDisease, anamnesisLife,
+        allergies, heredity, medications, dispensary, surgeries, lastCorrection, iin, profession
+    } = body;
 
     const updateData: any = {
         name: name?.trim(),
@@ -59,6 +63,22 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         doctorId: doctorId || null,
         parentId: parentId || null,
     };
+
+    if (typeof isChild === 'boolean') updateData.isChild = isChild;
+    if (parentName !== undefined) updateData.parentName = parentName?.trim() || null;
+    if (parentPhone !== undefined) updateData.parentPhone = parentPhone?.trim() || null;
+    if (city !== undefined) updateData.city = city?.trim() || null;
+    if (complaints !== undefined) updateData.complaints = complaints || null;
+    if (anamnesisDisease !== undefined) updateData.anamnesisDisease = anamnesisDisease || null;
+    if (anamnesisLife !== undefined) updateData.anamnesisLife = anamnesisLife || null;
+    if (allergies !== undefined) updateData.allergies = allergies || null;
+    if (heredity !== undefined) updateData.heredity = heredity || null;
+    if (medications !== undefined) updateData.medications = medications || null;
+    if (dispensary !== undefined) updateData.dispensary = dispensary || null;
+    if (surgeries !== undefined) updateData.surgeries = surgeries || null;
+    if (lastCorrection !== undefined) updateData.lastCorrection = lastCorrection || null;
+    if (iin !== undefined) updateData.iin = iin?.trim() || null;
+    if (profession !== undefined) updateData.profession = profession?.trim() || null;
 
     if (attachments !== undefined) {
         updateData.attachments = attachments;
