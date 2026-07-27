@@ -47,6 +47,11 @@ const fmt = (v: any, plus = true) => {
     return (plus && num > 0 ? '+' : '') + num.toFixed(2);
 };
 
+const hasTableData = (obj: any): boolean => {
+    if (!obj || typeof obj !== 'object') return false;
+    return Object.values(obj).some(val => val != null && typeof val === 'string' && val.trim() !== '' && val.trim() !== '—');
+};
+
 export default async function ConsultationPrintPage({ params }: { params: { id: string, consultId: string } }) {
     const session = await auth();
     if (!session?.user) return notFound();
@@ -97,6 +102,14 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
         ? savedExam.biomicroscopy
         : ((consultation as any)?.biomicroscopy || DEFAULT_BIOMICROSCOPY);
 
+    const hasAnamnesisLife = savedExam?.anamnesisLife && (
+        savedExam.anamnesisLife.allergyChecked || 
+        savedExam.anamnesisLife.heredityChecked || 
+        savedExam.anamnesisLife.medicationChecked || 
+        savedExam.anamnesisLife.dispensaryChecked || 
+        savedExam.anamnesisLife.surgeryChecked
+    );
+
     return (
         <div className="bg-white p-4 sm:p-8 max-w-4xl mx-auto min-h-screen text-slate-900 print:p-0 print:m-0 print:max-w-none font-sans">
             <style>{`
@@ -111,8 +124,8 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
             {/* Шапка организации (Округлые края) */}
             <div className="bg-slate-50/90 border-l-4 border-blue-600 p-4 sm:p-5 mb-6 rounded-2xl border-y border-r border-slate-200 flex justify-between items-center font-sans">
                 <div>
-                    <h1 className="text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">МЕДИЦИНСКАЯ ВЫПИСКА ПРИЁМА</h1>
-                    <p className="text-blue-600 font-semibold text-sm mt-1 font-sans">{clinicName}</p>
+                    <h1 className="text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА</h1>
+                    <p className="text-blue-600 font-semibold text-sm mt-1 font-sans">Медицинский протокол обследования глаз | {clinicName}</p>
                 </div>
                 <div className="text-right text-xs text-slate-600 max-w-[60%] space-y-0.5 font-sans">
                     <p className="font-medium text-slate-800 leading-snug">📍 {clinicAddress}</p>
@@ -175,9 +188,298 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
                     </div>
                 )}
 
+                {hasAnamnesisLife && (
+                    <div>
+                        <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">3. Анамнез жизни:</span>
+                        <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-xs font-medium">
+                            <div><strong>Аллергоанамнез:</strong> {savedExam?.anamnesisLife?.allergyChecked ? `отягощен (${savedExam.anamnesisLife.allergyText || '—'})` : 'не отягощен'}</div>
+                            <div><strong>Наследственность:</strong> {savedExam?.anamnesisLife?.heredityChecked ? `отягощена (${savedExam.anamnesisLife.heredityText || '—'})` : 'не отягощена'}</div>
+                            <div><strong>Прием медикаментов:</strong> {savedExam?.anamnesisLife?.medicationChecked ? `принимает (${savedExam.anamnesisLife.medicationText || '—'})` : 'не принимает'}</div>
+                            <div><strong>Диспансерный учет:</strong> {savedExam?.anamnesisLife?.dispensaryChecked ? `да (${savedExam.anamnesisLife.dispensaryText || '—'})` : 'нет'}</div>
+                            <div className="col-span-2"><strong>Операции:</strong> {savedExam?.anamnesisLife?.surgeryChecked ? `да (${savedExam.anamnesisLife.surgeryText || '—'})` : 'не было'}</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 4. Последняя коррекция */}
+                {hasTableData(savedExam?.lastCorrection) && (
+                    <div>
+                        <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">4. Последняя коррекция:</span>
+                        <div className="rounded-xl overflow-hidden border border-slate-200">
+                            <table className="w-full text-center border-collapse print-table text-xs">
+                                <thead>
+                                    <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                        <th className="border-r border-b border-slate-200 p-1.5">Глаз</th>
+                                        <th className="border-r border-b border-slate-200 p-1.5">Очки для дали</th>
+                                        <th className="border-r border-b border-slate-200 p-1.5">Контактные линзы</th>
+                                        <th className="border-b border-slate-200 p-1.5">Очки для близи</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border-r border-b border-slate-200 p-1.5 font-bold text-blue-700">OD</td>
+                                        <td className="border-r border-b border-slate-200 p-1.5">{savedExam?.lastCorrection?.odGlasses || '—'}</td>
+                                        <td className="border-r border-b border-slate-200 p-1.5">{savedExam?.lastCorrection?.odContacts || '—'}</td>
+                                        <td className="border-b border-slate-200 p-1.5">{savedExam?.lastCorrection?.odNear || '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border-r border-slate-200 p-1.5 font-bold text-teal-700">OS</td>
+                                        <td className="border-r border-slate-200 p-1.5">{savedExam?.lastCorrection?.osGlasses || '—'}</td>
+                                        <td className="border-r border-slate-200 p-1.5">{savedExam?.lastCorrection?.osContacts || '—'}</td>
+                                        <td className="p-1.5">{savedExam?.lastCorrection?.osNear || '—'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* 5. Рефракция и Циклоплегия */}
+                {(hasTableData(savedExam?.refraction) || hasTableData(savedExam?.cycloplegia)) && (
+                    <div className="grid grid-cols-2 gap-3">
+                        {hasTableData(savedExam?.refraction) && (
+                            <div>
+                                <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">Рефракция:</span>
+                                <div className="rounded-xl overflow-hidden border border-slate-200">
+                                    <table className="w-full text-center border-collapse print-table text-xs">
+                                        <thead>
+                                            <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                                <th className="border-r border-b border-slate-200 p-1">Глаз</th>
+                                                <th className="border-r border-b border-slate-200 p-1">Dsph</th>
+                                                <th className="border-r border-b border-slate-200 p-1">Dcyl</th>
+                                                <th className="border-b border-slate-200 p-1">Axis</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="border-r border-b border-slate-200 p-1 font-bold text-blue-700">OD</td>
+                                                <td className="border-r border-b border-slate-200 p-1">{savedExam?.refraction?.odSph || '—'}</td>
+                                                <td className="border-r border-b border-slate-200 p-1">{savedExam?.refraction?.odCyl || '—'}</td>
+                                                <td className="border-b border-slate-200 p-1">{savedExam?.refraction?.odAx || '—'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-200 p-1 font-bold text-teal-700">OS</td>
+                                                <td className="border-r border-slate-200 p-1">{savedExam?.refraction?.osSph || '—'}</td>
+                                                <td className="border-r border-slate-200 p-1">{savedExam?.refraction?.osCyl || '—'}</td>
+                                                <td className="p-1">{savedExam?.refraction?.osAx || '—'}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {hasTableData(savedExam?.cycloplegia) && (
+                            <div>
+                                <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">Циклоплегия:</span>
+                                <div className="rounded-xl overflow-hidden border border-slate-200">
+                                    <table className="w-full text-center border-collapse print-table text-xs">
+                                        <thead>
+                                            <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                                <th className="border-r border-b border-slate-200 p-1">Глаз</th>
+                                                <th className="border-r border-b border-slate-200 p-1">Dsph</th>
+                                                <th className="border-r border-b border-slate-200 p-1">Dcyl</th>
+                                                <th className="border-b border-slate-200 p-1">Axis</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="border-r border-b border-slate-200 p-1 font-bold text-blue-700">OD</td>
+                                                <td className="border-r border-b border-slate-200 p-1">{savedExam?.cycloplegia?.odSph || '—'}</td>
+                                                <td className="border-r border-b border-slate-200 p-1">{savedExam?.cycloplegia?.odCyl || '—'}</td>
+                                                <td className="border-b border-slate-200 p-1">{savedExam?.cycloplegia?.odAx || '—'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-200 p-1 font-bold text-teal-700">OS</td>
+                                                <td className="border-r border-slate-200 p-1">{savedExam?.cycloplegia?.osSph || '—'}</td>
+                                                <td className="border-r border-slate-200 p-1">{savedExam?.cycloplegia?.osCyl || '—'}</td>
+                                                <td className="p-1">{savedExam?.cycloplegia?.osAx || '—'}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* 6. Кератометрия */}
+                {hasTableData(savedExam?.keratometry) && (
+                    <div>
+                        <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">Кератометрия:</span>
+                        <div className="rounded-xl overflow-hidden border border-slate-200">
+                            <table className="w-full text-center border-collapse print-table text-xs">
+                                <thead>
+                                    <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                        <th className="border-r border-b border-slate-200 p-1" colSpan={3}>OD (Правый глаз)</th>
+                                        <th className="border-b border-slate-200 p-1" colSpan={3}>OS (Левый глаз)</th>
+                                    </tr>
+                                    <tr className="bg-slate-50 font-semibold text-[11px]">
+                                        <th className="border-r border-b border-slate-200 p-1">K1</th>
+                                        <th className="border-r border-b border-slate-200 p-1">K2</th>
+                                        <th className="border-r border-b border-slate-200 p-1">K1-K2</th>
+                                        <th className="border-r border-b border-slate-200 p-1">K1</th>
+                                        <th className="border-r border-b border-slate-200 p-1">K2</th>
+                                        <th className="border-b border-slate-200 p-1">K1-K2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="border-r border-slate-200 p-1">{savedExam?.keratometry?.odK1 || '—'}</td>
+                                        <td className="border-r border-slate-200 p-1">{savedExam?.keratometry?.odK2 || '—'}</td>
+                                        <td className="border-r border-slate-200 p-1 font-bold text-blue-700">
+                                            {savedExam?.keratometry?.odK1 && savedExam?.keratometry?.odK2
+                                                ? (parseFloat(savedExam.keratometry.odK2) - parseFloat(savedExam.keratometry.odK1)).toFixed(2)
+                                                : '—'}
+                                        </td>
+                                        <td className="border-r border-slate-200 p-1">{savedExam?.keratometry?.osK1 || '—'}</td>
+                                        <td className="border-r border-slate-200 p-1">{savedExam?.keratometry?.osK2 || '—'}</td>
+                                        <td className="p-1 font-bold text-teal-700">
+                                            {savedExam?.keratometry?.osK1 && savedExam?.keratometry?.osK2
+                                                ? (parseFloat(savedExam.keratometry.osK2) - parseFloat(savedExam.keratometry.osK1)).toFixed(2)
+                                                : '—'}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* 7. Vis без коррекции & Vis с коррекцией */}
+                {(hasTableData(savedExam?.visUncorrected) || hasTableData(savedExam?.visCorrected) || consultation?.visualAcuityOD || consultation?.visualAcuityOS) && (
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">Vis без коррекции:</span>
+                            <div className="rounded-xl overflow-hidden border border-slate-200">
+                                <table className="w-full text-center border-collapse print-table text-xs">
+                                    <thead>
+                                        <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                            <th className="border-r border-b border-slate-200 p-1">Глаз</th>
+                                            <th className="border-r border-b border-slate-200 p-1">Вдаль</th>
+                                            <th className="border-r border-b border-slate-200 p-1">Вблизи</th>
+                                            <th className="border-b border-slate-200 p-1">Домин.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td className="border-r border-b border-slate-200 p-1 font-bold text-blue-700">OD</td>
+                                            <td className="border-r border-b border-slate-200 p-1 font-bold">{savedExam?.visUncorrected?.odDistance || consultation?.visualAcuityOD || '—'}</td>
+                                            <td className="border-r border-b border-slate-200 p-1">{savedExam?.visUncorrected?.odNear || '—'}</td>
+                                            <td className="border-b border-slate-200 p-1">{savedExam?.visUncorrected?.dominantEye === 'OD' ? '👁️' : '—'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="border-r border-slate-200 p-1 font-bold text-teal-700">OS</td>
+                                            <td className="border-r border-slate-200 p-1 font-bold">{savedExam?.visUncorrected?.osDistance || consultation?.visualAcuityOS || '—'}</td>
+                                            <td className="border-r border-slate-200 p-1">{savedExam?.visUncorrected?.osNear || '—'}</td>
+                                            <td className="p-1">{savedExam?.visUncorrected?.dominantEye === 'OS' ? '👁️' : '—'}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">Vis с коррекцией:</span>
+                            <div className="rounded-xl overflow-hidden border border-slate-200">
+                                <table className="w-full text-center border-collapse print-table text-xs">
+                                    <thead>
+                                        <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                            <th className="border-r border-b border-slate-200 p-1">Глаз</th>
+                                            <th className="border-r border-b border-slate-200 p-1">Dsph</th>
+                                            <th className="border-r border-b border-slate-200 p-1">Dcyl</th>
+                                            <th className="border-r border-b border-slate-200 p-1">Axis</th>
+                                            <th className="border-r border-b border-slate-200 p-1">Visus</th>
+                                            <th className="border-b border-slate-200 p-1">Адд</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td className="border-r border-b border-slate-200 p-1 font-bold text-blue-700">OD</td>
+                                            <td className="border-r border-b border-slate-200 p-1">{savedExam?.visCorrected?.odSph || '—'}</td>
+                                            <td className="border-r border-b border-slate-200 p-1">{savedExam?.visCorrected?.odCyl || '—'}</td>
+                                            <td className="border-r border-b border-slate-200 p-1">{savedExam?.visCorrected?.odAx || '—'}</td>
+                                            <td className="border-r border-b border-slate-200 p-1 font-bold">{savedExam?.visCorrected?.odVisus || '—'}</td>
+                                            <td className="border-b border-slate-200 p-1">{savedExam?.visCorrected?.odAdd || '—'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="border-r border-slate-200 p-1 font-bold text-teal-700">OS</td>
+                                            <td className="border-r border-slate-200 p-1">{savedExam?.visCorrected?.osSph || '—'}</td>
+                                            <td className="border-r border-slate-200 p-1">{savedExam?.visCorrected?.osCyl || '—'}</td>
+                                            <td className="border-r border-slate-200 p-1">{savedExam?.visCorrected?.osAx || '—'}</td>
+                                            <td className="border-r border-slate-200 p-1 font-bold">{savedExam?.visCorrected?.osVisus || '—'}</td>
+                                            <td className="p-1">{savedExam?.visCorrected?.osAdd || '—'}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 8. Эксцентриситет & 9. ПЗО */}
+                {(hasTableData(savedExam?.eccentricity) || hasTableData(savedExam?.pzo)) && (
+                    <div className="grid grid-cols-2 gap-3">
+                        {hasTableData(savedExam?.eccentricity) && (
+                            <div>
+                                <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">Эксцентриситет (Ex):</span>
+                                <div className="rounded-xl overflow-hidden border border-slate-200">
+                                    <table className="w-full text-center border-collapse print-table text-xs">
+                                        <thead>
+                                            <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                                <th className="border-r border-b border-slate-200 p-1">Глаз</th>
+                                                <th className="border-r border-b border-slate-200 p-1">Горизонтальный</th>
+                                                <th className="border-b border-slate-200 p-1">Вертикальный</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="border-r border-b border-slate-200 p-1 font-bold text-blue-700">OD</td>
+                                                <td className="border-r border-b border-slate-200 p-1">{savedExam?.eccentricity?.odHoriz || '—'}</td>
+                                                <td className="border-b border-slate-200 p-1">{savedExam?.eccentricity?.odVert || '—'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-200 p-1 font-bold text-teal-700">OS</td>
+                                                <td className="border-r border-slate-200 p-1">{savedExam?.eccentricity?.osHoriz || '—'}</td>
+                                                <td className="p-1">{savedExam?.eccentricity?.osVert || '—'}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {hasTableData(savedExam?.pzo) && (
+                            <div>
+                                <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">ПЗО (Длина глаза мм):</span>
+                                <div className="rounded-xl overflow-hidden border border-slate-200">
+                                    <table className="w-full text-center border-collapse print-table text-xs">
+                                        <thead>
+                                            <tr className="bg-slate-100/90 font-bold text-slate-800">
+                                                <th className="border-r border-b border-slate-200 p-1">Глаз</th>
+                                                <th className="border-b border-slate-200 p-1">Значение ПЗО (мм)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="border-r border-b border-slate-200 p-1 font-bold text-blue-700">OD</td>
+                                                <td className="border-b border-slate-200 p-1 font-semibold">{savedExam?.pzo?.od ? `${savedExam.pzo.od} мм` : '—'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="border-r border-slate-200 p-1 font-bold text-teal-700">OS</td>
+                                                <td className="p-1 font-semibold">{savedExam?.pzo?.os ? `${savedExam.pzo.os} мм` : '—'}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {biomicroscopyText && (
                     <div>
-                        <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">3. Биомикроскопия (Передний отрезок):</span>
+                        <span className="font-semibold text-slate-500 uppercase text-[10px] block mb-1">Биомикроскопия (Передний отрезок):</span>
                         <p className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 leading-relaxed text-xs font-medium">{biomicroscopyText}</p>
                     </div>
                 )}
