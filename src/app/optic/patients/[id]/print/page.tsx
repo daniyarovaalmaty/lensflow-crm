@@ -1,7 +1,19 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { notFound } from 'next/navigation';
 import prisma from '@/lib/db/prisma';
 import { auth } from '@/auth';
+
+function cleanClinicAddress(rawAddress: string | null | undefined): string {
+    if (!rawAddress) return 'г. Алматы, Райымбека 217';
+    const addr = rawAddress.trim();
+    if (addr.toLowerCase().includes('актобе') || addr.toLowerCase().includes('ктобе') || addr.toLowerCase().includes('тайбеков')) {
+        return 'г. Актобе, ул. Е. Тайбекова, дом 10А';
+    }
+    return addr;
+}
 
 function calculateAge(birthDateStr: string | Date | null | undefined): string {
     if (!birthDateStr) return '';
@@ -15,7 +27,6 @@ function calculateAge(birthDateStr: string | Date | null | undefined): string {
     }
     if (age < 0) return '';
     
-    // Russian plural rules for years
     const lastDigit = age % 10;
     const lastTwo = age % 100;
     let word = 'лет';
@@ -55,10 +66,7 @@ export default async function FullPatientMedicalCardPrintPage({ params }: { para
     const profile = session.user.profile || {};
     
     const clinicName = org?.name || profile.opticName || profile.clinic || 'Бала Vision';
-    let clinicAddress = org?.actualAddress || org?.address || 'г. Алматы, Райымбека 217';
-    if (clinicAddress.startsWith('ктобе')) {
-        clinicAddress = 'г. Актобе' + clinicAddress.slice(5);
-    }
+    const clinicAddress = cleanClinicAddress(org?.actualAddress || org?.address);
     const clinicBin = org?.inn ? `БИН: ${org.inn}` : '';
 
     const formattedBirthDate = patient.birthDate 

@@ -794,9 +794,11 @@ export default function PatientDetailPage() {
                     <div className="text-right text-xs text-slate-600 space-y-0.5 max-w-[60%]">
                         <p className="font-medium text-slate-800 leading-snug">
                             📍 {(() => {
-                                let addr = (patient as any).organization?.actualAddress || (patient as any).organization?.address || 'г. Алматы, Райымбека 217';
-                                if (addr.startsWith('ктобе')) addr = 'г. Актобе' + addr.slice(5);
-                                return addr;
+                                const raw = (patient as any).organization?.actualAddress || (patient as any).organization?.address || 'г. Алматы, Райымбека 217';
+                                if (raw.toLowerCase().includes('актобе') || raw.toLowerCase().includes('ктобе') || raw.toLowerCase().includes('тайбеков')) {
+                                    return 'г. Актобе, ул. Е. Тайбекова, дом 10А';
+                                }
+                                return raw;
                             })()}
                         </p>
                         {(patient as any).organization?.inn && <p className="font-mono text-slate-600">БИН: {(patient as any).organization?.inn}</p>}
