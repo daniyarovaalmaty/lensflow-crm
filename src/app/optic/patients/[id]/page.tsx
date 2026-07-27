@@ -919,28 +919,75 @@ export default function PatientDetailPage() {
 
                 {/* Первичный осмотр врача-офтальмолога в печатной форме */}
                 {(() => {
-                    const exam = primaryExamState || (patient as any)?.metadata?.primaryExam;
-                    if (!exam) return null;
+                    const savedExam = primaryExamState 
+                        || (patient as any)?.metadata?.primaryExam 
+                        || (consultations.find(c => (c as any).primaryExamDetails) as any)?.primaryExamDetails;
+
+                    const latestConsult = consultations[0];
+
+                    const complaints = savedExam?.complaints 
+                        || (patient as any)?.complaints 
+                        || (Array.isArray((patient as any)?.complaints) ? (patient as any).complaints.join(', ') : '')
+                        || latestConsult?.notes
+                        || '';
+
+                    const anamnesisDisease = savedExam?.anamnesisDisease 
+                        || (patient as any)?.anamnesisDisease 
+                        || (Array.isArray((patient as any)?.anamnesisDisease) ? (patient as any).anamnesisDisease.join(', ') : '')
+                        || '';
+
+                    const anamnesisLife = savedExam?.anamnesisLife 
+                        || (patient as any)?.anamnesisLife 
+                        || (Array.isArray((patient as any)?.anamnesisLife) ? (patient as any).anamnesisLife.join(', ') : '')
+                        || ((patient as any)?.allergies ? `Аллергоанамнез: ${(patient as any).allergies}` : '')
+                        || '';
+
+                    const odVisus = savedExam?.visCorrected?.odVisus || savedExam?.visUncorrected?.odDistance || latestConsult?.visualAcuityOD || '';
+                    const osVisus = savedExam?.visCorrected?.osVisus || savedExam?.visUncorrected?.osDistance || latestConsult?.visualAcuityOS || '';
+                    const odIop = savedExam?.tonometry?.odIop || latestConsult?.intraocularPressureOD || '';
+                    const osIop = savedExam?.tonometry?.osIop || latestConsult?.intraocularPressureOS || '';
+
+                    const diagnosis = savedExam?.diagnosis || latestConsult?.diagnosis || '';
+                    const recommendations = savedExam?.recommendations || latestConsult?.treatment || '';
+
+                    const biomicroscopyText = savedExam?.biomicroscopy
+                        ? [
+                            savedExam.biomicroscopy.eyelids && `Веки: ${savedExam.biomicroscopy.eyelids}`,
+                            savedExam.biomicroscopy.cornea && `Роговица: ${savedExam.biomicroscopy.cornea}`,
+                            savedExam.biomicroscopy.iris && `Радужка: ${savedExam.biomicroscopy.iris}`,
+                            savedExam.biomicroscopy.lens && `Хрусталик: ${savedExam.biomicroscopy.lens}`,
+                          ].filter(Boolean).join('; ')
+                        : ((latestConsult as any)?.biomicroscopy || '');
+
+                    const ophthalmoscopyText = savedExam?.ophthalmoscopy
+                        ? [
+                            savedExam.ophthalmoscopy.opticDisc && `ДЗН: ${savedExam.ophthalmoscopy.opticDisc}`,
+                            savedExam.ophthalmoscopy.macula && `Макула: ${savedExam.ophthalmoscopy.macula}`,
+                            savedExam.ophthalmoscopy.vessels && `Сосуды: ${savedExam.ophthalmoscopy.vessels}`,
+                            savedExam.ophthalmoscopy.retina && `Сетчатка: ${savedExam.ophthalmoscopy.retina}`,
+                          ].filter(Boolean).join('; ')
+                        : '';
+
                     return (
                         <div className="mb-8 border border-blue-200 rounded-2xl p-5 bg-blue-50/30 print:p-4 print:mb-4">
                             <div className="flex items-center gap-2 mb-4 pb-2 border-b border-blue-200">
                                 <Stethoscope className="w-5 h-5 text-blue-600" />
-                                <h2 className="text-base font-bold text-blue-900 uppercase tracking-wide">Первичный осмотр врача-офтальмолога</h2>
+                                <h2 className="text-base font-bold text-blue-900 uppercase tracking-wide">ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА</h2>
                             </div>
                             
                             <div className="space-y-3 text-xs text-slate-800">
-                                {exam.complaints && (
-                                    <p><strong className="text-slate-900">1. Жалобы:</strong> {exam.complaints}</p>
+                                {complaints && (
+                                    <p><strong className="text-slate-900">1. Жалобы:</strong> {complaints}</p>
                                 )}
-                                {exam.anamnesisDisease && (
-                                    <p><strong className="text-slate-900">2. Анамнез заболевания:</strong> {exam.anamnesisDisease}</p>
+                                {anamnesisDisease && (
+                                    <p><strong className="text-slate-900">2. Анамнез заболевания:</strong> {anamnesisDisease}</p>
                                 )}
-                                {exam.anamnesisLife && (
-                                    <p><strong className="text-slate-900">3. Анамнез жизни:</strong> {exam.anamnesisLife}</p>
+                                {anamnesisLife && (
+                                    <p><strong className="text-slate-900">3. Анамнез жизни:</strong> {anamnesisLife}</p>
                                 )}
 
                                 {/* Таблица визуса / остроты зрения */}
-                                {(exam.visUncorrected || exam.visCorrected) && (
+                                {(odVisus || osVisus || savedExam?.visUncorrected || savedExam?.visCorrected) && (
                                     <div className="mt-3">
                                         <p className="font-bold text-slate-900 mb-1">4. Острота зрения (Visus):</p>
                                         <table className="w-full text-center border-collapse border border-slate-300 text-xs">
@@ -957,65 +1004,56 @@ export default function PatientDetailPage() {
                                             <tbody>
                                                 <tr>
                                                     <td className="border border-slate-300 p-1 font-bold text-blue-700">OD (Правый)</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visUncorrected?.odDistance || '—'}</td>
-                                                    <td className="border border-slate-300 p-1 font-bold">{exam.visCorrected?.odVisus || '—'}</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.odSph || '—'}</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.odCyl || '—'}</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.odAxis || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visUncorrected?.odDistance || '—'}</td>
+                                                    <td className="border border-slate-300 p-1 font-bold">{odVisus || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.odSph || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.odCyl || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.odAxis || '—'}</td>
                                                 </tr>
                                                 <tr>
                                                     <td className="border border-slate-300 p-1 font-bold text-teal-700">OS (Левый)</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visUncorrected?.osDistance || '—'}</td>
-                                                    <td className="border border-slate-300 p-1 font-bold">{exam.visCorrected?.osVisus || '—'}</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.osSph || '—'}</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.osCyl || '—'}</td>
-                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.osAxis || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visUncorrected?.osDistance || '—'}</td>
+                                                    <td className="border border-slate-300 p-1 font-bold">{osVisus || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.osSph || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.osCyl || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.osAxis || '—'}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
                                 )}
 
+                                {/* Тонометрия */}
+                                {(odIop || osIop) && (
+                                    <p><strong className="text-slate-900">7. Внутриглазное давление (ВГД):</strong> OD: {odIop || '—'}, OS: {osIop || '—'} мм рт.ст.</p>
+                                )}
+
                                 {/* Биомикроскопия и Офтальмоскопия */}
-                                {exam.biomicroscopy && (
+                                {biomicroscopyText && (
                                     <div className="mt-2">
                                         <strong className="text-slate-900 block mb-0.5">8. Биомикроскопия (Передний отрезок):</strong>
-                                        <p className="text-slate-700 bg-white p-2 rounded border border-slate-200">
-                                            {[
-                                                exam.biomicroscopy.eyelids && `Веки: ${exam.biomicroscopy.eyelids}`,
-                                                exam.biomicroscopy.cornea && `Роговица: ${exam.biomicroscopy.cornea}`,
-                                                exam.biomicroscopy.iris && `Радужка: ${exam.biomicroscopy.iris}`,
-                                                exam.biomicroscopy.lens && `Хрусталик: ${exam.biomicroscopy.lens}`,
-                                            ].filter(Boolean).join('; ') || 'Без патологий'}
-                                        </p>
+                                        <p className="text-slate-700 bg-white p-2 rounded border border-slate-200">{biomicroscopyText}</p>
                                     </div>
                                 )}
 
-                                {exam.ophthalmoscopy && (
+                                {ophthalmoscopyText && (
                                     <div className="mt-2">
                                         <strong className="text-slate-900 block mb-0.5">9. Офтальмоскопия (Глазное дно):</strong>
-                                        <p className="text-slate-700 bg-white p-2 rounded border border-slate-200">
-                                            {[
-                                                exam.ophthalmoscopy.opticDisc && `ДЗН: ${exam.ophthalmoscopy.opticDisc}`,
-                                                exam.ophthalmoscopy.macula && `Макула: ${exam.ophthalmoscopy.macula}`,
-                                                exam.ophthalmoscopy.vessels && `Сосуды: ${exam.ophthalmoscopy.vessels}`,
-                                                exam.ophthalmoscopy.retina && `Сетчатка: ${exam.ophthalmoscopy.retina}`,
-                                            ].filter(Boolean).join('; ') || 'Без особенностей'}
-                                        </p>
+                                        <p className="text-slate-700 bg-white p-2 rounded border border-slate-200">{ophthalmoscopyText}</p>
                                     </div>
                                 )}
 
-                                {exam.diagnosis && (
+                                {diagnosis && (
                                     <div className="mt-3 p-2.5 bg-red-50 border border-red-200 rounded-lg">
                                         <strong className="text-red-900 uppercase text-[11px] block">Окончательный диагноз:</strong>
-                                        <p className="text-red-950 font-bold text-sm">{exam.diagnosis}</p>
+                                        <p className="text-red-950 font-bold text-sm">{diagnosis}</p>
                                     </div>
                                 )}
 
-                                {exam.recommendations && (
+                                {recommendations && (
                                     <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
                                         <strong className="text-emerald-900 uppercase text-[11px] block">Назначения и рекомендации:</strong>
-                                        <p className="text-emerald-950 font-medium">{exam.recommendations}</p>
+                                        <p className="text-emerald-950 font-medium">{recommendations}</p>
                                     </div>
                                 )}
                             </div>
