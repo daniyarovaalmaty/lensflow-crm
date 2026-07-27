@@ -1001,9 +1001,14 @@ export default function PatientDetailPage() {
                                             </>
                                         ) : (
                                             <>
-                                                <button onClick={() => window.print()} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-1 text-sm flex justify-center text-gray-600">
-                                                    <Printer className="w-4 h-4" />
-                                                </button>
+                                                <Link
+                                                    href={`/optic/patients/${id}/print`}
+                                                    target="_blank"
+                                                    className="btn bg-white border border-blue-200 hover:border-blue-300 text-blue-600 shadow-sm flex-1 text-sm flex items-center justify-center gap-1 font-medium transition-colors"
+                                                    title="Печать медицинской карты"
+                                                >
+                                                    <Printer className="w-4 h-4" /> Печать карты
+                                                </Link>
                                                 <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
                                                     <Edit2 className="w-4 h-4" /> Редактировать
                                                 </button>
