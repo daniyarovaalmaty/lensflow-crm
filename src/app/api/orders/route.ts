@@ -666,8 +666,9 @@ export async function POST(request: NextRequest) {
                 if (order.status === 'new_order' || order.status === 'draft') {
                     try {
                         const doctorDisplayName = String(validatedData.doctor || session.user.profile?.fullName || 'Неизвестно').trim();
-                        const statusText = order.status === 'draft' ? 'Ожидает оплаты/бухгалтера!' : 'Ожидает проверки!';
-                        const message = `🚨 Новый заказ №${orderNumber} от врача ${doctorDisplayName}! Сумма: ${totalPrice.toLocaleString('ru-RU')} ₸. ${statusText}`;
+                        const message = order.status === 'draft' 
+                            ? `⏳ Сформирован счет на заказ №${orderNumber} от врача ${doctorDisplayName}.\nСумма: ${totalPrice.toLocaleString('ru-RU')} ₸.\nТребуется подтверждение бухгалтера!`
+                            : `🚨 Новый заказ №${orderNumber} от врача ${doctorDisplayName}!\nСумма: ${totalPrice.toLocaleString('ru-RU')} ₸.\nОжидает проверки лабораторией.`;
                         const orgName = (order.organization?.name || '').toLowerCase();
                         const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye') || orgName.includes('аймакс');
                         if (isAraiClinic) {
