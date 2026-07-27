@@ -890,8 +890,8 @@ export default function PatientDetailPage() {
                 {/* Шапка организации (Округлые края) */}
                 <div className="bg-slate-50/90 border-l-4 border-blue-600 print:p-3.5 p-5 print:mb-3 mb-6 rounded-2xl border-y border-r border-slate-200 flex justify-between items-center">
                     <div>
-                        <h1 className="print:text-base text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА</h1>
-                        <p className="text-blue-600 font-semibold print:text-xs text-sm mt-1 font-sans">Медицинский протокол обследования глаз | {(patient as any).organization?.name || session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Бала Vision'}</p>
+                        <h1 className="print:text-base text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА</h1>
+                        <p className="text-blue-600 font-semibold print:text-xs text-sm mt-1 font-sans">Первичный осмотр врача-офтальмолога | {(patient as any).organization?.name || session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Бала Vision'}</p>
                     </div>
                     <div className="text-right print:text-xs text-xs text-slate-600 max-w-[60%] space-y-0.5 font-sans">
                         <p className="font-medium text-slate-800 leading-snug">
@@ -1031,7 +1031,7 @@ export default function PatientDetailPage() {
                             <div className="border-b border-slate-200 pb-2 flex items-center justify-between">
                                 <h2 className="print:text-sm text-base font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2 font-sans">
                                     <Stethoscope className="w-4 h-4 text-blue-600 print:hidden" />
-                                    ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА
+                                    ПРОТОКОЛ ПЕРВИЧНОГО ОСМОТРА ВРАЧА-ОФТАЛЬМОЛОГА
                                 </h2>
                             </div>
 

@@ -165,8 +165,8 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
             {/* Шапка организации (Округлые края) */}
             <div className="bg-slate-50/90 border-l-4 border-blue-600 p-4 sm:p-5 mb-6 rounded-2xl border-y border-r border-slate-200 flex justify-between items-center font-sans">
                 <div>
-                    <h1 className="text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА</h1>
-                    <p className="text-blue-600 font-semibold text-sm mt-1 font-sans">Медицинский протокол обследования глаз | {clinicName}</p>
+                    <h1 className="text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА</h1>
+                    <p className="text-blue-600 font-semibold text-sm mt-1 font-sans">Первичный осмотр врача-офтальмолога | {clinicName}</p>
                 </div>
                 <div className="text-right text-xs text-slate-600 max-w-[60%] space-y-0.5 font-sans">
                     <p className="font-medium text-slate-800 leading-snug">📍 {clinicAddress}</p>
