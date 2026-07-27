@@ -10,7 +10,7 @@
  * - Structured sync results
  */
 
-import { PrismaClient } from '@prisma/client';
+// PrismaClient type omitted — using `any` for compatibility with extended prisma client
 import { OneCClient, OneCError } from './client';
 import { parseDataPackage, buildUploadPackage } from './xml-parser';
 import {
@@ -31,14 +31,14 @@ import {
 
 export class OneCSyncService {
   private readonly client: OneCClient;
-  private readonly prisma: PrismaClient;
+  private readonly prisma: any;
   private readonly orgId: string;
   private readonly exchangeConfig: OneCExchangeConfig;
   private exchangeNodeCreated = false;
 
   constructor(
     client: OneCClient,
-    prisma: PrismaClient,
+    prisma: any,
     orgId: string,
     exchangeConfig?: Partial<OneCExchangeConfig>,
   ) {
@@ -532,7 +532,7 @@ export class OneCSyncService {
           continue;
         }
 
-        const lines: OneCDocumentLine[] = (sale.items || []).map((item, idx) => ({
+        const lines: OneCDocumentLine[] = (sale.items || []).map((item: any, idx: number) => ({
           lineNumber: idx + 1,
           nomenclatureRef: (item.product?.metadata as any)?.onec?.ref || '',
           nomenclatureName: item.product?.name1c || item.product?.name || '',
@@ -730,9 +730,11 @@ export class OneCSyncService {
 
     try {
       await this.client.createExchangeNode(
-        this.exchangeConfig.exchangePlanName,
-        this.exchangeConfig.nodeCode,
-        this.exchangeConfig.nodeDescription,
+        `<Structure>
+          <Property name="ExchangePlanName"><Value>${this.exchangeConfig.exchangePlanName}</Value></Property>
+          <Property name="NodeCode"><Value>${this.exchangeConfig.nodeCode}</Value></Property>
+          <Property name="NodeDescription"><Value>${this.exchangeConfig.nodeDescription}</Value></Property>
+        </Structure>`
       );
       this.exchangeNodeCreated = true;
     } catch (err) {
