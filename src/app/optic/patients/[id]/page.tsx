@@ -945,6 +945,7 @@ export default function PatientDetailPage() {
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <p className="text-xs font-bold text-gray-400 uppercase mb-1">Документ сформирован</p>
                         <p className="font-bold text-gray-800 text-base">{new Date().toLocaleDateString('ru-RU')} в {new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}</p>
+                        <p className="text-[10px] text-gray-400 mt-1 font-medium">Сформировано в медицинской системе LensFlow CRM</p>
                     </div>
                     <div className="text-right">
                         <p className="text-xs font-bold text-gray-400 uppercase mb-2">Врач (ФИО, подпись)</p>
@@ -1005,14 +1006,14 @@ export default function PatientDetailPage() {
                                             </>
                                         ) : (
                                             <>
-                                                <Link
-                                                    href={`/optic/patients/${id}/print`}
-                                                    target="_blank"
-                                                    className="btn bg-white border border-blue-200 hover:border-blue-300 text-blue-600 shadow-sm flex-1 text-sm flex items-center justify-center gap-1 font-medium transition-colors"
+                                                <button
+                                                    type="button"
+                                                    onClick={() => window.print()}
+                                                    className="btn bg-white border border-blue-200 hover:border-blue-300 text-blue-600 shadow-sm flex-1 text-sm flex items-center justify-center gap-1.5 font-medium transition-colors"
                                                     title="Печать медицинской карты"
                                                 >
                                                     <Printer className="w-4 h-4" /> Печать карты
-                                                </Link>
+                                                </button>
                                                 <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
                                                     <Edit2 className="w-4 h-4" /> Редактировать
                                                 </button>
