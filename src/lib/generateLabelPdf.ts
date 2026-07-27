@@ -188,35 +188,54 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.line(0, 7, W, 7);
 
     // ===== PATIENT ROW =====
-    doc.setFont('Roboto', 'normal');
-    doc.setFontSize(4);
-    doc.setTextColor(100, 100, 100);
-    doc.text(order.order_id, 2, 9.5);
-
+    // Order ID (Left, Large Bold)
     doc.setFont('Roboto', 'bold');
-    let patientFontSize = 7.5;
-    doc.setFontSize(patientFontSize);
-    let patName = order.patient.name || '—';
-    // Shrink font if patient name is too long (max width ~26mm)
-    while (doc.getTextWidth(patName) > 26 && patientFontSize > 4.5) {
-        patientFontSize -= 0.5;
-        doc.setFontSize(patientFontSize);
-    }
-    // Truncate if still too long
-    if (doc.getTextWidth(patName) > 26) {
-        while (patName.length > 0 && doc.getTextWidth(patName + '...') > 26) {
-            patName = patName.slice(0, -1);
-        }
-        patName += '...';
-    }
     doc.setTextColor(0, 0, 0);
-    doc.text(patName, W / 2, 10, { align: 'center' });
+    let orderIdFontSize = 7.5;
+    doc.setFontSize(orderIdFontSize);
+    const orderIdText = String(order.order_id || '');
+    
+    // Scale order_id if wider than 14mm
+    while (doc.getTextWidth(orderIdText) > 14 && orderIdFontSize > 5) {
+        orderIdFontSize -= 0.5;
+        doc.setFontSize(orderIdFontSize);
+    }
+    doc.text(orderIdText, 2, 10);
+    const orderIdWidth = doc.getTextWidth(orderIdText);
 
+    // Eye Label (Right)
     const eyeLabel = (odQty > 0 && osQty > 0) ? 'OD/OS' : (odQty > 0 ? 'OD' : (osQty > 0 ? 'OS' : 'OD/OS'));
     doc.setFont('Roboto', 'normal');
     doc.setFontSize(5);
     doc.setTextColor(100, 100, 100);
     doc.text(eyeLabel, 44, 9.5, { align: 'right' });
+    const eyeLabelWidth = doc.getTextWidth(eyeLabel);
+
+    // Patient Name (Center between Order ID and Eye Label)
+    const leftLimit = 2 + orderIdWidth + 1.5;
+    const rightLimit = 44 - eyeLabelWidth - 1.5;
+    const availableWidth = Math.max(16, rightLimit - leftLimit);
+    const patientCenterX = (leftLimit + rightLimit) / 2;
+
+    doc.setFont('Roboto', 'bold');
+    let patientFontSize = 7.5;
+    doc.setFontSize(patientFontSize);
+    let patName = order.patient?.name || '—';
+
+    // Shrink font if patient name exceeds available width
+    while (doc.getTextWidth(patName) > availableWidth && patientFontSize > 4.5) {
+        patientFontSize -= 0.5;
+        doc.setFontSize(patientFontSize);
+    }
+    // Truncate if still too long
+    if (doc.getTextWidth(patName) > availableWidth) {
+        while (patName.length > 0 && doc.getTextWidth(patName + '...') > availableWidth) {
+            patName = patName.slice(0, -1);
+        }
+        patName += '...';
+    }
+    doc.setTextColor(0, 0, 0);
+    doc.text(patName, patientCenterX, 10, { align: 'center' });
 
     // ===== SECOND DIVIDER =====
     doc.setDrawColor(0, 0, 0);
