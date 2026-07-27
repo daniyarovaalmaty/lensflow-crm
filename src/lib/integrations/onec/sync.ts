@@ -532,7 +532,7 @@ export class OneCSyncService {
           continue;
         }
 
-        const lines: OneCDocumentLine[] = (sale.items || []).map((item, idx) => ({
+        const lines: OneCDocumentLine[] = (sale.items || []).map((item: any, idx: number) => ({
           lineNumber: idx + 1,
           nomenclatureRef: (item.product?.metadata as any)?.onec?.ref || '',
           nomenclatureName: item.product?.name1c || item.product?.name || '',
