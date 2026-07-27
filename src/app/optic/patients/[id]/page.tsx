@@ -89,8 +89,13 @@ interface PatientDetail {
     birthDate: string | null;
     gender: string | null;
     iin: string | null;
+    city?: string | null;
     address: string | null;
     profession: string | null;
+    isChild?: boolean;
+    parentName?: string | null;
+    parentPhone?: string | null;
+    metadata?: any;
     complaints: string | null;
     anamnesisDisease: string | null;
     anamnesisLife: string | null;
@@ -402,6 +407,59 @@ export default function PatientDetailPage() {
             setIsEditing(false);
         }
         setSaving(false);
+    };
+
+    const [savingPrimaryExam, setSavingPrimaryExam] = useState(false);
+
+    const handleSavePrimaryExam = async () => {
+        if (!primaryExamState) return;
+        setSavingPrimaryExam(true);
+        try {
+            const updatedMetadata = {
+                ...((patient as any)?.metadata || {}),
+                primaryExam: primaryExamState
+            };
+            
+            await fetch(`/api/patients/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ metadata: updatedMetadata }),
+            });
+
+            const primaryConsult = consultations.find(c => c.type === 'exam');
+            const consultUrl = primaryConsult ? `/api/consultations/${primaryConsult.id}` : `/api/patients/${id}/consultations`;
+            const consultMethod = primaryConsult ? 'PUT' : 'POST';
+
+            const consultPayload = {
+                visitDate: primaryConsult?.visitDate || new Date().toISOString().split('T')[0],
+                type: 'exam',
+                diagnosis: primaryExamState.diagnosis || '',
+                treatment: primaryExamState.recommendations || '',
+                primaryExamDetails: primaryExamState,
+                visualAcuityOD: primaryExamState.visUncorrected?.odDistance || primaryExamState.visCorrected?.odVisus || '',
+                visualAcuityOS: primaryExamState.visUncorrected?.osDistance || primaryExamState.visCorrected?.osVisus || '',
+            };
+
+            const res = await fetch(consultUrl, {
+                method: consultMethod,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(consultPayload),
+            });
+
+            if (res.ok) {
+                const c = await res.json();
+                setConsultations(prev => {
+                    const exists = prev.some(item => item.id === c.id);
+                    return exists ? prev.map(item => item.id === c.id ? c : item) : [c, ...prev];
+                });
+                alert('Первичный осмотр успешно сохранён!');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Ошибка при сохранении первичного осмотра');
+        } finally {
+            setSavingPrimaryExam(false);
+        }
     };
 
     const handleAddRx = async (e: React.FormEvent) => {
@@ -983,8 +1041,8 @@ export default function PatientDetailPage() {
                 </button>
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    
-                    {/* LEFT SIDEBAR */}
+
+                    {/* LEFT SIDEBAR - PROFILE */}
                     <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
                         <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-100 p-6 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-primary-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
@@ -995,25 +1053,49 @@ export default function PatientDetailPage() {
                                 </div>
                                 
                                 {isEditing ? (
-                                    <input
-                                        type="text" value={editForm.name || ''}
-                                        onChange={e => setEditForm((f: any) => ({ ...f, name: e.target.value }))}
-                                        className="input text-lg font-bold mb-2 w-full text-center"
-                                    />
+                                    <div className="w-full space-y-2 mb-3">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block text-left">ФИО пациента</label>
+                                        <input
+                                            type="text" value={editForm.name || ''}
+                                            onChange={e => setEditForm((f: any) => ({ ...f, name: e.target.value }))}
+                                            className="input text-base font-bold w-full text-center"
+                                            placeholder="ФИО пациента"
+                                        />
+                                    </div>
                                 ) : (
                                     <h1 className="text-xl font-bold text-gray-900 mb-1">{patient.name}</h1>
                                 )}
                                 
-                                <div className="flex flex-wrap justify-center gap-2 mb-4">
-                                    {((patient as any).isChild || patient.parent || (patient as any).parentName) ? (
-                                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200">👶 Ребёнок</span>
-                                    ) : (
-                                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200">👤 Взрослый</span>
-                                    )}
-                                    {patient.gender === 'male' && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium">♂ Мужской</span>}
-                                    {patient.gender === 'female' && <span className="px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 text-xs font-medium">♀ Женский</span>}
-                                    {patient.birthDate && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{calcAge(patient.birthDate)}</span>}
-                                </div>
+                                {/* Child vs Adult Segment Selector when editing */}
+                                {isEditing ? (
+                                    <div className="w-full bg-gray-100 p-1 rounded-xl flex gap-1 mb-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditForm((f: any) => ({ ...f, isChild: false }))}
+                                            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${!editForm.isChild ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                                        >
+                                            👤 Взрослый
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditForm((f: any) => ({ ...f, isChild: true }))}
+                                            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${editForm.isChild ? 'bg-white text-amber-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                                        >
+                                            👶 Ребёнок
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-wrap justify-center gap-2 mb-4">
+                                        {((patient as any).isChild || patient.parent || (patient as any).parentName) ? (
+                                            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200">👶 Ребёнок</span>
+                                        ) : (
+                                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200">👤 Взрослый</span>
+                                        )}
+                                        {patient.gender === 'male' && <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium">♂ Мужской</span>}
+                                        {patient.gender === 'female' && <span className="px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 text-xs font-medium">♀ Женский</span>}
+                                        {patient.birthDate && <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{calcAge(patient.birthDate)}</span>}
+                                    </div>
+                                )}
                                 
                                 <div className="flex flex-col gap-2 w-full">
                                     <div className="flex gap-2 w-full">
@@ -1021,7 +1103,7 @@ export default function PatientDetailPage() {
                                             <>
                                                 <button onClick={() => setIsEditing(false)} className="btn bg-gray-100 hover:bg-gray-200 flex-1 text-sm"><X className="w-4 h-4 mx-auto" /></button>
                                                 <button onClick={handleSave} disabled={saving} className="btn btn-primary flex-[2] text-sm flex items-center justify-center gap-1">
-                                                    <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить'}
+                                                    <Save className="w-4 h-4" /> {saving ? '...' : 'Сохранить профиль'}
                                                 </button>
                                             </>
                                         ) : (
@@ -1030,11 +1112,11 @@ export default function PatientDetailPage() {
                                                     type="button"
                                                     onClick={() => window.print()}
                                                     className="btn bg-white border border-blue-200 hover:border-blue-300 text-blue-600 shadow-sm flex-1 text-sm flex items-center justify-center gap-1.5 font-medium transition-colors"
-                                                    title="Печать медицинской карты"
+                                                    title="Печать карты"
                                                 >
-                                                    <Printer className="w-4 h-4" /> Печать карты
+                                                    <Printer className="w-4 h-4" /> Печать
                                                 </button>
-                                                <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700">
+                                                <button onClick={() => setIsEditing(true)} className="btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm flex-[2] text-sm flex items-center justify-center gap-1 text-gray-700 font-medium">
                                                     <Edit2 className="w-4 h-4" /> Редактировать
                                                 </button>
                                             </>
@@ -1049,110 +1131,171 @@ export default function PatientDetailPage() {
                             </div>
 
                             <div className="mt-6 space-y-4 relative z-10 text-left">
-                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string)) && (
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
+                                {/* Parent fields if Child */}
+                                {(isEditing ? editForm.isChild : ((patient as any).isChild || (patient as any).parentName || patient.parent)) && (
+                                    <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-2xl space-y-3">
+                                        <p className="text-[10px] font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1">
+                                            👨‍👩‍👧 Данные родителя / Опекуна
+                                        </p>
                                         {isEditing ? (
-                                            <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
-                                        ) : (
-                                            <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone}</p>
-                                        )}
-                                    </div>
-                                )}
-                                 {/* Family Tree / Parent & Children */}
-                                {((patient as any).isChild || patient.parent || (patient.children && patient.children.length > 0) || (patient as any).parentName) && (
-                                    <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl text-left">
-                                        <label className="text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                            👨‍👩‍👧‍👦 Семья / Родственные связи
-                                        </label>
-
-                                        {patient.parent ? (
-                                            <div className="mb-2">
-                                                <span className="text-[10px] text-gray-500 block">Родитель (Карта опекуна):</span>
-                                                <Link
-                                                    href={`/optic/patients/${patient.parent.id}`}
-                                                    className="font-bold text-amber-900 hover:text-amber-700 text-sm flex items-center gap-1 mt-0.5 underline decoration-amber-300"
-                                                >
-                                                    👤 {patient.parent.name} (📞 {patient.parent.phone})
-                                                </Link>
-                                            </div>
-                                        ) : (patient as any).parentName ? (
-                                            <div className="mb-2">
-                                                <span className="text-[10px] text-gray-500 block">ФИО Родителя:</span>
-                                                <p className="font-bold text-amber-900 text-sm">👤 {(patient as any).parentName} (📞 {(patient as any).parentPhone || patient.phone})</p>
-                                            </div>
-                                        ) : null}
-
-                                        {patient.children && patient.children.length > 0 && (
-                                            <div>
-                                                <span className="text-[10px] text-gray-500 block mb-1">Дети родителя:</span>
-                                                <div className="space-y-1">
-                                                    {patient.children.map(child => (
-                                                        <Link
-                                                            key={child.id}
-                                                            href={`/optic/patients/${child.id}`}
-                                                            className="text-xs font-semibold text-blue-700 hover:text-blue-900 bg-white border border-amber-200 px-2.5 py-1 rounded-lg block truncate transition-colors"
-                                                        >
-                                                            👶 {child.name}
-                                                        </Link>
-                                                    ))}
+                                            <>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">ФИО Родителя</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.parentName || ''}
+                                                        onChange={e => setEditForm((f: any) => ({ ...f, parentName: e.target.value }))}
+                                                        className="input text-xs w-full h-8"
+                                                        placeholder="ФИО родителя"
+                                                    />
                                                 </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Телефон родителя</label>
+                                                    <input
+                                                        type="tel"
+                                                        value={editForm.parentPhone || ''}
+                                                        onChange={e => setEditForm((f: any) => ({ ...f, parentPhone: e.target.value }))}
+                                                        className="input text-xs w-full h-8"
+                                                        placeholder="+7 700 000 0000"
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div>
+                                                {patient.parent ? (
+                                                    <Link href={`/optic/patients/${patient.parent.id}`} className="font-bold text-amber-900 hover:underline text-sm block">
+                                                        👤 {patient.parent.name} (📞 {patient.parent.phone})
+                                                    </Link>
+                                                ) : (patient as any).parentName ? (
+                                                    <p className="font-bold text-amber-900 text-sm">
+                                                        👤 {(patient as any).parentName} {((patient as any).parentPhone || patient.phone) && `(📞 ${(patient as any).parentPhone || patient.phone})`}
+                                                    </p>
+                                                ) : null}
                                             </div>
                                         )}
                                     </div>
                                 )}
-                                {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string)) && (
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
-                                        {isEditing ? (
-                                            <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
-                                        ) : (
-                                            <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
-                                        )}
-                                    </div>
-                                )}
+
+                                {/* Main Phone */}
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дата рождения</label>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Телефон</label>
                                     {isEditing ? (
-                                        <input type="date" value={editForm.birthDate?.split('T')[0] || ''} onChange={e => setEditForm((f: any) => ({ ...f, birthDate: e.target.value }))} className="input text-sm w-full" />
+                                        <input type="tel" value={editForm.phone || ''} onChange={e => setEditForm((f: any) => ({ ...f, phone: e.target.value }))} className="input text-sm w-full" />
                                     ) : (
-                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.birthDate ? <><Calendar className="w-4 h-4 text-primary-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm font-medium"><Phone className="w-4 h-4 text-primary-400" />{patient.phone || '—'}</p>
                                     )}
                                 </div>
-                                {patient.parent && (
+
+                                {/* Birth Date & Gender */}
+                                <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <div className="flex items-center justify-between mb-1">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Связанный профиль (Родитель)</label>
-                                            <button onClick={() => handleLinkParent(null)} className="text-[10px] text-red-500 hover:text-red-600 font-medium">Отвязать</button>
-                                        </div>
-                                        <Link href={`/optic/patients/${patient.parent.id}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors bg-primary-50 p-2 rounded-lg border border-primary-100">
-                                            <User className="w-4 h-4" /> {patient.parent.name}
-                                        </Link>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дата рождения</label>
+                                        {isEditing ? (
+                                            <input type="date" value={editForm.birthDate?.split('T')[0] || ''} onChange={e => setEditForm((f: any) => ({ ...f, birthDate: e.target.value }))} className="input text-xs w-full h-9" />
+                                        ) : (
+                                            <p className="flex items-center gap-1.5 text-gray-900 text-sm">{patient.birthDate ? <><Calendar className="w-3.5 h-3.5 text-primary-400" />{new Date(patient.birthDate).toLocaleDateString('ru-RU')}</> : '—'}</p>
+                                        )}
                                     </div>
-                                )}
-                                {patient.children && patient.children.length > 0 && (
                                     <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Дети</label>
-                                        <div className="space-y-2">
-                                            {patient.children.map((child: any) => (
-                                                <Link key={child.id} href={`/optic/patients/${child.id}`} className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors bg-emerald-50 p-2 rounded-lg border border-emerald-100">
-                                                    <User className="w-4 h-4" /> {child.name}
-                                                </Link>
-                                            ))}
-                                        </div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Пол</label>
+                                        {isEditing ? (
+                                            <select value={editForm.gender || ''} onChange={e => setEditForm((f: any) => ({ ...f, gender: e.target.value }))} className="input text-xs w-full h-9">
+                                                <option value="">Не указан</option>
+                                                <option value="male">Мужской</option>
+                                                <option value="female">Женский</option>
+                                            </select>
+                                        ) : (
+                                            <p className="text-gray-900 text-sm font-medium">{patient.gender === 'male' ? '♂ Мужской' : patient.gender === 'female' ? '♀ Женский' : '—'}</p>
+                                        )}
                                     </div>
-                                )}
-                                
-                                {!isEditing && (
-                                    <div className="pt-2">
-                                        <button onClick={() => { setFamilySearch(''); setFamilyResults([]); setShowFamilyModal(true); }} className="w-full btn bg-white border border-gray-200 hover:border-gray-300 shadow-sm text-sm text-gray-700 py-2 flex items-center justify-center gap-2">
-                                            <Users className="w-4 h-4" /> Управление семьей
+                                </div>
+
+                                {/* City */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Город</label>
+                                    {isEditing ? (
+                                        <input type="text" value={editForm.city || ''} onChange={e => setEditForm((f: any) => ({ ...f, city: e.target.value }))} className="input text-sm w-full" placeholder="Алматы, Астана..." />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.city ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.city}</> : '—'}</p>
+                                    )}
+                                </div>
+
+                                {/* IIN & Profession */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">ИИН</label>
+                                        {isEditing ? (
+                                            <input type="text" value={editForm.iin || ''} onChange={e => setEditForm((f: any) => ({ ...f, iin: e.target.value }))} className="input text-xs w-full h-9" placeholder="ИИН" />
+                                        ) : (
+                                            <p className="text-gray-900 text-xs font-mono font-medium">{patient.iin || '—'}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Профессия</label>
+                                        {isEditing ? (
+                                            <input type="text" value={editForm.profession || ''} onChange={e => setEditForm((f: any) => ({ ...f, profession: e.target.value }))} className="input text-xs w-full h-9" placeholder="Профессия" />
+                                        ) : (
+                                            <p className="text-gray-900 text-xs font-medium truncate" title={patient.profession || undefined}>{patient.profession || '—'}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Email */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
+                                    {isEditing ? (
+                                        <input type="email" value={editForm.email || ''} onChange={e => setEditForm((f: any) => ({ ...f, email: e.target.value }))} className="input text-sm w-full" />
+                                    ) : (
+                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.email ? <><Mail className="w-4 h-4 text-primary-400" />{patient.email}</> : '—'}</p>
+                                    )}
+                                </div>
+
+                                {/* Family Links Block */}
+                                <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl text-left">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
+                                            👨‍👩‍👧‍👦 Семейное древо
+                                        </label>
+                                        <button onClick={() => { setFamilySearch(''); setFamilyResults([]); setShowFamilyModal(true); }} className="text-[10px] text-blue-600 hover:text-blue-800 font-bold underline">
+                                            Привязать
                                         </button>
                                     </div>
-                                )}
+
+                                    {patient.parent ? (
+                                        <div className="mb-2">
+                                            <span className="text-[10px] text-gray-500 block">Родитель (Опекун):</span>
+                                            <Link
+                                                href={`/optic/patients/${patient.parent.id}`}
+                                                className="font-bold text-blue-700 hover:text-blue-900 text-xs flex items-center gap-1 mt-0.5 underline"
+                                            >
+                                                👤 {patient.parent.name}
+                                            </Link>
+                                        </div>
+                                    ) : null}
+
+                                    {patient.children && patient.children.length > 0 && (
+                                        <div>
+                                            <span className="text-[10px] text-gray-500 block mb-1">Дети родителя:</span>
+                                            <div className="space-y-1">
+                                                {patient.children.map(child => (
+                                                    <Link
+                                                        key={child.id}
+                                                        href={`/optic/patients/${child.id}`}
+                                                        className="text-xs font-semibold text-blue-700 hover:text-blue-900 bg-white border border-gray-200 px-2.5 py-1 rounded-lg block truncate transition-colors"
+                                                    >
+                                                        👶 {child.name}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!patient.parent && (!patient.children || patient.children.length === 0) && (
+                                        <p className="text-xs text-gray-400 italic">Связи не привязаны</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
-
                     </div>
 
                     {/* MAIN CONTENT AREA */}
@@ -1234,103 +1377,35 @@ export default function PatientDetailPage() {
                                 </div>
 
                                 <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-blue-500" /> Медицинская карта / Анамнез
-                                        </h3>
-                                        {!isEditing && (
-                                            <button
-                                                onClick={() => setIsEditing(true)}
-                                                className="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-                                            >
-                                                <Edit2 className="w-3.5 h-3.5" /> {patient.complaints || patient.anamnesisDisease || patient.allergies ? 'Редактировать' : 'Заполнить анамнез'}
-                                            </button>
-                                        )}
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-100">
+                                        <div>
+                                            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                                <Stethoscope className="w-5 h-5 text-teal-600" /> Первичный осмотр офтальмолога
+                                            </h3>
+                                            <p className="text-xs text-gray-500 mt-0.5">Полный протокол обследования (14 разделов)</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleSavePrimaryExam}
+                                            disabled={savingPrimaryExam}
+                                            className="btn btn-primary btn-sm flex items-center gap-1.5 shadow-sm"
+                                        >
+                                            <Save className="w-4 h-4" /> {savingPrimaryExam ? 'Сохранение...' : 'Сохранить первичный осмотр'}
+                                        </button>
                                     </div>
                                     
-                                    {isEditing ? (
-                                        <div className="space-y-6">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">ИИН</label>
-                                                    <input type="text" value={editForm.iin || ''} onChange={e => setEditForm((f: any) => ({ ...f, iin: e.target.value }))} className="input text-sm w-full h-10" placeholder="ИИН" />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Профессия</label>
-                                                    <input type="text" value={editForm.profession || ''} onChange={e => setEditForm((f: any) => ({ ...f, profession: e.target.value }))} className="input text-sm w-full h-10" placeholder="Профессия" />
-                                                </div>
-                                            </div>
+                                    <PrimaryExamForm initialData={primaryExamState} onChange={setPrimaryExamState} />
 
-                                            <div className="pt-4 border-t border-gray-100 space-y-4">
-                                                <TagsInput category="complaints" label="Жалобы" value={editForm.complaints || ''} onChange={(val) => setEditForm((f: any) => ({ ...f, complaints: val }))} />
-                                                <TagsInput category="anamnesis_disease" label="Анамнез заболевания (Anamnesis morbi)" value={editForm.anamnesisDisease || ''} onChange={(val) => setEditForm((f: any) => ({ ...f, anamnesisDisease: val }))} />
-                                                
-                                                <div className="bg-white border border-gray-100 rounded-xl p-4 mt-4">
-                                                    <h4 className="text-sm font-bold text-gray-800 mb-2 border-b border-gray-100 pb-2">Анамнез жизни</h4>
-                                                    <div className="space-y-1">
-                                                        <CheckboxAnamnesisField label="Аллергоанамнез" value={editForm.allergies} onChange={val => setEditForm((f: any) => ({ ...f, allergies: val }))} negativeLabel="не отягощен" positiveLabel="отягощен:" negativePrefix="не отягощен" positivePrefix="отягощен:" />
-                                                        <CheckboxAnamnesisField label="Наследственность" value={editForm.heredity} onChange={val => setEditForm((f: any) => ({ ...f, heredity: val }))} negativeLabel="не отягощена" positiveLabel="отягощена:" negativePrefix="не отягощена" positivePrefix="отягощена:" />
-                                                        <CheckboxAnamnesisField label="Прием медикаментов" value={editForm.medications} onChange={val => setEditForm((f: any) => ({ ...f, medications: val }))} negativeLabel="не принимает" positiveLabel="принимает:" negativePrefix="не принимает" positivePrefix="принимает:" />
-                                                        <CheckboxAnamnesisField label="Диспансерный учет" value={editForm.dispensary} onChange={val => setEditForm((f: any) => ({ ...f, dispensary: val }))} negativeLabel="нет" positiveLabel="да:" negativePrefix="нет" positivePrefix="да:" />
-                                                        <CheckboxAnamnesisField label="Операции" value={editForm.surgeries} onChange={val => setEditForm((f: any) => ({ ...f, surgeries: val }))} negativeLabel="не было" positiveLabel="да:" negativePrefix="не было" positivePrefix="да:" />
-                                                    </div>
-                                                </div>
-
-                                                <MedicalTextarea category="last_correction" label="Последняя коррекция" value={editForm.lastCorrection || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, lastCorrection: val }))} className="input text-sm min-h-[40px]" rows={1} placeholder="Очки, МКЛ (дата)" />
-                                                <MedicalTextarea category="notes" label="Прочие заметки" value={editForm.notes || ''} onValueChange={(val) => setEditForm((f: any) => ({ ...f, notes: val }))} className="input text-sm min-h-[60px]" rows={2} />
-                                            </div>
-                                        </div>
-                                    ) : (!patient.complaints && !patient.anamnesisDisease && !patient.allergies && !patient.heredity && !patient.notes && !patient.iin && !patient.profession) ? (
-                                        <div className="text-center py-8 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed">
-                                            <FileText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                                            <p className="text-gray-500 text-sm font-medium mb-3">Данные медицинской карты и анамнеза ещё не заполнены</p>
-                                            <button
-                                                onClick={() => setIsEditing(true)}
-                                                className="btn btn-primary btn-sm inline-flex items-center gap-1.5"
-                                            >
-                                                <Edit2 className="w-3.5 h-3.5" /> Заполнить анамнез и карту
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-6">
-                                            {(patient.iin || patient.profession) && (
-                                                <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-100">
-                                                    {patient.iin && <div><p className="text-[10px] font-bold text-gray-400 uppercase mb-1">ИИН</p><p className="text-gray-900 text-sm font-medium">{patient.iin}</p></div>}
-                                                    {patient.profession && <div><p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Профессия</p><p className="text-gray-900 text-sm font-medium">{patient.profession}</p></div>}
-                                                </div>
-                                            )}
-                                            
-                                            {patient.complaints && <div className="bg-red-50 p-4 rounded-xl border border-red-100/50"><p className="text-[10px] font-bold text-red-500 uppercase">Жалобы</p>{renderTags(patient.complaints)}</div>}
-                                            {patient.anamnesisDisease && <div className="bg-orange-50 p-4 rounded-xl border border-orange-100/50"><p className="text-[10px] font-bold text-orange-500 uppercase">Анамнез заболевания</p>{renderTags(patient.anamnesisDisease)}</div>}
-                                            
-                                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                                                <div className="bg-rose-50 p-3 rounded-xl border border-rose-100">
-                                                    <p className="text-[10px] font-bold text-rose-500 uppercase mb-1">Аллергоанамнез</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.allergies || '—'}</p>
-                                                </div>
-                                                <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
-                                                    <p className="text-[10px] font-bold text-indigo-500 uppercase mb-1">Наследственность</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.heredity || '—'}</p>
-                                                </div>
-                                                <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
-                                                    <p className="text-[10px] font-bold text-sky-500 uppercase mb-1">Прием медикаментов</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.medications || '—'}</p>
-                                                </div>
-                                                <div className="bg-amber-50 p-3 rounded-xl border border-amber-100">
-                                                    <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Диспансерный учет</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.dispensary || '—'}</p>
-                                                </div>
-                                                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                                                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Операции</p>
-                                                    <p className="text-sm font-medium text-gray-800">{patient.surgeries || '—'}</p>
-                                                </div>
-                                            </div>
-                                            
-                                            {patient.lastCorrection && <div><p className="text-[10px] font-bold text-purple-500 uppercase mb-1">Последняя коррекция</p><p className="text-gray-800 text-sm bg-purple-50 p-4 rounded-xl border border-purple-100/50">{patient.lastCorrection}</p></div>}
-                                            
-                                            {patient.notes && <div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Прочие заметки</p><p className="text-gray-700 text-sm bg-gray-50 p-4 rounded-xl border border-gray-100 leading-relaxed">{patient.notes}</p></div>}
-                                        </div>
-                                    )}
+                                    <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleSavePrimaryExam}
+                                            disabled={savingPrimaryExam}
+                                            className="btn btn-primary flex items-center gap-2 px-6"
+                                        >
+                                            <Save className="w-4 h-4" /> {savingPrimaryExam ? 'Сохранение...' : 'Сохранить первичный осмотр'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
