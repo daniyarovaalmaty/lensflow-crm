@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import {
     ArrowLeft, User, Users, Phone, Mail, Calendar, FileText, Edit2, Save, X,
     Plus, Eye, Stethoscope, ClipboardList, ChevronDown, ChevronUp, Trash2,
-    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag, Award
+    Activity, Clock, ChevronRight, UploadCloud, Paperclip, Download, Printer, Tag, Wand2, LayoutDashboard, MapPin, Globe, Banknote, Search, Minus, ShoppingBag, Award
 } from 'lucide-react';
 import Link from 'next/link';
 import MedicalTextarea from '@/components/ui/MedicalTextarea';
@@ -1846,6 +1846,28 @@ export default function PatientDetailPage() {
                                                     {order.totalPrice ? ` · ${order.totalPrice.toLocaleString('ru-RU')} ₸` : ''}
                                                 </p>
                                             </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    import('@/lib/generateLabelPdf').then(({ generateLabelPdf }) => {
+                                                        generateLabelPdf({
+                                                            order_id: order.orderNumber || order.id,
+                                                            patient: { name: patient?.name || '' },
+                                                            meta: { optic_name: (patient as any)?.organization?.name || '' },
+                                                            config: (order as any).config || { eyes: { od: {}, os: {} } },
+                                                            ready_at: order.createdAt,
+                                                            production_started_at: order.createdAt,
+                                                        });
+                                                    });
+                                                }}
+                                                className="px-2.5 py-1 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors flex items-center gap-1 border border-gray-200 mr-1"
+                                                title="Скачать этикетку"
+                                            >
+                                                <Tag className="w-3.5 h-3.5" />
+                                                Этикетка
+                                            </button>
                                             {!isItigris && <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary-500 transition-colors" />}
                                         </>
                                     );
