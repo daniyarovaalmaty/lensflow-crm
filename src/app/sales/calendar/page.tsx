@@ -52,6 +52,10 @@ export default function CalendarPage() {
     const [saving, setSaving] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingAppId, setEditingAppId] = useState<string | null>(null);
+    const [isChild, setIsChild] = useState(false);
+    const [parentName, setParentName] = useState('');
+    const [parentPhone, setParentPhone] = useState('');
+    const [city, setCity] = useState('');
     
     // Detailed view modal for month view
     const [selectedDayApps, setSelectedDayApps] = useState<{date: Date, apps: LeadAppointment[]} | null>(null);
@@ -463,8 +467,30 @@ export default function CalendarPage() {
                             </button>
                         </div>
                         <div className="p-5 space-y-4">
-                            <div className="relative">
-                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Поиск или имя пациента</label>
+                            {/* Toggle: Ребенок / Взрослый для нового пациента */}
+                            {!selectedPatient && (
+                                <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner mb-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsChild(false)}
+                                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${!isChild ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'}`}
+                                    >
+                                        👤 Взрослый
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsChild(true)}
+                                        className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${isChild ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'}`}
+                                    >
+                                        👶 Ребёнок
+                                    </button>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">
+                                    {selectedPatient ? 'Пациент' : (isChild ? 'ФИ Ребёнка *' : 'ФИО Пациента *')}
+                                </label>
                                 {selectedPatient ? (
                                     <div className="flex items-center justify-between p-2.5 border border-blue-200 bg-blue-50 rounded-xl">
                                         <div>
@@ -486,7 +512,7 @@ export default function CalendarPage() {
                                     <div>
                                         <input 
                                             type="text" 
-                                            placeholder="Иван Иванов"
+                                            placeholder={isChild ? 'Фамилия Имя ребенка' : 'Фамилия Имя Отчество'}
                                             value={patientSearchQuery}
                                             onChange={e => setPatientSearchQuery(e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
@@ -511,7 +537,7 @@ export default function CalendarPage() {
                                                     ))
                                                 ) : (
                                                     <div className="p-3 text-sm text-gray-500 bg-gray-50">
-                                                        Пациент не найден. Будет создана новая запись для: <span className="font-medium text-gray-900">{patientSearchQuery}</span>
+                                                        Пациент не найден. Будет создана новая карта для: <span className="font-medium text-gray-900">{patientSearchQuery}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -521,17 +547,56 @@ export default function CalendarPage() {
                             </div>
                             
                             {!selectedPatient && (
+                                isChild ? (
+                                    <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-100 space-y-2">
+                                        <div>
+                                            <label className="text-xs font-semibold text-amber-900 uppercase tracking-wider mb-1 block">ФИО Родителя *</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Фамилия Имя Отчество родителя"
+                                                value={parentName}
+                                                onChange={e => setParentName(e.target.value)}
+                                                className="w-full px-3 py-1.5 border border-amber-200 rounded-xl text-sm bg-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold text-amber-900 uppercase tracking-wider mb-1 block">Телефон родителя *</label>
+                                            <input 
+                                                type="tel" 
+                                                placeholder="+7 701 000 00 00"
+                                                value={parentPhone}
+                                                onChange={e => setParentPhone(e.target.value)}
+                                                className="w-full px-3 py-1.5 border border-amber-200 rounded-xl text-sm bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Телефон пациента *</label>
+                                        <input 
+                                            type="tel" 
+                                            placeholder="+7 701 000 00 00"
+                                            value={newPhone}
+                                            onChange={e => setNewPhone(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                        />
+                                    </div>
+                                )
+                            )}
+
+                            {!selectedPatient && (
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Телефон нового пациента</label>
+                                    <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Город / Адрес</label>
                                     <input 
-                                        type="tel" 
-                                        placeholder="77001234567"
-                                        value={newPhone}
-                                        onChange={e => setNewPhone(e.target.value)}
+                                        type="text" 
+                                        placeholder="г. Актобе"
+                                        value={city}
+                                        onChange={e => setCity(e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                     />
                                 </div>
                             )}
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block">Дата</label>
@@ -595,7 +660,7 @@ export default function CalendarPage() {
                                 Отмена
                             </button>
                             <button 
-                                disabled={saving || (!selectedPatient && !newPhone) || !newDate || !newTime || !newDoctorId}
+                                disabled={saving || (!selectedPatient && (isChild ? (!parentName || !parentPhone) : !newPhone)) || !newDate || !newTime || !newDoctorId}
                                 onClick={async () => {
                                     setSaving(true);
                                     try {
@@ -612,7 +677,7 @@ export default function CalendarPage() {
                                                         duration: newDuration,
                                                         patientId: selectedPatient?.id || undefined,
                                                         patientName: selectedPatient ? undefined : patientSearchQuery,
-                                                        patientPhone: selectedPatient ? undefined : newPhone,
+                                                        patientPhone: selectedPatient ? undefined : (isChild ? parentPhone : newPhone),
                                                         type: newType,
                                                         doctorId: newDoctorId || undefined
                                                     })
@@ -626,7 +691,7 @@ export default function CalendarPage() {
                                                         appointmentNotes: newType,
                                                         doctorId: newDoctorId || null,
                                                         name: selectedPatient ? selectedPatient.name : patientSearchQuery,
-                                                        phone: selectedPatient ? selectedPatient.phone : newPhone
+                                                        phone: selectedPatient ? selectedPatient.phone : (isChild ? parentPhone : newPhone)
                                                     })
                                                 });
                                             }
@@ -638,8 +703,12 @@ export default function CalendarPage() {
                                                     date: dateTime.toISOString(),
                                                     duration: newDuration,
                                                     patientId: selectedPatient?.id || undefined,
-                                                        patientName: selectedPatient ? undefined : patientSearchQuery,
-                                                        patientPhone: selectedPatient ? undefined : newPhone,
+                                                    patientName: selectedPatient ? undefined : patientSearchQuery,
+                                                    patientPhone: selectedPatient ? undefined : (isChild ? parentPhone : newPhone),
+                                                    isChild: selectedPatient ? undefined : isChild,
+                                                    parentName: selectedPatient ? undefined : parentName,
+                                                    parentPhone: selectedPatient ? undefined : parentPhone,
+                                                    city: selectedPatient ? undefined : city,
                                                     type: newType,
                                                     doctorId: newDoctorId || undefined
                                                 })

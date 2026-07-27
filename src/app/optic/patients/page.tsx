@@ -358,67 +358,137 @@ export default function PatientsPage() {
 
             {/* New Patient Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-                        <div className="p-6 border-b border-gray-100">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg my-8 overflow-hidden">
+                        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
                             <h2 className="text-lg font-bold text-gray-900">Новый пациент</h2>
-                            <p className="text-xs text-emerald-600 mt-0.5">Будет добавлен в LensFlow и MedMundus</p>
+                            <p className="text-xs text-emerald-700 mt-0.5">Выберите категорию для точной привязки семьи</p>
+                            
+                            {/* Toggle: Ребенок / Взрослый */}
+                            <div className="flex bg-white p-1 rounded-xl border border-emerald-200 mt-4 shadow-sm">
+                                <button
+                                    type="button"
+                                    onClick={() => setForm(f => ({ ...f, isChild: false }))}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${!form.isChild ? 'bg-emerald-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'}`}
+                                >
+                                    👤 Взрослый
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setForm(f => ({ ...f, isChild: true }))}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${form.isChild ? 'bg-emerald-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'}`}
+                                >
+                                    👶 Ребёнок
+                                </button>
+                            </div>
                         </div>
+
                         <form onSubmit={handleCreate} className="p-6 space-y-4">
+                            {form.isChild ? (
+                                <>
+                                    {/* Поля для Ребёнка */}
+                                    <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3">
+                                        <span className="text-xs font-bold text-blue-800 uppercase tracking-wider block">Данные Ребёнка</span>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">ФИ Ребёнка *</label>
+                                            <input type="text" required value={form.name}
+                                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                                className="input w-full" placeholder="Фамилия Имя ребенка" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 mb-1">Дата рождения *</label>
+                                                <input type="date" required value={form.birthDate}
+                                                    onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} className="input w-full" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 mb-1">Пол</label>
+                                                <select value={form.gender} onChange={e => setForm(f => ({ ...f, gender: e.target.value }))} className="input w-full">
+                                                    <option value="">Не указан</option>
+                                                    <option value="male">Мужской</option>
+                                                    <option value="female">Женский</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Поля для Родителя */}
+                                    <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 space-y-3">
+                                        <span className="text-xs font-bold text-amber-800 uppercase tracking-wider block">Данные Родителя (Опекуна)</span>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">ФИО Родителя *</label>
+                                            <input type="text" required value={form.parentName}
+                                                onChange={e => setForm(f => ({ ...f, parentName: e.target.value }))}
+                                                className="input w-full" placeholder="Фамилия Имя Отчество родителя" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Номер телефона родителя *</label>
+                                            <input type="tel" required value={form.parentPhone}
+                                                onChange={e => setForm(f => ({ ...f, parentPhone: e.target.value, phone: e.target.value }))}
+                                                className="input w-full" placeholder="+7 701 000 00 00" />
+                                            <p className="text-[10px] text-gray-500 mt-1">Все дети одного родителя автоматически связываются по этому номеру.</p>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {/* Поля для Взрослого */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1">ФИО Пациента *</label>
+                                        <input type="text" required value={form.name}
+                                            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                            className="input w-full" placeholder="Фамилия Имя Отчество" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Телефон Пациента *</label>
+                                            <input type="tel" required value={form.phone}
+                                                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                                                className="input w-full" placeholder="+7 701 000 00 00" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Пол</label>
+                                            <select value={form.gender} onChange={e => setForm(f => ({ ...f, gender: e.target.value }))} className="input w-full">
+                                                <option value="">Не указан</option>
+                                                <option value="male">Мужской</option>
+                                                <option value="female">Женский</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Дата рождения</label>
+                                            <input type="date" value={form.birthDate}
+                                                onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} className="input w-full" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-700 mb-1">Email</label>
+                                            <input type="email" value={form.email}
+                                                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                                                className="input w-full" placeholder="email@example.com" />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Общие поля */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">ФИО *</label>
-                                <input type="text" required value={form.name}
-                                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                    className="input w-full" placeholder="Фамилия Имя Отчество" />
+                                <label className="block text-xs font-bold text-gray-700 mb-1">Город / Адрес</label>
+                                <input type="text" value={form.city}
+                                    onChange={e => setForm(f => ({ ...f, city: e.target.value, address: e.target.value }))}
+                                    className="input w-full" placeholder="г. Актобе, ул. Е. Тайбекова 10А" />
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Телефон *</label>
-                                    <input type="tel" required value={form.phone}
-                                        onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                                        className="input w-full" placeholder="+7 777 000 00 00" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Пол</label>
-                                    <select value={form.gender} onChange={e => setForm(f => ({ ...f, gender: e.target.value }))} className="input w-full">
-                                        <option value="">Не указан</option>
-                                        <option value="male">Мужской</option>
-                                        <option value="female">Женский</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Дата рождения</label>
-                                    <input type="date" value={form.birthDate}
-                                        onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} className="input w-full" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input type="email" value={form.email}
-                                        onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                                        className="input w-full" placeholder="email@example.com" />
-                                </div>
-                            </div>
+
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Заметки / Анамнез</label>
+                                <label className="block text-xs font-bold text-gray-700 mb-1">Заметки / Анамнез</label>
                                 <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                                     className="input w-full resize-none" rows={2} placeholder="Аллергии, особенности..." />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Родитель / Опекун</label>
-                                <select value={form.parentId} onChange={e => setForm(f => ({ ...f, parentId: e.target.value }))} className="input w-full">
-                                    <option value="">Нет (Самостоятельный пациент)</option>
-                                    {patients.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name} ({p.phone})</option>
-                                    ))}
-                                </select>
-                                <p className="text-[10px] text-gray-500 mt-1">Привяжите карту к родителю, если это ребенок.</p>
-                            </div>
+
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary flex-1">Отмена</button>
                                 <button type="submit" disabled={saving} className="btn btn-primary flex-1">
-                                    {saving ? 'Создание...' : 'Создать'}
+                                    {saving ? 'Создание...' : 'Создать карту'}
                                 </button>
                             </div>
                         </form>

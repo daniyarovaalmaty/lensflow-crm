@@ -12,6 +12,7 @@ import Link from 'next/link';
 import MedicalTextarea from '@/components/ui/MedicalTextarea';
 import TagsInput from '@/components/ui/TagsInput';
 import CheckboxAnamnesisField from '@/components/ui/CheckboxAnamnesisField';
+import PrimaryExamForm, { PrimaryExamData } from '@/components/consultation/PrimaryExamForm';
 
 // Helper to remove payment-related text (kaspi, ckk, terminals, etc) for doctors
 const filterMedicalText = (text: string | null | undefined, userRole?: string) => {
@@ -309,6 +310,7 @@ export default function PatientDetailPage() {
     const [savingConsult, setSavingConsult] = useState(false);
     const [expandedConsult, setExpandedConsult] = useState<string | null>(null);
     const [editingConsultId, setEditingConsultId] = useState<string | null>(null);
+    const [primaryExamState, setPrimaryExamState] = useState<PrimaryExamData | undefined>(undefined);
     const [isUploadingOCR, setIsUploadingOCR] = useState(false);
 
     // Invoice Form (Send to Cashier)
@@ -459,10 +461,15 @@ export default function PatientDetailPage() {
             ? `/api/consultations/${editingConsultId}`
             : `/api/patients/${id}/consultations`;
         
+        const payload = {
+            ...consultForm,
+            primaryExamDetails: primaryExamState,
+        };
+
         const res = await fetch(url, {
             method: editingConsultId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(consultForm),
+            body: JSON.stringify(payload),
         });
 
         // Also create a prescription if checked
@@ -492,6 +499,7 @@ export default function PatientDetailPage() {
             }
             setShowConsultForm(false);
             setEditingConsultId(null);
+            setPrimaryExamState(undefined);
             setConsultForm({ 
                 visitDate: new Date().toISOString().split('T')[0], type: 'exam', diagnosis: '', treatment: '', nextVisit: '', 
                 intraocularPressureOD: '', intraocularPressureOS: '', visualAcuityOD: '', visualAcuityOS: '', notes: '', biomicroscopy: '',
@@ -548,6 +556,11 @@ export default function PatientDetailPage() {
 
     const handleEditConsultClick = (c: Consultation) => {
         setEditingConsultId(c.id);
+        if ((c as any).primaryExamDetails) {
+            setPrimaryExamState((c as any).primaryExamDetails);
+        } else {
+            setPrimaryExamState(undefined);
+        }
         setConsultForm({
             visitDate: c.visitDate ? new Date(c.visitDate).toISOString().split('T')[0] : '',
             type: c.type || 'exam',
@@ -1041,14 +1054,48 @@ export default function PatientDetailPage() {
                                         )}
                                     </div>
                                 )}
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Город / Адрес</label>
-                                    {isEditing ? (
-                                        <input type="text" value={editForm.address || ''} onChange={e => setEditForm((f: any) => ({ ...f, address: e.target.value }))} className="input text-sm w-full" />
-                                    ) : (
-                                        <p className="flex items-center gap-2 text-gray-900 text-sm">{patient.address ? <><MapPin className="w-4 h-4 text-primary-400" />{patient.address}</> : '—'}</p>
-                                    )}
-                                </div>
+                                 {/* Family Tree / Parent & Children */}
+                                {((patient as any).isChild || patient.parent || (patient.children && patient.children.length > 0) || (patient as any).parentName) && (
+                                    <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl text-left">
+                                        <label className="text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                            👨‍👩‍👧‍👦 Семья / Родственные связи
+                                        </label>
+
+                                        {patient.parent ? (
+                                            <div className="mb-2">
+                                                <span className="text-[10px] text-gray-500 block">Родитель (Карта опекуна):</span>
+                                                <Link
+                                                    href={`/optic/patients/${patient.parent.id}`}
+                                                    className="font-bold text-amber-900 hover:text-amber-700 text-sm flex items-center gap-1 mt-0.5 underline decoration-amber-300"
+                                                >
+                                                    👤 {patient.parent.name} (📞 {patient.parent.phone})
+                                                </Link>
+                                            </div>
+                                        ) : (patient as any).parentName ? (
+                                            <div className="mb-2">
+                                                <span className="text-[10px] text-gray-500 block">ФИО Родителя:</span>
+                                                <p className="font-bold text-amber-900 text-sm">👤 {(patient as any).parentName} (📞 {(patient as any).parentPhone || patient.phone})</p>
+                                            </div>
+                                        ) : null}
+
+                                        {patient.children && patient.children.length > 0 && (
+                                            <div>
+                                                <span className="text-[10px] text-gray-500 block mb-1">Дети родителя:</span>
+                                                <div className="space-y-1">
+                                                    {patient.children.map(child => (
+                                                        <Link
+                                                            key={child.id}
+                                                            href={`/optic/patients/${child.id}`}
+                                                            className="text-xs font-semibold text-blue-700 hover:text-blue-900 bg-white border border-amber-200 px-2.5 py-1 rounded-lg block truncate transition-colors"
+                                                        >
+                                                            👶 {child.name}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 {!(session?.user?.role === 'doctor' || ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(session?.user?.subRole as string)) && (
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Email</label>
@@ -1312,6 +1359,11 @@ export default function PatientDetailPage() {
                                             <option value="other">📋 Другое</option>
                                         </select>
                                     </div>
+                                </div>
+
+                                {/* Primary Examination Form Component */}
+                                <div className="my-4">
+                                    <PrimaryExamForm initialData={primaryExamState} onChange={setPrimaryExamState} />
                                 </div>
 
                                 {/* Visual metrics */}
