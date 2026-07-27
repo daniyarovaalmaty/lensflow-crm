@@ -184,6 +184,7 @@ export default async function PrescriptionPrintPage({ params }: { params: { id: 
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
                     <p className="text-slate-500 uppercase font-semibold text-[10px]">ДОКУМЕНТ СФОРМИРОВАН</p>
                     <p className="font-bold text-slate-900 text-sm mt-0.5">{nowFormatted}</p>
+                    <p className="text-[10px] text-slate-400 mt-1 font-medium">Сформировано в медицинской системе LensFlow CRM</p>
                 </div>
 
                 <div className="text-right">
