@@ -47,7 +47,10 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
     const profile = session.user.profile || {};
 
     const clinicName = org?.name || profile.opticName || profile.clinic || 'Бала Vision';
-    const clinicAddress = org?.actualAddress || org?.address || 'г. Алматы, Райымбека 217';
+    let clinicAddress = org?.actualAddress || org?.address || 'г. Алматы, Райымбека 217';
+    if (clinicAddress.startsWith('ктобе')) {
+        clinicAddress = 'г. Актобе' + clinicAddress.slice(5);
+    }
     const clinicBin = org?.inn ? `БИН: ${org.inn}` : '';
     const doctorName = consultation.doctor?.fullName || profile.fullName || 'Врач не указан';
 
@@ -72,21 +75,16 @@ export default async function ConsultationPrintPage({ params }: { params: { id: 
                 }
             `}</style>
 
-            {/* Bala Vision Style Header */}
-            <div className="flex justify-between items-start border-l-4 border-blue-600 pl-4 py-1 mb-6 bg-slate-50/70 p-4 rounded-r-xl border-y border-r border-slate-200">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                        🩺
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-extrabold uppercase tracking-wider text-blue-900 leading-tight">
-                            МЕДИЦИНСКАЯ ВЫПИСКА ПРИЁМА
-                        </h1>
-                        <p className="text-sm font-semibold text-blue-700">{clinicName}</p>
-                    </div>
+            {/* Header: Left Blue Vertical Line, No Circular Icon */}
+            <div className="flex justify-between items-start border-l-[5px] border-blue-600 pl-4 py-2 mb-6 bg-slate-50/70 p-4 rounded-r-xl border-y border-r border-slate-200">
+                <div>
+                    <h1 className="text-xl font-bold uppercase tracking-wider text-blue-900 leading-none">
+                        МЕДИЦИНСКАЯ ВЫПИСКА ПРИЁМА
+                    </h1>
+                    <p className="text-sm font-semibold text-blue-600 mt-1">{clinicName}</p>
                 </div>
-                <div className="text-right text-xs text-slate-600 space-y-0.5">
-                    <p className="font-medium text-slate-800 flex items-center justify-end gap-1">
+                <div className="text-right text-xs text-slate-600 space-y-0.5 max-w-[60%]">
+                    <p className="font-medium text-slate-800 leading-snug">
                         📍 {clinicAddress}
                     </p>
                     {clinicBin && <p className="font-mono text-slate-600">{clinicBin}</p>}

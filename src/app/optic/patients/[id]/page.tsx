@@ -785,20 +785,21 @@ export default function PatientDetailPage() {
                         @page { margin: 0; size: auto; }
                     }
                 `}</style>
-                {/* Header: Логотип и контакты клиники */}
-                <div className="bg-gradient-to-r from-primary-50 to-white border-l-4 border-primary-500 print:p-3 p-6 print:mb-4 mb-8 rounded-r-xl flex justify-between items-center shadow-sm">
-                    <div className="flex items-center print:gap-2 gap-4">
-                        <div className="print:w-8 print:h-8 w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md">
-                            <Stethoscope className="print:w-4 print:h-4 w-6 h-6" />
-                        </div>
-                        <div>
-                            <h1 className="print:text-lg text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
-                            <p className="text-primary-600 font-medium print:text-[10px] mt-1">{(patient as any).organization?.name || session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Бала Vision'}</p>
-                        </div>
+                {/* Header: Clean Left Blue Accent Border, No circular icon */}
+                <div className="bg-slate-50/80 border-l-[5px] border-blue-600 print:p-3 p-4 print:mb-4 mb-6 rounded-r-xl border-y border-r border-slate-200 flex justify-between items-start">
+                    <div>
+                        <h1 className="print:text-lg text-xl font-bold tracking-wider text-blue-900 uppercase leading-none">МЕДИЦИНСКАЯ КАРТА</h1>
+                        <p className="text-blue-600 font-semibold print:text-xs text-sm mt-1">{(patient as any).organization?.name || session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Бала Vision'}</p>
                     </div>
-                    <div className="text-right text-sm text-gray-500 space-y-1">
-                        <p className="flex items-center justify-end gap-2"><MapPin className="w-3.5 h-3.5 text-primary-400" /> {(patient as any).organization?.actualAddress || (patient as any).organization?.address || 'г. Алматы, Райымбека 217'}</p>
-                        {(patient as any).organization?.inn && <p className="text-xs text-gray-500 font-mono">БИН: {(patient as any).organization?.inn}</p>}
+                    <div className="text-right text-xs text-slate-600 space-y-0.5 max-w-[60%]">
+                        <p className="font-medium text-slate-800 leading-snug">
+                            📍 {(() => {
+                                let addr = (patient as any).organization?.actualAddress || (patient as any).organization?.address || 'г. Алматы, Райымбека 217';
+                                if (addr.startsWith('ктобе')) addr = 'г. Актобе' + addr.slice(5);
+                                return addr;
+                            })()}
+                        </p>
+                        {(patient as any).organization?.inn && <p className="font-mono text-slate-600">БИН: {(patient as any).organization?.inn}</p>}
                     </div>
                 </div>
 
