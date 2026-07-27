@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, Check, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Loader2, Wallet, Database } from 'lucide-react';
+import { Plus, Package, Clock, Check, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Loader2, Wallet } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -498,16 +498,7 @@ export default function OpticDashboard() {
                                     ITIGRIS
                                 </Link>
                             )}
-                            {subRole === 'optic_manager' && (
-                                <Link
-                                    href="/optic/settings/onec"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-indigo-600 hover:bg-indigo-50"
-                                >
-                                    <Database className="w-4 h-4" />
-                                    1С
-                                </Link>
-                            )}
+
                             {subRole === 'optic_manager' && (
                                 <Link
                                     href="/clinic-manager/dashboard"

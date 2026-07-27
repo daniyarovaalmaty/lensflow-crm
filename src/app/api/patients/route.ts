@@ -138,18 +138,23 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { 
-        name, phone, email, birthDate, gender, notes, doctorId, parentId,
-        isChild, parentName, parentPhone, city,
+        name, lastName, firstName, middleName, phone, email, birthDate, gender, notes, doctorId, parentId,
+        isChild, parentName, parentLastName, parentFirstName, parentPhone, city,
         iin, address, profession, complaints, anamnesisDisease, anamnesisLife,
         allergies, heredity, medications, dispensary, surgeries, lastCorrection
     } = body;
 
     const isChildBool = Boolean(isChild);
+    const fullPatientName = name?.trim() || [lastName, firstName, middleName].filter(Boolean).join(' ').trim();
+    const fullParentName = parentName?.trim() || [parentLastName, parentFirstName].filter(Boolean).join(' ').trim();
     const effectivePhone = (isChildBool ? parentPhone : phone) || phone;
-    const effectiveName = name || (isChildBool ? 'Ребенок' : 'Пациент');
 
-    if (!effectiveName || !effectivePhone) {
-        return NextResponse.json({ error: 'ФИО и телефон обязательны' }, { status: 400 });
+    if (!fullPatientName || !effectivePhone) {
+        return NextResponse.json({ error: 'Фамилия, Имя и Номер телефона обязательны для заполнения' }, { status: 400 });
+    }
+
+    if (isChildBool && (!fullParentName || !parentPhone)) {
+        return NextResponse.json({ error: 'Для карточки ребёнка обязательно заполните ФИО и телефон родителя' }, { status: 400 });
     }
 
     let finalParentId = parentId || null;
@@ -170,7 +175,7 @@ export async function POST(request: Request) {
         if (!parentObj) {
             parentObj = await prisma.patient.create({
                 data: {
-                    name: parentName || 'Родитель',
+                    name: fullParentName || 'Родитель',
                     phone: parentPhone,
                     isChild: false,
                     city: city || address || null,
@@ -187,7 +192,7 @@ export async function POST(request: Request) {
     let medmundusId: number | null = null;
     try {
         medmundusId = await mmCreatePatient({
-            name: name.trim(),
+            name: fullPatientName,
             phone: effectivePhone,
             email: email?.trim() || undefined,
             birthDate: birthDate || undefined,
@@ -201,14 +206,14 @@ export async function POST(request: Request) {
     const patient = await prisma.patient.create({
         data: {
             medmundusId: medmundusId || undefined,
-            name: name.trim(),
+            name: fullPatientName,
             phone: effectivePhone,
             email: email?.trim() || null,
             birthDate: birthDate ? new Date(birthDate) : null,
             gender: gender || null,
             notes: notes || null,
             isChild: isChildBool,
-            parentName: parentName?.trim() || null,
+            parentName: fullParentName || null,
             parentPhone: parentPhone?.trim() || null,
             city: city?.trim() || address?.trim() || null,
             organizationId: session.user.organizationId || null,
