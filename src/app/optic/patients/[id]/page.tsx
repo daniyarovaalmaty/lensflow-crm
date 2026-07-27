@@ -871,20 +871,24 @@ export default function PatientDetailPage() {
     return (
         <div className="min-h-screen bg-surface">
             
-            {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, видна при печати) --- */}
-            <div className="hidden print:block print:p-8 p-8 bg-white text-gray-800 font-sans w-full min-h-screen" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+            {/* --- ПЕЧАТНАЯ ФОРМА (Скрыта на экране, идеально умещается на 1 лист А4 при печати) --- */}
+            <div className="hidden print:block print:p-0 p-8 bg-white text-gray-800 font-sans w-full print-container" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                 <style>{`
                     @media print {
-                        @page { margin: 0; size: auto; }
+                        @page { margin: 5mm 7mm; size: A4 portrait; }
+                        html, body { background: white !important; font-size: 8px !important; line-height: 1.15 !important; color: #0f172a !important; }
+                        .print-container { padding: 0 !important; font-size: 8px !important; }
+                        .print-table th, .print-table td { padding: 1px 3px !important; font-size: 7.5px !important; line-height: 1.1 !important; }
                     }
                 `}</style>
-                {/* Header: Clean Left Blue Accent Border, No circular icon */}
-                <div className="bg-slate-50/80 border-l-[5px] border-blue-600 print:p-3 p-4 print:mb-4 mb-6 rounded-r-xl border-y border-r border-slate-200 flex justify-between items-start">
+
+                {/* Header: Clean Left Blue Accent Border */}
+                <div className="bg-slate-50/80 border-l-4 border-blue-600 print:p-1.5 print:mb-1.5 p-4 mb-6 rounded-r-lg border-y border-r border-slate-200 flex justify-between items-center">
                     <div>
-                        <h1 className="print:text-lg text-xl font-bold tracking-wider text-blue-900 uppercase leading-none">МЕДИЦИНСКАЯ КАРТА</h1>
-                        <p className="text-blue-600 font-semibold print:text-xs text-sm mt-1">{(patient as any).organization?.name || session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Бала Vision'}</p>
+                        <h1 className="print:text-xs text-xl font-bold tracking-wider text-blue-900 uppercase leading-none">МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА</h1>
+                        <p className="text-blue-600 font-semibold print:text-[9px] text-sm mt-0.5">{(patient as any).organization?.name || session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Бала Vision'}</p>
                     </div>
-                    <div className="text-right text-xs text-slate-600 space-y-0.5 max-w-[60%]">
+                    <div className="text-right print:text-[8px] text-xs text-slate-600 max-w-[60%]">
                         <p className="font-medium text-slate-800 leading-snug">
                             📍 {(() => {
                                 const raw = (patient as any).organization?.actualAddress || (patient as any).organization?.address || 'г. Алматы, Райымбека 217';
@@ -899,25 +903,32 @@ export default function PatientDetailPage() {
                 </div>
 
                 {/* Данные пациента */}
-                <div className="print:mb-4 mb-8 bg-gray-50 rounded-2xl print:p-3 p-6 border border-gray-100">
-                    <div className="flex items-center gap-2 print:mb-2 mb-4 print:pb-1 pb-2 border-b border-gray-200">
-                        <User className="print:w-4 print:h-4 w-5 h-5 text-primary-500" />
-                        <h2 className="print:text-sm text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
+                <div className="print:mb-1.5 mb-8 bg-gray-50 rounded-xl print:p-1.5 p-6 border border-gray-100">
+                    <div className="flex items-center gap-1.5 print:mb-1 mb-4 print:pb-0.5 pb-2 border-b border-gray-200">
+                        <User className="print:w-3 print:h-3 w-5 h-5 text-primary-500" />
+                        <h2 className="print:text-[10px] text-lg font-bold text-gray-800 uppercase tracking-wide">Пациент</h2>
                     </div>
-                    <div className="grid grid-cols-2 print:gap-y-2 gap-y-4 gap-x-8 print:text-xs text-sm">
-                        <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">ФИО</span> <strong className="print:text-sm text-lg text-gray-900">{patient.name}</strong></div>
-                        <div className="flex flex-col"><span className="print:text-[9px] text-xs font-bold text-gray-400 uppercase print:mb-0.5 mb-1">Дата рождения</span> <strong className="print:text-xs text-base text-gray-900">{patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} <span className="text-primary-600 font-medium">({calcAge(patient.birthDate)})</span></strong></div>
-
+                    <div className="grid grid-cols-2 print:gap-x-4 print:gap-y-0.5 print:text-[8.5px] text-sm">
+                        <div className="flex items-center gap-1">
+                            <span className="font-bold text-gray-500 uppercase print:text-[8px]">ФИО:</span> 
+                            <strong className="print:text-[9.5px] text-gray-900">{patient.name}</strong>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span className="font-bold text-gray-500 uppercase print:text-[8px]">Дата рождения:</span> 
+                            <strong className="print:text-[8.5px] text-gray-900">
+                                {patient.birthDate ? new Date(patient.birthDate).toLocaleDateString('ru-RU') : '—'} 
+                                <span className="text-primary-600 font-medium"> ({calcAge(patient.birthDate)})</span>
+                            </strong>
+                        </div>
                         {patient.notes && (
-                            <div className="col-span-2 mt-2 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
-                                <span className="text-xs font-bold text-orange-400 uppercase mb-1 block">Анамнез / Заметки</span>
-                                <p className="text-gray-800 leading-relaxed">{patient.notes}</p>
+                            <div className="col-span-2 mt-0.5 bg-orange-50/50 p-1 rounded border border-orange-100 print:text-[8px]">
+                                <strong className="text-orange-600 uppercase">Заметки:</strong> {patient.notes}
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА в печатной форме (Все 14 разделов) */}
+                {/* ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА в печатной форме (Все 14 разделов, компактный формат) */}
                 {(() => {
                     const DEFAULT_BIOMICROSCOPY = 'OU- веки и слезные органы без изменений, конъюнктива бледно-розовая, склера - белая, роговица - прозрачная, блестящая, передняя камера - средней глубины, равномерная, влага ПК прозрачная, радужка - структурна, зрачок - правильной округлой формы, реакция на свет – живая, хрусталик – прозрачный.';
 
@@ -946,10 +957,10 @@ export default function PatientDetailPage() {
                     const recommendations = savedExam?.recommendations || latestConsult?.treatment || '';
 
                     return (
-                        <div className="mb-6 border border-slate-300 rounded-xl p-4 bg-white text-xs print:p-2 print:mb-4 print:text-[11px] text-slate-800 space-y-3">
-                            <div className="border-b-2 border-slate-800 pb-1.5 flex items-center justify-between">
-                                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-                                    <Stethoscope className="w-4 h-4 text-blue-600 print:hidden" />
+                        <div className="mb-2 border border-slate-300 rounded-lg p-2 bg-white print:p-1.5 print:mb-1.5 print:text-[8px] text-slate-800 space-y-1">
+                            <div className="border-b border-slate-800 pb-0.5 flex items-center justify-between">
+                                <h2 className="print:text-[9.5px] text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1">
+                                    <Stethoscope className="w-3.5 h-3.5 text-blue-600 print:hidden" />
                                     ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА
                                 </h2>
                             </div>
@@ -957,66 +968,56 @@ export default function PatientDetailPage() {
                             {/* 1. Жалобы */}
                             {complaints && (
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-0.5 uppercase text-[10px]">1. Жалобы:</span>
-                                    <p className="bg-slate-50 p-2 rounded border border-slate-200">{complaints}</p>
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">1. Жалобы:</span>
+                                    <p className="bg-slate-50 p-1 rounded border border-slate-200 print:text-[8px] leading-tight">{complaints}</p>
                                 </div>
                             )}
 
                             {/* 2. Анамнез заболевания */}
                             {anamnesisDisease && (
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-0.5 uppercase text-[10px]">2. Анамнез заболевания (Anamnesis morbi):</span>
-                                    <p className="bg-slate-50 p-2 rounded border border-slate-200">{anamnesisDisease}</p>
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">2. Анамнез заболевания (Anamnesis morbi):</span>
+                                    <p className="bg-slate-50 p-1 rounded border border-slate-200 print:text-[8px] leading-tight">{anamnesisDisease}</p>
                                 </div>
                             )}
 
                             {/* 3. Анамнез жизни */}
                             <div>
-                                <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">3. Анамнез жизни:</span>
-                                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2 rounded border border-slate-200">
-                                    <div>
-                                        <strong>Аллергоанамнез:</strong> {savedExam?.anamnesisLife?.allergyChecked ? `отягощен (${savedExam.anamnesisLife.allergyText || '—'})` : 'не отягощен'}
-                                    </div>
-                                    <div>
-                                        <strong>Наследственность:</strong> {savedExam?.anamnesisLife?.heredityChecked ? `отягощена (${savedExam.anamnesisLife.heredityText || '—'})` : 'не отягощена'}
-                                    </div>
-                                    <div>
-                                        <strong>Прием медикаментов:</strong> {savedExam?.anamnesisLife?.medicationChecked ? `принимает (${savedExam.anamnesisLife.medicationText || '—'})` : 'не принимает'}
-                                    </div>
-                                    <div>
-                                        <strong>Диспансерный учет:</strong> {savedExam?.anamnesisLife?.dispensaryChecked ? `да (${savedExam.anamnesisLife.dispensaryText || '—'})` : 'нет'}
-                                    </div>
-                                    <div className="col-span-2">
-                                        <strong>Операции:</strong> {savedExam?.anamnesisLife?.surgeryChecked ? `да (${savedExam.anamnesisLife.surgeryText || '—'})` : 'не было'}
-                                    </div>
+                                <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">3. Анамнез жизни:</span>
+                                <div className="grid grid-cols-2 gap-1 bg-slate-50 p-1 rounded border border-slate-200 print:text-[7.5px]">
+                                    <div><strong>Аллергоанамнез:</strong> {savedExam?.anamnesisLife?.allergyChecked ? `отягощен (${savedExam.anamnesisLife.allergyText || '—'})` : 'не отягощен'}</div>
+                                    <div><strong>Наследственность:</strong> {savedExam?.anamnesisLife?.heredityChecked ? `отягощена (${savedExam.anamnesisLife.heredityText || '—'})` : 'не отягощена'}</div>
+                                    <div><strong>Прием медикаментов:</strong> {savedExam?.anamnesisLife?.medicationChecked ? `принимает (${savedExam.anamnesisLife.medicationText || '—'})` : 'не принимает'}</div>
+                                    <div><strong>Диспансерный учет:</strong> {savedExam?.anamnesisLife?.dispensaryChecked ? `да (${savedExam.anamnesisLife.dispensaryText || '—'})` : 'нет'}</div>
+                                    <div className="col-span-2"><strong>Операции:</strong> {savedExam?.anamnesisLife?.surgeryChecked ? `да (${savedExam.anamnesisLife.surgeryText || '—'})` : 'не было'}</div>
                                 </div>
                             </div>
 
                             {/* 4. Последняя коррекция */}
                             {(savedExam?.lastCorrection?.odGlasses || savedExam?.lastCorrection?.osGlasses || savedExam?.lastCorrection?.odContacts || savedExam?.lastCorrection?.osContacts) && (
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">4. Последняя коррекция:</span>
-                                    <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">4. Последняя коррекция:</span>
+                                    <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                         <thead>
                                             <tr className="bg-slate-100 font-bold">
-                                                <th className="border border-slate-300 p-1">Глаз</th>
-                                                <th className="border border-slate-300 p-1">Очки для дали</th>
-                                                <th className="border border-slate-300 p-1">Контактные линзы</th>
-                                                <th className="border border-slate-300 p-1">Очки для близи</th>
+                                                <th className="border border-slate-300 p-0.5">Глаз</th>
+                                                <th className="border border-slate-300 p-0.5">Очки для дали</th>
+                                                <th className="border border-slate-300 p-0.5">Контактные линзы</th>
+                                                <th className="border border-slate-300 p-0.5">Очки для близи</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-blue-700">OD</td>
-                                                <td className="border border-slate-300 p-1">{savedExam.lastCorrection?.odGlasses || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam.lastCorrection?.odContacts || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam.lastCorrection?.odNear || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-blue-700">OD</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam.lastCorrection?.odGlasses || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam.lastCorrection?.odContacts || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam.lastCorrection?.odNear || '—'}</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-teal-700">OS</td>
-                                                <td className="border border-slate-300 p-1">{savedExam.lastCorrection?.osGlasses || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam.lastCorrection?.osContacts || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam.lastCorrection?.osNear || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-teal-700">OS</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam.lastCorrection?.osGlasses || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam.lastCorrection?.osContacts || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam.lastCorrection?.osNear || '—'}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1024,31 +1025,31 @@ export default function PatientDetailPage() {
                             )}
 
                             {/* 5. Рефракция и Циклоплегия */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {/* Рефракция */}
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">Рефракция:</span>
-                                    <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">Рефракция:</span>
+                                    <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                         <thead>
                                             <tr className="bg-slate-100 font-bold">
-                                                <th className="border border-slate-300 p-1">Глаз</th>
-                                                <th className="border border-slate-300 p-1">Dsph</th>
-                                                <th className="border border-slate-300 p-1">Dcyl</th>
-                                                <th className="border border-slate-300 p-1">Axis</th>
+                                                <th className="border border-slate-300 p-0.5">Глаз</th>
+                                                <th className="border border-slate-300 p-0.5">Dsph</th>
+                                                <th className="border border-slate-300 p-0.5">Dcyl</th>
+                                                <th className="border border-slate-300 p-0.5">Axis</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-blue-700">OD</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.refraction?.odSph || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.refraction?.odCyl || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.refraction?.odAx || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-blue-700">OD</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.refraction?.odSph || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.refraction?.odCyl || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.refraction?.odAx || '—'}</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-teal-700">OS</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.refraction?.osSph || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.refraction?.osCyl || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.refraction?.osAx || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-teal-700">OS</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.refraction?.osSph || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.refraction?.osCyl || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.refraction?.osAx || '—'}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1056,28 +1057,28 @@ export default function PatientDetailPage() {
 
                                 {/* Циклоплегия */}
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">Циклоплегия:</span>
-                                    <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">Циклоплегия:</span>
+                                    <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                         <thead>
                                             <tr className="bg-slate-100 font-bold">
-                                                <th className="border border-slate-300 p-1">Глаз</th>
-                                                <th className="border border-slate-300 p-1">Dsph</th>
-                                                <th className="border border-slate-300 p-1">Dcyl</th>
-                                                <th className="border border-slate-300 p-1">Axis</th>
+                                                <th className="border border-slate-300 p-0.5">Глаз</th>
+                                                <th className="border border-slate-300 p-0.5">Dsph</th>
+                                                <th className="border border-slate-300 p-0.5">Dcyl</th>
+                                                <th className="border border-slate-300 p-0.5">Axis</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-blue-700">OD</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.cycloplegia?.odSph || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.cycloplegia?.odCyl || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.cycloplegia?.odAx || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-blue-700">OD</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.cycloplegia?.odSph || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.cycloplegia?.odCyl || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.cycloplegia?.odAx || '—'}</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-teal-700">OS</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.cycloplegia?.osSph || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.cycloplegia?.osCyl || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.cycloplegia?.osAx || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-teal-700">OS</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.cycloplegia?.osSph || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.cycloplegia?.osCyl || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.cycloplegia?.osAx || '—'}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1086,34 +1087,34 @@ export default function PatientDetailPage() {
 
                             {/* 6. Кератометрия */}
                             <div>
-                                <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">Кератометрия:</span>
-                                <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">Кератометрия:</span>
+                                <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                     <thead>
                                         <tr className="bg-slate-100 font-bold">
-                                            <th className="border border-slate-300 p-1" colSpan={3}>OD (Правый глаз)</th>
-                                            <th className="border border-slate-300 p-1" colSpan={3}>OS (Левый глаз)</th>
+                                            <th className="border border-slate-300 p-0.5" colSpan={3}>OD (Правый глаз)</th>
+                                            <th className="border border-slate-300 p-0.5" colSpan={3}>OS (Левый глаз)</th>
                                         </tr>
-                                        <tr className="bg-slate-50 text-[10px]">
-                                            <th className="border border-slate-300 p-1">K1</th>
-                                            <th className="border border-slate-300 p-1">K2</th>
-                                            <th className="border border-slate-300 p-1">K1-K2</th>
-                                            <th className="border border-slate-300 p-1">K1</th>
-                                            <th className="border border-slate-300 p-1">K2</th>
-                                            <th className="border border-slate-300 p-1">K1-K2</th>
+                                        <tr className="bg-slate-50 font-bold">
+                                            <th className="border border-slate-300 p-0.5">K1</th>
+                                            <th className="border border-slate-300 p-0.5">K2</th>
+                                            <th className="border border-slate-300 p-0.5">K1-K2</th>
+                                            <th className="border border-slate-300 p-0.5">K1</th>
+                                            <th className="border border-slate-300 p-0.5">K2</th>
+                                            <th className="border border-slate-300 p-0.5">K1-K2</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td className="border border-slate-300 p-1">{savedExam?.keratometry?.odK1 || '—'}</td>
-                                            <td className="border border-slate-300 p-1">{savedExam?.keratometry?.odK2 || '—'}</td>
-                                            <td className="border border-slate-300 p-1 font-bold text-blue-700">
+                                            <td className="border border-slate-300 p-0.5">{savedExam?.keratometry?.odK1 || '—'}</td>
+                                            <td className="border border-slate-300 p-0.5">{savedExam?.keratometry?.odK2 || '—'}</td>
+                                            <td className="border border-slate-300 p-0.5 font-bold text-blue-700">
                                                 {savedExam?.keratometry?.odK1 && savedExam?.keratometry?.odK2
                                                     ? (parseFloat(savedExam.keratometry.odK2) - parseFloat(savedExam.keratometry.odK1)).toFixed(2)
                                                     : '—'}
                                             </td>
-                                            <td className="border border-slate-300 p-1">{savedExam?.keratometry?.osK1 || '—'}</td>
-                                            <td className="border border-slate-300 p-1">{savedExam?.keratometry?.osK2 || '—'}</td>
-                                            <td className="border border-slate-300 p-1 font-bold text-teal-700">
+                                            <td className="border border-slate-300 p-0.5">{savedExam?.keratometry?.osK1 || '—'}</td>
+                                            <td className="border border-slate-300 p-0.5">{savedExam?.keratometry?.osK2 || '—'}</td>
+                                            <td className="border border-slate-300 p-0.5 font-bold text-teal-700">
                                                 {savedExam?.keratometry?.osK1 && savedExam?.keratometry?.osK2
                                                     ? (parseFloat(savedExam.keratometry.osK2) - parseFloat(savedExam.keratometry.osK1)).toFixed(2)
                                                     : '—'}
@@ -1124,31 +1125,31 @@ export default function PatientDetailPage() {
                             </div>
 
                             {/* 7. Vis без коррекции & Vis с коррекцией */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {/* Vis без коррекции */}
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">Vis без коррекции:</span>
-                                    <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">Vis без коррекции:</span>
+                                    <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                         <thead>
                                             <tr className="bg-slate-100 font-bold">
-                                                <th className="border border-slate-300 p-1">Глаз</th>
-                                                <th className="border border-slate-300 p-1">Вдаль</th>
-                                                <th className="border border-slate-300 p-1">Вблизи</th>
-                                                <th className="border border-slate-300 p-1">Домин.</th>
+                                                <th className="border border-slate-300 p-0.5">Глаз</th>
+                                                <th className="border border-slate-300 p-0.5">Вдаль</th>
+                                                <th className="border border-slate-300 p-0.5">Вблизи</th>
+                                                <th className="border border-slate-300 p-0.5">Домин.</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-blue-700">OD</td>
-                                                <td className="border border-slate-300 p-1 font-bold">{savedExam?.visUncorrected?.odDistance || latestConsult?.visualAcuityOD || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visUncorrected?.odNear || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visUncorrected?.dominantEye === 'OD' ? '👁️' : '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-blue-700">OD</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold">{savedExam?.visUncorrected?.odDistance || latestConsult?.visualAcuityOD || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visUncorrected?.odNear || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visUncorrected?.dominantEye === 'OD' ? '👁️' : '—'}</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-teal-700">OS</td>
-                                                <td className="border border-slate-300 p-1 font-bold">{savedExam?.visUncorrected?.osDistance || latestConsult?.visualAcuityOS || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visUncorrected?.osNear || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visUncorrected?.dominantEye === 'OS' ? '👁️' : '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-teal-700">OS</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold">{savedExam?.visUncorrected?.osDistance || latestConsult?.visualAcuityOS || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visUncorrected?.osNear || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visUncorrected?.dominantEye === 'OS' ? '👁️' : '—'}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1156,34 +1157,34 @@ export default function PatientDetailPage() {
 
                                 {/* Vis с коррекцией */}
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">Vis с коррекцией:</span>
-                                    <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">Vis с коррекцией:</span>
+                                    <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                         <thead>
                                             <tr className="bg-slate-100 font-bold">
-                                                <th className="border border-slate-300 p-1">Глаз</th>
-                                                <th className="border border-slate-300 p-1">Dsph</th>
-                                                <th className="border border-slate-300 p-1">Dcyl</th>
-                                                <th className="border border-slate-300 p-1">Axis</th>
-                                                <th className="border border-slate-300 p-1">Visus</th>
-                                                <th className="border border-slate-300 p-1">Адд</th>
+                                                <th className="border border-slate-300 p-0.5">Глаз</th>
+                                                <th className="border border-slate-300 p-0.5">Dsph</th>
+                                                <th className="border border-slate-300 p-0.5">Dcyl</th>
+                                                <th className="border border-slate-300 p-0.5">Axis</th>
+                                                <th className="border border-slate-300 p-0.5">Visus</th>
+                                                <th className="border border-slate-300 p-0.5">Адд</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-blue-700">OD</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.odSph || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.odCyl || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.odAx || '—'}</td>
-                                                <td className="border border-slate-300 p-1 font-bold">{savedExam?.visCorrected?.odVisus || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.odAdd || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-blue-700">OD</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.odSph || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.odCyl || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.odAx || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold">{savedExam?.visCorrected?.odVisus || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.odAdd || '—'}</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-teal-700">OS</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.osSph || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.osCyl || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.osAx || '—'}</td>
-                                                <td className="border border-slate-300 p-1 font-bold">{savedExam?.visCorrected?.osVisus || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.visCorrected?.osAdd || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-teal-700">OS</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.osSph || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.osCyl || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.osAx || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold">{savedExam?.visCorrected?.osVisus || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.visCorrected?.osAdd || '—'}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1191,28 +1192,28 @@ export default function PatientDetailPage() {
                             </div>
 
                             {/* 8. Эксцентриситет & ПЗО */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {/* Эксцентриситет */}
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">Эксцентриситет:</span>
-                                    <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">Эксцентриситет:</span>
+                                    <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                         <thead>
                                             <tr className="bg-slate-100 font-bold">
-                                                <th className="border border-slate-300 p-1">Глаз</th>
-                                                <th className="border border-slate-300 p-1">Горизонт. (гор.)</th>
-                                                <th className="border border-slate-300 p-1">Вертикальн. (верт.)</th>
+                                                <th className="border border-slate-300 p-0.5">Глаз</th>
+                                                <th className="border border-slate-300 p-0.5">Горизонт. (гор.)</th>
+                                                <th className="border border-slate-300 p-0.5">Вертикальн. (верт.)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-blue-700">OD</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.eccentricity?.odHoriz || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.eccentricity?.odVert || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-blue-700">OD</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.eccentricity?.odHoriz || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.eccentricity?.odVert || '—'}</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-teal-700">OS</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.eccentricity?.osHoriz || '—'}</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.eccentricity?.osVert || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-teal-700">OS</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.eccentricity?.osHoriz || '—'}</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.eccentricity?.osVert || '—'}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1220,22 +1221,22 @@ export default function PatientDetailPage() {
 
                                 {/* ПЗО */}
                                 <div>
-                                    <span className="font-bold text-slate-900 block mb-1 uppercase text-[10px]">ПЗО (Переднее-задняя ось / длина глаза):</span>
-                                    <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                    <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">ПЗО (Переднее-задняя ось / длина глаза):</span>
+                                    <table className="w-full text-center border-collapse border border-slate-300 print-table">
                                         <thead>
                                             <tr className="bg-slate-100 font-bold">
-                                                <th className="border border-slate-300 p-1">Глаз</th>
-                                                <th className="border border-slate-300 p-1">Значение ПЗО (мм)</th>
+                                                <th className="border border-slate-300 p-0.5">Глаз</th>
+                                                <th className="border border-slate-300 p-0.5">Значение ПЗО (мм)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-blue-700">OD</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.pzo?.od ? `${savedExam.pzo.od} мм` : '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-blue-700">OD</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.pzo?.od ? `${savedExam.pzo.od} мм` : '—'}</td>
                                             </tr>
                                             <tr>
-                                                <td className="border border-slate-300 p-1 font-bold text-teal-700">OS</td>
-                                                <td className="border border-slate-300 p-1">{savedExam?.pzo?.os ? `${savedExam.pzo.os} мм` : '—'}</td>
+                                                <td className="border border-slate-300 p-0.5 font-bold text-teal-700">OS</td>
+                                                <td className="border border-slate-300 p-0.5">{savedExam?.pzo?.os ? `${savedExam.pzo.os} мм` : '—'}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1244,141 +1245,70 @@ export default function PatientDetailPage() {
 
                             {/* 9. Биомикроскопия */}
                             <div>
-                                <span className="font-bold text-slate-900 block mb-0.5 uppercase text-[10px]">Биомикроскопия (Передний отрезок):</span>
-                                <p className="bg-slate-50 p-2 rounded border border-slate-200 leading-relaxed">{biomicroscopyText}</p>
+                                <span className="font-bold text-slate-900 block uppercase print:text-[7.5px]">Биомикроскопия (Передний отрезок):</span>
+                                <p className="bg-slate-50 p-1 rounded border border-slate-200 leading-tight print:text-[8px]">{biomicroscopyText}</p>
                             </div>
 
                             {/* 10. Диагноз */}
                             {diagnosis && (
-                                <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg">
-                                    <span className="text-red-900 uppercase text-[10px] font-bold block">Окончательный диагноз:</span>
-                                    <p className="text-red-950 font-bold text-sm">{diagnosis}</p>
+                                <div className="p-1 bg-red-50 border border-red-200 rounded">
+                                    <span className="text-red-900 uppercase text-[7.5px] font-bold block">Окончательный диагноз:</span>
+                                    <p className="text-red-950 font-bold print:text-[9px]">{diagnosis}</p>
                                 </div>
                             )}
 
                             {/* 11. Назначения и рекомендации */}
                             {recommendations && (
-                                <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                                    <span className="text-emerald-900 uppercase text-[10px] font-bold block">Назначения и рекомендации:</span>
-                                    <p className="text-emerald-950 font-medium">{recommendations}</p>
+                                <div className="p-1 bg-emerald-50 border border-emerald-200 rounded">
+                                    <span className="text-emerald-900 uppercase text-[7.5px] font-bold block">Назначения и рекомендации:</span>
+                                    <p className="text-emerald-950 font-medium print:text-[8.5px]">{recommendations}</p>
                                 </div>
                             )}
                         </div>
                     );
                 })()}
 
-                {/* Последняя консультация (если есть) */}
-                {consultations.length > 0 && (
-                    <div className="mb-8">
-                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
-                            <Activity className="w-5 h-5 text-teal-500" />
-                            <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Последний визит</h2>
-                        </div>
-                        {(() => {
-                            const c = consultations[0];
-                            return (
-                                <div className="text-sm">
-                                    <div className="flex items-center gap-4 mb-4 bg-teal-50 text-teal-800 px-4 py-2 rounded-lg font-medium inline-flex">
-                                        <Calendar className="w-4 h-4 text-teal-600" />
-                                        <span>{new Date(c.visitDate).toLocaleDateString('ru-RU')}</span>
-                                        {c.doctor && <span className="border-l border-teal-200 pl-4 ml-2">Врач: {c.doctor.fullName}</span>}
-                                    </div>
-                                    
-                                    {(c.visualAcuityOD || c.visualAcuityOS || c.intraocularPressureOD || c.intraocularPressureOS) && (
-                                        <div className="rounded-xl overflow-hidden border border-gray-200 print:mb-3 mb-6">
-                                            <table className="w-full text-center print:text-xs">
-                                                <thead>
-                                                    <tr className="bg-gray-50 border-b border-gray-200">
-                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-500 uppercase print:text-[9px] text-xs tracking-wider">Показатель</th>
-                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-primary-600 uppercase print:text-[9px] text-xs tracking-wider bg-primary-50/50">OD (Правый)</th>
-                                                        <th className="print:py-1 print:px-2 py-3 px-4 font-bold text-teal-600 uppercase print:text-[9px] text-xs tracking-wider bg-teal-50/50">OS (Левый)</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-100">
-                                                    {(c.visualAcuityOD || c.visualAcuityOS) && (
-                                                        <tr>
-                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-medium text-gray-600 text-left">Острота зрения (Visus)</td>
-                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.visualAcuityOD || '—'}</td>
-                                                            <td className="print:py-1 print:px-2 py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.visualAcuityOS || '—'}</td>
-                                                        </tr>
-                                                    )}
-                                                    {(c.intraocularPressureOD || c.intraocularPressureOS) && (
-                                                        <tr>
-                                                            <td className="py-3 px-4 font-medium text-gray-600 text-left">ВГД (мм рт.ст.)</td>
-                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-primary-50/20">{c.intraocularPressureOD || '—'}</td>
-                                                            <td className="py-3 px-4 font-bold text-gray-900 bg-teal-50/20">{c.intraocularPressureOS || '—'}</td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-
-                                    {c.diagnosis && (
-                                        <div className="mb-4">
-                                            <span className="text-xs font-bold text-red-400 uppercase mb-1 block">Диагноз</span>
-                                            <p className="text-gray-900 font-medium bg-red-50 p-3 rounded-lg border border-red-100">{c.diagnosis}</p>
-                                        </div>
-                                    )}
-                                    {c.treatment && (
-                                        <div className="mb-4">
-                                            <span className="text-xs font-bold text-emerald-500 uppercase mb-1 block">Рекомендации / Лечение</span>
-                                            <p className="text-gray-800 bg-emerald-50 p-3 rounded-lg border border-emerald-100">{c.treatment}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })()}
-                    </div>
-                )}
-
-                {/* Последний рецепт (если есть) */}
+                {/* Актуальный рецепт (если есть, компактный вид для печати) */}
                 {patient.prescriptions.length > 0 && (
-                    <div className="mb-8">
-                        <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-200">
-                            <Eye className="w-5 h-5 text-indigo-500" />
-                            <h2 className="text-lg font-bold text-gray-800 uppercase tracking-wide">Актуальный рецепт</h2>
+                    <div className="print:mb-1 mb-8">
+                        <div className="flex items-center gap-1 print:mb-0.5 mb-2 pb-0.5 border-b border-gray-200">
+                            <Eye className="w-3.5 h-3.5 text-indigo-500 print:hidden" />
+                            <h2 className="print:text-[9.5px] text-lg font-bold text-gray-800 uppercase tracking-wide">Актуальный рецепт</h2>
                         </div>
                         {(() => {
                             const rx = patient.prescriptions[0];
                             return (
-                                <div className="text-sm">
-                                    <p className="mb-4 flex items-center gap-2"><span className="text-gray-400 font-medium">Выписан:</span> <strong className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md">{new Date(rx.prescribedAt).toLocaleDateString('ru-RU')}</strong></p>
-                                    <div className="rounded-xl overflow-hidden border border-indigo-100 mb-4 shadow-sm">
-                                        <table className="w-full text-center">
-                                            <thead>
-                                                <tr className="bg-indigo-50 border-b border-indigo-100">
-                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Глаз</th>
-                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Sph</th>
-                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Cyl</th>
-                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Ax</th>
-                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">Add</th>
-                                                    <th className="py-3 px-3 font-bold text-indigo-800 uppercase text-xs tracking-wider">PD</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-indigo-50">
-                                                <tr>
-                                                    <td className="py-3 px-3 font-bold text-primary-600 bg-white">OD</td>
-                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odSph)}</td>
-                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odCyl)}</td>
-                                                    <td className="py-3 px-3 font-medium bg-white">{rx.odAx || '—'}</td>
-                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odAdd)}</td>
-                                                    <td className="py-3 px-3 font-medium bg-white">{fmt(rx.odPd, false)}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="py-3 px-3 font-bold text-teal-600 bg-gray-50/50">OS</td>
-                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osSph)}</td>
-                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osCyl)}</td>
-                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{rx.osAx || '—'}</td>
-                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osAdd)}</td>
-                                                    <td className="py-3 px-3 font-medium bg-gray-50/50">{fmt(rx.osPd, false)}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div className="flex gap-8">
-                                        {rx.notes && <p className="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100"><span className="text-gray-400 font-medium">Заметки:</span> <span className="text-gray-800 ml-2">{rx.notes}</span></p>}
-                                    </div>
+                                <div className="print:text-[8px] text-sm">
+                                    <table className="w-full text-center border-collapse border border-indigo-100 print-table">
+                                        <thead>
+                                            <tr className="bg-indigo-50 font-bold">
+                                                <th className="p-0.5 text-indigo-800 uppercase">Глаз</th>
+                                                <th className="p-0.5 text-indigo-800 uppercase">Sph</th>
+                                                <th className="p-0.5 text-indigo-800 uppercase">Cyl</th>
+                                                <th className="p-0.5 text-indigo-800 uppercase">Ax</th>
+                                                <th className="p-0.5 text-indigo-800 uppercase">Add</th>
+                                                <th className="p-0.5 text-indigo-800 uppercase">PD</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td className="p-0.5 font-bold text-primary-600">OD</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.odSph)}</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.odCyl)}</td>
+                                                <td className="p-0.5 font-medium">{rx.odAx || '—'}</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.odAdd)}</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.odPd, false)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="p-0.5 font-bold text-teal-600">OS</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.osSph)}</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.osCyl)}</td>
+                                                <td className="p-0.5 font-medium">{rx.osAx || '—'}</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.osAdd)}</td>
+                                                <td className="p-0.5 font-medium">{fmt(rx.osPd, false)}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             );
                         })()}
@@ -1386,21 +1316,20 @@ export default function PatientDetailPage() {
                 )}
 
                 {/* Footer / Подписи */}
-                <div className="mt-12 pt-8 border-t-2 border-gray-100 flex justify-between items-end text-sm">
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <p className="text-xs font-bold text-gray-400 uppercase mb-1">Документ сформирован</p>
-                        <p className="font-bold text-gray-800 text-base">{new Date().toLocaleDateString('ru-RU')} в {new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}</p>
-                        <p className="text-[10px] text-gray-400 mt-1 font-medium">Сформировано в медицинской системе LensFlow CRM</p>
+                <div className="print:mt-1.5 print:pt-1 mt-12 pt-8 border-t border-gray-200 flex justify-between items-end print:text-[8px] text-sm">
+                    <div className="bg-gray-50 p-1.5 rounded border border-gray-100">
+                        <p className="font-bold text-gray-800 print:text-[8.5px]">Сформирован: {new Date().toLocaleDateString('ru-RU')} в {new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}</p>
+                        <p className="print:text-[7px] text-gray-400 font-medium">Медицинская система LensFlow CRM</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs font-bold text-gray-400 uppercase mb-2">Врач (ФИО, подпись)</p>
-                        <div className="flex gap-4 items-end">
-                            <p className="font-bold text-gray-800 text-lg border-b-2 border-gray-200 pb-1 px-4 min-w-[200px] text-center">
+                        <p className="font-bold text-gray-500 uppercase print:text-[7.5px] print:mb-0.5 mb-2">Врач (ФИО, подпись)</p>
+                        <div className="flex gap-2 items-end">
+                            <p className="font-bold text-gray-800 print:text-[9px] text-lg border-b border-gray-300 pb-0.5 px-2 min-w-[140px] text-center">
                                 {consultations.length > 0 && consultations[0].doctor 
                                     ? consultations[0].doctor.fullName 
                                     : (patient.doctor ? patient.doctor.fullName : (session?.user?.name || ''))}
                             </p>
-                            <p className="border-b-2 border-gray-200 w-32 pb-1"></p>
+                            <p className="border-b border-gray-300 w-24 pb-0.5"></p>
                         </div>
                     </div>
                 </div>
