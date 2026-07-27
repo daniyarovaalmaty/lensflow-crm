@@ -793,11 +793,12 @@ export default function PatientDetailPage() {
                         </div>
                         <div>
                             <h1 className="print:text-lg text-2xl font-bold tracking-wider text-primary-900 uppercase">Медицинская карта</h1>
-                            <p className="text-primary-600 font-medium print:text-[10px] mt-1">{session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Офтальмологический центр New Eye'}</p>
+                            <p className="text-primary-600 font-medium print:text-[10px] mt-1">{(patient as any).organization?.name || session?.user?.profile?.opticName || session?.user?.profile?.clinic || 'Бала Vision'}</p>
                         </div>
                     </div>
                     <div className="text-right text-sm text-gray-500 space-y-1">
-                        <p className="flex items-center justify-end gap-2"><MapPin className="w-3.5 h-3.5 text-primary-400" /> г. Алматы, Райымбека 217</p>
+                        <p className="flex items-center justify-end gap-2"><MapPin className="w-3.5 h-3.5 text-primary-400" /> {(patient as any).organization?.actualAddress || (patient as any).organization?.address || 'г. Алматы, Райымбека 217'}</p>
+                        {(patient as any).organization?.inn && <p className="text-xs text-gray-500 font-mono">БИН: {(patient as any).organization?.inn}</p>}
                     </div>
                 </div>
 
@@ -948,7 +949,9 @@ export default function PatientDetailPage() {
                         <p className="text-xs font-bold text-gray-400 uppercase mb-2">Врач (ФИО, подпись)</p>
                         <div className="flex gap-4 items-end">
                             <p className="font-bold text-gray-800 text-lg border-b-2 border-gray-200 pb-1 px-4 min-w-[200px] text-center">
-                                {consultations.length > 0 && consultations[0].doctor ? consultations[0].doctor.fullName : ''}
+                                {consultations.length > 0 && consultations[0].doctor 
+                                    ? consultations[0].doctor.fullName 
+                                    : (patient.doctor ? patient.doctor.fullName : (session?.user?.name || ''))}
                             </p>
                             <p className="border-b-2 border-gray-200 w-32 pb-1"></p>
                         </div>
