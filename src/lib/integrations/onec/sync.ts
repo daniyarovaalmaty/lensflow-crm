@@ -10,7 +10,7 @@
  * - Structured sync results
  */
 
-import { PrismaClient } from '@prisma/client';
+// PrismaClient type omitted — using `any` for compatibility with extended prisma client
 import { OneCClient, OneCError } from './client';
 import { parseDataPackage, buildUploadPackage } from './xml-parser';
 import {
@@ -31,14 +31,14 @@ import {
 
 export class OneCSyncService {
   private readonly client: OneCClient;
-  private readonly prisma: PrismaClient;
+  private readonly prisma: any;
   private readonly orgId: string;
   private readonly exchangeConfig: OneCExchangeConfig;
   private exchangeNodeCreated = false;
 
   constructor(
     client: OneCClient,
-    prisma: PrismaClient,
+    prisma: any,
     orgId: string,
     exchangeConfig?: Partial<OneCExchangeConfig>,
   ) {
