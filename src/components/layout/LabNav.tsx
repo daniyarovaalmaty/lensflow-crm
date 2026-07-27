@@ -49,7 +49,7 @@ export default function LabNav() {
                 {/* Desktop nav — static, no scroll */}
                 <div className="hidden md:flex items-center flex-1">
                     {visibleItems.map(item => {
-                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                        const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && !(item.href === '/laboratory/settings' && pathname.startsWith('/laboratory/settings/onec')));
                         return (
                             <Link
                                 key={item.href}
@@ -105,7 +105,7 @@ export default function LabNav() {
                 <div className="md:hidden border-t border-gray-100 bg-white shadow-lg">
                     <div className="px-4 py-2 space-y-1">
                         {visibleItems.map(item => {
-                            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                            const isActive = pathname === item.href || (pathname.startsWith(item.href + '/') && !(item.href === '/laboratory/settings' && pathname.startsWith('/laboratory/settings/onec')));
                             return (
                                 <Link
                                     key={item.href}
