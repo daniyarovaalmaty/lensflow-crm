@@ -140,7 +140,7 @@ export async function PATCH(
             };
 
             if (newStatus === 'new_order' && order.status === 'draft') {
-                const message = `🚨 Новый заказ №${orderNumber} от врача ${order.doctorName?.trim() || 'Неизвестно'}! Сумма: ${(order.totalPrice || 0).toLocaleString('ru-RU')} ₸. Ожидает проверки!`;
+                const message = `✅ Заказ №${orderNumber} от врача ${order.doctorName?.trim() || 'Неизвестно'} подтвержден бухгалтером!\nСумма: ${(order.totalPrice || 0).toLocaleString('ru-RU')} ₸.\nПередан в лабораторию на проверку.`;
                 const orgName = (updated.organization?.name || '').toLowerCase();
                 const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye') || orgName.includes('аймакс');
                 if (isAraiClinic) {
