@@ -69,11 +69,11 @@ const DEFAULT_BIOMICROSCOPY = `OU- веки и слезные органы бе�
 
 export default function PrimaryExamForm({ initialData, onChange, readOnly = false }: PrimaryExamFormProps) {
     const [data, setData] = useState<PrimaryExamData>(() => ({
-        complaints: initialData?.complaints ?? 'на низкое зрение вдаль',
-        anamnesisDisease: initialData?.anamnesisDisease ?? 'Носит очки для дали. Пришел/шла на подбор ОКЛ.',
+        complaints: initialData?.complaints ?? '',
+        anamnesisDisease: initialData?.anamnesisDisease ?? '',
         anamnesisLife: {
             allergyChecked: initialData?.anamnesisLife?.allergyChecked ?? false,
-            allergyText: initialData?.anamnesisLife?.allergyText ?? 'не переносит - пищевая, поллиноз',
+            allergyText: initialData?.anamnesisLife?.allergyText ?? '',
             heredityChecked: initialData?.anamnesisLife?.heredityChecked ?? false,
             heredityText: initialData?.anamnesisLife?.heredityText ?? '',
             medicationChecked: initialData?.anamnesisLife?.medicationChecked ?? false,
@@ -92,12 +92,12 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
             osNear: initialData?.lastCorrection?.osNear ?? '',
         },
         refraction: {
-            odSph: initialData?.refraction?.odSph ?? '-3.87',
-            odCyl: initialData?.refraction?.odCyl ?? '-0.62',
-            odAx: initialData?.refraction?.odAx ?? '168',
-            osSph: initialData?.refraction?.osSph ?? '-4.00',
-            osCyl: initialData?.refraction?.osCyl ?? '-0.75',
-            osAx: initialData?.refraction?.osAx ?? '16',
+            odSph: initialData?.refraction?.odSph ?? '',
+            odCyl: initialData?.refraction?.odCyl ?? '',
+            odAx: initialData?.refraction?.odAx ?? '',
+            osSph: initialData?.refraction?.osSph ?? '',
+            osCyl: initialData?.refraction?.osCyl ?? '',
+            osAx: initialData?.refraction?.osAx ?? '',
         },
         cycloplegia: {
             odSph: initialData?.cycloplegia?.odSph ?? '',
@@ -108,16 +108,16 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
             osAx: initialData?.cycloplegia?.osAx ?? '',
         },
         keratometry: {
-            odK1: initialData?.keratometry?.odK1 ?? '42.29',
-            odK2: initialData?.keratometry?.odK2 ?? '43.92',
-            osK1: initialData?.keratometry?.osK1 ?? '42.61',
-            osK2: initialData?.keratometry?.osK2 ?? '44.50',
+            odK1: initialData?.keratometry?.odK1 ?? '',
+            odK2: initialData?.keratometry?.odK2 ?? '',
+            osK1: initialData?.keratometry?.osK1 ?? '',
+            osK2: initialData?.keratometry?.osK2 ?? '',
         },
         visUncorrected: {
-            odDistance: initialData?.visUncorrected?.odDistance ?? '0.1',
+            odDistance: initialData?.visUncorrected?.odDistance ?? '',
             odNear: initialData?.visUncorrected?.odNear ?? '',
-            dominantEye: initialData?.visUncorrected?.dominantEye ?? 'OD',
-            osDistance: initialData?.visUncorrected?.osDistance ?? '0.1',
+            dominantEye: initialData?.visUncorrected?.dominantEye ?? '',
+            osDistance: initialData?.visUncorrected?.osDistance ?? '',
             osNear: initialData?.visUncorrected?.osNear ?? '',
         },
         visCorrected: {
@@ -135,17 +135,17 @@ export default function PrimaryExamForm({ initialData, onChange, readOnly = fals
             osNear: initialData?.visCorrected?.osNear ?? '',
         },
         eccentricity: {
-            odHoriz: initialData?.eccentricity?.odHoriz ?? '0.61',
-            odVert: initialData?.eccentricity?.odVert ?? '0.68',
-            osHoriz: initialData?.eccentricity?.osHoriz ?? '0.55',
-            osVert: initialData?.eccentricity?.osVert ?? '0.69',
+            odHoriz: initialData?.eccentricity?.odHoriz ?? '',
+            odVert: initialData?.eccentricity?.odVert ?? '',
+            osHoriz: initialData?.eccentricity?.osHoriz ?? '',
+            osVert: initialData?.eccentricity?.osVert ?? '',
         },
         pzo: {
             od: initialData?.pzo?.od ?? '',
             os: initialData?.pzo?.os ?? '',
         },
-        biomicroscopy: initialData?.biomicroscopy ?? DEFAULT_BIOMICROSCOPY,
-        diagnosis: initialData?.diagnosis ?? 'OU - Миопия средней степени. Сложный миопический астигматизм.',
+        biomicroscopy: initialData?.biomicroscopy ?? '',
+        diagnosis: initialData?.diagnosis ?? '',
     }));
 
     useEffect(() => {
