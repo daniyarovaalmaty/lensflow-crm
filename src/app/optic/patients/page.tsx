@@ -63,7 +63,7 @@ export default function PatientsPage() {
     const [showModal, setShowModal] = useState(false);
     const searchTimer = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', profession: '', parentId: '' as string });
+    const [form, setForm] = useState({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', city: '', profession: '', parentId: '' as string, isChild: false, parentName: '', parentPhone: '' });
     const [saving, setSaving] = useState(false);
     const [dedupMsg, setDedupMsg] = useState('');
 
@@ -139,7 +139,7 @@ export default function PatientsPage() {
             if (res.ok) {
                 const patient = await res.json();
                 setShowModal(false);
-                setForm({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', profession: '', parentId: '' });
+                setForm({ name: '', phone: '', email: '', birthDate: '', gender: '', notes: '', iin: '', address: '', city: '', profession: '', parentId: '', isChild: false, parentName: '', parentPhone: '' });
                 router.push(`/optic/patients/${patient.id}`);
             }
         } finally {
