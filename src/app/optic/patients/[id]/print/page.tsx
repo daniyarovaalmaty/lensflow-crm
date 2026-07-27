@@ -183,7 +183,7 @@ export default async function FullPatientMedicalCardPrintPage({ params }: { para
             {/* Шапка организации (Округлые края) */}
             <div className="bg-slate-50/90 border-l-4 border-blue-600 p-4 sm:p-5 mb-6 rounded-2xl border-y border-r border-slate-200 flex justify-between items-center font-sans">
                 <div>
-                    <h1 className="text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА</h1>
+                    <h1 className="text-xl font-bold tracking-wide text-blue-950 uppercase leading-none font-sans">МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА</h1>
                     <p className="text-blue-600 font-semibold text-sm mt-1 font-sans">Медицинский протокол обследования глаз | {clinicName}</p>
                 </div>
                 <div className="text-right text-xs text-slate-600 max-w-[60%] space-y-0.5 font-sans">
@@ -231,7 +231,7 @@ export default async function FullPatientMedicalCardPrintPage({ params }: { para
             {/* Первичный осмотр врача-офтальмолога (ВСЕ 14 РАЗДЕЛОВ) */}
             <div className="mb-6 border border-slate-200 rounded-2xl p-4 bg-white text-xs text-slate-800 space-y-3 font-sans">
                 <div className="border-b border-slate-200 pb-2">
-                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide font-sans">ПЕРВИЧНЫЙ ОСМОТР ВРАЧА-ОФТАЛЬМОЛОГА</h2>
+                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide font-sans">ПРОТОКОЛ ПЕРВИЧНОГО ОСМОТРА ВРАЧА-ОФТАЛЬМОЛОГА</h2>
                 </div>
 
                 {complaints && (
