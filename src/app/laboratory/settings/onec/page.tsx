@@ -177,7 +177,7 @@ export default function OneCSettingsPage() {
         <div className="max-w-3xl mx-auto py-8 px-4">
             {/* Header */}
             <div className="flex items-center gap-3 mb-8">
-                <Link href="/optic/settings" className="text-gray-400 hover:text-gray-600">
+                <Link href="/laboratory/settings" className="text-gray-400 hover:text-gray-600">
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
