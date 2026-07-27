@@ -917,6 +917,112 @@ export default function PatientDetailPage() {
                     </div>
                 </div>
 
+                {/* Первичный осмотр врача-офтальмолога в печатной форме */}
+                {(() => {
+                    const exam = primaryExamState || (patient as any)?.metadata?.primaryExam;
+                    if (!exam) return null;
+                    return (
+                        <div className="mb-8 border border-blue-200 rounded-2xl p-5 bg-blue-50/30 print:p-4 print:mb-4">
+                            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-blue-200">
+                                <Stethoscope className="w-5 h-5 text-blue-600" />
+                                <h2 className="text-base font-bold text-blue-900 uppercase tracking-wide">Первичный осмотр врача-офтальмолога</h2>
+                            </div>
+                            
+                            <div className="space-y-3 text-xs text-slate-800">
+                                {exam.complaints && (
+                                    <p><strong className="text-slate-900">1. Жалобы:</strong> {exam.complaints}</p>
+                                )}
+                                {exam.anamnesisDisease && (
+                                    <p><strong className="text-slate-900">2. Анамнез заболевания:</strong> {exam.anamnesisDisease}</p>
+                                )}
+                                {exam.anamnesisLife && (
+                                    <p><strong className="text-slate-900">3. Анамнез жизни:</strong> {exam.anamnesisLife}</p>
+                                )}
+
+                                {/* Таблица визуса / остроты зрения */}
+                                {(exam.visUncorrected || exam.visCorrected) && (
+                                    <div className="mt-3">
+                                        <p className="font-bold text-slate-900 mb-1">4. Острота зрения (Visus):</p>
+                                        <table className="w-full text-center border-collapse border border-slate-300 text-xs">
+                                            <thead>
+                                                <tr className="bg-slate-100">
+                                                    <th className="border border-slate-300 p-1">Глаз</th>
+                                                    <th className="border border-slate-300 p-1">Без корр. (Вдаль)</th>
+                                                    <th className="border border-slate-300 p-1">С корр. (Visus)</th>
+                                                    <th className="border border-slate-300 p-1">Sph</th>
+                                                    <th className="border border-slate-300 p-1">Cyl</th>
+                                                    <th className="border border-slate-300 p-1">Ax</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td className="border border-slate-300 p-1 font-bold text-blue-700">OD (Правый)</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visUncorrected?.odDistance || '—'}</td>
+                                                    <td className="border border-slate-300 p-1 font-bold">{exam.visCorrected?.odVisus || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.odSph || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.odCyl || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.odAxis || '—'}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="border border-slate-300 p-1 font-bold text-teal-700">OS (Левый)</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visUncorrected?.osDistance || '—'}</td>
+                                                    <td className="border border-slate-300 p-1 font-bold">{exam.visCorrected?.osVisus || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.osSph || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.osCyl || '—'}</td>
+                                                    <td className="border border-slate-300 p-1">{exam.visCorrected?.osAxis || '—'}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+
+                                {/* Биомикроскопия и Офтальмоскопия */}
+                                {exam.biomicroscopy && (
+                                    <div className="mt-2">
+                                        <strong className="text-slate-900 block mb-0.5">8. Биомикроскопия (Передний отрезок):</strong>
+                                        <p className="text-slate-700 bg-white p-2 rounded border border-slate-200">
+                                            {[
+                                                exam.biomicroscopy.eyelids && `Веки: ${exam.biomicroscopy.eyelids}`,
+                                                exam.biomicroscopy.cornea && `Роговица: ${exam.biomicroscopy.cornea}`,
+                                                exam.biomicroscopy.iris && `Радужка: ${exam.biomicroscopy.iris}`,
+                                                exam.biomicroscopy.lens && `Хрусталик: ${exam.biomicroscopy.lens}`,
+                                            ].filter(Boolean).join('; ') || 'Без патологий'}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {exam.ophthalmoscopy && (
+                                    <div className="mt-2">
+                                        <strong className="text-slate-900 block mb-0.5">9. Офтальмоскопия (Глазное дно):</strong>
+                                        <p className="text-slate-700 bg-white p-2 rounded border border-slate-200">
+                                            {[
+                                                exam.ophthalmoscopy.opticDisc && `ДЗН: ${exam.ophthalmoscopy.opticDisc}`,
+                                                exam.ophthalmoscopy.macula && `Макула: ${exam.ophthalmoscopy.macula}`,
+                                                exam.ophthalmoscopy.vessels && `Сосуды: ${exam.ophthalmoscopy.vessels}`,
+                                                exam.ophthalmoscopy.retina && `Сетчатка: ${exam.ophthalmoscopy.retina}`,
+                                            ].filter(Boolean).join('; ') || 'Без особенностей'}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {exam.diagnosis && (
+                                    <div className="mt-3 p-2.5 bg-red-50 border border-red-200 rounded-lg">
+                                        <strong className="text-red-900 uppercase text-[11px] block">Окончательный диагноз:</strong>
+                                        <p className="text-red-950 font-bold text-sm">{exam.diagnosis}</p>
+                                    </div>
+                                )}
+
+                                {exam.recommendations && (
+                                    <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                        <strong className="text-emerald-900 uppercase text-[11px] block">Назначения и рекомендации:</strong>
+                                        <p className="text-emerald-950 font-medium">{exam.recommendations}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })()}
+
                 {/* Последняя консультация (если есть) */}
                 {consultations.length > 0 && (
                     <div className="mb-8">
