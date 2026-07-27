@@ -187,7 +187,7 @@ export async function POST(request: Request) {
     let medmundusId: number | null = null;
     try {
         medmundusId = await mmCreatePatient({
-            fullName: name.trim(),
+            name: name.trim(),
             phone: effectivePhone,
             email: email?.trim() || undefined,
             birthDate: birthDate || undefined,
