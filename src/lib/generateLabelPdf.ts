@@ -188,19 +188,19 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.line(0, 7, W, 7);
 
     // ===== PATIENT ROW =====
-    // Order ID (Left, Large Bold)
+    // Order ID (Left, Extra Large & Bold: 13pt)
     doc.setFont('Roboto', 'bold');
     doc.setTextColor(0, 0, 0);
-    let orderIdFontSize = 7.5;
+    let orderIdFontSize = 13;
     doc.setFontSize(orderIdFontSize);
     const orderIdText = String(order.order_id || '');
     
-    // Scale order_id if wider than 14mm
-    while (doc.getTextWidth(orderIdText) > 14 && orderIdFontSize > 5) {
+    // Scale order_id if wider than 16mm (for long order IDs like ITG-1000000180)
+    while (doc.getTextWidth(orderIdText) > 16 && orderIdFontSize > 6.5) {
         orderIdFontSize -= 0.5;
         doc.setFontSize(orderIdFontSize);
     }
-    doc.text(orderIdText, 2, 10);
+    doc.text(orderIdText, 2, 10.4);
     const orderIdWidth = doc.getTextWidth(orderIdText);
 
     // Eye Label (Right)
