@@ -730,9 +730,11 @@ export class OneCSyncService {
 
     try {
       await this.client.createExchangeNode(
-        this.exchangeConfig.exchangePlanName,
-        this.exchangeConfig.nodeCode,
-        this.exchangeConfig.nodeDescription,
+        `<Structure>
+          <Property name="ExchangePlanName"><Value>${this.exchangeConfig.exchangePlanName}</Value></Property>
+          <Property name="NodeCode"><Value>${this.exchangeConfig.nodeCode}</Value></Property>
+          <Property name="NodeDescription"><Value>${this.exchangeConfig.nodeDescription}</Value></Property>
+        </Structure>`
       );
       this.exchangeNodeCreated = true;
     } catch (err) {
