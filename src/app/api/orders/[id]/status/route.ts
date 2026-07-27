@@ -139,37 +139,12 @@ export async function PATCH(
                 return null;
             };
 
-            if (newStatus === 'new_order' && order.status === 'draft') {
-                const message = `✅ Заказ №${orderNumber} от врача ${order.doctorName?.trim() || 'Неизвестно'} подтвержден бухгалтером!\nСумма: ${(order.totalPrice || 0).toLocaleString('ru-RU')} ₸.\nПередан в лабораторию на проверку.`;
-                const orgName = (updated.organization?.name || '').toLowerCase();
-                const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye') || orgName.includes('аймакс');
-                if (isAraiClinic) {
-                    sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
-                }
-            } else if (newStatus === 'ready' && order.status !== 'ready') {
-                const doctorPhone = await findDoctorPhone();
-                if (doctorPhone) {
-                    const cleanPhone = String(doctorPhone).replace(/\D/g, '');
-                    if (cleanPhone.length >= 10) {
-                        const message = `✅ Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) успешно изготовлен!`;
-                        sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
-                    }
-                }
-            } else if ((newStatus === 'shipped' || newStatus === 'out_for_delivery') && order.status !== 'shipped' && order.status !== 'out_for_delivery') {
+            if ((newStatus === 'shipped' || newStatus === 'out_for_delivery') && order.status !== 'shipped' && order.status !== 'out_for_delivery') {
                 const doctorPhone = await findDoctorPhone();
                 if (doctorPhone) {
                     const cleanPhone = String(doctorPhone).replace(/\D/g, '');
                     if (cleanPhone.length >= 10) {
                         const message = `🚚 Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) готов и передан в доставку!`;
-                        sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
-                    }
-                }
-            } else if (newStatus === 'delivered' && order.status !== 'delivered') {
-                const doctorPhone = await findDoctorPhone();
-                if (doctorPhone) {
-                    const cleanPhone = String(doctorPhone).replace(/\D/g, '');
-                    if (cleanPhone.length >= 10) {
-                        const message = `🎉 Ваш заказ №${orderNumber} (Пациент: ${updated.patient?.name || 'Не указан'}) успешно выдан!`;
                         sendWhatsAppMessage(`${cleanPhone}@c.us`, message).catch(err => console.error('WhatsApp Error:', err));
                     }
                 }
