@@ -670,7 +670,8 @@ export async function POST(request: NextRequest) {
                             ? `⏳ Сформирован счет на заказ №${orderNumber} от врача ${doctorDisplayName}.\nСумма: ${totalPrice.toLocaleString('ru-RU')} ₸.\nТребуется подтверждение бухгалтера!`
                             : `🚨 Новый заказ №${orderNumber} от врача ${doctorDisplayName}!\nСумма: ${totalPrice.toLocaleString('ru-RU')} ₸.\nОжидает проверки лабораторией.`;
                         const orgName = (order.organization?.name || '').toLowerCase();
-                        const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye') || orgName.includes('аймакс');
+                        // Specifically match eye max / eyemax to avoid matching "new eye"
+                        const isAraiClinic = orgName.includes('коновалова') || orgName.includes('eye max') || orgName.includes('eyemax') || orgName.includes('аймакс');
                         if (isAraiClinic) {
                             // Send async so it doesn't block
                             sendWhatsAppMessage('77004601612@c.us', message).catch(err => console.error('WhatsApp Error:', err));
