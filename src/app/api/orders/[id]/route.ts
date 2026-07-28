@@ -61,6 +61,13 @@ async function findOrderWithAccess(idOrNumber: string, session: any) {
                 }
             }
         }
+        
+        // Also check explicit branches
+        const branches = session.user.branches || [];
+        if (order.organizationId && branches.includes(order.organizationId)) return order;
+        
+        // Also check if they created it themselves
+        if (order.createdById === session.user.id) return order;
     }
     // Doctor sees only their own orders
     if (session.user.role === 'doctor' && order.createdById === session.user.id) return order;
