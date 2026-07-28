@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
+import { getAllDescendantOrgIds } from '@/lib/org-scope';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,11 +27,8 @@ export async function GET(req: NextRequest) {
         // If "All branches" or no branch specified, fetch for HQ and all child branches
         const myOrg = await prisma.organization.findUnique({ where: { id: user.organizationId }, select: { type: true } });
         if (myOrg?.type === 'headquarters') {
-            const childOrgs = await prisma.organization.findMany({ 
-                where: { parentId: user.organizationId }, 
-                select: { id: true } 
-            });
-            fetchOrgId = { in: [user.organizationId, ...childOrgs.map((o: any) => o.id)] };
+            const childOrgIds = await getAllDescendantOrgIds(user.organizationId);
+            fetchOrgId = { in: [user.organizationId, ...childOrgIds] };
         }
     }
 
@@ -72,12 +70,35 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(docs);
     }
 
+    // ---- By branch view ----
+    if (view === 'by_branch') {
+        const products = await prisma.opticProduct.findMany({
+            where: { organizationId: fetchOrgId, isActive: true, type: 'product' },
+            orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+            include: {
+                organization: { select: { name: true, city: true } }
+            },
+        });
+
+        const mapped = products.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            currentStock: p.currentStock,
+            organizationId: p.organizationId,
+            branchName: p.organization?.name,
+            branchCity: p.organization?.city
+        }));
+
+        return NextResponse.json(mapped);
+    }
+
     // ---- Default: product summary with stock counts ----
     const products = await prisma.opticProduct.findMany({
         where: { organizationId: fetchOrgId, isActive: true, type: 'product' },
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
         include: {
             _count: { select: { stockItems: { where: { status: 'in_stock' } } } },
+            organization: { select: { name: true, city: true } },
         },
     });
 

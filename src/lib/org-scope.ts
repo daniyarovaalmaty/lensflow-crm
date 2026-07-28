@@ -8,6 +8,20 @@ export interface OrgScope {
     currentBranchId?: string;
 }
 
+export async function getAllDescendantOrgIds(orgId: string): Promise<string[]> {
+    const allOrgs = await prisma.organization.findMany({
+        where: { status: 'active' },
+        select: { id: true, parentId: true },
+    });
+
+    function collectDescendants(parentId: string): string[] {
+        const children = allOrgs.filter(o => o.parentId === parentId);
+        return children.flatMap(c => [c.id, ...collectDescendants(c.id)]);
+    }
+
+    return collectDescendants(orgId);
+}
+
 export async function getOrgScope(
     session: Session,
     requestedBranchId?: string | null
@@ -20,11 +34,7 @@ export async function getOrgScope(
     }
 
     if (orgType === 'headquarters') {
-        const branches = await prisma.organization.findMany({
-            where: { parentId: orgId, status: 'active' },
-            select: { id: true },
-        });
-        const branchIds = branches.map(b => b.id);
+        const branchIds = await getAllDescendantOrgIds(orgId);
         const allIds = [orgId, ...branchIds];
 
         if (requestedBranchId && branchIds.includes(requestedBranchId)) {
@@ -73,16 +83,15 @@ export function orgWhere(scope: OrgScope, branchId?: string | null): { organizat
 }
 
 export async function getUserBranches(userId: string, orgId: string) {
-    const org = await prisma.organization.findUnique({
-        where: { id: orgId },
-        include: {
-            branches: {
-                where: { status: 'active' },
-                select: { id: true, name: true, address: true, city: true, phone: true },
-                orderBy: { name: 'asc' },
-            },
-        },
+    const descendantIds = await getAllDescendantOrgIds(orgId);
+    
+    if (descendantIds.length === 0) return [];
+
+    const branches = await prisma.organization.findMany({
+        where: { id: { in: descendantIds }, status: 'active' },
+        select: { id: true, name: true, address: true, city: true, phone: true },
+        orderBy: { name: 'asc' },
     });
 
-    return org?.branches || [];
+    return branches;
 }

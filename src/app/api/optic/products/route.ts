@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/db/prisma';
+import { getAllDescendantOrgIds } from '@/lib/org-scope';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,11 +30,8 @@ export async function GET(req: NextRequest) {
         // If "All branches" or no branch specified, fetch products for HQ and all its child branches
         const myOrg = await prisma.organization.findUnique({ where: { id: user.organizationId }, select: { type: true } });
         if (myOrg?.type === 'headquarters') {
-            const childOrgs = await prisma.organization.findMany({ 
-                where: { parentId: user.organizationId }, 
-                select: { id: true } 
-            });
-            fetchOrgId = { in: [user.organizationId, ...childOrgs.map(o => o.id)] };
+            const childOrgIds = await getAllDescendantOrgIds(user.organizationId);
+            fetchOrgId = { in: [user.organizationId, ...childOrgIds] };
         }
     }
 
