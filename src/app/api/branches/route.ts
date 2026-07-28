@@ -19,6 +19,12 @@ export async function GET() {
                     userBranches: {
                         include: { user: { select: { id: true, fullName: true, subRole: true } } },
                     },
+                    // Include nested sub-branches (stores within city branches)
+                    branches: {
+                        where: { status: 'active' },
+                        select: { id: true, name: true, city: true, address: true, phone: true, metadata: true },
+                        orderBy: { name: 'asc' },
+                    },
                 },
                 orderBy: { createdAt: 'asc' },
             },
@@ -51,6 +57,14 @@ export async function GET() {
             fullName: ub.user.fullName,
             subRole: ub.user.subRole,
         })),
+        // Nested stores/depots within this city branch
+        children: (b as any).branches?.map((child: any) => ({
+            id: child.id,
+            name: child.name,
+            city: child.city,
+            address: child.address,
+            type: child.metadata?.itigris?.type || 'STORE',
+        })) || [],
     }));
 
     return NextResponse.json({
