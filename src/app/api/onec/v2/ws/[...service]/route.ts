@@ -69,7 +69,27 @@ function handleTestConnection(): string {
 }
 
 function handleGetIBParameters(): string {
-    return soapEnvelope(`<m:GetIBParametersResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1"><m:return>${IB_PARAMS}</m:return></m:GetIBParametersResponse>`);
+    const structXml = `
+        <m:Property name="InfobasePrefix">
+            <m:Value xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">LF</m:Value>
+        </m:Property>
+        <m:Property name="ConfigurationVersion">
+            <m:Value xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">1.0.0</m:Value>
+        </m:Property>
+        <m:Property name="InfobaseDescription">
+            <m:Value xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">LensFlow CRM</m:Value>
+        </m:Property>
+        <m:Property name="OrganizationName">
+            <m:Value xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">LensFlow CRM</m:Value>
+        </m:Property>
+        <m:Property name="OrganizationPrefix">
+            <m:Value xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">LF</m:Value>
+        </m:Property>
+        <m:Property name="DefaultExchangeMessagesTransportKind">
+            <m:Value xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">WS</m:Value>
+        </m:Property>`;
+    
+    return soapEnvelope(`<m:GetIBParametersResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1"><m:return>${structXml}</m:return></m:GetIBParametersResponse>`);
 }
 
 function handleGetExchangePlans(): string {
@@ -144,6 +164,18 @@ function getWsdl(serviceName: string, baseUrl: string): string {
     const typesXml = `
     <wsdl:types>
         <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="${ns}" elementFormDefault="qualified">
+            <xsd:complexType name="Structure">
+                <xsd:sequence>
+                    <xsd:element name="Property" maxOccurs="unbounded" minOccurs="0">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="Value" type="xsd:anyType" nillable="true"/>
+                            </xsd:sequence>
+                            <xsd:attribute name="name" type="xsd:string" use="required"/>
+                        </xsd:complexType>
+                    </xsd:element>
+                </xsd:sequence>
+            </xsd:complexType>
             ${operations.map(op => {
                 let params = '';
                 let returnType = 'xsd:string'; // default
@@ -172,6 +204,8 @@ function getWsdl(serviceName: string, baseUrl: string): string {
                     <xsd:element name="ResultMessage" type="xsd:string" nillable="true"/>
                 </xsd:sequence></xsd:complexType>
             </xsd:element>`;
+                } else if (op === 'GetIBParameters') {
+                    returnType = 'tns:Structure';
                 } else if (op === 'UploadData' || op === 'CreateExchangeNode' || op === 'PutFilePart' || op === 'SaveFileFromParts' || op === 'RegisterOnlyCatalogData') {
                     returnType = 'xsd:boolean';
                 } else if (op === 'GetExchangeRules' || op === 'DownloadData' || op === 'GetFilePart') {
