@@ -189,7 +189,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     // Order ID (Left, Regular font: 13pt)
     doc.setFont('Roboto', 'normal');
     doc.setTextColor(0, 0, 0);
-    let orderIdFontSize = 13;
+    let orderIdFontSize = 9;
     doc.setFontSize(orderIdFontSize);
     const orderIdText = String(order.order_id || '');
     
@@ -198,7 +198,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
         orderIdFontSize -= 0.5;
         doc.setFontSize(orderIdFontSize);
     }
-    doc.text(orderIdText, 2, 10.4);
+    doc.text(orderIdText, 2, 10);
     const orderIdWidth = doc.getTextWidth(orderIdText);
 
     // Eye Label (Right)
