@@ -146,7 +146,7 @@ function getWsdl(serviceName: string, baseUrl: string): string {
         ? 'http://www.1c.ru/SaaS/1.0/WS/RemoteAdministrationOfExchange_2_0_1_6'
         : serviceName === 'InterfaceVersion'
         ? 'http://www.1c.ru/SaaS/1.0/WS'
-        : \`http://www.1c.ru/SSL/\${serviceName}\`;
+        : `http://www.1c.ru/SSL/${serviceName}`;
 
     const operations = serviceName === 'Exchange_3_0_2_1' 
         ? ['Ping', 'TestConnection', 'GetIBParameters', 'DownloadData', 'UploadData', 'CreateExchangeNode', 'GetExchangeRules', 'PutFilePart', 'GetFilePart', 'SaveFileFromParts']
@@ -156,66 +156,66 @@ function getWsdl(serviceName: string, baseUrl: string): string {
         ? ['GetVersions']
         : ['GetExchangePlans'];
 
-    const typesXml = \`
+    const typesXml = `
     <wsdl:types>
-        <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="\${ns}" elementFormDefault="qualified">
-            \${operations.map(op => \`
-            <xsd:element name="\${op}">
-                <xsd:complexType><xsd:sequence>\${
+        <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="${ns}" elementFormDefault="qualified">
+            ${operations.map(op => `
+            <xsd:element name="${op}">
+                <xsd:complexType><xsd:sequence>${
                     op === 'GetVersions' ? '<xsd:element name="InterfaceName" type="xsd:string" minOccurs="0"/>' : ''
                 }</xsd:sequence></xsd:complexType>
             </xsd:element>
-            <xsd:element name="\${op}Response">
-                <xsd:complexType><xsd:sequence><xsd:element name="return" type="\${op === 'GetVersions' ? 'xsd:string' : 'xsd:anyType'}" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
-            </xsd:element>\`).join('')}
+            <xsd:element name="${op}Response">
+                <xsd:complexType><xsd:sequence><xsd:element name="return" type="${op === 'GetVersions' ? 'xsd:string' : 'xsd:anyType'}" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+            </xsd:element>`).join('')}
         </xsd:schema>
-    </wsdl:types>\`;
+    </wsdl:types>`;
 
-    const msgXml = operations.map(op => \`
-        <wsdl:message name="\${op}Request"><wsdl:part name="parameters" element="tns:\${op}"/></wsdl:message>
-        <wsdl:message name="\${op}Response"><wsdl:part name="parameters" element="tns:\${op}Response"/></wsdl:message>\`).join('');
+    const msgXml = operations.map(op => `
+        <wsdl:message name="${op}Request"><wsdl:part name="parameters" element="tns:${op}"/></wsdl:message>
+        <wsdl:message name="${op}Response"><wsdl:part name="parameters" element="tns:${op}Response"/></wsdl:message>`).join('');
 
-    const bindOps = operations.map(op => \`
-        <wsdl:operation name="\${op}">
-            <soap:operation soapAction="\${ns}#\${serviceName}:\${op}"/>
+    const bindOps = operations.map(op => `
+        <wsdl:operation name="${op}">
+            <soap:operation soapAction="${ns}#${serviceName}:${op}"/>
             <wsdl:input><soap:body use="literal"/></wsdl:input>
             <wsdl:output><soap:body use="literal"/></wsdl:output>
-        </wsdl:operation>\`).join('');
+        </wsdl:operation>`).join('');
 
-    const bindOps12 = operations.map(op => \`
-        <wsdl:operation name="\${op}">
-            <soap12:operation soapAction="\${ns}#\${serviceName}:\${op}"/>
+    const bindOps12 = operations.map(op => `
+        <wsdl:operation name="${op}">
+            <soap12:operation soapAction="${ns}#${serviceName}:${op}"/>
             <wsdl:input><soap12:body use="literal"/></wsdl:input>
             <wsdl:output><soap12:body use="literal"/></wsdl:output>
-        </wsdl:operation>\`).join('');
+        </wsdl:operation>`).join('');
 
-    return \`<?xml version="1.0" encoding="UTF-8"?>
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <wsdl:definitions 
-    name="\${serviceName}"
+    name="${serviceName}"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:tns="\${ns}"
-    targetNamespace="\${ns}">
-    \${typesXml}
-    \${msgXml}
-    <wsdl:portType name="\${serviceName}PortType">\${opXml}</wsdl:portType>
-    <wsdl:binding name="\${serviceName}SoapBinding" type="tns:\${serviceName}PortType">
-        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>\${bindOps}
+    xmlns:tns="${ns}"
+    targetNamespace="${ns}">
+    ${typesXml}
+    ${msgXml}
+    <wsdl:portType name="${serviceName}PortType">${opXml}</wsdl:portType>
+    <wsdl:binding name="${serviceName}SoapBinding" type="tns:${serviceName}PortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>${bindOps}
     </wsdl:binding>
-    <wsdl:binding name="\${serviceName}Soap12Binding" type="tns:\${serviceName}PortType">
-        <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>\${bindOps12}
+    <wsdl:binding name="${serviceName}Soap12Binding" type="tns:${serviceName}PortType">
+        <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>${bindOps12}
     </wsdl:binding>
-    <wsdl:service name="\${serviceName}">
-        <wsdl:port name="\${serviceName}Soap" binding="tns:\${serviceName}SoapBinding">
-            <soap:address location="\${baseUrl}/ws/\${serviceName}"/>
+    <wsdl:service name="${serviceName}">
+        <wsdl:port name="${serviceName}Soap" binding="tns:${serviceName}SoapBinding">
+            <soap:address location="${baseUrl}/ws/${serviceName}"/>
         </wsdl:port>
-        <wsdl:port name="\${serviceName}Soap12" binding="tns:\${serviceName}Soap12Binding">
-            <soap12:address location="\${baseUrl}/ws/\${serviceName}"/>
+        <wsdl:port name="${serviceName}Soap12" binding="tns:${serviceName}Soap12Binding">
+            <soap12:address location="${baseUrl}/ws/${serviceName}"/>
         </wsdl:port>
     </wsdl:service>
-</wsdl:definitions>\`;
+</wsdl:definitions>`;
 }
 
 // ─── Route Handlers ──────────────────────────────────────────────────
@@ -230,7 +230,7 @@ export async function GET(
 
     // WSDL request
     if (url.searchParams.has('wsdl') || url.searchParams.has('WSDL')) {
-        const baseUrl = \`\${url.protocol}//\${url.host}/api/onec/sync\`;
+        const baseUrl = `${url.protocol}//${url.host}/api/onec/sync`;
         return new NextResponse(getWsdl(serviceName, baseUrl), {
             headers: { 'Content-Type': 'text/xml; charset=utf-8' },
         });
@@ -260,7 +260,7 @@ export async function POST(
         operation = extractOperation(body);
     }
 
-    console.log(\`[1C WS] Operation: \${operation}, SOAPAction: \${soapAction}\`);
+    console.log(`[1C WS] Operation: ${operation}, SOAPAction: ${soapAction}`);
 
     // Route to handler
     const handlers: Record<string, () => string> = {
@@ -289,9 +289,9 @@ export async function POST(
     }
 
     // Unknown operation — return generic success to not break the wizard
-    console.warn(\`[1C WS] Unknown operation: \${operation}\`);
+    console.warn(`[1C WS] Unknown operation: ${operation}`);
     return new NextResponse(
-        soapEnvelope(\`<m:\${operation}Response><m:return>true</m:return></m:\${operation}Response>\`),
+        soapEnvelope(`<m:${operation}Response><m:return>true</m:return></m:${operation}Response>`),
         { headers: { 'Content-Type': 'text/xml; charset=utf-8' } }
     );
 }
