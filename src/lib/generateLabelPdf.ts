@@ -3,6 +3,7 @@
 import jsPDF from 'jspdf';
 import { RobotoRegular } from './fonts/roboto-regular';
 import { RobotoBold } from './fonts/roboto-bold';
+import { UnboundedLight } from './fonts/unbounded-light';
 
 
 interface LabelOrder {
@@ -86,18 +87,20 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
 
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
     doc.addFileToVFS('Roboto-Bold.ttf', RobotoBold);
+    doc.addFileToVFS('Unbounded-Light.ttf', UnboundedLight);
     doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal', 'Identity-H');
     doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold', 'Identity-H');
+    doc.addFont('Unbounded-Light.ttf', 'Unbounded', 'light', 'Identity-H');
 
     // ===== BACKGROUND =====
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, W, H, 'F');
 
     // ===== TOP: LOGO + PRODUCT NAME =====
-    doc.setFont('Roboto', 'bold');
+    doc.setFont('Unbounded', 'light');
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    doc.text('MediLens', 2, 5.5);
+    doc.text('MEDILENS', 2, 5.5);
 
     // Quantity — large number
     const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
@@ -304,7 +307,15 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     let opticName = order.company || order.meta.optic_name || '';
     
     // Shorten long clinic names like "Офтальмологический центр «New Eye»"
-    const lowerName = opticName.toLowerCase();
+    let lowerName = opticName.toLowerCase();
+    
+    // If it defaults to the distributor organization name, try to use delivery address as a fallback,
+    // or just leave it empty instead of printing "ЦКК Дистрибьютор"
+    if (lowerName.includes('цкк') || lowerName.includes('дистрибьютор')) {
+        opticName = order.company || (order as any).delivery_address || '';
+        lowerName = opticName.toLowerCase();
+    }
+
     if (lowerName.includes('new eye') || lowerName.includes('neweye') || lowerName.includes('нью ай')) {
         opticName = 'New Eye';
     }
