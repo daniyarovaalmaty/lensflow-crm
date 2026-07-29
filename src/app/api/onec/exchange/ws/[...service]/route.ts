@@ -156,11 +156,18 @@ function getWsdl(serviceName: string, baseUrl: string): string {
         ? ['GetVersions']
         : ['GetExchangePlans'];
 
-    const opXml = operations.map(op => `
-        <wsdl:operation name="${op}">
-            <wsdl:input message="tns:${op}Request"/>
-            <wsdl:output message="tns:${op}Response"/>
-        </wsdl:operation>`).join('');
+    const typesXml = `
+    <wsdl:types>
+        <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="${ns}" elementFormDefault="qualified">
+            ${operations.map(op => `
+            <xsd:element name="${op}">
+                <xsd:complexType><xsd:sequence/></xsd:complexType>
+            </xsd:element>
+            <xsd:element name="${op}Response">
+                <xsd:complexType><xsd:sequence><xsd:element name="return" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+            </xsd:element>`).join('')}
+        </xsd:schema>
+    </wsdl:types>`;
 
     const msgXml = operations.map(op => `
         <wsdl:message name="${op}Request"><wsdl:part name="parameters" element="tns:${op}"/></wsdl:message>
@@ -173,12 +180,20 @@ function getWsdl(serviceName: string, baseUrl: string): string {
             <wsdl:output><soap:body use="literal"/></wsdl:output>
         </wsdl:operation>`).join('');
 
+    const opXml = operations.map(op => `
+        <wsdl:operation name="${op}">
+            <wsdl:input message="tns:${op}Request"/>
+            <wsdl:output message="tns:${op}Response"/>
+        </wsdl:operation>`).join('');
+
     return `<?xml version="1.0" encoding="UTF-8"?>
 <wsdl:definitions 
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:tns="${ns}"
     targetNamespace="${ns}">
+    ${typesXml}
     ${msgXml}
     <wsdl:portType name="${serviceName}PortType">${opXml}</wsdl:portType>
     <wsdl:binding name="${serviceName}Binding" type="tns:${serviceName}PortType">
