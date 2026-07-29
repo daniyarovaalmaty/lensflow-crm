@@ -182,6 +182,12 @@ function getWsdl(serviceName: string, baseUrl: string): string {
             <wsdl:output><soap:body use="literal"/></wsdl:output>
         </wsdl:operation>`).join('');
 
+    const opXml = operations.map(op => `
+        <wsdl:operation name="${op}">
+            <wsdl:input message="tns:${op}Request"/>
+            <wsdl:output message="tns:${op}Response"/>
+        </wsdl:operation>`).join('');
+
     const bindOps12 = operations.map(op => `
         <wsdl:operation name="${op}">
             <soap12:operation soapAction="${ns}#${serviceName}:${op}"/>
