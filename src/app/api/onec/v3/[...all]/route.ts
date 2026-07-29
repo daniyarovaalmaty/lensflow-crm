@@ -68,17 +68,81 @@ function handleGeneric(): string { return soapEnvelope(`<m:GenericResponse><m:re
 // ─── WSDL ────────────────────────────────────────────────────────────
 
 function getWsdl(serviceName: string, baseUrl: string): string {
+    if (serviceName === 'InterfaceVersion') {
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap12bind="http://schemas.xmlsoap.org/wsdl/soap12/"
+             xmlns:soapbind="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:tns="http://www.1c.ru/SaaS/1.0/WS"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:xsd1="http://www.1c.ru/SaaS/1.0/WS"
+             name="InterfaceVersion"
+             targetNamespace="http://www.1c.ru/SaaS/1.0/WS">
+    <types>
+        <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                   xmlns:xs1="http://www.1c.ru/SaaS/1.0/WS"
+                   targetNamespace="http://www.1c.ru/SaaS/1.0/WS"
+                   elementFormDefault="qualified">
+            <xs:element name="GetVersions">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="InterfaceName" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="GetVersionsResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="return" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </types>
+    <message name="GetVersionsRequestMessage">
+        <part name="parameters" element="tns:GetVersions"/>
+    </message>
+    <message name="GetVersionsResponseMessage">
+        <part name="parameters" element="tns:GetVersionsResponse"/>
+    </message>
+    <portType name="InterfaceVersionPortType">
+        <operation name="GetVersions">
+            <input message="tns:GetVersionsRequestMessage"/>
+            <output message="tns:GetVersionsResponseMessage"/>
+        </operation>
+    </portType>
+    <binding name="InterfaceVersionSoapBinding" type="tns:InterfaceVersionPortType">
+        <soapbind:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="GetVersions">
+            <soapbind:operation style="document" soapAction="http://www.1c.ru/SaaS/1.0/WS#InterfaceVersion:GetVersions"/>
+            <input><soapbind:body use="literal"/></input>
+            <output><soapbind:body use="literal"/></output>
+        </operation>
+    </binding>
+    <binding name="InterfaceVersionSoap12Binding" type="tns:InterfaceVersionPortType">
+        <soap12bind:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="GetVersions">
+            <soap12bind:operation style="document" soapAction="http://www.1c.ru/SaaS/1.0/WS#InterfaceVersion:GetVersions"/>
+            <input><soap12bind:body use="literal"/></input>
+            <output><soap12bind:body use="literal"/></output>
+        </operation>
+    </binding>
+    <service name="InterfaceVersion">
+        <port name="InterfaceVersionSoap" binding="tns:InterfaceVersionSoapBinding">
+            <soapbind:address location="${baseUrl}/ws/InterfaceVersion"/>
+        </port>
+        <port name="InterfaceVersionSoap12" binding="tns:InterfaceVersionSoap12Binding">
+            <soap12bind:address location="${baseUrl}/ws/InterfaceVersion"/>
+        </port>
+    </service>
+</definitions>`;
+    }
+
     const ns = serviceName === 'Exchange_3_0_2_1' 
         ? 'http://www.1c.ru/SSL/Exchange_3_0_2_1'
-        : serviceName === 'InterfaceVersion'
-        ? 'http://www.1c.ru/SaaS/1.0/WS'
         : `http://www.1c.ru/SSL/${serviceName}`;
 
-    const operations = serviceName === 'Exchange_3_0_2_1' 
-        ? ['Ping', 'TestConnection', 'GetIBParameters', 'DownloadData', 'UploadData']
-        : serviceName === 'InterfaceVersion'
-        ? ['GetVersions']
-        : ['Ping'];
+    const operations = ['Ping', 'TestConnection', 'GetIBParameters', 'DownloadData', 'UploadData'];
 
     const typesXml = `
     <wsdl:types>
@@ -100,11 +164,7 @@ function getWsdl(serviceName: string, baseUrl: string): string {
                 let returnType = 'xsd:string'; // default
                 let maxOccurs = '1';
 
-                if (op === 'GetVersions') {
-                    params = '<xsd:element name="InterfaceName" type="xsd:string" minOccurs="0"/>';
-                    returnType = 'xsd:string';
-                    maxOccurs = 'unbounded';
-                } else if (op === 'Ping') {
+                if (op === 'Ping') {
                     params = '';
                     returnType = 'xsd:boolean';
                 } else if (op === 'TestConnection') {
@@ -130,7 +190,7 @@ function getWsdl(serviceName: string, baseUrl: string): string {
                     returnType = 'xsd:base64Binary';
                 }
 
-                if (op !== 'GetVersions' && op !== 'Ping' && op !== 'TestConnection') {
+                if (op !== 'Ping' && op !== 'TestConnection') {
                     params = `
                         <xsd:element name="ExchangePlanName" type="xsd:string" minOccurs="0"/>
                         <xsd:element name="NodeCode" type="xsd:string" minOccurs="0"/>
@@ -138,8 +198,6 @@ function getWsdl(serviceName: string, baseUrl: string): string {
                     `;
                 }
                 
-                if (op === 'TestConnection') return '';
-
                 return `
             <xsd:element name="${op}">
                 <xsd:complexType><xsd:sequence>${params}</xsd:sequence></xsd:complexType>
@@ -202,7 +260,6 @@ function getWsdl(serviceName: string, baseUrl: string): string {
         </wsdl:port>
     </wsdl:service>
 </wsdl:definitions>`;
-}
 
 // ─── Route Handlers ──────────────────────────────────────────────────
 
