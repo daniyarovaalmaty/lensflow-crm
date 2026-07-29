@@ -260,6 +260,7 @@ function getWsdl(serviceName: string, baseUrl: string): string {
         </wsdl:port>
     </wsdl:service>
 </wsdl:definitions>`;
+}
 
 // ─── Route Handlers ──────────────────────────────────────────────────
 
