@@ -252,7 +252,10 @@ export async function GET(
     { params }: { params: Promise<{ service: string[] }> }
 ) {
     const { service } = await params;
-    const serviceName = service?.[0] || 'Exchange_3_0_2_1';
+    let serviceName = service?.[0] || 'Exchange_3_0_2_1';
+    if (serviceName.endsWith('.1cws')) {
+        serviceName = serviceName.slice(0, -5);
+    }
     const url = req.nextUrl;
 
     // WSDL request
