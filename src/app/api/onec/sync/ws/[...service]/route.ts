@@ -159,15 +159,32 @@ function getWsdl(serviceName: string, baseUrl: string): string {
     const typesXml = `
     <wsdl:types>
         <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="${ns}" elementFormDefault="qualified">
-            ${operations.map(op => `
+            ${operations.map(op => {
+                let params = '';
+                if (op === 'GetVersions') {
+                    params = '<xsd:element name="InterfaceName" type="xsd:string" minOccurs="0"/>';
+                } else {
+                    // Standard parameters for Exchange_3_0_2_1 operations
+                    // The order is critical for 1C proxy method signatures!
+                    params = `
+                        <xsd:element name="ExchangePlanName" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="NodeCode" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="Data" type="xsd:base64Binary" minOccurs="0"/>
+                        <xsd:element name="FileID" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="PartNumber" type="xsd:int" minOccurs="0"/>
+                        <xsd:element name="ExchangeMessageFormat" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="Message" type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="ErrorMessage" type="xsd:string" minOccurs="0"/>
+                    `;
+                }
+                return `
             <xsd:element name="${op}">
-                <xsd:complexType><xsd:sequence>${
-                    op === 'GetVersions' ? '<xsd:element name="InterfaceName" type="xsd:string" minOccurs="0"/>' : ''
-                }</xsd:sequence></xsd:complexType>
+                <xsd:complexType><xsd:sequence>${params}</xsd:sequence></xsd:complexType>
             </xsd:element>
             <xsd:element name="${op}Response">
-                <xsd:complexType><xsd:sequence><xsd:element name="return" type="${op === 'GetVersions' ? 'xsd:string' : 'xsd:anyType'}" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
-            </xsd:element>`).join('')}
+                <xsd:complexType><xsd:sequence><xsd:element name="return" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+            </xsd:element>`;
+            }).join('')}
         </xsd:schema>
     </wsdl:types>`;
 
