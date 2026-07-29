@@ -71,7 +71,6 @@ function handlePing(): string {
 }
 
 function handleTestConnection(): string {
-    // 1C standard TestConnection expects 'true' to signal a successful connection
     return soapEnvelope('<m:TestConnectionResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1"><m:return>true</m:return><m:ResultMessage></m:ResultMessage></m:TestConnectionResponse>');
 }
 
@@ -153,13 +152,24 @@ function getWsdl(serviceName: string, baseUrl: string): string {
         <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="${ns}" elementFormDefault="qualified">
             ${operations.map(op => {
                 let params = '';
+                let returnType = 'xsd:string'; // default
+                let maxOccurs = '1';
+
                 if (op === 'GetVersions') {
                     params = '<xsd:element name="InterfaceName" type="xsd:string" minOccurs="0"/>';
+                    returnType = 'xsd:string';
+                    maxOccurs = 'unbounded';
                 } else if (op === 'Ping') {
                     params = '';
-                } else {
+                    returnType = 'xsd:boolean';
+                } else if (op === 'TestConnection' || op === 'UploadData' || op === 'CreateExchangeNode' || op === 'PutFilePart' || op === 'SaveFileFromParts' || op === 'RegisterOnlyCatalogData') {
+                    returnType = 'xsd:boolean';
+                } else if (op === 'GetExchangeRules' || op === 'DownloadData' || op === 'GetFilePart') {
+                    returnType = 'xsd:base64Binary';
+                }
+
+                if (op !== 'GetVersions' && op !== 'Ping') {
                     // Standard parameters for Exchange_3_0_2_1 operations
-                    // 1C proxy binds arguments by order and type.
                     params = `
                         <xsd:element name="ExchangePlanName" type="xsd:string" minOccurs="0"/>
                         <xsd:element name="NodeCode" type="xsd:string" minOccurs="0"/>
@@ -176,7 +186,7 @@ function getWsdl(serviceName: string, baseUrl: string): string {
                 <xsd:complexType><xsd:sequence>${params}</xsd:sequence></xsd:complexType>
             </xsd:element>
             <xsd:element name="${op}Response">
-                <xsd:complexType><xsd:sequence><xsd:element name="return" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+                <xsd:complexType><xsd:sequence><xsd:element name="return" type="${returnType}" minOccurs="0" maxOccurs="${maxOccurs}"/></xsd:sequence></xsd:complexType>
             </xsd:element>`;
             }).join('')}
         </xsd:schema>
@@ -248,6 +258,7 @@ export async function GET(
     // WSDL request
     if (url.searchParams.has('wsdl') || url.searchParams.has('WSDL')) {
         const baseUrl = `${url.protocol}//${url.host}/api/onec/gate`;
+        console.log(`[1C WS GET] WSDL requested for ${serviceName}`);
         return new NextResponse(getWsdl(serviceName, baseUrl), {
             headers: { 'Content-Type': 'text/xml; charset=utf-8' },
         });
@@ -277,7 +288,7 @@ export async function POST(
         operation = extractOperation(body);
     }
 
-    console.log(`[1C WS] Operation: ${operation}, SOAPAction: ${soapAction}`);
+    console.log(`[1C WS POST] Operation: ${operation}, SOAPAction: ${soapAction}`);
 
     // Route to handler
     const handlers: Record<string, () => string> = {
