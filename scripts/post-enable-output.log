@@ -1,0 +1,3565 @@
+﻿[dotenv@17.3.1] injecting env (11) from .env -- tip: тЪЩя╕П  write to custom object with { processEnv: myObject }
+тХФтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХЧ
+тХС  POST-ENABLE SYNC TEST                                 тХС
+тХЪтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХРтХЭ
+
+=== 1. TestConnection ===
+
+HTTP: 200
+Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:TestConnectionResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</m:return>
+			<m:Result xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">╨Т "╨в╨Ю╨Ю "Medinn Vision Lab" " ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜╨░ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨░ ╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╨╕ ╨┤╨░╨╜╨╜╤Л╤Е "╨б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╤П ╨┤╨░╨╜╨╜╤Л╤Е ╤З╨╡╤А╨╡╨╖ ╤Г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╤Л╨╣ ╤Д╨╛╤А╨╝╨░╤В" ╤Б ╨╕╨┤╨╡╨╜╤В╨╕╤Д╨╕╨║╨░╤В╨╛╤А╨╛╨╝ "LENSFLOW".</m:Result>
+		</m:TestConnectionResponse>
+	</soap:Body>
+</soap:Envelope>
+
+
+=== 2. CreateExchange (Exchange_2_0_1_6) ===
+
+--- Format A: Parameters=LENSFLOW, empty structures ---
+  тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(134)}: ╨Я╤А╨╕ ╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╕ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨╕ ╨╛╨▒╨╝╨╡╨╜╨░ ╨▓╨╛ ╨▓╤В╨╛╤А╨╛╨╣ ╨╕╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣ ╨▒╨░╨╖╨╡ ╨▓╨╛╨╖╨╜╨╕╨║╨╗╨╕ ╨╛╤И╨╕╨▒╨║╨╕: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М)
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2551)}:╨Я╨╛╨║╨░ ╨з╤В╨╡╨╜╨╕╨╡XML.╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М() ╨ж╨╕╨║╨╗
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2184)}:╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML╨Т╨б╤В╤А╤Г╨║╤В╤Г╤А╤Г(╨б╤В╤А╤Г╨║╤В╤Г╤А╨░╨Э╨░╤Б╤В╤А╨╛╨╡╨║, ╨Ш╨╝╤П╨д╨░╨╣╨╗╨░╨б╤В╤А╨╛╨║╨░XML, ╨н╤В╨╛╨д╨░╨╣╨╗);
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ю╨▒╤К╨╡╨║╤В╨░(723)}:╨Ь╨╛╨┤╤Г╨╗╤М╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕.╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML(╨н╤В╨╛╤В╨Ю╨▒╤К╨╡╨║╤В, ╨б╤В╤А╨╛╨║╨░XML);
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(125)}:╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Т╤Л╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨░╨│╤А╤Г╨╖╨║╤Г╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓╨Ь╨░╤Б╤В╨╡╤А╨░(╨Ю╤В╨║╨░╨╖, ╨б╤В╤А╨╛╨║╨░╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓);
+
+[╨Ю╤И╨╕╨▒╨║╨░╨Т╨╛╨Т╤А╨╡╨╝╤П╨Т╤Л╨┐╨╛╨╗╨╜╨╡╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░]
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ XML:  - [1,1]
+╨д╨░╤В╨░╨╗╤М╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░: 
+Document is empty
+
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(134)}: ╨Я╤А╨╕ ╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╕ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨╕ ╨╛╨▒╨╝╨╡╨╜╨░ ╨▓╨╛ ╨▓╤В╨╛╤А╨╛╨╣ ╨╕╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣ ╨▒╨░╨╖╨╡ ╨▓╨╛╨╖╨╜╨╕╨║╨╗╨╕ ╨╛╤И╨╕╨▒╨║╨╕: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М)
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2551)}:╨Я╨╛╨║╨░ ╨з╤В╨╡╨╜╨╕╨╡XML.╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М() ╨ж╨╕╨║╨╗
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2184)}:╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML╨Т╨б╤В╤А╤Г╨║╤В╤Г╤А╤Г(╨б╤В╤А╤Г╨║╤В╤Г╤А╨░╨Э╨░╤Б╤В╤А╨╛╨╡╨║, ╨Ш╨╝╤П╨д╨░╨╣╨╗╨░╨б╤В╤А╨╛╨║╨░XML, ╨н╤В╨╛╨д╨░╨╣╨╗);
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ю╨▒╤К╨╡╨║╤В╨░(723)}:╨Ь╨╛╨┤╤Г╨╗╤М╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕.╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML(╨н╤В╨╛╤В╨Ю╨▒╤К╨╡╨║╤В, ╨б╤В╤А╨╛╨║╨░XML);
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(125)}:╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Т╤Л╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨░╨│╤А╤Г╨╖╨║╤Г╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓╨Ь╨░╤Б╤В╨╡╤А╨░(╨Ю╤В╨║╨░╨╖, ╨б╤В╤А╨╛╨║╨░╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓);
+
+[╨Ю╤И╨╕╨▒╨║╨░╨Т╨╛╨Т╤А╨╡╨╝╤П╨Т╤Л╨┐╨╛╨╗╨╜╨╡╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░]
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ XML:  - [1,1]
+╨д╨░╤В╨░╨╗╤М╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░: 
+Document is empty (HTTP 500)
+
+--- Format B: Parameters as JSON with NodeCode and Description ---
+  тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(134)}: ╨Я╤А╨╕ ╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╕ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨╕ ╨╛╨▒╨╝╨╡╨╜╨░ ╨▓╨╛ ╨▓╤В╨╛╤А╨╛╨╣ ╨╕╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣ ╨▒╨░╨╖╨╡ ╨▓╨╛╨╖╨╜╨╕╨║╨╗╨╕ ╨╛╤И╨╕╨▒╨║╨╕: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М)
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2551)}:╨Я╨╛╨║╨░ ╨з╤В╨╡╨╜╨╕╨╡XML.╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М() ╨ж╨╕╨║╨╗
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2184)}:╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML╨Т╨б╤В╤А╤Г╨║╤В╤Г╤А╤Г(╨б╤В╤А╤Г╨║╤В╤Г╤А╨░╨Э╨░╤Б╤В╤А╨╛╨╡╨║, ╨Ш╨╝╤П╨д╨░╨╣╨╗╨░╨б╤В╤А╨╛╨║╨░XML, ╨н╤В╨╛╨д╨░╨╣╨╗);
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ю╨▒╤К╨╡╨║╤В╨░(723)}:╨Ь╨╛╨┤╤Г╨╗╤М╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕.╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML(╨н╤В╨╛╤В╨Ю╨▒╤К╨╡╨║╤В, ╨б╤В╤А╨╛╨║╨░XML);
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(125)}:╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Т╤Л╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨░╨│╤А╤Г╨╖╨║╤Г╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓╨Ь╨░╤Б╤В╨╡╤А╨░(╨Ю╤В╨║╨░╨╖, ╨б╤В╤А╨╛╨║╨░╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓);
+
+[╨Ю╤И╨╕╨▒╨║╨░╨Т╨╛╨Т╤А╨╡╨╝╤П╨Т╤Л╨┐╨╛╨╗╨╜╨╡╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░]
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ XML:  - [1,1]
+╨д╨░╤В╨░╨╗╤М╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░: 
+Document is empty
+
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(134)}: ╨Я╤А╨╕ ╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╕ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨╕ ╨╛╨▒╨╝╨╡╨╜╨░ ╨▓╨╛ ╨▓╤В╨╛╤А╨╛╨╣ ╨╕╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣ ╨▒╨░╨╖╨╡ ╨▓╨╛╨╖╨╜╨╕╨║╨╗╨╕ ╨╛╤И╨╕╨▒╨║╨╕: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М)
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2551)}:╨Я╨╛╨║╨░ ╨з╤В╨╡╨╜╨╕╨╡XML.╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М() ╨ж╨╕╨║╨╗
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2184)}:╨Я╤А╨╛╤З╨╕╤В╨░╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML╨Т╨б╤В╤А╤Г╨║╤В╤Г╤А╤Г(╨б╤В╤А╤Г╨║╤В╤Г╤А╨░╨Э╨░╤Б╤В╤А╨╛╨╡╨║, ╨Ш╨╝╤П╨д╨░╨╣╨╗╨░╨б╤В╤А╨╛╨║╨░XML, ╨н╤В╨╛╨д╨░╨╣╨╗);
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ю╨▒╤К╨╡╨║╤В╨░(723)}:╨Ь╨╛╨┤╤Г╨╗╤М╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕.╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML(╨н╤В╨╛╤В╨Ю╨▒╤К╨╡╨║╤В, ╨б╤В╤А╨╛╨║╨░XML);
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(125)}:╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Т╤Л╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨░╨│╤А╤Г╨╖╨║╤Г╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓╨Ь╨░╤Б╤В╨╡╤А╨░(╨Ю╤В╨║╨░╨╖, ╨б╤В╤А╨╛╨║╨░╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓);
+
+[╨Ю╤И╨╕╨▒╨║╨░╨Т╨╛╨Т╤А╨╡╨╝╤П╨Т╤Л╨┐╨╛╨╗╨╜╨╡╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░]
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ XML:  - [1,1]
+╨д╨░╤В╨░╨╗╤М╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░: 
+Document is empty (HTTP 500)
+
+--- Format C: Parameters as XML structure string ---
+  тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(134)}: ╨Я╤А╨╕ ╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╕ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨╕ ╨╛╨▒╨╝╨╡╨╜╨░ ╨▓╨╛ ╨▓╤В╨╛╤А╨╛╨╣ ╨╕╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣ ╨▒╨░╨╖╨╡ ╨▓╨╛╨╖╨╜╨╕╨║╨╗╨╕ ╨╛╤И╨╕╨▒╨║╨╕: ╨Я╨╛╨╗╨╡ ╨╛╨▒╤К╨╡╨║╤В╨░ ╨╜╨╡ ╨╛╨▒╨╜╨░╤А╤Г╨╢╨╡╨╜╨╛ (╨Ш╨╝╤П╨Я╨╗╨░╨╜╨░╨Ю╨▒╨╝╨╡╨╜╨░)
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2199)}:╨Э╨░╨╣╨┤╨╡╨╜╨╜╤Л╨╣╨Я╨╗╨░╨╜╨Ю╨▒╨╝╨╡╨╜╨░ = ╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Э╨░╨╣╤В╨╕╨Ш╨╝╤П╨Я╨╗╨░╨╜╨░╨Ю╨▒╨╝╨╡╨╜╨░╨з╨╡╤А╨╡╨╖╨г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╤Л╨╣╨д╨╛╤А╨╝╨░╤В(╨б╤В╤А╤Г╨║╤В╤Г╤А╨░╨Э╨░╤Б╤В╤А╨╛╨╡╨║.╨Ш╨╝╤П╨Я╨╗╨░╨╜╨░╨Ю╨▒╨╝╨╡╨╜╨░);
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ю╨▒╤К╨╡╨║╤В╨░(723)}:╨Ь╨╛╨┤╤Г╨╗╤М╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕.╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML(╨н╤В╨╛╤В╨Ю╨▒╤К╨╡╨║╤В, ╨б╤В╤А╨╛╨║╨░XML);
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(125)}:╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Т╤Л╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨░╨│╤А╤Г╨╖╨║╤Г╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓╨Ь╨░╤Б╤В╨╡╤А╨░(╨Ю╤В╨║╨░╨╖, ╨б╤В╤А╨╛╨║╨░╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓);
+
+[╨Ю╤И╨╕╨▒╨║╨░╨Т╨╛╨Т╤А╨╡╨╝╤П╨Т╤Л╨┐╨╛╨╗╨╜╨╡╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░, ╨Ю╤И╨╕╨▒╨║╨░╨Ш╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░]
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(134)}: ╨Я╤А╨╕ ╤Б╨╛╨╖╨┤╨░╨╜╨╕╨╕ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨╕ ╨╛╨▒╨╝╨╡╨╜╨░ ╨▓╨╛ ╨▓╤В╨╛╤А╨╛╨╣ ╨╕╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣ ╨▒╨░╨╖╨╡ ╨▓╨╛╨╖╨╜╨╕╨║╨╗╨╕ ╨╛╤И╨╕╨▒╨║╨╕: ╨Я╨╛╨╗╨╡ ╨╛╨▒╤К╨╡╨║╤В╨░ ╨╜╨╡ ╨╛╨▒╨╜╨░╤А╤Г╨╢╨╡╨╜╨╛ (╨Ш╨╝╤П╨Я╨╗╨░╨╜╨░╨Ю╨▒╨╝╨╡╨╜╨░)
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ь╨╡╨╜╨╡╨┤╨╢╨╡╤А╨░(2199)}:╨Э╨░╨╣╨┤╨╡╨╜╨╜╤Л╨╣╨Я╨╗╨░╨╜╨Ю╨▒╨╝╨╡╨╜╨░ = ╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Э╨░╨╣╤В╨╕╨Ш╨╝╤П╨Я╨╗╨░╨╜╨░╨Ю╨▒╨╝╨╡╨╜╨░╨з╨╡╤А╨╡╨╖╨г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╤Л╨╣╨д╨╛╤А╨╝╨░╤В(╨б╤В╤А╤Г╨║╤В╤Г╤А╨░╨Э╨░╤Б╤В╤А╨╛╨╡╨║.╨Ш╨╝╤П╨Я╨╗╨░╨╜╨░╨Ю╨▒╨╝╨╡╨╜╨░);
+{╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░.╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Ь╨╛╨┤╤Г╨╗╤М╨Ю╨▒╤К╨╡╨║╤В╨░(723)}:╨Ь╨╛╨┤╤Г╨╗╤М╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕.╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨╛╨┤╨║╨╗╤О╤З╨╡╨╜╨╕╤П╨Ш╨╖XML(╨н╤В╨╛╤В╨Ю╨▒╤К╨╡╨║╤В, ╨б╤В╤А╨╛╨║╨░XML);
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_2_0_1_6.╨Ь╨╛╨┤╤Г╨╗╤М(125)}:╨Я╨╛╨╝╨╛╤Й╨╜╨╕╨║╨б╨╛╨╖╨┤╨░╨╜╨╕╤П╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕.╨Т╤Л╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨░╨│╤А╤Г╨╖╨║╤Г╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓╨Ь╨░╤Б╤В╨╡╤А╨░(╨Ю╤В╨║╨░╨╖, ╨б╤В╤А╨╛╨║╨░╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓);
+
+[╨Ю╤И╨╕╨▒╨║╨░╨Т╨╛╨Т╤А╨╡╨╝╤П╨Т╤Л╨┐╨╛╨╗╨╜╨╡╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░, ╨Ю╤И╨╕╨▒╨║╨░╨Ш╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╨╜╨╕╤П╨Т╤Б╤В╤А╨╛╨╡╨╜╨╜╨╛╨│╨╛╨п╨╖╤Л╨║╨░] (HTTP 500)
+
+
+=== 3. CreateExchangeNode (Exchange_3_0_2_1) ===
+
+HTTP: 500
+Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<soap:Fault>
+			<faultcode>soap:Client</faultcode>
+			<faultstring>╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ SOAP ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П: ╨╜╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╤Л╨╣ ╨┐╨░╤А╨░╨╝╨╡╤В╤А. </faultstring>
+			<detail/>
+		</soap:Fault>
+	</soap:Body>
+</soap:Envelope>
+
+
+=== 4. RemoteAdmin PrepareExchangeExecution ===
+
+HTTP: 500
+тЭМ ╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ SOAP ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П: ╨╜╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╤Л╨╣ ╨┐╨░╤А╨░╨╝╨╡╤В╤А. 
+
+
+=== 5. GetIBParameters (post-enable) ===
+
+HTTP: 200
+тЬЕ Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:GetIBParametersResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╗╨░╨╜╨Ю╨▒╨╝╨╡╨╜╨░╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╨╡╤В">
+					<Value xsi:type="xs:boolean">true</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string"/>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л╨Я╨╛╨г╨╝╨╛╨╗╤З╨░╨╜╨╕╤О">
+					<Value xsi:type="xs:string">╨С╨Ъ</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string">╨в╨Ю╨Ю "Medinn Vision Lab" </Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л╨Я╨╛╨г╨╝╨╛╨╗╤З╨░╨╜╨╕╤О">
+					<Value xsi:type="xs:string">╨в╨Ю╨Ю "Medinn Vision Lab" </Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Я╨░╤А╨░╨╝╨╡╤В╤А╨╛╨▓╨г╤З╨╡╤В╨░╨Ч╨░╨┤╨░╨╜╤Л">
+					<Value xsi:type="xs:boolean">false</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Ъ╨╛╨┤╨н╤В╨╛╨│╨╛╨г╨╖╨╗╨░">
+					<Value xsi:type="xs:string">f7495236-5705-450a-a565-814e84f71911</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Т╨╡╤А╤Б╨╕╤П╨Ъ╨╛╨╜╤Д╨╕╨│╤Г╤А╨░╤Ж╨╕╨╕">
+					<Value xsi:type="xs:string">3.0.72.1</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨г╨╖╨╡╨╗╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╨╡╤В">
+					<Value xsi:type="xs:boolean">false</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Т╨╡╤А╤Б╨╕╤П╨д╨╛╤А╨╝╨░╤В╨░╨Э╨░╤Б╤В╤А╨╛╨╡╨║╨Ю╨▒╨╝╨╡╨╜╨░╨Ф╨░╨╜╨╜╤Л╨╝╨╕">
+					<Value xsi:type="xs:string">1.2</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Ш╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╤М╨Я╤А╨╡╤Д╨╕╨║╤Б╤Л╨Ф╨╗╤П╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨Ю╨▒╨╝╨╡╨╜╨░">
+					<Value xsi:type="xs:boolean">false</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨д╨╛╤А╨╝╨░╤В╨Ю╨▒╨╝╨╡╨╜╨░">
+					<Value xsi:type="xs:string">http://v8.1c.ru/edi/edi_stnd/EnterpriseData</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Ш╨╝╤П╨Я╨╗╨░╨╜╨░╨Ю╨▒╨╝╨╡╨╜╨░">
+					<Value xsi:type="xs:string">╨б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╤П╨Ф╨░╨╜╨╜╤Л╤Е╨з╨╡╤А╨╡╨╖╨г╨╜╨╕╨▓╨╡╤А╤Б╨░╨╗╤М╨╜╤Л╨╣╨д╨╛╤А╨╝╨░╤В</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Т╨╡╤А╤Б╨╕╨╕╨д╨╛╤А╨╝╨░╤В╨░╨Ю╨▒╨╝╨╡╨╜╨░">
+					<Value xsi:type="Array">
+						<Value xsi:type="xs:string">1.6</Value>
+						<Value xsi:type="xs:string">1.5</Value>
+						<Value xsi:type="xs:string">1.3</Value>
+						<Value xsi:type="xs:string">1.2</Value>
+						<Value xsi:type="xs:string">1.1</Value>
+						<Value xsi:type="xs:string">1.0</Value>
+					</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╛╨┤╨┤╨╡╤А╨╢╨╕╨▓╨░╨╡╨╝╤Л╨╡╨Ю╨▒╤К╨╡╨║╤В╤Л╨д╨╛╤А╨╝╨░╤В╨░">
+					<Value xsi:type="ValueTable">
+						<column>
+							<Name>╨Т╨╡╤А╤Б╨╕╤П</Name>
+							<ValueType>
+								<Type>xs:string</Type>
+								<StringQualifiers>
+									<Length>0</Length>
+									<AllowedLength>Variable</AllowedLength>
+								</StringQualifiers>
+							</ValueType>
+						</column>
+						<column>
+							<Name>╨Ю╨▒╤К╨╡╨║╤В</Name>
+							<ValueType>
+								<Type>xs:string</Type>
+								<StringQualifiers>
+									<Length>0</Length>
+									<AllowedLength>Variable</AllowedLength>
+								</StringQualifiers>
+							</ValueType>
+						</column>
+						<column>
+							<Name>╨Ю╤В╨┐╤А╨░╨▓╨║╨░</Name>
+							<ValueType>
+								<Type>xs:boolean</Type>
+							</ValueType>
+						</column>
+						<column>
+							<Name>╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╕╨╡</Name>
+							<ValueType>
+								<Type>xs:boolean</Type>
+							</ValueType>
+						</column>
+						<index>
+							<column>╨Т╨╡╤А╤Б╨╕╤П</column>
+							<column>╨Ю╨▒╤К╨╡╨║╤В</column>
+						</index>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨▓╨░╨╜╤Б╨╛╨▓╤Л╨╣╨Ю╤В╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Ю╤В╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╤Г</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Э╨░╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ю╤Ж╨╡╨╜╨╛╤З╨╜╤Л╤Е╨Ю╨▒╤П╨╖╨░╤В╨╡╨╗╤М╤Б╤В╨▓╨Я╨╛╨Ю╤В╨┐╤Г╤Б╨║╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╤А╨╕╤Е╨╛╨┤╨╛╨▓╨░╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨С╨╡╨╖╨╜╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Ч╨░╨┤╨╛╨╗╨╢╨╡╨╜╨╜╨╛╤Б╤В╨╕╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨Я╨╛╨Ъ╤А╨╡╨┤╨╕╤В╨░╨╝╨Ч╨░╨╣╨╝╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Я╨╡╤А╨╡╤А╨░╤Б╤Е╨╛╨┤╨░╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨б╨╛╨▒╤Б╤В╨▓╨╡╨╜╨╜╤Л╤Е╨в╨Ь╨ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╤А╨╕╨╜╤П╤В╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╤А╨╕╨╜╤П╤В╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╨╡╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨╝╨╡╤Й╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╕╨╡╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Т╨С╨░╨╜╨║╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨╛╨╖╨╜╨╕╤З╨╜╨░╤П╨Т╤Л╤А╤Г╤З╨║╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╨▓╨╛╨┤╨Э╨░╨Ф╤А╤Г╨│╨╛╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╗╨░╤В╨╡╨╢╨╕╨Т╨С╤О╨┤╨╢╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨б╨┐╨╕╤Б╨░╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨а╨░╤Б╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╤П╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Э╨░╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨░╤П╨Т╤Л╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╣╨а╨░╤Б╤Е╨╛╨┤</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л╨Э╨░╨Ы╨╕╤Ж╨╡╨▓╤Л╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨г╤Б╤В╨░╨╜╨╛╨▓╨║╨░╨ж╨╡╨╜╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨│╨╛╨▓╨╛╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨░╤Б╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╤А╨░╨╜╤Л╨Ь╨╕╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨в╨░╨╝╨╛╨╢╨╡╨╜╨╜╨░╤П╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Х╨┤╨╕╨╜╨╕╤Ж╤Л╨Ш╨╖╨╝╨╡╤А╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨┐╨╛╤Б╨╛╨▒╤Л╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╤П╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╨░╤В╤М╨╕╨Ф╨Ф╨б</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨в╨╕╨┐╤Л╨ж╨╡╨╜</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨╜╨╜╤Г╨╗╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╤П╨▓╨║╨░╨Э╨░╨а╨░╤Б╤Е╨╛╨┤╨Ф╨б╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╨║╨░╨╖╨Ъ╨╗╨╕╨╡╨╜╤В╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ъ╨╛╤А╤А╨╡╨║╤В╨╕╤А╨╛╨▓╨║╨░╨Ф╨╛╨╗╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨Я╨╛╨Я╨╗╨░╤В╨╡╨╢╨╜╨╛╨╣╨Ъ╨░╤А╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤З╨╡╤В╨С╨░╨╜╨║╨░╨Я╨╛╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨╝╨н╨║╨▓╨░╨╣╤А╨╕╨╜╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨┤╨░╤З╨░╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╛╨▓╨Т╨Я╤А╨╛╨╕╨╖╨▓╨╛╨┤╤Б╤В╨▓╨╛</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨▒╨╛╤А╨║╨░╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Т╤Л╨┤╨░╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╨╛╨▓╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╤Л╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨┐╨╛╤Б╨╛╨▒╤Л╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╤П╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.6</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨и╤В╤А╨╕╤Е╨║╨╛╨┤╤Л╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨▓╨░╨╜╤Б╨╛╨▓╤Л╨╣╨Ю╤В╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Ю╤В╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╤Г</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Э╨░╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ю╤Ж╨╡╨╜╨╛╤З╨╜╤Л╤Е╨Ю╨▒╤П╨╖╨░╤В╨╡╨╗╤М╤Б╤В╨▓╨Я╨╛╨Ю╤В╨┐╤Г╤Б╨║╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╤А╨╕╤Е╨╛╨┤╨╛╨▓╨░╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨С╨╡╨╖╨╜╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Ч╨░╨┤╨╛╨╗╨╢╨╡╨╜╨╜╨╛╤Б╤В╨╕╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨Я╨╛╨Ъ╤А╨╡╨┤╨╕╤В╨░╨╝╨Ч╨░╨╣╨╝╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Я╨╡╤А╨╡╤А╨░╤Б╤Е╨╛╨┤╨░╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨б╨╛╨▒╤Б╤В╨▓╨╡╨╜╨╜╤Л╤Е╨в╨Ь╨ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╤А╨╕╨╜╤П╤В╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╤А╨╕╨╜╤П╤В╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╨╡╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨╝╨╡╤Й╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╕╨╡╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Т╨С╨░╨╜╨║╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨╛╨╖╨╜╨╕╤З╨╜╨░╤П╨Т╤Л╤А╤Г╤З╨║╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╨▓╨╛╨┤╨Э╨░╨Ф╤А╤Г╨│╨╛╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╗╨░╤В╨╡╨╢╨╕╨Т╨С╤О╨┤╨╢╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨б╨┐╨╕╤Б╨░╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨а╨░╤Б╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╤П╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨╖╨╡╤А╨▓╤Л╨Я╨╛╨Ю╨┐╨╗╨░╤В╨╡╨в╤А╤Г╨┤╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Э╨░╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨░╤П╨Т╤Л╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╣╨а╨░╤Б╤Е╨╛╨┤</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л╨Э╨░╨Ы╨╕╤Ж╨╡╨▓╤Л╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨г╤Б╤В╨░╨╜╨╛╨▓╨║╨░╨ж╨╡╨╜╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨│╨╛╨▓╨╛╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨░╤Б╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╤А╨░╨╜╤Л╨Ь╨╕╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨в╨░╨╝╨╛╨╢╨╡╨╜╨╜╨░╤П╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Х╨┤╨╕╨╜╨╕╤Ж╤Л╨Ш╨╖╨╝╨╡╤А╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨┐╨╛╤Б╨╛╨▒╤Л╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╤П╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╨░╤В╤М╨╕╨Ф╨Ф╨б</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨в╨╕╨┐╤Л╨ж╨╡╨╜</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨╜╨╜╤Г╨╗╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╡╨┤╨╛╨╝╨╛╤Б╤В╤М╨Э╨░╨Т╨╛╨╖╨▓╤А╨░╤В╨Я╤А╨╛╤З╨╕╤Е╨Т╤Л╨┐╨╗╨░╤В</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╤П╨▓╨║╨░╨Э╨░╨а╨░╤Б╤Е╨╛╨┤╨Ф╨б╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╨║╨░╨╖╨Ъ╨╗╨╕╨╡╨╜╤В╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ъ╨╛╤А╤А╨╡╨║╤В╨╕╤А╨╛╨▓╨║╨░╨Ф╨╛╨╗╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨Я╨╛╨Я╨╗╨░╤В╨╡╨╢╨╜╨╛╨╣╨Ъ╨░╤А╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤З╨╡╤В╨С╨░╨╜╨║╨░╨Я╨╛╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨╝╨н╨║╨▓╨░╨╣╤А╨╕╨╜╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Т╨╛╨╖╨▓╤А╨░╤В╨Т╨╖╨╜╨╛╤Б╨╛╨▓╨Ш╨Ю╤В╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Т╨╛╨╖╨▓╤А╨░╤В╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨┤╨░╤З╨░╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╛╨▓╨Т╨Я╤А╨╛╨╕╨╖╨▓╨╛╨┤╤Б╤В╨▓╨╛</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨│╨╕╤Б╤В╤А╨░╤Ж╨╕╤П╨Я╤А╨╛╤З╨╕╤Е╨Т╤Л╨┐╨╗╨░╤В</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Т╨╖╨╜╨╛╤Б╨╛╨▓╨Ш╨Ю╤В╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨▒╨╛╤А╨║╨░╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Т╤Л╨┤╨░╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╨╛╨▓╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨Я╤А╨╛╤З╨╕╤Е╨Т╤Л╨┐╨╗╨░╤В</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╤Л╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨╕╨а╨░╤Б╤З╨╡╤В╨░╨а╨╡╨╖╨╡╤А╨▓╨╛╨▓╨Я╨╛╨Ю╨┐╨╗╨░╤В╨╡╨в╤А╤Г╨┤╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨а╨╡╨╖╨╡╤А╨▓╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨┐╨╛╤Б╨╛╨▒╤Л╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╤П╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.5</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨и╤В╤А╨╕╤Е╨║╨╛╨┤╤Л╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨▓╨░╨╜╤Б╨╛╨▓╤Л╨╣╨Ю╤В╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Ю╤В╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╤Г</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Э╨░╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ю╤Ж╨╡╨╜╨╛╤З╨╜╤Л╤Е╨Ю╨▒╤П╨╖╨░╤В╨╡╨╗╤М╤Б╤В╨▓╨Я╨╛╨Ю╤В╨┐╤Г╤Б╨║╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╤А╨╕╤Е╨╛╨┤╨╛╨▓╨░╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨С╨╡╨╖╨╜╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Ч╨░╨┤╨╛╨╗╨╢╨╡╨╜╨╜╨╛╤Б╤В╨╕╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨Я╨╛╨Ъ╤А╨╡╨┤╨╕╤В╨░╨╝╨Ч╨░╨╣╨╝╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Я╨╡╤А╨╡╤А╨░╤Б╤Е╨╛╨┤╨░╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨б╨╛╨▒╤Б╤В╨▓╨╡╨╜╨╜╤Л╤Е╨в╨Ь╨ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╤А╨╕╨╜╤П╤В╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╤А╨╕╨╜╤П╤В╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╨╡╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨╝╨╡╤Й╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╕╨╡╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Т╨С╨░╨╜╨║╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨╛╨╖╨╜╨╕╤З╨╜╨░╤П╨Т╤Л╤А╤Г╤З╨║╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╨▓╨╛╨┤╨Э╨░╨Ф╤А╤Г╨│╨╛╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╗╨░╤В╨╡╨╢╨╕╨Т╨С╤О╨┤╨╢╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨б╨┐╨╕╤Б╨░╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨а╨░╤Б╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╤П╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Э╨░╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨░╤П╨Т╤Л╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╣╨а╨░╤Б╤Е╨╛╨┤</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л╨Э╨░╨Ы╨╕╤Ж╨╡╨▓╤Л╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨г╤Б╤В╨░╨╜╨╛╨▓╨║╨░╨ж╨╡╨╜╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨│╨╛╨▓╨╛╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨░╤Б╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╤А╨░╨╜╤Л╨Ь╨╕╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨в╨░╨╝╨╛╨╢╨╡╨╜╨╜╨░╤П╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Х╨┤╨╕╨╜╨╕╤Ж╤Л╨Ш╨╖╨╝╨╡╤А╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨┐╨╛╤Б╨╛╨▒╤Л╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╤П╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╨░╤В╤М╨╕╨Ф╨Ф╨б</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨в╨╕╨┐╤Л╨ж╨╡╨╜</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨╜╨╜╤Г╨╗╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╤П╨▓╨║╨░╨Э╨░╨а╨░╤Б╤Е╨╛╨┤╨Ф╨б╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╨║╨░╨╖╨Ъ╨╗╨╕╨╡╨╜╤В╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ъ╨╛╤А╤А╨╡╨║╤В╨╕╤А╨╛╨▓╨║╨░╨Ф╨╛╨╗╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨Я╨╛╨Я╨╗╨░╤В╨╡╨╢╨╜╨╛╨╣╨Ъ╨░╤А╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤З╨╡╤В╨С╨░╨╜╨║╨░╨Я╨╛╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨╝╨н╨║╨▓╨░╨╣╤А╨╕╨╜╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Т╨╛╨╖╨▓╤А╨░╤В╨Т╨╖╨╜╨╛╤Б╨╛╨▓╨Ш╨Ю╤В╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Т╨╛╨╖╨▓╤А╨░╤В╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨┤╨░╤З╨░╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╛╨▓╨Т╨Я╤А╨╛╨╕╨╖╨▓╨╛╨┤╤Б╤В╨▓╨╛</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Т╨╖╨╜╨╛╤Б╨╛╨▓╨Ш╨Ю╤В╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨▒╨╛╤А╨║╨░╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Т╤Л╨┤╨░╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╨╛╨▓╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╤Л╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨┐╨╛╤Б╨╛╨▒╤Л╨Ю╤В╤А╨░╨╢╨╡╨╜╨╕╤П╨Ч╨░╤А╨┐╨╗╨░╤В╤Л╨Т╨д╨╕╨╜╨░╨╜╤Б╨╛╨▓╨╛╨╝╨г╤З╨╡╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.3</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨и╤В╤А╨╕╤Е╨║╨╛╨┤╤Л╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨▓╨░╨╜╤Б╨╛╨▓╤Л╨╣╨Ю╤В╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Ю╤В╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╤Г</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╤А╨╕╤Е╨╛╨┤╨╛╨▓╨░╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨С╨╡╨╖╨╜╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Ч╨░╨┤╨╛╨╗╨╢╨╡╨╜╨╜╨╛╤Б╤В╨╕╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨Я╨╛╨Ъ╤А╨╡╨┤╨╕╤В╨░╨╝╨Ч╨░╨╣╨╝╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Я╨╡╤А╨╡╤А╨░╤Б╤Е╨╛╨┤╨░╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨б╨╛╨▒╤Б╤В╨▓╨╡╨╜╨╜╤Л╤Е╨в╨Ь╨ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╤А╨╕╨╜╤П╤В╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╤А╨╕╨╜╤П╤В╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨╝╨╡╤Й╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╕╨╡╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Т╨С╨░╨╜╨║╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨╛╨╖╨╜╨╕╤З╨╜╨░╤П╨Т╤Л╤А╤Г╤З╨║╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╨▓╨╛╨┤╨Э╨░╨Ф╤А╤Г╨│╨╛╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╗╨░╤В╨╡╨╢╨╕╨Т╨С╤О╨┤╨╢╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨б╨┐╨╕╤Б╨░╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨а╨░╤Б╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╤П╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Э╨░╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨░╤П╨Т╤Л╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╣╨а╨░╤Б╤Е╨╛╨┤</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л╨Э╨░╨Ы╨╕╤Ж╨╡╨▓╤Л╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨г╤Б╤В╨░╨╜╨╛╨▓╨║╨░╨ж╨╡╨╜╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨│╨╛╨▓╨╛╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╤А╨░╨╜╤Л╨Ь╨╕╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨в╨░╨╝╨╛╨╢╨╡╨╜╨╜╨░╤П╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Х╨┤╨╕╨╜╨╕╤Ж╤Л╨Ш╨╖╨╝╨╡╤А╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╨░╤В╤М╨╕╨Ф╨Ф╨б</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨в╨╕╨┐╤Л╨ж╨╡╨╜</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨╜╨╜╤Г╨╗╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╤П╨▓╨║╨░╨Э╨░╨а╨░╤Б╤Е╨╛╨┤╨Ф╨б╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╨║╨░╨╖╨Ъ╨╗╨╕╨╡╨╜╤В╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ъ╨╛╤А╤А╨╡╨║╤В╨╕╤А╨╛╨▓╨║╨░╨Ф╨╛╨╗╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨Я╨╛╨Я╨╗╨░╤В╨╡╨╢╨╜╨╛╨╣╨Ъ╨░╤А╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤З╨╡╤В╨С╨░╨╜╨║╨░╨Я╨╛╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨╝╨н╨║╨▓╨░╨╣╤А╨╕╨╜╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨┤╨░╤З╨░╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╛╨▓╨Т╨Я╤А╨╛╨╕╨╖╨▓╨╛╨┤╤Б╤В╨▓╨╛</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨▒╨╛╤А╨║╨░╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Т╤Л╨┤╨░╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.2</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨и╤В╤А╨╕╤Е╨║╨╛╨┤╤Л╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨▓╨░╨╜╤Б╨╛╨▓╤Л╨╣╨Ю╤В╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Ю╤В╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╤Г</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╤А╨╕╤Е╨╛╨┤╨╛╨▓╨░╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨С╨╡╨╖╨╜╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Ч╨░╨┤╨╛╨╗╨╢╨╡╨╜╨╜╨╛╤Б╤В╨╕╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨Я╨╛╨Ъ╤А╨╡╨┤╨╕╤В╨░╨╝╨Ч╨░╨╣╨╝╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Я╨╡╤А╨╡╤А╨░╤Б╤Е╨╛╨┤╨░╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨б╨╛╨▒╤Б╤В╨▓╨╡╨╜╨╜╤Л╤Е╨в╨Ь╨ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╤А╨╕╨╜╤П╤В╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╤А╨╕╨╜╤П╤В╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨╝╨╡╤Й╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╕╨╡╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Т╨С╨░╨╜╨║╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨╛╨╖╨╜╨╕╤З╨╜╨░╤П╨Т╤Л╤А╤Г╤З╨║╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╨▓╨╛╨┤╨Э╨░╨Ф╤А╤Г╨│╨╛╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╗╨░╤В╨╡╨╢╨╕╨Т╨С╤О╨┤╨╢╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨б╨┐╨╕╤Б╨░╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨а╨░╤Б╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╤П╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Э╨░╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨░╤П╨Т╤Л╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╣╨а╨░╤Б╤Е╨╛╨┤</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л╨Э╨░╨Ы╨╕╤Ж╨╡╨▓╤Л╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨г╤Б╤В╨░╨╜╨╛╨▓╨║╨░╨ж╨╡╨╜╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨│╨╛╨▓╨╛╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨░╤Б╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╤А╨░╨╜╤Л╨Ь╨╕╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨в╨░╨╝╨╛╨╢╨╡╨╜╨╜╨░╤П╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Х╨┤╨╕╨╜╨╕╤Ж╤Л╨Ш╨╖╨╝╨╡╤А╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╨░╤В╤М╨╕╨Ф╨Ф╨б</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨в╨╕╨┐╤Л╨ж╨╡╨╜</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨╜╨╜╤Г╨╗╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╤П╨▓╨║╨░╨Э╨░╨а╨░╤Б╤Е╨╛╨┤╨Ф╨б╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╨║╨░╨╖╨Ъ╨╗╨╕╨╡╨╜╤В╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ъ╨╛╤А╤А╨╡╨║╤В╨╕╤А╨╛╨▓╨║╨░╨Ф╨╛╨╗╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨Я╨╛╨Я╨╗╨░╤В╨╡╨╢╨╜╨╛╨╣╨Ъ╨░╤А╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤З╨╡╤В╨С╨░╨╜╨║╨░╨Я╨╛╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨╝╨н╨║╨▓╨░╨╣╤А╨╕╨╜╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨┤╨░╤З╨░╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╛╨▓╨Т╨Я╤А╨╛╨╕╨╖╨▓╨╛╨┤╤Б╤В╨▓╨╛</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨▒╨╛╤А╨║╨░╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Т╤Л╨┤╨░╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.1</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨и╤В╤А╨╕╤Е╨║╨╛╨┤╤Л╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨▓╨░╨╜╤Б╨╛╨▓╤Л╨╣╨Ю╤В╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Ю╤В╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╤Г</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╤А╨╕╤Е╨╛╨┤╨╛╨▓╨░╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨С╨╡╨╖╨╜╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Ч╨░╨┤╨╛╨╗╨╢╨╡╨╜╨╜╨╛╤Б╤В╨╕╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨Я╨╛╨Ъ╤А╨╡╨┤╨╕╤В╨░╨╝╨Ч╨░╨╣╨╝╨░╨╝</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Ф╨╡╨╜╨╡╨╢╨╜╤Л╤Е╨б╤А╨╡╨┤╤Б╤В╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨Я╨╡╤А╨╡╤А╨░╤Б╤Е╨╛╨┤╨░╨Я╨╛╨┤╨╛╤В╤З╨╡╤В╨╜╤Л╤Е╨Ы╨╕╤Ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╨║╤Г╨┐╨░╤В╨╡╨╗╤П╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Р╨▓╨░╨╜╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨а╨░╤Б╤З╨╡╤В╨╛╨▓╨б╨Я╨╛╤Б╤В╨░╨▓╤Й╨╕╨║╨░╨╝╨╕╨Ф╨╛╨╗╨│╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨б╨╛╨▒╤Б╤В╨▓╨╡╨╜╨╜╤Л╤Е╨в╨Ь╨ж</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨░╤А╨░╨Я╤А╨╕╨╜╤П╤В╨░╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╨╡╤А╨╡╨┤╨░╨╜╨╜╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤Б╤В╨░╤В╨║╨╕╨в╨╛╨▓╨░╤А╨╛╨▓╨Я╤А╨╕╨╜╤П╤В╤Л╤Е╨Э╨░╨Ъ╨╛╨╝╨╕╤Б╤Б╨╕╤О</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨╝╨╡╤Й╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╕╨╡╨Э╨░╨╗╨╕╤З╨╜╤Л╤Е╨Т╨С╨░╨╜╨║╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨а╨╛╨╖╨╜╨╕╤З╨╜╨░╤П╨Т╤Л╤А╤Г╤З╨║╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨Ф╨╛╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╨▓╨╛╨┤╨Э╨░╨Ф╤А╤Г╨│╨╛╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╗╨░╤В╨╡╨╢╨╕╨Т╨С╤О╨┤╨╢╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╡╨╡╨б╨┐╨╕╤Б╨░╨╜╨╕╨╡</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╤А╨╛╤З╨╕╨╡╨а╨░╤Б╤Е╨╛╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╨╡╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╤П╨в╨╛╨▓╨░╤А╨╛╨▓╨г╤Б╨╗╤Г╨│</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╤Л╨┐╨╗╨░╤В╨░╨Ч╨░╤А╨┐╨╗╨░╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Э╨░╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╣╨б╤З╨╡╤В</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨░╤П╨Т╤Л╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Я╤А╨╛╤З╨╕╨╣╨а╨░╤Б╤Е╨╛╨┤</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Я╨╡╤А╨╡╤З╨╕╤Б╨╗╨╡╨╜╨╕╨╡╨Ч╨░╤А╨░╨▒╨╛╤В╨╜╨╛╨╣╨Я╨╗╨░╤В╤Л╨Э╨░╨Ы╨╕╤Ж╨╡╨▓╤Л╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨а╨░╤Б╤З╨╡╤В╤Л╨б╨б╨╛╤В╤А╤Г╨┤╨╜╨╕╨║╨░╨╝╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨г╤Б╤В╨░╨╜╨╛╨▓╨║╨░╨ж╨╡╨╜╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╛╨▓╤Б╨║╨╕╨╡╨б╤З╨╡╤В╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨│╨╛╨▓╨╛╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨░╤Б╤Б╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╤А╨░╨╜╤Л╨Ь╨╕╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨┤╤А╨░╨╖╨┤╨╡╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨в╨░╨╝╨╛╨╢╨╡╨╜╨╜╨░╤П╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨С╨░╨╜╨║╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨Я╨╛╤Б╤В╤Г╨┐╨╗╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Т╨╕╨┤╤Л╨а╨╡╨░╨╗╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Х╨┤╨╕╨╜╨╕╤Ж╤Л╨Ш╨╖╨╝╨╡╤А╨╡╨╜╨╕╤П</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Я╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╕</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╨║╨╗╨░╨┤╤Л╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨б╤В╨░╤В╤М╨╕╨Ф╨Ф╨б</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨в╨╕╨┐╤Л╨ж╨╡╨╜</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨д╨╕╨╖╨╕╤З╨╡╤Б╨║╨╕╨╡╨Ы╨╕╤Ж╨░╨У╤А╤Г╨┐╨┐╨░</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Р╨╜╨╜╤Г╨╗╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Т╨╛╨╖╨▓╤А╨░╤В╨Я╨╛╨┤╨░╤А╨╛╤З╨╜╤Л╤Е╨б╨╡╤А╤В╨╕╤Д╨╕╨║╨░╤В╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ч╨░╨║╨░╨╖╨Ъ╨╗╨╕╨╡╨╜╤В╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ъ╨╛╤А╤А╨╡╨║╤В╨╕╤А╨╛╨▓╨║╨░╨Ф╨╛╨╗╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨Я╨╛╨Я╨╗╨░╤В╨╡╨╢╨╜╨╛╨╣╨Ъ╨░╤А╤В╨╡</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Ю╤В╤З╨╡╤В╨С╨░╨╜╨║╨░╨Я╨╛╨Ю╨┐╨╡╤А╨░╤Ж╨╕╤П╨╝╨н╨║╨▓╨░╨╣╤А╨╕╨╜╨│╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨╡╤А╨╡╨┤╨░╤З╨░╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╛╨▓╨Т╨Я╤А╨╛╨╕╨╖╨▓╨╛╨┤╤Б╤В╨▓╨╛</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨Я╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨а╨Ъ╨Ю╨Т╨╜╤Г╤В╤А╨╡╨╜╨╜╤П╤П╨Я╨╡╤А╨╡╨┤╨░╤З╨░</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨С╨Ф╨б╨Ъ╨╛╨╜╨▓╨╡╤А╤В╨░╤Ж╨╕╤П╨Т╨░╨╗╤О╤В╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╨▒╨╛╤А╨║╨░╨в╨╛╨▓╨░╤А╨╛╨▓</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Т╤Л╨┤╨░╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В.╨б╤З╨╡╤В╨д╨░╨║╤В╤Г╤А╨░╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╜╤Л╨╣</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+						<row>
+							<Value xsi:type="xs:string">1.0</Value>
+							<Value xsi:type="xs:string">╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨и╤В╤А╨╕╤Е╨║╨╛╨┤╤Л╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╤Л</Value>
+							<Value xsi:type="xs:boolean">false</Value>
+							<Value xsi:type="xs:boolean">true</Value>
+						</row>
+					</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╤Б╤В╤А╨╛╨╣╨║╨░╨б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╨╕╨Ф╨░╨╜╨╜╤Л╤Е╨Ч╨░╨▓╨╡╤А╤И╨╡╨╜╨░">
+					<Value xsi:type="xs:boolean">false</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╛╨╗╤Г╤З╨╡╨╜╨╛╨б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡╨Ф╨╗╤П╨б╨╛╨┐╨╛╤Б╤В╨░╨▓╨╗╨╡╨╜╨╕╤П╨Ф╨░╨╜╨╜╤Л╤Е">
+					<Value xsi:type="xs:boolean">false</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╛╨┤╨┤╨╡╤А╨╢╨╕╨▓╨░╨╡╤В╤Б╤П╨б╨╛╨┐╨╛╤Б╤В╨░╨▓╨╗╨╡╨╜╨╕╨╡╨Ф╨░╨╜╨╜╤Л╤Е">
+					<Value xsi:type="xs:boolean">true</Value>
+				</Property>
+			</m:return>
+			<m:ResultMessage xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					xsi:nil="true"/>
+		</m:GetIBParametersResponse>
+	</soap:Body>
+</soap:Envelope>
+
+
+=== 6. DownloadData ===
+
+HTTP: 500
+тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_3_0_2_1.╨Ь╨╛╨┤╤Г╨╗╤М(116)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨║╨╛╨╜╤Б╤В╤А╤Г╨║╤В╨╛╤А╨░ (╨г╨╜╨╕╨║╨░╨╗╤М╨╜╤Л╨╣╨Ш╨┤╨╡╨╜╤В╨╕╤Д╨╕╨║╨░╤В╨╛╤А)
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{Web╨б╨╡╤А╨▓╨╕╤Б.Exchange_3_0_2_1.╨Ь╨╛╨┤╤Г╨╗╤М(116)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨║╨╛╨╜╤Б╤В╤А╤Г╨║╤В╨╛╤А╨░ (╨г╨╜╨╕╨║╨░╨╗╤М╨╜╤Л╨╣╨Ш╨┤╨╡╨╜╤В╨╕╤Д╨╕╨║╨░╤В╨╛╤А)
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+╨Э╨╡╨┤╨╛╨┐╤Г╤Б╤В╨╕╨╝╨╛╨╡ ╨╖╨╜╨░╤З╨╡╨╜╨╕╨╡ ╨┐╨░╤А╨░╨╝╨╡╤В╤А╨░ (╨┐╨░╤А╨░╨╝╨╡╤В╤А ╨╜╨╛╨╝╨╡╤А '1')
+
+
+=== 7. DataExchange.GiveAllDocs ===
+
+тЬЕ Response length: 763
+First 3000 chars: <ValueTable xmlns="http://v8.1c.ru/8.1/data/core" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<column>
+		<Name>Name</Name>
+		<ValueType>
+			<Type>xs:string</Type>
+			<StringQualifiers>
+				<Length>0</Length>
+				<AllowedLength>Variable</AllowedLength>
+			</StringQualifiers>
+		</ValueType>
+	</column>
+	<column>
+		<Name>Date</Name>
+		<ValueType>
+			<Type>xs:dateTime</Type>
+			<DateQualifiers>
+				<DateFractions>DateTime</DateFractions>
+			</DateQualifiers>
+		</ValueType>
+	</column>
+	<column>
+		<Name>Number</Name>
+		<ValueType>
+			<Type>xs:string</Type>
+			<StringQualifiers>
+				<Length>0</Length>
+				<AllowedLength>Variable</AllowedLength>
+			</StringQualifiers>
+		</ValueType>
+	</column>
+</ValueTable>
+
+=== DONE ===

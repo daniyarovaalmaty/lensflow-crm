@@ -1,0 +1,258 @@
+﻿[dotenv@17.3.1] injecting env (11) from .env -- tip: ЁЯдЦ agentic secret storage: https://dotenvx.com/as2
+=== 1. TestConnection with Zone ===
+
+  Zone=0: тЬЕ (HTTP 200)
+  Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:TestConnectionResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</m:return>
+			<m:Result xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">╨Т "╨в╨Ю╨Ю "Medinn Vision Lab" " ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜╨░ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨░ ╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╨╕ ╨┤╨░╨╜╨╜╤Л╤Е "╨б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕
+  Zone=1: тЬЕ (HTTP 200)
+  Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:TestConnectionResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</m:return>
+			<m:Result xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">╨Т "╨в╨Ю╨Ю "Medinn Vision Lab" " ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜╨░ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨░ ╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╨╕ ╨┤╨░╨╜╨╜╤Л╤Е "╨б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕
+  Zone=-1: тЬЕ (HTTP 200)
+  Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:TestConnectionResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">false</m:return>
+			<m:Result xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">╨Т "╨в╨Ю╨Ю "Medinn Vision Lab" " ╨╜╨╡ ╨╜╨░╨╣╨┤╨╡╨╜╨░ ╨╜╨░╤Б╤В╤А╨╛╨╣╨║╨░ ╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╨╕ ╨┤╨░╨╜╨╜╤Л╤Е "╨б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕
+
+=== 2. GetIBParameters with Zone ===
+
+  Zone=0: тЬЕ (HTTP 200)
+  Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:GetIBParametersResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╗╨░╨╜╨Ю╨▒╨╝╨╡╨╜╨░╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╨╡╤В">
+					<Value xsi:type="xs:boolean">true</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string"/>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л╨Я╨╛╨г╨╝╨╛╨╗╤З╨░╨╜╨╕╤О">
+					<Value xsi:type="xs:string">╨С╨Ъ</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string">╨в╨Ю╨Ю "Medinn Vision Lab" </Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="
+  Zone=1: тЬЕ (HTTP 200)
+  Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:GetIBParametersResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╗╨░╨╜╨Ю╨▒╨╝╨╡╨╜╨░╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╨╡╤В">
+					<Value xsi:type="xs:boolean">true</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string"/>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л╨Я╨╛╨г╨╝╨╛╨╗╤З╨░╨╜╨╕╤О">
+					<Value xsi:type="xs:string">╨С╨Ъ</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string">╨в╨Ю╨Ю "Medinn Vision Lab" </Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="
+  Zone=-1: тЬЕ (HTTP 200)
+  Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:GetIBParametersResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╗╨░╨╜╨Ю╨▒╨╝╨╡╨╜╨░╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╨╡╤В">
+					<Value xsi:type="xs:boolean">true</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string"/>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л╨Я╨╛╨г╨╝╨╛╨╗╤З╨░╨╜╨╕╤О">
+					<Value xsi:type="xs:string">╨С╨Ъ</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string">╨в╨Ю╨Ю "Medinn Vision Lab" </Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="
+
+  With NodeCode=LENSFLOW, Zone=0:
+    тЬЕ (HTTP 200)
+    Response: <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<m:GetIBParametersResponse xmlns:m="http://www.1c.ru/SSL/Exchange_3_0_2_1">
+			<m:return xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╨╗╨░╨╜╨Ю╨▒╨╝╨╡╨╜╨░╨б╤Г╤Й╨╡╤Б╤В╨▓╤Г╨╡╤В">
+					<Value xsi:type="xs:boolean">true</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string"/>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Я╤А╨╡╤Д╨╕╨║╤Б╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л╨Я╨╛╨г╨╝╨╛╨╗╤З╨░╨╜╨╕╤О">
+					<Value xsi:type="xs:string">╨С╨Ъ</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨Э╨░╨╕╨╝╨╡╨╜╨╛╨▓╨░╨╜╨╕╨╡╨Ш╨╜╤Д╨╛╤А╨╝╨░╤Ж╨╕╨╛╨╜╨╜╨╛╨╣╨С╨░╨╖╤Л">
+					<Value xsi:type="xs:string">╨в╨Ю╨Ю "Medinn Vision Lab" </Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="
+
+=== 3. GetIBData with TableName ===
+
+  "╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л": тЬЕ (HTTP 200)
+    Response: 
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨б╨▓╨╛╨╣╤Б╤В╨▓╨░╨Ю╨▒╤К╨╡╨║╤В╨░╨Ь╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е">
+					<Value xsi:type="Structure">
+						<Property name="╨б╨╕╨╜╨╛╨╜╨╕╨╝">
+							<Value xsi:type="xs:string">╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+						</Property>
+						<Property name="╨Ш╨╡╤А╨░╤А╤Е╨╕╤З╨╡╤Б╨║╨╕╨╣">
+							<Value xsi:type="xs:boolean">true</Value>
+						</Property>
+					</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨в╨░╨▒╨╗╨╕╤Ж╨░╨С╨░╨╖╤Л╨Ъ╨╛╤А╤А╨╡╤Б╨┐╨╛╨╜╨┤╨╡╨╜╤В╨░">
+					<Value xsi:type="xs:st
+  "╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░": тЬЕ (HTTP 200)
+    Response: 
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨б╨▓╨╛╨╣╤Б╤В╨▓╨░╨Ю╨▒╤К╨╡╨║╤В╨░╨Ь╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е">
+					<Value xsi:type="Structure">
+						<Property name="╨б╨╕╨╜╨╛╨╜╨╕╨╝">
+							<Value xsi:type="xs:string">╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+						</Property>
+						<Property name="╨Ш╨╡╤А╨░╤А╤Е╨╕╤З╨╡╤Б╨║╨╕╨╣">
+							<Value xsi:type="xs:boolean">true</Value>
+						</Property>
+					</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨в╨░╨▒╨╗╨╕╤Ж╨░╨С╨░╨╖╤Л╨Ъ╨╛╤А╤А╨╡╤Б╨┐╨╛╨╜╨┤╨╡╨╜╤В╨░">
+					<Value xsi:type="xs:s
+  "╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕": тЬЕ (HTTP 200)
+    Response: 
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨б╨▓╨╛╨╣╤Б╤В╨▓╨░╨Ю╨▒╤К╨╡╨║╤В╨░╨Ь╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е">
+					<Value xsi:type="Structure">
+						<Property name="╨б╨╕╨╜╨╛╨╜╨╕╨╝">
+							<Value xsi:type="xs:string">╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕</Value>
+						</Property>
+						<Property name="╨Ш╨╡╤А╨░╤А╤Е╨╕╤З╨╡╤Б╨║╨╕╨╣">
+							<Value xsi:type="xs:boolean">false</Value>
+						</Property>
+					</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨в╨░╨▒╨╗╨╕╤Ж╨░╨С╨░╨╖╤Л╨Ъ╨╛╤А╤А╨╡╤Б╨┐╨╛╨╜╨┤╨╡╨╜╤В╨░">
+					<Value xsi:type="xs:s
+  "╨б╨┐╤А╨░╨▓╨╛╤З╨╜╨╕╨║.╨Ф╨╛╨│╨╛╨▓╨╛╤А╤Л": тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨╜╨░╤З╨╡╨╜╨╕╤П╨б╨▓╨╛╨╣╤Б╤В╨▓)
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ (HTTP 500)
+  "Catalog.╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л": тЬЕ (HTTP 200)
+    Response: 
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨б╨▓╨╛╨╣╤Б╤В╨▓╨░╨Ю╨▒╤К╨╡╨║╤В╨░╨Ь╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е">
+					<Value xsi:type="Structure">
+						<Property name="╨б╨╕╨╜╨╛╨╜╨╕╨╝">
+							<Value xsi:type="xs:string">╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л</Value>
+						</Property>
+						<Property name="╨Ш╨╡╤А╨░╤А╤Е╨╕╤З╨╡╤Б╨║╨╕╨╣">
+							<Value xsi:type="xs:boolean">true</Value>
+						</Property>
+					</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨в╨░╨▒╨╗╨╕╤Ж╨░╨С╨░╨╖╤Л╨Ъ╨╛╤А╤А╨╡╤Б╨┐╨╛╨╜╨┤╨╡╨╜╤В╨░">
+					<Value xsi:type="xs:st
+  "Catalog.╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░": тЬЕ (HTTP 200)
+    Response: 
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨б╨▓╨╛╨╣╤Б╤В╨▓╨░╨Ю╨▒╤К╨╡╨║╤В╨░╨Ь╨╡╤В╨░╨┤╨░╨╜╨╜╤Л╤Е">
+					<Value xsi:type="Structure">
+						<Property name="╨б╨╕╨╜╨╛╨╜╨╕╨╝">
+							<Value xsi:type="xs:string">╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░</Value>
+						</Property>
+						<Property name="╨Ш╨╡╤А╨░╤А╤Е╨╕╤З╨╡╤Б╨║╨╕╨╣">
+							<Value xsi:type="xs:boolean">true</Value>
+						</Property>
+					</Value>
+				</Property>
+				<Property xmlns="http://v8.1c.ru/8.1/data/core"
+						name="╨в╨░╨▒╨╗╨╕╤Ж╨░╨С╨░╨╖╤Л╨Ъ╨╛╤А╤А╨╡╤Б╨┐╨╛╨╜╨┤╨╡╨╜╤В╨░">
+					<Value xsi:type="xs:s
+  "╨Ъ╨╛╨╜╤В╤А╨░╨│╨╡╨╜╤В╤Л": тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨╜╨░╤З╨╡╨╜╨╕╤П╨б╨▓╨╛╨╣╤Б╤В╨▓)
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ (HTTP 500)
+  "╨Э╨╛╨╝╨╡╨╜╨║╨╗╨░╤В╤Г╤А╨░": тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨╜╨░╤З╨╡╨╜╨╕╤П╨б╨▓╨╛╨╣╤Б╤В╨▓)
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ (HTTP 500)
+  "╨Ю╤А╨│╨░╨╜╨╕╨╖╨░╤Ж╨╕╨╕": тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨╜╨░╤З╨╡╨╜╨╕╤П╨б╨▓╨╛╨╣╤Б╤В╨▓)
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ (HTTP 500)
+  "": тЭМ ╨Э╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╨░╤П ╨╛╤И╨╕╨▒╨║╨░. {╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ ╨▓╤Л╨╖╨╛╨▓╨╡ ╨╝╨╡╤В╨╛╨┤╨░ ╨║╨╛╨╜╤В╨╡╨║╤Б╤В╨░ (╨Ч╨░╨┐╨╛╨╗╨╜╨╕╤В╤М╨Ч╨╜╨░╤З╨╡╨╜╨╕╤П╨б╨▓╨╛╨╣╤Б╤В╨▓)
+╨┐╨╛ ╨┐╤А╨╕╤З╨╕╨╜╨╡:
+{╨Ю╨▒╤Й╨╕╨╣╨Ь╨╛╨┤╤Г╨╗╤М.╨Ю╨▒╨╝╨╡╨╜╨Ф╨░╨╜╨╜╤Л╨╝╨╕╨б╨╡╤А╨▓╨╡╤А.╨Ь╨╛╨┤╤Г╨╗╤М(12269)}: ╨Ю╤И╨╕╨▒╨║╨░ ╨┐╤А╨╕ (HTTP 500)
+
+=== 4. CreateExchangeNode with correct WSDL params ===
+
+WSDL says: ExchangePlanName, NodeId, FileId, Zone
+
+  NodeId=LENSFLOW, FileId=empty, Zone=0:
+    тЭМ ╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ SOAP ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П: ╨╜╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╤Л╨╣ ╨┐╨░╤А╨░╨╝╨╡╤В╤А. (HTTP 500)
+
+  NodeId=LENSFLOW, FileId=LENSFLOW, Zone=0:
+    тЭМ ╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ SOAP ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П: ╨╜╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╤Л╨╣ ╨┐╨░╤А╨░╨╝╨╡╤В╤А. (HTTP 500)
+
+  NodeId=LENSFLOW, FileId=empty, Zone=-1:
+    тЭМ ╨Ю╤И╨╕╨▒╨║╨░ ╤А╨░╨╖╨▒╨╛╤А╨░ SOAP ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П: ╨╜╨╡╨╕╨╖╨▓╨╡╤Б╤В╨╜╤Л╨╣ ╨┐╨░╤А╨░╨╝╨╡╤В╤А. (HTTP 500)
+
+
+=== 5. DownloadData with Zone ===
+
+  тЭМ ╨Ю╨▒╤П╨╖╨░╤В╨╡╨╗╤М╨╜╤Л╨╣ ╨┐╨░╤А╨░╨╝╨╡╤В╤А ╨╜╨╡ ╨╖╨░╨┤╨░╨╜:  http://www.1c.ru/SSL/Exchange_3_0_2_1}:Exchange_3_0_2_1SoapBinding:DownloadData(...FileID...) (HTTP 500)
+
+=== 6. DataExchange.Test full response ===
+
+Test response (decoded):
+<Structure xmlns="http://v8.1c.ru/8.1/data/core" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Property name="Success">
+		<Value xsi:type="xs:boolean">true</Value>
+	</Property>
+	<Property name="Message">
+		<Value xsi:type="xs:string">╨б╨╛╨╡╨┤╨╕╨╜╨╡╨╜╨╕╨╡ ╤Г╤Б╤В╨░╨╜╨╛╨▓╨╗╨╡╨╜╨╛.</Value>
+	</Property>
+</Structure>
+
+=== DONE ===

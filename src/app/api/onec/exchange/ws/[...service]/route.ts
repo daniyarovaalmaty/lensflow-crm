@@ -196,11 +196,11 @@ function getWsdl(serviceName: string, baseUrl: string): string {
     ${typesXml}
     ${msgXml}
     <wsdl:portType name="${serviceName}PortType">${opXml}</wsdl:portType>
-    <wsdl:binding name="${serviceName}Binding" type="tns:${serviceName}PortType">
+    <wsdl:binding name="${serviceName}SoapBinding" type="tns:${serviceName}PortType">
         <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>${bindOps}
     </wsdl:binding>
     <wsdl:service name="${serviceName}">
-        <wsdl:port name="${serviceName}Port" binding="tns:${serviceName}Binding">
+        <wsdl:port name="${serviceName}Soap" binding="tns:${serviceName}SoapBinding">
             <soap:address location="${baseUrl}/ws/${serviceName}"/>
         </wsdl:port>
     </wsdl:service>
