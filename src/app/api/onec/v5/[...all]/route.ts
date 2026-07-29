@@ -1,5 +1,5 @@
 /**
- * 1C Exchange Web Service Endpoint (V4 Honeypot)
+ * 1C Exchange Web Service Endpoint (V5 Honeypot)
  * 
  * Catches ALL requests (OData, WS, etc.) to log exactly what 1C is doing.
  * Used to bust 1C's aggressive local WSDL cache.
@@ -271,14 +271,14 @@ export async function GET(
 ) {
     const { all } = await params;
     const urlStr = req.nextUrl.toString();
-    console.log(`\n\n=== [1C V4 HONEYPOT GET] ===`);
+    console.log(`\n\n=== [1C V5 HONEYPOT GET] ===`);
     console.log(`URL: ${urlStr}`);
     console.log(`Path Array: ${JSON.stringify(all)}`);
 
     // If 1C is looking for OData (REST), explicitly return a 404 text response
     // to FORCE it to log the failure and fall back to SOAP, without hitting Vercel's Edge Next.js 404 cache.
     if (all.includes('odata')) {
-        console.log(`[1C V4 HONEYPOT] OData requested, forcing 404 to trigger SOAP fallback.`);
+        console.log(`[1C V5 HONEYPOT] OData requested, forcing 404 to trigger SOAP fallback.`);
         return new NextResponse('OData not supported, use SOAP', { status: 404 });
     }
 
@@ -289,8 +289,8 @@ export async function GET(
     
     // WSDL request
     if (req.nextUrl.searchParams.has('wsdl') || req.nextUrl.searchParams.has('WSDL')) {
-        const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}/api/onec/v4`;
-        console.log(`[1C V4 HONEYPOT] Returning WSDL for ${serviceName}`);
+        const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}/api/onec/v5`;
+        console.log(`[1C V5 HONEYPOT] Returning WSDL for ${serviceName}`);
         
         return new NextResponse(getWsdl(serviceName, baseUrl), {
             headers: { 
@@ -300,19 +300,19 @@ export async function GET(
         });
     }
 
-    return NextResponse.json({ path: all, status: 'V4 Honeypot Ready' });
+    return NextResponse.json({ path: all, status: 'V5 Honeypot Ready' });
 }
 
 export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ all: string[] }> }
 ) {
-    console.log(`\n\n=== [1C V4 HONEYPOT POST] ===`);
+    console.log(`\n\n=== [1C V5 HONEYPOT POST] ===`);
     const { all } = await params;
     console.log(`Path Array: ${JSON.stringify(all)}`);
 
     if (!checkAuth(req)) {
-        console.log(`[1C V4 HONEYPOT] Unauthorized request`);
+        console.log(`[1C V5 HONEYPOT] Unauthorized request`);
         return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -328,7 +328,7 @@ export async function POST(
         operation = extractOperation(body);
     }
 
-    console.log(`[1C V4 HONEYPOT POST] Operation: ${operation}`);
+    console.log(`[1C V5 HONEYPOT POST] Operation: ${operation}`);
 
     const handlers: Record<string, () => string> = {
         'Ping': handlePing,
