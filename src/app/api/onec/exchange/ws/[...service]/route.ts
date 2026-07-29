@@ -161,10 +161,12 @@ function getWsdl(serviceName: string, baseUrl: string): string {
         <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="${ns}" elementFormDefault="qualified">
             ${operations.map(op => `
             <xsd:element name="${op}">
-                <xsd:complexType><xsd:sequence/></xsd:complexType>
+                <xsd:complexType><xsd:sequence>${
+                    op === 'GetVersions' ? '<xsd:element name="InterfaceName" type="xsd:string" minOccurs="0"/>' : ''
+                }</xsd:sequence></xsd:complexType>
             </xsd:element>
             <xsd:element name="${op}Response">
-                <xsd:complexType><xsd:sequence><xsd:element name="return" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+                <xsd:complexType><xsd:sequence><xsd:element name="return" type="${op === 'GetVersions' ? 'xsd:string' : 'xsd:anyType'}" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
             </xsd:element>`).join('')}
         </xsd:schema>
     </wsdl:types>`;
