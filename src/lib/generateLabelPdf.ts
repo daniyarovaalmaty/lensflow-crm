@@ -100,7 +100,7 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     doc.setFont('Unbounded', 'light');
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    doc.text('MEDILENS', 2, 5.5);
+    doc.text('MediLens', 2, 5.5);
 
     // Quantity — large number
     const odQty = od.characteristic ? (Number(od.qty) || 0) : 0;
