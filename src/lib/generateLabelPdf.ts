@@ -86,8 +86,8 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
 
     doc.addFileToVFS('Roboto-Regular.ttf', RobotoRegular);
     doc.addFileToVFS('Roboto-Bold.ttf', RobotoBold);
-    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-    doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal', 'Identity-H');
+    doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold', 'Identity-H');
 
     // ===== BACKGROUND =====
     doc.setFillColor(255, 255, 255);
