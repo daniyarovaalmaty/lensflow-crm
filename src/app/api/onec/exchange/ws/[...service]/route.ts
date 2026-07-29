@@ -186,10 +186,19 @@ function getWsdl(serviceName: string, baseUrl: string): string {
             <wsdl:output message="tns:${op}Response"/>
         </wsdl:operation>`).join('');
 
+    const bindOps12 = operations.map(op => `
+        <wsdl:operation name="${op}">
+            <soap12:operation soapAction="${ns}#${serviceName}:${op}"/>
+            <wsdl:input><soap12:body use="literal"/></wsdl:input>
+            <wsdl:output><soap12:body use="literal"/></wsdl:output>
+        </wsdl:operation>`).join('');
+
     return `<?xml version="1.0" encoding="UTF-8"?>
 <wsdl:definitions 
+    name="${serviceName}"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:tns="${ns}"
     targetNamespace="${ns}">
@@ -199,9 +208,15 @@ function getWsdl(serviceName: string, baseUrl: string): string {
     <wsdl:binding name="${serviceName}SoapBinding" type="tns:${serviceName}PortType">
         <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>${bindOps}
     </wsdl:binding>
+    <wsdl:binding name="${serviceName}Soap12Binding" type="tns:${serviceName}PortType">
+        <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>${bindOps12}
+    </wsdl:binding>
     <wsdl:service name="${serviceName}">
         <wsdl:port name="${serviceName}Soap" binding="tns:${serviceName}SoapBinding">
             <soap:address location="${baseUrl}/ws/${serviceName}"/>
+        </wsdl:port>
+        <wsdl:port name="${serviceName}Soap12" binding="tns:${serviceName}Soap12Binding">
+            <soap12:address location="${baseUrl}/ws/${serviceName}"/>
         </wsdl:port>
     </wsdl:service>
 </wsdl:definitions>`;
