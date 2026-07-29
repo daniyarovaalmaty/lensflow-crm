@@ -17,6 +17,8 @@ interface Product {
     sku: string | null; barcode?: string | null; currentStock: number; minStock: number; unit: string;
     purchasePrice: number; retailPrice: number; trackSerials: boolean;
     _count?: { stockItems: number };
+    organizationId?: string;
+    organization?: { name: string; city: string | null };
 }
 
 interface StockItem {
@@ -960,6 +962,7 @@ export default function WarehousePage() {
                                     <thead>
                                         <tr className="border-b border-gray-100 bg-gray-50/50">
                                             <th className="text-left px-4 py-3 font-medium text-gray-500">Товар</th>
+                                            {products.some(p => p.organization) && <th className="text-left px-4 py-3 font-medium text-gray-500 hidden md:table-cell">Точка</th>}
                                             <th className="text-center px-4 py-3 font-medium text-gray-500">Остаток</th>
                                             <th className="text-center px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Мин.</th>
                                             <th className="text-right px-4 py-3 font-medium text-gray-500 hidden sm:table-cell">Закуп.</th>
@@ -978,6 +981,16 @@ export default function WarehousePage() {
                                                         <div className="font-medium text-gray-900">{p.name}</div>
                                                         {p.brand && <div className="text-xs text-gray-400">{p.brand} {p.sku ? `• ${p.sku}` : ''}</div>}
                                                     </td>
+                                                    {products.some(pp => pp.organization) && (
+                                                        <td className="px-4 py-3 hidden md:table-cell">
+                                                            {p.organization ? (
+                                                                <div>
+                                                                    <div className="text-xs font-medium text-gray-700">{p.organization.name}</div>
+                                                                    {p.organization.city && <div className="text-[10px] text-gray-400">{p.organization.city}</div>}
+                                                                </div>
+                                                            ) : <span className="text-gray-300">—</span>}
+                                                        </td>
+                                                    )}
                                                     <td className="px-4 py-3 text-center">
                                                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
                                                             isLow ? 'bg-red-100 text-red-700' : stock > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
