@@ -2316,6 +2316,7 @@ export default function PatientDetailPage() {
                                                             order_id: order.orderNumber || order.id,
                                                             patient: { name: patient?.name || '' },
                                                             meta: { optic_name: (patient as any)?.organization?.name || '' },
+                                                            company: (order as any).company,
                                                             config: (order as any).config || { eyes: { od: {}, os: {} } },
                                                             ready_at: order.createdAt,
                                                             production_started_at: order.createdAt,

@@ -304,7 +304,15 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     let opticName = order.company || order.meta.optic_name || '';
     
     // Shorten long clinic names like "Офтальмологический центр «New Eye»"
-    const lowerName = opticName.toLowerCase();
+    let lowerName = opticName.toLowerCase();
+    
+    // If it defaults to the distributor organization name, try to use delivery address as a fallback,
+    // or just leave it empty instead of printing "ЦКК Дистрибьютор"
+    if (lowerName.includes('цкк') || lowerName.includes('дистрибьютор')) {
+        opticName = order.company || (order as any).delivery_address || '';
+        lowerName = opticName.toLowerCase();
+    }
+
     if (lowerName.includes('new eye') || lowerName.includes('neweye') || lowerName.includes('нью ай')) {
         opticName = 'New Eye';
     }
