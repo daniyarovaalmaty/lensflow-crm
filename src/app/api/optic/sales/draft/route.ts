@@ -48,36 +48,50 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    const sale = await prisma.sale.create({
-        data: {
-            saleNumber,
-            organizationId: orgId,
-            customerName: patientObj.name,
-            customerPhone: patientObj.phone,
-            patientId,
-            subtotal,
-            discountPercent: 0,
-            discountAmount: 0,
-            total: subtotal,
-            paidAmount: 0,
-            paymentMethod: 'cash',
-            paymentStatus: 'unpaid',
-            performedById: user.id,
-            performedByName: user.fullName || user.email,
-            notes: notes || null,
-            items: {
-                create: saleItems.map(si => ({
-                    productId: si.productId,
-                    name: si.name,
-                    category: si.category,
-                    quantity: si.quantity,
-                    unitPrice: si.unitPrice,
-                    total: si.total,
-                })),
-            },
-        },
-        include: { items: true },
-    });
+    let sale: any = null;
+    for (let _attempt = 0; _attempt < 5; _attempt++) {
+        try {
+            sale = await prisma.sale.create({
+                data: {
+                    saleNumber,
+                    organizationId: orgId,
+                    customerName: patientObj.name,
+                    customerPhone: patientObj.phone,
+                    patientId,
+                    subtotal,
+                    discountPercent: 0,
+                    discountAmount: 0,
+                    total: subtotal,
+                    paidAmount: 0,
+                    paymentMethod: 'cash',
+                    paymentStatus: 'unpaid',
+                    performedById: user.id,
+                    performedByName: user.fullName || user.email,
+                    notes: notes || null,
+                    items: {
+                        create: saleItems.map(si => ({
+                            productId: si.productId,
+                            name: si.name,
+                            category: si.category,
+                            quantity: si.quantity,
+                            unitPrice: si.unitPrice,
+                            total: si.total,
+                        })),
+                    },
+                },
+                include: { items: true },
+            });
+            break;
+        } catch (e: any) {
+            const isUnique = e?.code === 'P2002' || JSON.stringify(e || '').includes('23505');
+            if (isUnique && _attempt < 4) {
+                saleCount++;
+                saleNumber = `INV-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
+                continue;
+            }
+            throw e;
+        }
+    }
 
     return NextResponse.json(sale, { status: 201 });
 }
