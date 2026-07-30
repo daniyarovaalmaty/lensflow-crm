@@ -1,7 +1,8 @@
 import prisma from '@/lib/db/prisma';
-import { oneCClient } from './client';
+import { OneCClient } from './client';
 
 export class OrderSyncService {
+  constructor(private oneCClient: OneCClient) {}
   /**
    * Отправляет Заказ (Order) в 1С
    * 1. Находит или создает контрагента
@@ -37,7 +38,7 @@ export class OrderSyncService {
     
     if (!counterpartyKey) {
       // Пытаемся создать контрагента в 1С
-      const newCp = await oneCClient.createCounterparty({
+      const newCp = await this.oneCClient.createCounterparty({
         name: org.name,
         inn: org.inn || '',
         type: 'ЮридическоеЛицо'
@@ -74,7 +75,7 @@ export class OrderSyncService {
     const findProductKey = async (name: string) => {
       // В идеале мы должны искать в локальной БД (Product.onecId),
       // но если таблица еще не синхронизирована, ищем напрямую в 1С по OData фильтру:
-      const res = await oneCClient.request<any>(`Catalog_Номенклатура?$filter=Description eq '${name}'`);
+      const res = await this.oneCClient.request<any>(`Catalog_Номенклатура?$filter=Description eq '${name}'`);
       if (res.value && res.value.length > 0) {
         return res.value[0].Ref_Key;
       }
@@ -104,7 +105,7 @@ export class OrderSyncService {
     }
 
     // 6. Создаем Реализацию
-    const invoice = await oneCClient.createSalesInvoice({
+    const invoice = await this.oneCClient.createSalesInvoice({
       date: new Date().toISOString().split('.')[0], // Формат OData без миллисекунд
       organizationKey: labOrgKey,
       warehouseKey: labWarehouseKey,
@@ -117,5 +118,3 @@ export class OrderSyncService {
     return invoice;
   }
 }
-
-export const orderSyncService = new OrderSyncService();

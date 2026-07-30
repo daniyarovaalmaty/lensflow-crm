@@ -1,14 +1,25 @@
+export interface OneCClientConfig {
+  baseUrl: string;
+  username: string;
+  password: string;
+}
+
 export class OneCClient {
   private readonly baseUrl: string;
   private readonly authHeader: string;
 
-  constructor() {
-    const url = process.env.ONEC_ODATA_URL || 'https://1cstart.itsheff.cloud/okeyvizhenjb94v/odata/standard.odata';
-    const user = process.env.ONEC_USER || 'Главный бухгалтер';
-    const pass = process.env.ONEC_PASSWORD || '5555';
+  constructor(config: OneCClientConfig) {
+    let url = config.baseUrl;
+    const user = config.username;
+    const pass = config.password;
 
     if (!url) {
-      throw new Error('ONEC_ODATA_URL is not configured');
+      throw new Error('Укажите URL сервера 1С в настройках');
+    }
+
+    // Если URL не заканчивается на odata/standard.odata, добавим его (как fallback для тех, кто ввел просто корень)
+    if (!url.includes('odata/standard.odata')) {
+        url = url.endsWith('/') ? `${url}odata/standard.odata` : `${url}/odata/standard.odata`;
     }
 
     this.baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
@@ -143,5 +154,3 @@ export class OneCClient {
     return res;
   }
 }
-
-export const oneCClient = new OneCClient();

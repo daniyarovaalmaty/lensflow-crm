@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { orderSyncService } from '@/lib/onec/orderSync';
+import { OrderSyncService } from '@/lib/onec/orderSync';
+import { OneCClient } from '@/lib/onec/client';
 import { auth } from '@/auth';
+import prisma from '@/lib/db/prisma';
 
 export async function POST(
   req: NextRequest,
@@ -11,6 +13,23 @@ export async function POST(
     if (!session || !['lab_head', 'lab_admin', 'superadmin'].includes(session.user?.subRole || session.user?.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const orgId = (session.user as any).organizationId;
+    if (!orgId) return NextResponse.json({ error: 'Организация не найдена' }, { status: 403 });
+
+    const org = await prisma.organization.findUnique({ where: { id: orgId } });
+    const onecConf = (org?.metadata as any)?.onec;
+    
+    if (!onecConf || !onecConf.baseUrl || !onecConf.username || !onecConf.password) {
+      return NextResponse.json({ error: 'Сначала настройте интеграцию с 1С (Настройки -> Интеграция 1С)' }, { status: 400 });
+    }
+
+    const client = new OneCClient({
+        baseUrl: onecConf.baseUrl,
+        username: onecConf.username,
+        password: onecConf.password
+    });
+    const orderSyncService = new OrderSyncService(client);
 
     const invoice = await orderSyncService.syncOrderTo1C(params.id);
 
