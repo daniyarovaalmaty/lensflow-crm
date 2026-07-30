@@ -60,7 +60,7 @@ const DOC_TYPES: Record<string, string> = {
 
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
-type Tab = 'stock' | 'receive' | 'movements' | 'documents' | 'inventory';
+type Tab = 'stock' | 'catalog' | 'receive' | 'movements' | 'documents' | 'inventory';
 
 // ==================== Product Search Select ====================
 function ProductSearchSelect({ products, value, onChange }: {
