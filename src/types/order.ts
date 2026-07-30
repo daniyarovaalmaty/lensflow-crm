@@ -39,6 +39,11 @@ const optionalBoundedNumber = (min: number, max: number) =>
         z.number().min(min).max(max).optional()
     );
 
+const optionalNonNegativeNumber = z.preprocess(
+    (val) => (val === '' || val === null || val === undefined || Number.isNaN(Number(val)) ? undefined : Number(val)),
+    z.number().min(0, 'Значение не может быть отрицательным').optional()
+);
+
 const optionalEnum = <T extends [string, ...string[]]>(enumSchema: z.ZodEnum<T>) =>
     z.preprocess(
         (val) => (val === '' || val === null || val === undefined ? undefined : val),
@@ -55,7 +60,7 @@ export const OrthoEyeParamsSchema = z.object({
     dia: optionalNumber,
     e1: optionalNumber,
     e2: optionalNumber,
-    tor: optionalNumber,
+    tor: optionalNonNegativeNumber,
     trial: z.boolean().optional(),
     color: z.string().optional(),
     dk: optionalEnum(DkEnum),
