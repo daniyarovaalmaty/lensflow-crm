@@ -115,7 +115,23 @@ export class OrderSyncService {
       throw new Error('В заказе нет товаров для отправки (пустые documentNameOd/Os)');
     }
 
-    // 6. Создаем Реализацию
+    // 6. Создаем Счет на оплату
+    try {
+      await this.oneCClient.createPaymentBill({
+        date: new Date().toISOString().split('.')[0], // Формат OData без миллисекунд
+        organizationKey: labOrgKey,
+        warehouseKey: labWarehouseKey,
+        counterpartyKey,
+        contractKey,
+        items
+      });
+      console.log(`[1C Sync] Created Payment Bill for order ${order.id}`);
+    } catch (billError: any) {
+      console.error(`[1C Sync] Failed to create Payment Bill for order ${order.id}:`, billError.message);
+      // Мы не прерываем создание реализации, если счет не создался (или можно прерывать, на усмотрение)
+    }
+
+    // 7. Создаем Реализацию
     const invoice = await this.oneCClient.createSalesInvoice({
       date: new Date().toISOString().split('.')[0], // Формат OData без миллисекунд
       organizationKey: labOrgKey,

@@ -153,4 +153,93 @@ export class OneCClient {
 
     return res;
   }
+
+  /**
+   * Создать Счет на оплату в 1С
+   */
+  async createPaymentBill(data: {
+    date: string;
+    organizationKey: string;
+    warehouseKey: string;
+    counterpartyKey: string;
+    contractKey: string;
+    items: Array<{
+      productKey: string;
+      quantity: number;
+      price: number;
+    }>;
+  }) {
+    const payload = {
+      Date: data.date,
+      Организация_Key: data.organizationKey,
+      Контрагент_Key: data.counterpartyKey,
+      ДоговорКонтрагента_Key: data.contractKey,
+      Товары: data.items.map((item, index) => ({
+        LineNumber: (index + 1).toString(),
+        Номенклатура_Key: item.productKey,
+        Количество: item.quantity,
+        Цена: item.price,
+        Сумма: item.quantity * item.price
+      }))
+    };
+
+    const res = await this.request<any>('Document_СчетНаОплатуПокупателю', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    return res;
+  }
+
+  /**
+   * Получить цены (Прайсы) из 1С
+   * Возвращает словарь: { 'onecId': retailPrice }
+   */
+  async getPrices(): Promise<Record<string, number>> {
+    try {
+      // 1. Пытаемся найти Розничную цену
+      const priceTypes = await this.request<any>('Catalog_ТипыЦенНоменклатуры');
+      let targetPriceTypeKey = null;
+      if (priceTypes && priceTypes.value) {
+        const retailType = priceTypes.value.find((pt: any) => pt.Description.toLowerCase().includes('розничная'));
+        if (retailType) {
+          targetPriceTypeKey = retailType.Ref_Key;
+        } else {
+          // Fallback to first available
+          targetPriceTypeKey = priceTypes.value[0]?.Ref_Key;
+        }
+      }
+
+      // 2. Скачиваем регистр цен
+      // Если есть определенный тип цен, можно отфильтровать (но OData фильтр по вложенным массивам сложен)
+      // Проще скачать весь регистр (или $top=1000)
+      const res = await this.request<any>('InformationRegister_ЦеныНоменклатуры');
+      const records = res.value || [];
+      
+      const priceMap: Record<string, number> = {};
+
+      for (const recorder of records) {
+        if (recorder.RecordSet && Array.isArray(recorder.RecordSet)) {
+          for (const record of recorder.RecordSet) {
+            // Если мы определили желаемый тип цен и он не совпадает — пропускаем (если это не единственный)
+            if (targetPriceTypeKey && record.ТипЦен_Key !== targetPriceTypeKey) {
+              // Если в priceMap еще нет цены для этой номенклатуры, сохраняем хотя бы эту
+              if (!priceMap[record.Номенклатура_Key]) {
+                priceMap[record.Номенклатура_Key] = record.Цена;
+              }
+              continue;
+            }
+            
+            // Сохраняем/перезаписываем приоритетной ценой
+            priceMap[record.Номенклатура_Key] = record.Цена;
+          }
+        }
+      }
+
+      return priceMap;
+    } catch (error) {
+      console.error('[1C OData getPrices Error]', error);
+      return {}; // Возвращаем пустой объект при ошибке, чтобы не ломать синхронизацию каталога
+    }
+  }
 }

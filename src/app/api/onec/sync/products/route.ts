@@ -30,6 +30,14 @@ export async function POST(req: NextRequest) {
     const productsFrom1C = await oneCClient.request<any>('Catalog_Номенклатура?$top=1000');
     const items = productsFrom1C.value || [];
 
+    // Получаем цены из 1С
+    let pricesMap: Record<string, number> = {};
+    try {
+        pricesMap = await oneCClient.getPrices();
+    } catch (e) {
+        console.error('[1C Sync] Failed to fetch prices:', e);
+    }
+
     let createdCount = 0;
     let updatedCount = 0;
 
@@ -39,11 +47,11 @@ export async function POST(req: NextRequest) {
 
       const onecId = item.Ref_Key;
       const name = item.Description;
-      const code = item.Code;
-      // В 1С артикул может называться "Артикул"
       const sku = item.Артикул || null;
+      
+      const price = pricesMap[onecId] || 0;
 
-      // Ищем товар по onecId или по точному совпадению name1c
+      // Ищем товар по onecId или по точному совпадению name
       const existingProduct = await prisma.opticProduct.findFirst({
         where: {
           organizationId: orgId,
@@ -61,7 +69,8 @@ export async function POST(req: NextRequest) {
           data: {
             onecId,
             name: name,
-            sku: sku || existingProduct.sku
+            sku: sku || existingProduct.sku,
+            retailPrice: price // Обновляем цену из 1С
           }
         });
         updatedCount++;
@@ -72,10 +81,10 @@ export async function POST(req: NextRequest) {
             onecId,
             name,
             sku,
-            category: 'lens', // Дефолтная категория, потом можно мапить из ВидНоменклатуры
+            category: 'lens', // Дефолтная категория
             type: 'product',
             organizationId: orgId,
-            retailPrice: 0,
+            retailPrice: price, // Проставляем цену из 1С
             unit: 'шт',
             isActive: true
           }
