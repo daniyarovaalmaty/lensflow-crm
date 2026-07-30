@@ -37,14 +37,25 @@ export class OrderSyncService {
     let counterpartyKey = org.onecOrgId;
     
     if (!counterpartyKey) {
-      // Пытаемся создать контрагента в 1С
-      const newCp = await this.oneCClient.createCounterparty({
-        name: org.name,
-        inn: org.inn || '',
-        type: 'ЮридическоеЛицо'
-      });
+      // Ищем контрагента в 1С по ИНН или Названию
+      let searchFilter = `Description eq '${org.name}'`;
+      if (org.inn) {
+          searchFilter = `ИНН eq '${org.inn}'`;
+      }
       
-      counterpartyKey = newCp.Ref_Key;
+      const searchRes = await this.oneCClient.request<any>(`Catalog_Контрагенты?$filter=${searchFilter}`);
+      
+      if (searchRes.value && searchRes.value.length > 0) {
+          counterpartyKey = searchRes.value[0].Ref_Key;
+      } else {
+          // Пытаемся создать контрагента в 1С
+          const newCp = await this.oneCClient.createCounterparty({
+            name: org.name,
+            inn: org.inn || '',
+            type: 'ЮридическоеЛицо'
+          });
+          counterpartyKey = newCp.Ref_Key;
+      }
       
       // Сохраняем полученный ключ в базу
       if (counterpartyKey) {
