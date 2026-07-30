@@ -84,8 +84,9 @@ export class OneCClient {
   async createCounterparty(data: { name: string; inn?: string; type?: 'ЮридическоеЛицо' | 'ФизическоеЛицо' }) {
     const payload = {
       Description: data.name,
-      ИНН: data.inn || '',
-      ЮрФизЛицо: data.type || 'ЮридическоеЛицо'
+      НаименованиеПолное: data.name,
+      ЮрФизЛицо: data.type === 'ЮридическоеЛицо' ? 'ЮрЛицо' : 'ФизЛицо',
+      ИдентификационныйКодЛичности: data.inn || '',
     };
 
     const res = await this.request<any>('Catalog_Контрагенты', {
@@ -102,7 +103,7 @@ export class OneCClient {
   async createContract(counterpartyKey: string, orgKey: string, currencyKey: string) {
     const payload = {
       Description: 'Основной договор',
-      Владелец_Key: counterpartyKey,
+      Owner_Key: counterpartyKey,
       Организация_Key: orgKey,
       ВидДоговора: 'СПокупателем',
       ВалютаВзаиморасчетов_Key: currencyKey
