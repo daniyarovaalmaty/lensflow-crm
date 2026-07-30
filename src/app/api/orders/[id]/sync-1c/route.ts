@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { orderSyncService } from '@/lib/onec/orderSync';
-import { getServerSession } from 'next-auth';
-// import { authOptions } from '@/lib/auth'; // Adjust import based on the actual auth path
+import { auth } from '@/auth';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // В реальной системе нужно проверить права доступа (isAdmin / isManager)
-    // const session = await getServerSession(authOptions);
-    // if (!session || !['admin', 'manager'].includes(session.user?.role)) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    const session = await auth();
+    if (!session || !['lab_head', 'lab_admin', 'superadmin'].includes(session.user?.subRole || session.user?.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const invoice = await orderSyncService.syncOrderTo1C(params.id);
 

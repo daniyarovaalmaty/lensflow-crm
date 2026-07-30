@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus, Pencil, Trash2, X, Save, Package, Droplets, Wrench,
-    Search, DollarSign, Tag, Hash, FileText, Barcode
+    Search, DollarSign, Tag, Hash, FileText, Barcode, RefreshCw
 } from 'lucide-react';
 import type { SubRole } from '@/types/user';
 
@@ -44,6 +44,7 @@ export default function CatalogPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterCategory, setFilterCategory] = useState<string>('');
+    const [isSyncing, setIsSyncing] = useState(false);
 
     // Modal
     const [showModal, setShowModal] = useState(false);
@@ -76,6 +77,27 @@ export default function CatalogPage() {
             }
         } catch (e) { console.error(e); }
         finally { setIsLoading(false); }
+    };
+
+    const handleSync1C = async () => {
+        if (!confirm('Синхронизировать товары с 1С? Это может занять некоторое время.')) return;
+        setIsSyncing(true);
+        try {
+            const res = await fetch('/api/onec/sync/products', { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Синхронизация завершена успешно.\nСоздано: ${data.stats?.created || 0}, Обновлено: ${data.stats?.updated || 0}`);
+                fetchProducts();
+            } else {
+                const err = await res.json();
+                alert(`Ошибка синхронизации: ${err.error || 'Неизвестная ошибка'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка при выполнении запроса к 1С');
+        } finally {
+            setIsSyncing(false);
+        }
     };
 
     const openCreateModal = () => {
@@ -208,10 +230,16 @@ export default function CatalogPage() {
                             <p className="text-gray-600 mt-1">{products.filter(p => p.isActive).length} товаров</p>
                         </div>
                         {canEdit && (
-                            <button onClick={openCreateModal} className="btn btn-primary gap-2">
-                                <Plus className="w-5 h-5" />
-                                Добавить товар
-                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={handleSync1C} disabled={isSyncing} className="btn bg-gray-100 hover:bg-gray-200 text-gray-800 gap-2 border border-gray-300">
+                                    <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                                    {isSyncing ? 'Синхронизация...' : 'Синхронизировать с 1С'}
+                                </button>
+                                <button onClick={openCreateModal} className="btn btn-primary gap-2">
+                                    <Plus className="w-5 h-5" />
+                                    Добавить товар
+                                </button>
+                            </div>
                         )}
                     </div>
 

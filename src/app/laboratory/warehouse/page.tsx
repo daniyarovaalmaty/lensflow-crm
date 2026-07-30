@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil, ClipboardCheck } from 'lucide-react';
+import { Package, Plus, Search, X, ArrowDownToLine, ArrowUpFromLine, FileText, Clock, AlertTriangle, Trash2, BarChart3, ChevronDown, Glasses, Eye, Droplets, ShoppingBag, Wrench, Hash, Download, ArrowLeft, Upload, Banknote, CheckCircle, Printer, Sparkles, Camera, Pencil, ClipboardCheck, PackageSearch } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate, formatDateTime } from '@/lib/dateUtils';
 import { getEffectiveClinicPermissions } from '@/types/user';
 import AccessDenied from '@/components/ui/AccessDenied';
 import { BarcodeScanner } from '@/components/scanner/BarcodeScanner';
 import QuickNav from '@/components/ui/QuickNav';
+import CatalogTab from './CatalogTab';
 
 // ==================== Types ====================
 interface Product {
@@ -830,6 +831,7 @@ export default function WarehousePage() {
                     <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
                         {([
                             { key: 'stock', label: 'Остатки', icon: Package },
+                            { key: 'catalog', label: 'Номенклатура', icon: PackageSearch },
                             { key: 'receive', label: 'Приход', icon: ArrowDownToLine },
                             { key: 'movements', label: 'История', icon: Clock },
                             { key: 'documents', label: 'Документы', icon: FileText },

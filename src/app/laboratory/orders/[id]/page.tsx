@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import {
     ArrowLeft, Package, User, Building2, Stethoscope,
-    Eye, Zap, Truck, FileText, CreditCard, AlertCircle, Clock, Download
+    Eye, Zap, Truck, FileText, CreditCard, AlertCircle, Clock, Download, RefreshCw
 } from 'lucide-react';
 import { OrderStatusLabels, PaymentStatusLabels, PaymentStatusColors } from '@/types/order';
 import type { OrderStatus, PaymentStatus } from '@/types/order';
@@ -22,6 +22,7 @@ export default function LabOrderDetailPage() {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [isSyncing, setIsSyncing] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -81,6 +82,25 @@ export default function LabOrderDetailPage() {
                 notes: order.notes,
             });
         });
+    };
+
+    const handleSync1C = async () => {
+        if (!confirm('Отправить реализацию по этому заказу в 1С?')) return;
+        setIsSyncing(true);
+        try {
+            const res = await fetch(`/api/orders/${orderId}/sync-1c`, { method: 'POST' });
+            if (res.ok) {
+                alert('Успешно отправлено в 1С!');
+            } else {
+                const err = await res.json();
+                alert(`Ошибка: ${err.error || 'Не удалось отправить в 1С'}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка сети при отправке в 1С');
+        } finally {
+            setIsSyncing(false);
+        }
     };
 
     /* ── Param row helper ── */
@@ -269,6 +289,15 @@ export default function LabOrderDetailPage() {
                         >
                             <Download className="w-4 h-4" />
                             Скачать заявку PDF
+                        </button>
+                        
+                        <button
+                            onClick={handleSync1C}
+                            disabled={isSyncing}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                            {isSyncing ? 'Отправка...' : 'Отправить в 1С'}
                         </button>
                     </div>
                 </div>
