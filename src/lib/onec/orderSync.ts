@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import prisma from '@/lib/db/prisma';
 import { oneCClient } from './client';
 
 export class OrderSyncService {
@@ -11,7 +11,7 @@ export class OrderSyncService {
    */
   async syncOrderTo1C(orderId: string) {
     // 1. Получаем заказ из базы
-    const order = await db.order.findUnique({
+    const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
         organization: true, // Клиника-заказчик
@@ -47,7 +47,7 @@ export class OrderSyncService {
       
       // Сохраняем полученный ключ в базу
       if (counterpartyKey) {
-        await db.organization.update({
+        await prisma.organization.update({
           where: { id: org.id },
           data: { onecOrgId: counterpartyKey }
         });

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { oneCClient } from '@/lib/onec/client';
-import { db } from '@/lib/db';
+import prisma from '@/lib/db/prisma';
 
 export async function POST() {
   try {
@@ -21,7 +21,7 @@ export async function POST() {
       const sku = item.Артикул || null;
 
       // Ищем товар по onecId или по точному совпадению name1c
-      const existingProduct = await db.product.findFirst({
+      const existingProduct = await prisma.product.findFirst({
         where: {
           OR: [
             { onecId },
@@ -32,7 +32,7 @@ export async function POST() {
 
       if (existingProduct) {
         // Обновляем
-        await db.product.update({
+        await prisma.product.update({
           where: { id: existingProduct.id },
           data: {
             onecId,
@@ -44,7 +44,7 @@ export async function POST() {
         updatedCount++;
       } else {
         // Создаем новый товар (как сырье/материал для лаборатории)
-        await db.product.create({
+        await prisma.product.create({
           data: {
             onecId,
             name,
