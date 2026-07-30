@@ -21,6 +21,10 @@ model Organization {
   city      String?
   crmPhone  String?   // Номер WhatsApp для CRM-интеграции филиала
 
+  // 1C OData Integration
+  onecOrgId        String?  // ID (Ref_Key) вашей компании в 1С
+  onecWarehouseId  String?  // ID склада в 1С
+
   // Multi-branch: self-relation
   parentId  String?
   parent    Organization?  @relation("OrgBranches", fields: [parentId], references: [id])
@@ -273,6 +277,10 @@ model Patient {
   doctor         User?    @relation("DoctorPatients", fields: [doctorId], references: [id])
   // Family relations & Classification
   isChild        Boolean  @default(false)
+
+  // 1C OData Integration
+  onecId         String?  // ID контрагента в 1С (Ref_Key)
+  onecContractId String?  // ID договора контрагента в 1С (Ref_Key)
   parentName     String?
   parentPhone    String?
   city           String?
@@ -435,6 +443,7 @@ model Product {
   category    String   // lens, solution, accessory
   sku         String?  @unique
   name1c      String?  // Наименование в 1С
+  onecId      String?  @unique // ID (Ref_Key) номенклатуры в 1С
   code        String?  // Код товара
   description String?
   price       Int      @default(0)
@@ -667,6 +676,7 @@ model OpticProduct {
 
   name             String
   slug             String?
+  onecId           String?  @unique // ID (Ref_Key) номенклатуры в 1С
   category         String          // frame | sun_glasses | contact_lens | spectacle_lens | solution | accessory | service_exam | service_fitting | service_cutting | service_repair | service_other
   type             String  @default("product")  // product | service
 
