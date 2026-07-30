@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
     if (!patientObj) return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
 
     // Generate sale number
-    const saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
-    const saleNumber = `INV-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
+    let saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
+    let saleNumber = `INV-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
 
     let subtotal = 0;
     const saleItems: any[] = [];
