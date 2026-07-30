@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
           organizationId: orgId,
           OR: [
             { onecId },
-            { name1c: name }
+            { name: name }
           ]
         }
       });
@@ -60,8 +60,7 @@ export async function POST(req: NextRequest) {
           where: { id: existingProduct.id },
           data: {
             onecId,
-            name1c: name,
-            code: code || existingProduct.code,
+            name: name,
             sku: sku || existingProduct.sku
           }
         });
@@ -72,13 +71,11 @@ export async function POST(req: NextRequest) {
           data: {
             onecId,
             name,
-            name1c: name,
-            code,
             sku,
             category: 'lens', // Дефолтная категория, потом можно мапить из ВидНоменклатуры
             type: 'product',
             organizationId: orgId,
-            price: 0,
+            retailPrice: 0,
             unit: 'шт',
             isActive: true
           }
