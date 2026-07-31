@@ -72,7 +72,7 @@ export async function GET(
                     patient: { select: { name: true } },
                 },
                 orderBy: { createdAt: 'desc' },
-                take: 100,
+                take: 1000,
             });
 
             const statusMap: Record<string, string> = {
@@ -132,7 +132,7 @@ export async function GET(
                     organization: { select: { name: true } },
                 },
                 orderBy: { createdAt: 'desc' },
-                take: 100,
+                take: 1000,
             });
 
             const statusMap: Record<string, string> = {
