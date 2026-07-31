@@ -12,8 +12,13 @@ export class OrderSyncService {
    */
   async syncOrderTo1C(orderId: string) {
     // 1. Получаем заказ из базы
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: orderId },
+          { orderNumber: orderId }
+        ]
+      },
       include: {
         organization: true, // Клиника-заказчик
         labOrg: true,       // Лаборатория-производитель
