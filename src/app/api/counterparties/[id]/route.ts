@@ -56,7 +56,10 @@ export async function GET(
             const orders = await prisma.order.findMany({
                 where: { 
                     organizationId: params.id,
-                    NOT: { source: 'itigris' }
+                    OR: [
+                        { source: { not: 'itigris' } },
+                        { source: null }
+                    ]
                 },
                 select: {
                     orderNumber: true,
@@ -112,7 +115,10 @@ export async function GET(
             const orders = await prisma.order.findMany({
                 where: { 
                     createdById: params.id,
-                    NOT: { source: 'itigris' }
+                    OR: [
+                        { source: { not: 'itigris' } },
+                        { source: null }
+                    ]
                 },
                 select: {
                     orderNumber: true,
