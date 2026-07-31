@@ -56,6 +56,7 @@ export async function GET(
             const orders = await prisma.order.findMany({
                 where: { 
                     organizationId: params.id,
+                    status: { not: 'cancelled' },
                     OR: [
                         { source: { not: 'itigris' } },
                         { source: null }
@@ -115,6 +116,7 @@ export async function GET(
             const orders = await prisma.order.findMany({
                 where: { 
                     createdById: params.id,
+                    status: { not: 'cancelled' },
                     OR: [
                         { source: { not: 'itigris' } },
                         { source: null }
