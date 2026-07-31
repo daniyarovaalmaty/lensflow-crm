@@ -41,6 +41,7 @@ export default function ProductionHubPage() {
     // Tick every minute to refresh countdown displays
     const [, setTick] = useState(0);
     const [serverTimeOffset, setServerTimeOffset] = useState(0);
+    const [syncingOrderId, setSyncingOrderId] = useState<string | null>(null);
     useEffect(() => { const t = setInterval(() => setTick(n => n + 1), 60_000); return () => clearInterval(t); }, []);
 
     // Closing documents state for admin view
@@ -211,6 +212,26 @@ export default function ProductionHubPage() {
         } catch (error) {
             console.error('Delete error:', error);
             alert('Ошибка удаления заказа');
+        }
+    };
+
+    const handleSync1C = async (orderId: string) => {
+        setSyncingOrderId(orderId);
+        try {
+            const res = await fetch('/api/external/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Не удалось синхронизировать');
+            alert('Успешно отправлено в 1С (создан счет и накладная)!');
+            await loadOrders();
+        } catch (e: any) {
+            console.error('1C sync error:', e);
+            alert(`Ошибка 1С: ${e.message}`);
+        } finally {
+            setSyncingOrderId(null);
         }
     };
 
@@ -1641,6 +1662,14 @@ export default function ProductionHubPage() {
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     Скачать Excel
+                                </button>
+                                <button
+                                    onClick={() => handleSync1C(order.order_id)}
+                                    disabled={syncingOrderId === order.order_id}
+                                    className="btn text-xs py-2 px-3 gap-1.5 bg-green-600 hover:bg-green-700 text-white shadow-sm disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${syncingOrderId === order.order_id ? 'animate-spin' : ''}`} />
+                                    {syncingOrderId === order.order_id ? 'Отправка...' : 'Отправить в 1С'}
                                 </button>
                                 <button
                                     onClick={() => {
