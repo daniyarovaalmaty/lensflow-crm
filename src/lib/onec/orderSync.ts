@@ -16,6 +16,7 @@ export class OrderSyncService {
       where: { id: orderId },
       include: {
         organization: true, // Клиника-заказчик
+        labOrg: true,       // Лаборатория-производитель
       }
     });
 
@@ -24,13 +25,17 @@ export class OrderSyncService {
 
     const org = order.organization;
 
-    // 2. Получаем ключи самой лаборатории из .env (Организация-продавец и Склад)
-    // В реальной интеграции они могут лежать в настройках или ENV
-    const labOrgKey = process.env.ONEC_LAB_ORG_ID;
-    const labWarehouseKey = process.env.ONEC_LAB_WAREHOUSE_ID;
+    // 2. Получаем ключи Организации-продавца и Склада
+    // Сначала ищем индивидуальные ключи в настройках конкретной лаборатории (Multi-tenant)
+    let labOrgKey = (order.labOrg as any)?.metadata?.onec?.orgId;
+    let labWarehouseKey = (order.labOrg as any)?.metadata?.onec?.warehouseId;
+
+    // Если индивидуальных нет, берем глобальные ключи сервера (или хардкод для текущего теста Medinn)
+    if (!labOrgKey) labOrgKey = process.env.ONEC_LAB_ORG_ID || 'd0455782-d295-11e5-bf5f-001a4d5d6b30';
+    if (!labWarehouseKey) labWarehouseKey = process.env.ONEC_LAB_WAREHOUSE_ID || 'd0455949-d295-11e5-bf5f-001a4d5d6b30';
 
     if (!labOrgKey || !labWarehouseKey) {
-      throw new Error('ONEC_LAB_ORG_ID and ONEC_LAB_WAREHOUSE_ID must be set in ENV');
+      throw new Error('ONEC_LAB_ORG_ID and ONEC_LAB_WAREHOUSE_ID must be set');
     }
 
     // 3. Обработка контрагента (клиники)
