@@ -218,10 +218,8 @@ export default function ProductionHubPage() {
     const handleSync1C = async (orderId: string) => {
         setSyncingOrderId(orderId);
         try {
-            const res = await fetch('/api/external/orders', {
+            const res = await fetch(`/api/orders/${orderId}/sync-1c`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Не удалось синхронизировать');
