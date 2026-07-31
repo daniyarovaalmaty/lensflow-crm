@@ -132,7 +132,11 @@ export default function ProductionHubPage() {
         loadOrders();
         // Pause auto-refresh when delete confirmation is active to prevent UI flash
         if (confirmDeleteId) return;
-        const interval = setInterval(loadOrders, 10000);
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadOrders();
+            }
+        }, 60000);
         return () => clearInterval(interval);
     }, [confirmDeleteId]);
 

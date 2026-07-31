@@ -145,7 +145,11 @@ export default function SalesPipelinePage() {
 
     useEffect(() => { fetchLeads(); }, [fetchLeads]);
     useEffect(() => {
-        const interval = setInterval(fetchLeads, 15000);
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                fetchLeads();
+            }
+        }, 60000);
         return () => clearInterval(interval);
     }, [fetchLeads]);
 

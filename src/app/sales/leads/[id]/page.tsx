@@ -103,7 +103,11 @@ export default function LeadDetailPage() {
 
     // Refresh messages every 5 seconds
     useEffect(() => {
-        const interval = setInterval(fetchLead, 5000);
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                fetchLead();
+            }
+        }, 30000);
         return () => clearInterval(interval);
     }, [fetchLead]);
 
