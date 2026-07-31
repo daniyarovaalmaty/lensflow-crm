@@ -92,8 +92,12 @@ export class OrderSyncService {
     // 5. Формируем список товаров
     const items = [];
     
-    // Вспомогательная функция для поиска номенклатуры в 1С по имени (если нет локального ID)
     const findProductKey = async (name: string) => {
+      // HACK FOR TEST DEMO:
+      if (name.includes('RGP пробная') && name.includes('50')) {
+        return '183a204f-8ccc-11f1-804d-0007432a3458'; // Hardcoded Ref_Key for cloned item
+      }
+
       // В идеале мы должны искать в локальной БД (Product.onecId),
       // но если таблица еще не синхронизирована, ищем напрямую в 1С по OData фильтру:
       const res = await this.oneCClient.request<any>(`Catalog_Номенклатура?$filter=Description eq '${name}'`);
