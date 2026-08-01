@@ -244,58 +244,56 @@ export default function PayrollPage() {
                                             <Receipt className="w-4 h-4 text-indigo-500" /> 
                                             Транзакции и оплаты пациентов
                                         </h4>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                                            {st.metrics.transactions.map((tx: any, idx: number) => (
-                                                <div key={idx} className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all flex flex-col">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div className="font-semibold text-gray-800 text-xs truncate pr-2" title={tx.patientName}>
-                                                            {tx.patientName || 'Неизвестный пациент'}
-                                                        </div>
-                                                        <div className="font-bold text-emerald-600 text-sm whitespace-nowrap">
-                                                            {fmt(tx.saleAmount)} ₸
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="text-[10px] text-gray-500 mb-2 truncate" title={tx.itemName}>
-                                                        {tx.itemName || 'Оплата услуг/товаров'}
-                                                    </div>
-                                                    
-                                                    <div className="bg-slate-50 rounded p-2 mb-2 flex flex-col gap-1 border border-slate-100 flex-1">
-                                                        {tx.totalCost > 0 && (
-                                                            <div className="flex justify-between text-[9px]">
-                                                                <span className="text-gray-500">Себестоимость:</span>
-                                                                <span className="text-red-500 font-medium">-{fmt(tx.totalCost)} ₸</span>
-                                                            </div>
-                                                        )}
-                                                        {tx.isInstallment && (
-                                                            <div className="flex justify-between text-[9px]">
-                                                                <span className="text-gray-500">Комиссия банка (15%):</span>
-                                                                <span className="text-red-500 font-medium">-{fmt(tx.bankFee)} ₸</span>
-                                                            </div>
-                                                        )}
-                                                        <div className="flex justify-between text-[10px] font-semibold mt-1 pt-1 border-t border-slate-200">
-                                                            <span className="text-gray-700">Итого база:</span>
-                                                            <span className="text-gray-900">{fmt(tx.netIncome)} ₸</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-[11px] font-bold text-indigo-700 mt-1 bg-indigo-50 -mx-2 -mb-2 p-2 rounded-b">
-                                                            <span>Бонус:</span>
-                                                            <span>+{fmt(tx.bonus)} ₸</span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
-                                                        <div className="text-[9px] text-gray-400 font-mono">
-                                                            № {tx.id.substring(tx.id.length - 6)}
-                                                        </div>
-                                                        <button 
-                                                            onClick={() => router.push(`/optic/sales-history?search=${tx.id}`)}
-                                                            className="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded"
-                                                        >
-                                                            Чек <Receipt className="w-2.5 h-2.5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-xs text-left border-collapse bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                                <thead className="bg-gray-50 text-gray-500 border-b border-gray-200">
+                                                    <tr>
+                                                        <th className="px-3 py-2 font-medium">ФИО пациента</th>
+                                                        <th className="px-3 py-2 font-medium">Услуга</th>
+                                                        <th className="px-3 py-2 font-medium whitespace-nowrap">Сумма чека</th>
+                                                        <th className="px-3 py-2 font-medium">Себестоимость</th>
+                                                        <th className="px-3 py-2 font-medium">Комиссия банка</th>
+                                                        <th className="px-3 py-2 font-medium">Итого (база)</th>
+                                                        <th className="px-3 py-2 font-bold text-indigo-700">Бонус</th>
+                                                        <th className="px-3 py-2 font-medium"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100">
+                                                    {st.metrics.transactions.map((tx: any, idx: number) => (
+                                                        <tr key={idx} className="hover:bg-slate-50">
+                                                            <td className="px-3 py-2 font-medium text-gray-800 truncate max-w-[150px]" title={tx.patientName}>
+                                                                {tx.patientName || 'Неизвестный'}
+                                                            </td>
+                                                            <td className="px-3 py-2 text-gray-500 max-w-[200px] truncate" title={tx.itemName}>
+                                                                {tx.itemName || 'Оплата услуг'}
+                                                            </td>
+                                                            <td className="px-3 py-2 font-semibold text-emerald-600 whitespace-nowrap">
+                                                                {fmt(tx.saleAmount)} ₸
+                                                            </td>
+                                                            <td className="px-3 py-2 text-red-500 whitespace-nowrap">
+                                                                {tx.totalCost > 0 ? `-${fmt(tx.totalCost)} ₸` : '0 ₸'}
+                                                            </td>
+                                                            <td className="px-3 py-2 text-red-500 whitespace-nowrap">
+                                                                {tx.bankFee > 0 ? `-${fmt(tx.bankFee)} ₸` : '0 ₸'}
+                                                            </td>
+                                                            <td className="px-3 py-2 font-bold text-gray-900 whitespace-nowrap">
+                                                                {fmt(tx.netIncome)} ₸
+                                                            </td>
+                                                            <td className="px-3 py-2 font-bold text-indigo-700 bg-indigo-50/30 whitespace-nowrap">
+                                                                +{fmt(tx.bonus)} ₸
+                                                            </td>
+                                                            <td className="px-3 py-2 whitespace-nowrap">
+                                                                <button 
+                                                                    onClick={() => window.open(`/optic/sales-history?search=${tx.id}`, '_blank')}
+                                                                    className="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded no-toggle"
+                                                                >
+                                                                    Чек <Receipt className="w-2.5 h-2.5" />
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </td>
