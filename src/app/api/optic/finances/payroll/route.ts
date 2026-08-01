@@ -210,11 +210,15 @@ export async function GET(req: NextRequest) {
                         if (isGross) grossMap.set(assignedDoctorId, (grossMap.get(assignedDoctorId) || 0) + 1);
                         if (isArmost) armostMap.set(assignedDoctorId, (armostMap.get(assignedDoctorId) || 0) + 1);
                         if (isTiedra) tiedraMap.set(assignedDoctorId, (tiedraMap.get(assignedDoctorId) || 0) + 1);
-
-                        const arr = transactionsMap.get(assignedDoctorId) || [];
-                        arr.push({ ...sale, transactionName, transactionAmount });
-                        transactionsMap.set(assignedDoctorId, arr);
                     }
+
+                    if (transactionName === 'Транзакция' && sale.items.length > 0) {
+                        transactionName = sale.items[0].name || 'Транзакция';
+                    }
+
+                    const arr = transactionsMap.get(assignedDoctorId) || [];
+                    arr.push({ ...sale, transactionName, transactionAmount });
+                    transactionsMap.set(assignedDoctorId, arr);
                 }
             }
         });
