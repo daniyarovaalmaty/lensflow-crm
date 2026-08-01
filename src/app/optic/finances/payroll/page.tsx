@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Briefcase, ArrowLeft, Save, Play, Calendar as CalendarIcon, Check, X, Clock } from 'lucide-react';
+import { useState, useEffect, Fragment } from 'react';
+import { Briefcase, ArrowLeft, Save, Play, Calendar as CalendarIcon, Check, X, Clock, Receipt, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface StaffPayroll {
     user: { id: string; fullName: string; role: string; subRole?: string; isDoctor?: boolean };
@@ -25,6 +26,7 @@ interface StaffPayroll {
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 export default function PayrollPage() {
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [staff, setStaff] = useState<StaffPayroll[]>([]);
     const [activeTab, setActiveTab] = useState<'payroll' | 'timesheet'>('payroll');
@@ -137,7 +139,8 @@ export default function PayrollPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {staff.map(st => (
-                        <tr key={st.user.id} className="hover:bg-gray-50">
+                        <Fragment key={st.user.id}>
+                        <tr className={`border-b border-gray-50 hover:bg-slate-50/50 transition-colors ${expandedDoctorId === st.user.id ? 'bg-slate-50/50' : ''}`}>
                             <td className="px-6 py-4">
                                 <div className="font-bold text-gray-900">{st.user.fullName || 'Без имени'}</div>
                                 <div className="text-xs text-gray-400 uppercase mt-0.5">{st.user.role}</div>
@@ -164,25 +167,11 @@ export default function PayrollPage() {
                                             <div className="mt-2 border-t border-gray-100 pt-2">
                                                 <button 
                                                     onClick={() => setExpandedDoctorId(expandedDoctorId === st.user.id ? null : st.user.id)}
-                                                    className="text-[10px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors"
+                                                    className="text-[10px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors flex items-center gap-1"
                                                 >
                                                     {expandedDoctorId === st.user.id ? 'Скрыть транзакции' : 'Показать транзакции'}
+                                                    {expandedDoctorId === st.user.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                                 </button>
-                                                {expandedDoctorId === st.user.id && (
-                                                    <div className="mt-2 space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                                                        {st.metrics.transactions.map((tx: any, idx: number) => (
-                                                            <div key={idx} className="bg-gray-50 rounded p-1.5 text-[10px] flex flex-col gap-0.5 border border-gray-100">
-                                                                <div className="flex justify-between items-start text-gray-700 font-medium">
-                                                                    <div className="flex flex-col">
-                                                                        <span className="truncate w-28 text-[9px] text-gray-500 font-normal mb-0.5" title={tx.patientName}>{tx.patientName}</span>
-                                                                        <span className="truncate w-28" title={tx.itemName}>{tx.itemName}</span>
-                                                                    </div>
-                                                                    <span className={tx.saleAmount > 0 ? 'text-emerald-600 font-bold' : 'text-gray-400'}>{fmt(tx.saleAmount)} ₸</span>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -242,6 +231,52 @@ export default function PayrollPage() {
                                 </button>
                             </td>
                         </tr>
+                        {expandedDoctorId === st.user.id && st.metrics?.transactions && st.metrics.transactions.length > 0 && (
+                            <tr className="bg-slate-50 border-b border-gray-100">
+                                <td colSpan={7} className="px-6 py-6 relative">
+                                    {/* Small arrow pointing up to the doctor row */}
+                                    <div className="absolute top-0 left-[20%] -mt-2 w-4 h-4 bg-slate-50 border-t border-l border-gray-100 transform rotate-45"></div>
+                                    
+                                    <div className="w-full">
+                                        <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                            <Receipt className="w-4 h-4 text-indigo-500" /> 
+                                            Транзакции и оплаты пациентов
+                                        </h4>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                                            {st.metrics.transactions.map((tx: any, idx: number) => (
+                                                <div key={idx} className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all flex flex-col">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="font-semibold text-gray-800 text-xs truncate pr-2" title={tx.patientName}>
+                                                            {tx.patientName || 'Неизвестный пациент'}
+                                                        </div>
+                                                        <div className="text-emerald-600 font-bold whitespace-nowrap text-sm">
+                                                            {fmt(tx.saleAmount > 0 ? tx.saleAmount : tx.total)}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="text-[10px] text-gray-500 mb-3 truncate" title={tx.transactionName}>
+                                                        {tx.transactionName || 'Оплата услуг/товаров'}
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
+                                                        <div className="text-[9px] text-gray-400 font-mono">
+                                                            № {tx.saleNumber}
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => router.push(`/optic/sales-history?search=${tx.saleNumber}`)}
+                                                            className="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded"
+                                                        >
+                                                            Чек <Receipt className="w-2.5 h-2.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                        </Fragment>
                     ))}
                 </tbody>
             </table>
