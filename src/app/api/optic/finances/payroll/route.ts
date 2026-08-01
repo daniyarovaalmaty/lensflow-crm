@@ -296,6 +296,7 @@ export async function GET(req: NextRequest) {
                     let isExcluded = cat === 'product_frames' || cat === 'product_sunglasses' || 
                                      name.includes('оправа') || name.includes('солнцезащит') || name.includes('очки') ||
                                      name.includes('раствор') || name.includes('капли') || name.includes('one step') || name.includes('пероксид') ||
+                                     name.includes('avisor') || name.includes('unica') || name.includes('aosept') || name.includes('систейн') ||
                                      name.includes('контейнер') || name.includes('манипулятор') || name.includes('пинцет') || name.includes('аксессуар') ||
                                      name.includes('работа мастера') || name.includes('изготовление') || name.includes('вставка') || name.includes('ремонт') ||
                                      cat === 'product_accessories' || cat === 'product_solutions';
