@@ -48,7 +48,7 @@ export default function PayrollPage() {
     const fetchPayroll = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/optic/finances/payroll?start=${startDate}T00:00:00.000Z&end=${endDate}T23:59:59.999Z`);
+            const res = await fetch(`/api/optic/finances/payroll?start=${startDate}T00:00:00.000Z&end=${endDate}T23:59:59.999Z&_t=${Date.now()}`);
             if (res.ok) {
                 const data = await res.json();
                 setStaff(data.staffPayroll);

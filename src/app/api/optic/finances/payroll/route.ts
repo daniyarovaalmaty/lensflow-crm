@@ -160,7 +160,28 @@ export async function GET(req: NextRequest) {
                         if (name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог')) {
                             let isToric = name.includes('торич') || name.includes('торик') || name.includes('toric') || name.includes('tor');
                             let isHalf = name.includes('1 глаз') || name.includes('один глаз') || name.includes('одна линза') || name.includes('1 линза') || name.includes('поломан');
-                            let baseCost = isToric ? 60000 : 50000;
+                            
+                            let dk = 100;
+                            if (name.includes('180')) dk = 180;
+                            else if (name.includes('125')) dk = 125;
+                            else if (name.includes('100')) dk = 100;
+                            else if (name.includes('50') || name.includes('dk 50') || name.includes('dk50')) dk = 50;
+                            
+                            let baseCost = 0;
+                            if (isToric) {
+                                if (dk === 180) baseCost = 36000 * 2;
+                                else if (dk === 125) baseCost = 33000 * 2;
+                                else if (dk === 100) baseCost = 30000 * 2;
+                                else if (dk === 50) baseCost = 12000 * 2;
+                                else baseCost = 60000;
+                            } else {
+                                if (dk === 180) baseCost = 31000 * 2;
+                                else if (dk === 125) baseCost = 28000 * 2;
+                                else if (dk === 100) baseCost = 25000 * 2;
+                                else if (dk === 50) baseCost = 12000 * 2;
+                                else baseCost = 50000;
+                            }
+                            
                             if (isHalf) baseCost /= 2;
                             itemCost = baseCost * (item.quantity || 1);
                         } else if (!isService && item.product?.purchasePrice) {
