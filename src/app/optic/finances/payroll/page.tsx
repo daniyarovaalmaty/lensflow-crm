@@ -23,7 +23,7 @@ interface StaffPayroll {
     metrics?: any;
 }
 
-const fmt = (n: number) => n.toLocaleString('ru-RU');
+const fmt = (n?: number) => n ? n.toLocaleString('ru-RU') : '0';
 
 export default function PayrollPage() {
     const router = useRouter();
@@ -251,8 +251,8 @@ export default function PayrollPage() {
                                                         <div className="font-semibold text-gray-800 text-xs truncate pr-2" title={tx.patientName}>
                                                             {tx.patientName || 'Неизвестный пациент'}
                                                         </div>
-                                                        <div className="text-emerald-600 font-bold whitespace-nowrap text-sm">
-                                                            {fmt(tx.saleAmount > 0 ? tx.saleAmount : tx.total)}
+                                                        <div className="font-bold text-emerald-600 text-sm whitespace-nowrap">
+                                                            {fmt(tx.saleAmount)} ₸
                                                         </div>
                                                     </div>
                                                     
