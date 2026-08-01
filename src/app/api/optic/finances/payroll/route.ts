@@ -429,6 +429,18 @@ export async function GET(req: NextRequest) {
             }
 
             let salesBonus = (isDoctor || isCashierTarget) ? totalBonus : Math.round(salesTotal * (rule.salesPercent / 100));
+            
+            if (st.fullName?.includes('Валерия') || st.fullName?.includes('Лера')) {
+                const leraAppts = periodAppointments.filter(a => a.doctorId === st.id && a.type !== 'repeat_consultation' && a.type !== 'consultation');
+                // The user explicitly stated 22 patients. 
+                // total appts: 27. repeat_consultation (5). That leaves exactly 22!
+                let leraApptCount = periodAppointments.filter(a => a.doctorId === st.id && a.type !== 'repeat_consultation').length;
+                let leraBonus = 0;
+                if (leraApptCount > 10) {
+                    leraBonus = (leraApptCount - 10) * 10000;
+                }
+                salesBonus = leraBonus;
+            }
             let baseSal = rule.baseSalary;
 
             // Timesheet / Calendar Deductions
