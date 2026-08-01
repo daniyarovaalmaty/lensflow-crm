@@ -289,7 +289,10 @@ export async function GET(req: NextRequest) {
                         itemCost = item.product.purchasePrice * (item.quantity || 1);
                     }
 
-                    let itemBankFee = s.isInstallment ? Math.round(item.total * 0.15) : 0;
+                    let effectiveDiscountRatio = (s.subtotal && s.subtotal > 0) ? Math.max(0, s.subtotal - s.total) / s.subtotal : 0;
+                    let effectiveItemTotal = Math.round(item.total * (1 - effectiveDiscountRatio));
+
+                    let itemBankFee = s.isInstallment ? Math.round(effectiveItemTotal * 0.15) : 0;
                     
                     let isStellestOrGross = name.includes('stellest') || name.includes('стеллест') || name.includes('gross') || name.includes('гросс');
                     
@@ -307,10 +310,10 @@ export async function GET(req: NextRequest) {
                         validNetIncome = 0;
                         saleBonus = 0;
                     } else if (isStellestOrGross) {
-                        saleBonus = Math.round(item.total * 0.04);
-                        validNetIncome = item.total;
+                        saleBonus = Math.round(effectiveItemTotal * 0.04);
+                        validNetIncome = effectiveItemTotal;
                     } else {
-                        let net = Math.max(0, item.total - itemCost - itemBankFee);
+                        let net = Math.max(0, effectiveItemTotal - itemCost - itemBankFee);
                         validNetIncome = net;
                         saleBonus = Math.round(net * doctorPercent);
                     }
@@ -322,7 +325,7 @@ export async function GET(req: NextRequest) {
                         date: s.createdAt,
                         patientName: s.customerName || s.patient?.fullName || 'Неизвестный',
                         itemName: item.name,
-                        saleAmount: item.total,
+                        saleAmount: effectiveItemTotal,
                         netIncome: validNetIncome,
                         bonus: saleBonus,
                         isInstallment: s.isInstallment,
