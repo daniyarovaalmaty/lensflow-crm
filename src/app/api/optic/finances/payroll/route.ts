@@ -352,7 +352,14 @@ export async function GET(req: NextRequest) {
                         } else {
                             let net = Math.max(0, effectiveItemTotal - itemCost - itemBankFee);
                             validNetIncome = net;
-                            saleBonus = Math.round(net * doctorPercent);
+                            
+                            let appliedPercent = doctorPercent;
+                            let isConsultationOrFitting = name.includes('консультация') || name.includes('диагностика') || name.includes('подбор') || name.includes('прием');
+                            if (st.fullName?.includes('Замира') && isConsultationOrFitting) {
+                                appliedPercent = 0.50;
+                            }
+                            
+                            saleBonus = Math.round(net * appliedPercent);
                         }
                     }
 
