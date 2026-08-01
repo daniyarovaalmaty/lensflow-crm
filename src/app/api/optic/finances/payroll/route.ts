@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
                 clinicId: user.organizationId,
                 date: dateFilter
             },
-            include: { doctor: true }
+            include: { doctor: true, patient: true }
         });
 
         const consultationsMap = new Map();
@@ -262,7 +262,7 @@ export async function GET(req: NextRequest) {
             let totalBonus = 0;
             let valeriaNightLensCount = 0;
 
-            const transactions = doctorTransactions.flatMap((s: any) => {
+            let transactions = doctorTransactions.flatMap((s: any) => {
                 return s.items.map((item: any) => {
                     const name = typeof item.name === 'string' ? item.name.toLowerCase() : '';
                     const cat = item.category || item.product?.category || '';
@@ -435,15 +435,41 @@ export async function GET(req: NextRequest) {
             let salesBonus = (isDoctor || isCashierTarget) ? totalBonus : Math.round(salesTotal * (rule.salesPercent / 100));
             
             if (st.fullName?.includes('Валерия') || st.fullName?.includes('Лера')) {
-                const leraAppts = periodAppointments.filter(a => a.doctorId === st.id && a.type !== 'repeat_consultation' && a.type !== 'consultation');
-                // The user explicitly stated 22 patients. 
-                // total appts: 27. repeat_consultation (5). That leaves exactly 22!
-                let leraApptCount = periodAppointments.filter(a => a.doctorId === st.id && a.type !== 'repeat_consultation').length;
+                transactions = []; // Clear sales transactions to only show her appointments
+                
+                const sortedAppts = periodAppointments
+                    .filter(a => a.doctorId === st.id && a.type !== 'repeat_consultation')
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    
+                let counter = 0;
+                sortedAppts.forEach(appt => {
+                    counter++;
+                    let bonusAmt = counter > 10 ? 10000 : 0;
+                    
+                    let typeName = 'Прием';
+                    if (appt.type === 'primary_fitting') typeName = 'Первичный подбор';
+                    if (appt.type === 'ok_fitting') typeName = 'Подбор ночных линз';
+                    if (appt.type === 'ok_delivery') typeName = 'Выдача ночных линз';
+                    if (appt.type === 'consultation') typeName = 'Консультация';
+                    
+                    transactions.push({
+                        id: appt.id,
+                        patientName: appt.patient?.fullName || 'Пациент',
+                        serviceName: `${typeName} (${counter}-й)`,
+                        totalAmount: 0,
+                        costPrice: 0,
+                        bankCommission: 0,
+                        baseAmount: 0,
+                        bonus: bonusAmt
+                    });
+                });
+                
                 let leraBonus = 0;
-                if (leraApptCount > 10) {
-                    leraBonus = (leraApptCount - 10) * 10000;
+                if (counter > 10) {
+                    leraBonus = (counter - 10) * 10000;
                 }
                 salesBonus = leraBonus;
+                docMetrics.transactions = transactions;
             }
             let baseSal = rule.baseSalary;
 
