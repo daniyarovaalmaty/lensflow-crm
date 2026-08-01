@@ -294,6 +294,27 @@ export default function PayrollPage() {
                                                             </td>
                                                         </tr>
                                                     ))}
+                                                    {st.metrics.transactions.length > 0 && (
+                                                        <tr className="bg-slate-100/50 font-bold border-t-2 border-gray-200">
+                                                            <td colSpan={2} className="px-3 py-3 text-right text-gray-700">Итого по детализации:</td>
+                                                            <td className="px-3 py-3 text-emerald-700 whitespace-nowrap">
+                                                                {fmt(st.metrics.transactions.reduce((acc: number, tx: any) => acc + (tx.saleAmount || 0), 0))} ₸
+                                                            </td>
+                                                            <td className="px-3 py-3 text-red-600 whitespace-nowrap">
+                                                                -{fmt(st.metrics.transactions.reduce((acc: number, tx: any) => acc + (tx.totalCost || 0), 0))} ₸
+                                                            </td>
+                                                            <td className="px-3 py-3 text-red-600 whitespace-nowrap">
+                                                                -{fmt(st.metrics.transactions.reduce((acc: number, tx: any) => acc + (tx.bankFee || 0), 0))} ₸
+                                                            </td>
+                                                            <td className="px-3 py-3 text-gray-900 whitespace-nowrap">
+                                                                {fmt(st.metrics.transactions.reduce((acc: number, tx: any) => acc + (tx.netIncome || 0), 0))} ₸
+                                                            </td>
+                                                            <td className="px-3 py-3 text-indigo-700 bg-indigo-50/50 whitespace-nowrap">
+                                                                +{fmt(st.metrics.transactions.reduce((acc: number, tx: any) => acc + (tx.bonus || 0), 0))} ₸
+                                                            </td>
+                                                            <td className="px-3 py-3"></td>
+                                                        </tr>
+                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
