@@ -292,16 +292,22 @@ export async function GET(req: NextRequest) {
                     let itemBankFee = s.isInstallment ? Math.round(item.total * 0.15) : 0;
                     
                     let isStellestOrGross = name.includes('stellest') || name.includes('стеллест') || name.includes('gross') || name.includes('гросс');
-                    let isFrameOrSunglasses = cat === 'product_frames' || cat === 'product_sunglasses' || name.includes('оправа') || name.includes('солнцезащит') || name.includes('очки');
+                    
+                    let isExcluded = cat === 'product_frames' || cat === 'product_sunglasses' || 
+                                     name.includes('оправа') || name.includes('солнцезащит') || name.includes('очки') ||
+                                     name.includes('раствор') || name.includes('капли') || name.includes('one step') || name.includes('пероксид') ||
+                                     name.includes('контейнер') || name.includes('манипулятор') || name.includes('пинцет') || name.includes('аксессуар') ||
+                                     name.includes('работа мастера') || name.includes('изготовление') || name.includes('вставка') || name.includes('ремонт') ||
+                                     cat === 'product_accessories' || cat === 'product_solutions';
                     
                     let saleBonus = 0;
                     let validNetIncome = 0;
-                    if (isStellestOrGross) {
-                        saleBonus = Math.round(item.total * 0.04);
-                        validNetIncome = item.total;
-                    } else if (isFrameOrSunglasses) {
+                    if (isExcluded) {
                         validNetIncome = 0;
                         saleBonus = 0;
+                    } else if (isStellestOrGross) {
+                        saleBonus = Math.round(item.total * 0.04);
+                        validNetIncome = item.total;
                     } else {
                         let net = Math.max(0, item.total - itemCost - itemBankFee);
                         validNetIncome = net;
