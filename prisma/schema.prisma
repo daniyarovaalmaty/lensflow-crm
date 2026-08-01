@@ -11,83 +11,82 @@ datasource db {
 
 // ==================== Organization (Clinic / Optic) ====================
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  type      OrgType  @default(standalone)
-  inn       String?   // БИН/ИИН
-  phone     String?
-  email     String?
-  address   String?   // Юридический адрес
-  city      String?
-  crmPhone  String?   // Номер WhatsApp для CRM-интеграции филиала
+  id       String  @id @default(cuid())
+  name     String
+  type     OrgType @default(standalone)
+  inn      String? // БИН/ИИН
+  phone    String?
+  email    String?
+  address  String? // Юридический адрес
+  city     String?
+  crmPhone String? // Номер WhatsApp для CRM-интеграции филиала
 
   // 1C OData Integration
   onecOrgId        String?  // ID (Ref_Key) вашей компании в 1С
   onecWarehouseId  String?  // ID склада в 1С
 
   // Multi-branch: self-relation
-  parentId  String?
-  parent    Organization?  @relation("OrgBranches", fields: [parentId], references: [id])
-  branches  Organization[] @relation("OrgBranches")
+  parentId String?
+  parent   Organization?  @relation("OrgBranches", fields: [parentId], references: [id])
+  branches Organization[] @relation("OrgBranches")
 
   // Дополнительные реквизиты
-  actualAddress    String?  // Фактический адрес
-  deliveryAddress  String?  // Адрес доставки
-  bankName         String?  // Название банка
-  bik              String?  // БИК банка
-  iban             String?  // IBAN / расчётный счёт
-  bankName2        String?  // Название банка 2
-  bik2             String?  // БИК банка 2
-  iban2            String?  // IBAN / расчётный счёт 2
-  bankName3        String?  // Название банка 3
-  bik3             String?  // БИК банка 3
-  iban3            String?  // IBAN / расчётный счёт 3
-  directorName     String?  // ФИО руководителя
-  registrationDate String?  // Дата регистрации
-  contactPerson    String?  // Контактное лицо
-  contactPhone     String?  // Телефон контактного лица
-  discountPercent  Float    @default(0)  // Персональная скидка (%), по умолчанию 0%
-  logo             String?  @db.Text     // URL логотипа организации
-  metadata         Json?    // Integrations config (ITIGRIS, etc.)
+  actualAddress     String? // Фактический адрес
+  deliveryAddress   String? // Адрес доставки
+  bankName          String? // Название банка
+  bik               String? // БИК банка
+  iban              String? // IBAN / расчётный счёт
+  bankName2         String? // Название банка 2
+  bik2              String? // БИК банка 2
+  iban2             String? // IBAN / расчётный счёт 2
+  bankName3         String? // Название банка 3
+  bik3              String? // БИК банка 3
+  iban3             String? // IBAN / расчётный счёт 3
+  directorName      String? // ФИО руководителя
+  registrationDate  String? // Дата регистрации
+  contactPerson     String? // Контактное лицо
+  contactPhone      String? // Телефон контактного лица
+  discountPercent   Float    @default(0) // Персональная скидка (%), по умолчанию 0%
+  logo              String?  @db.Text // URL логотипа организации
+  metadata          Json? // Integrations config (ITIGRIS, etc.)
   allowedPartnerIds String[] @default([]) // Массив ID лабораторий, доступных этому филиалу
 
-  status    OrgStatus @default(active)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  requiresApproval Boolean @default(false) // Опциональное подтверждение заказов бухгалтером
+  status           OrgStatus @default(active)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  requiresApproval Boolean   @default(false) // Опциональное подтверждение заказов бухгалтером
 
   users    User[]
   orders   Order[]
   patients Patient[]
 
   // Inventory & POS
-  opticProducts   OpticProduct[]
-  stockItems      StockItem[]
-  wholesaleOrders WholesaleOrder[] @relation("WholesaleOrderOrganization")
+  opticProducts               OpticProduct[]
+  stockItems                  StockItem[]
+  wholesaleOrders             WholesaleOrder[] @relation("WholesaleOrderOrganization")
   wholesaleCounterpartyOrders WholesaleOrder[] @relation("WholesaleOrderCounterparty")
-  stockDocsCreated StockDocument[]
-  stockDocsTarget  StockDocument[] @relation("TransferTarget")
-  stockMovements  StockMovement[]
-  inventories     Inventory[]
-  sales           Sale[]
-  stockRequests   StockRequest[]
-  targetedRequests StockRequest[] @relation("RequestTarget")
-
+  stockDocsCreated            StockDocument[]
+  stockDocsTarget             StockDocument[]  @relation("TransferTarget")
+  stockMovements              StockMovement[]
+  inventories                 Inventory[]
+  sales                       Sale[]
+  stockRequests               StockRequest[]
+  targetedRequests            StockRequest[]   @relation("RequestTarget")
 
   // CRM Sales
-  clinicLeads         Lead[]               @relation("ClinicLeads")
-  clinicSubscription  ClinicSubscription[]  @relation("ClinicSubscription")
+  clinicLeads        Lead[]               @relation("ClinicLeads")
+  clinicSubscription ClinicSubscription[] @relation("ClinicSubscription")
 
-  cashRegisters CashRegister[]
+  cashRegisters   CashRegister[]
   itigrisSyncLogs ItigrisSyncLog[]
-  userBranches UserBranch[]
+  userBranches    UserBranch[]
 
   // Distributor orders
   distributorOrders Order[] @relation("DistributorOrders")
 
   // Default lab for distributor (which lab they send orders to)
-  defaultLabId  String?
-  defaultLab    Organization?  @relation("DistributorDefaultLab", fields: [defaultLabId], references: [id])
+  defaultLabId       String?
+  defaultLab         Organization?  @relation("DistributorDefaultLab", fields: [defaultLabId], references: [id])
   distributorClients Organization[] @relation("DistributorDefaultLab")
 
   // Lab orders (orders forwarded to this lab by a distributor)
@@ -101,12 +100,14 @@ model Organization {
   appointments       Appointment[]
 
   // Finances
-  companyAccounts        CompanyAccount[]
-  financialTransactions  FinancialTransaction[]
-  payrollRules           PayrollRule[]
-  payrollPayouts         PayrollPayout[]
+  companyAccounts       CompanyAccount[]
+  financialTransactions FinancialTransaction[]
+  payrollRules          PayrollRule[]
+  payrollPayouts        PayrollPayout[]
 
-  suppliers              Supplier[]
+  suppliers         Supplier[]
+  workSchedules     WorkSchedule[]
+  attendanceRecords AttendanceRecord[]
 
   @@map("organizations")
 }
@@ -125,12 +126,12 @@ model ItigrisSyncLog {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   syncedAt       DateTime     @default(now())
-  entity         String       // 'clients' | 'orders' | 'full'
+  entity         String // 'clients' | 'orders' | 'full'
   created        Int          @default(0)
   updated        Int          @default(0)
   errors         Int          @default(0)
   details        Json?
-  triggeredBy    String?      // userId or 'manual'
+  triggeredBy    String? // userId or 'manual'
   durationMs     Int?
 
   @@map("itigris_sync_logs")
@@ -138,15 +139,15 @@ model ItigrisSyncLog {
 
 // ==================== Lab Settings (singleton) ====================
 model LabSettings {
-  id                      String @id @default("default")
-  urgentSurchargePercent   Int    @default(25)
-  urgentDiscountPercent    Int    @default(0)
-  normContrapolPerLens    Float  @default(0.05)
-  normWaxPerLens          Float  @default(0.05)
-  normBoxPerOrder         Int    @default(0)
-  normPackagePerOrder     Int    @default(0)
-  normStickerPerLens      Int    @default(1)
-  updatedAt               DateTime @updatedAt
+  id                     String   @id @default("default")
+  urgentSurchargePercent Int      @default(25)
+  urgentDiscountPercent  Int      @default(0)
+  normContrapolPerLens   Float    @default(0.05)
+  normWaxPerLens         Float    @default(0.05)
+  normBoxPerOrder        Int      @default(0)
+  normPackagePerOrder    Int      @default(0)
+  normStickerPerLens     Int      @default(1)
+  updatedAt              DateTime @updatedAt
 
   @@map("lab_settings")
 }
@@ -159,44 +160,46 @@ enum OrgStatus {
 
 // ==================== User ====================
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  password       String
-  fullName       String    @default("")
-  phone          String?
-  avatar         String?   @db.Text
-  role           UserRole
-  subRole        SubRole
-  status         UserStatus @default(active)
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-  discountPercent Float?        // Персональная скидка для независимых врачей (%)
-  permissions    Json?          // Настройки прав видимости модулей клиники
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String        @id @default(cuid())
+  email           String        @unique
+  password        String
+  fullName        String        @default("")
+  phone           String?
+  avatar          String?       @db.Text
+  role            UserRole
+  subRole         SubRole
+  status          UserStatus    @default(active)
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  discountPercent Float? // Персональная скидка для независимых врачей (%)
+  permissions     Json? // Настройки прав видимости модулей клиники
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  orders Order[] @relation("CreatedBy")
-  engineeredOrders Order[] @relation("OrderEngineer")
-  supportTickets SupportTicket[]
-  assignedLeads  Lead[]  @relation("AssignedLeads")
-  doctorLeads    Lead[]  @relation("DoctorLeads")
-  doctorSales    Sale[]  @relation("SaleDoctor")
-  patients       Patient[] @relation("DoctorPatients")
-  prescriptions  Prescription[] @relation("DoctorPrescriptions")
-  consultations  Consultation[] @relation("DoctorConsultations")
-  appointments   Appointment[]  @relation("DoctorAppointments")
-  createdAppointments Appointment[] @relation("CreatedAppointments")
+  orders              Order[]         @relation("CreatedBy")
+  engineeredOrders    Order[]         @relation("OrderEngineer")
+  supportTickets      SupportTicket[]
+  assignedLeads       Lead[]          @relation("AssignedLeads")
+  doctorLeads         Lead[]          @relation("DoctorLeads")
+  doctorSales         Sale[]          @relation("SaleDoctor")
+  patients            Patient[]       @relation("DoctorPatients")
+  prescriptions       Prescription[]  @relation("DoctorPrescriptions")
+  consultations       Consultation[]  @relation("DoctorConsultations")
+  appointments        Appointment[]   @relation("DoctorAppointments")
+  createdAppointments Appointment[]   @relation("CreatedAppointments")
 
-  openedShifts      CashShift[]       @relation("OpenedShifts")
-  closedShifts      CashShift[]       @relation("ClosedShifts")
-  cashTransactions  CashTransaction[] @relation("CreatedTransactions")
-  branches          UserBranch[]
+  openedShifts     CashShift[]       @relation("OpenedShifts")
+  closedShifts     CashShift[]       @relation("ClosedShifts")
+  cashTransactions CashTransaction[] @relation("CreatedTransactions")
+  branches         UserBranch[]
 
   // Finances
-  payrollRules           PayrollRule[]
-  payrollPayouts         PayrollPayout[]
+  payrollRules                 PayrollRule[]
+  payrollPayouts               PayrollPayout[]
   financialTransactionsCreated FinancialTransaction[] @relation("FinancialTransactionsCreated")
   financialTransactionsLinked  FinancialTransaction[] @relation("FinancialTransactionsLinked")
+  workSchedules                WorkSchedule[]
+  attendanceRecords            AttendanceRecord[]
 
   @@map("users")
 }
@@ -215,12 +218,12 @@ model OtpCode {
 
 // ==================== User ↔ Branch (M2M) ====================
 model UserBranch {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   branchId  String
   branch    Organization @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  createdAt DateTime     @default(now())
 
   @@unique([userId, branchId])
   @@map("user_branches")
@@ -262,19 +265,20 @@ enum UserStatus {
 
 // ==================== Patient ====================
 model Patient {
-  id             String  @id @default(cuid())
-  medmundusId    Int?    @unique  // MedMundus Patient.id for cross-system sync
+  id             String        @id @default(cuid())
+  medmundusId    Int?          @unique // MedMundus Patient.id for cross-system sync
   name           String
   phone          String
   email          String?
   birthDate      DateTime?
-  gender         String?   // male | female
-  notes          String?   @db.Text
-  attachments    Json?     // [{ name, url, type, size, uploadedAt }]
+  gender         String? // male | female
+  notes          String?       @db.Text
+  attachments    Json? // [{ name, url, type, size, uploadedAt }]
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   doctorId       String?
-  doctor         User?    @relation("DoctorPatients", fields: [doctorId], references: [id])
+  doctor         User?         @relation("DoctorPatients", fields: [doctorId], references: [id])
+  // Family relations & Classification
   // Family relations & Classification
   isChild        Boolean  @default(false)
 
@@ -285,29 +289,29 @@ model Patient {
   parentPhone    String?
   city           String?
   parentId       String?
-  parent         Patient?   @relation("Family", fields: [parentId], references: [id])
-  children       Patient[]  @relation("Family")
+  parent         Patient?      @relation("Family", fields: [parentId], references: [id])
+  children       Patient[]     @relation("Family")
 
   // External integrations (ITIGRIS, etc.)
-  externalId     String?  // e.g. "itigris:12345"
-  externalSource String?  // e.g. "itigris"
+  externalId     String? // e.g. "itigris:12345"
+  externalSource String? // e.g. "itigris"
 
   // General Medical / Anamnesis
   iin              String?
   address          String?
   profession       String?
-  complaints       String?   @db.Text
-  anamnesisDisease String?   @db.Text
-  anamnesisLife    String?   @db.Text
-  allergies        String?   @db.Text
-  heredity         String?   @db.Text
-  medications      String?   @db.Text
-  dispensary       String?   @db.Text
-  surgeries        String?   @db.Text
-  lastCorrection   String?   @db.Text
+  complaints       String? @db.Text
+  anamnesisDisease String? @db.Text
+  anamnesisLife    String? @db.Text
+  allergies        String? @db.Text
+  heredity         String? @db.Text
+  medications      String? @db.Text
+  dispensary       String? @db.Text
+  surgeries        String? @db.Text
+  lastCorrection   String? @db.Text
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   orders        Order[]
   prescriptions Prescription[]
@@ -325,51 +329,51 @@ model Patient {
 
 // ==================== Prescription (Vision Rx History) ====================
 model Prescription {
-  id          String   @id @default(cuid())
-  patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctorId    String?
-  doctor      User?    @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId  String?
+  doctor    User?   @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
 
   // Right eye (OD)
-  odSph       Float?
-  odCyl       Float?
-  odAx        Float?
-  odAdd       Float?
-  odPd        Float?
-  odPdNear    Float?
-  odPrism     String?
-  odBc        String?
-  odDia       String?
+  odSph    Float?
+  odCyl    Float?
+  odAx     Float?
+  odAdd    Float?
+  odPd     Float?
+  odPdNear Float?
+  odPrism  String?
+  odBc     String?
+  odDia    String?
 
   // Left eye (OS)
-  osSph       Float?
-  osCyl       Float?
-  osAx        Float?
-  osAdd       Float?
-  osPd        Float?
-  osPdNear    Float?
-  osPrism     String?
-  osBc        String?
-  osDia       String?
+  osSph    Float?
+  osCyl    Float?
+  osAx     Float?
+  osAdd    Float?
+  osPd     Float?
+  osPdNear Float?
+  osPrism  String?
+  osBc     String?
+  osDia    String?
 
   // General
   visualAcuityODAfter Float?
   visualAcuityOSAfter Float?
-  pdTotal     Float?   // Total PD if measured together
+  pdTotal             Float? // Total PD if measured together
   // Clinical fields
-  refraction        String?  @db.Text
-  cycloplegia       String?  @db.Text
-  complaints        String?  @db.Text
-  medicalHistory    String?  @db.Text
-  diseaseHistory    String?  @db.Text
-  biomicroscopy     String?  @db.Text
-  pzo               String?  @db.Text
+  refraction          String? @db.Text
+  cycloplegia         String? @db.Text
+  complaints          String? @db.Text
+  medicalHistory      String? @db.Text
+  diseaseHistory      String? @db.Text
+  biomicroscopy       String? @db.Text
+  pzo                 String? @db.Text
 
-  type        String   @default("glasses") // glasses | contacts | ortho-k
-  notes       String?  @db.Text
+  type         String   @default("glasses") // glasses | contacts | ortho-k
+  notes        String?  @db.Text
   prescribedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([patientId])
   @@map("prescriptions")
@@ -377,59 +381,59 @@ model Prescription {
 
 // ==================== Consultation (Visit History) ====================
 model Consultation {
-  id          String   @id @default(cuid())
-  patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctorId    String?
-  doctor      User?    @relation("DoctorConsultations", fields: [doctorId], references: [id])
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId  String?
+  doctor    User?   @relation("DoctorConsultations", fields: [doctorId], references: [id])
 
-  visitDate   DateTime @default(now())   // Date of the visit
-  type        String   @default("exam")  // exam | follow_up | fitting | other
-  diagnosis   String?  @db.Text          // Clinical notes / diagnosis
-  treatment   String?  @db.Text          // Treatment plan / recommendation
-  nextVisit   DateTime?                  // Scheduled next appointment
-  intraocularPressureOD Float?           // IOP OD (mmHg)
-  intraocularPressureOS Float?           // IOP OS
-  visualAcuityOD Float?                  // Visual acuity OD (e.g. 0.8)
-  visualAcuityOS Float?                  // Visual acuity OS
+  visitDate             DateTime  @default(now()) // Date of the visit
+  type                  String    @default("exam") // exam | follow_up | fitting | other
+  diagnosis             String?   @db.Text // Clinical notes / diagnosis
+  treatment             String?   @db.Text // Treatment plan / recommendation
+  nextVisit             DateTime? // Scheduled next appointment
+  intraocularPressureOD Float? // IOP OD (mmHg)
+  intraocularPressureOS Float? // IOP OS
+  visualAcuityOD        Float? // Visual acuity OD (e.g. 0.8)
+  visualAcuityOS        Float? // Visual acuity OS
 
   // Topography / Keratometry OD
-  k1OD             Float?
-  k2OD             Float?
-  r1OD             Float?
-  r2OD             Float?
-  axisOD           Float?
-  astigmatismOD    Float?
-  pachymetryOD     Float?
-  eccentricityOD   Float?
+  k1OD           Float?
+  k2OD           Float?
+  r1OD           Float?
+  r2OD           Float?
+  axisOD         Float?
+  astigmatismOD  Float?
+  pachymetryOD   Float?
+  eccentricityOD Float?
 
   // Topography / Keratometry OS
-  k1OS             Float?
-  k2OS             Float?
-  r1OS             Float?
-  r2OS             Float?
-  axisOS           Float?
-  astigmatismOS    Float?
-  pachymetryOS     Float?
-  eccentricityOS   Float?
+  k1OS           Float?
+  k2OS           Float?
+  r1OS           Float?
+  r2OS           Float?
+  axisOS         Float?
+  astigmatismOS  Float?
+  pachymetryOS   Float?
+  eccentricityOS Float?
 
   // Lens Fitting & Refraction (Free Text)
-  lensFittingOD    String?   @db.Text
-  lensFittingOS    String?   @db.Text
-  refractionOD     String?   @db.Text
-  refractionOS     String?   @db.Text
-  cycloplegia      String?   @db.Text
-  complaints       String?   @db.Text
-  anamnesisLife    String?   @db.Text
-  anamnesisDisease String?   @db.Text
-  biomicroscopy    String?   @db.Text
-  pzo              String?   @db.Text
+  lensFittingOD    String? @db.Text
+  lensFittingOS    String? @db.Text
+  refractionOD     String? @db.Text
+  refractionOS     String? @db.Text
+  cycloplegia      String? @db.Text
+  complaints       String? @db.Text
+  anamnesisLife    String? @db.Text
+  anamnesisDisease String? @db.Text
+  biomicroscopy    String? @db.Text
+  pzo              String? @db.Text
 
   // Structured Primary Examination Details (JSON)
   primaryExamDetails Json?
 
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now())
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
 
   @@index([patientId])
   @@index([visitDate])
@@ -438,22 +442,22 @@ model Consultation {
 
 // ==================== Product Catalog ====================
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  category    String   // lens, solution, accessory
-  sku         String?  @unique
-  name1c      String?  // Наименование в 1С
-  onecId      String?  @unique // ID (Ref_Key) номенклатуры в 1С
-  code        String?  // Код товара
-  description String?
-  price       Int      @default(0)
-  priceByDk   Json?    // { "50": 7600, "100": 18500, ... } DK-specific prices for lenses (clinic/optic price)
+  id                   String   @id @default(cuid())
+  name                 String
+  category             String // lens, solution, accessory
+  sku                  String?  @unique
+  name1c               String? // Наименование в 1С
+  onecId               String?  @unique // ID (Ref_Key) номенклатуры в 1С
+  code                 String? // Код товара
+  description          String?
+  price                Int      @default(0)
+  priceByDk            Json? // { "50": 7600, "100": 18500, ... } DK-specific prices for lenses (clinic/optic price)
   distributorPriceByDk Json? // { "50": 7600, "100": 18500, ... } DK-specific prices for distributors
-  unit        String   @default("шт")
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  unit                 String   @default("шт")
+  isActive             Boolean  @default(true)
+  sortOrder            Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@map("products")
 }
@@ -471,19 +475,19 @@ model Appointment {
   clinic       Organization? @relation(fields: [clinicId], references: [id])
   createdById  String?
   createdBy    User?         @relation("CreatedAppointments", fields: [createdById], references: [id])
-  
-  date         DateTime
-  duration     Int           @default(30) // in minutes
-  status       String        @default("scheduled") // scheduled | completed | cancelled | no_show
-  type         String        @default("consultation") // consultation | fitting | checkup | other
-  notes        String?       @db.Text
+
+  date     DateTime
+  duration Int      @default(30) // in minutes
+  status   String   @default("scheduled") // scheduled | completed | cancelled | no_show
+  type     String   @default("consultation") // consultation | fitting | checkup | other
+  notes    String?  @db.Text
 
   // External integrations (ITIGRIS, etc.) — e.g. "itigris:registry:123"
-  externalId   String?
+  externalId     String?
   externalSource String?
 
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([doctorId, date])
   @@index([clinicId])
@@ -493,27 +497,27 @@ model Appointment {
 
 // ==================== Order ====================
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
-  status          OrderStatus @default(new_order)
-  isUrgent        Boolean     @default(false)
+  id          String      @id @default(cuid())
+  orderNumber String      @unique
+  status      OrderStatus @default(new_order)
+  isUrgent    Boolean     @default(false)
 
   // Relations
-  organizationId  String?
-  organization    Organization? @relation(fields: [organizationId], references: [id])
-  createdById     String?
-  createdBy       User?        @relation("CreatedBy", fields: [createdById], references: [id])
-  engineerId      String?
-  engineer        User?        @relation("OrderEngineer", fields: [engineerId], references: [id])
-  patientId       String?
-  patient         Patient?     @relation(fields: [patientId], references: [id])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  createdById    String?
+  createdBy      User?         @relation("CreatedBy", fields: [createdById], references: [id])
+  engineerId     String?
+  engineer       User?         @relation("OrderEngineer", fields: [engineerId], references: [id])
+  patientId      String?
+  patient        Patient?      @relation(fields: [patientId], references: [id])
 
   // Meta
-  opticName       String?
-  doctorName      String?
-  doctorEmail     String?
-  company         String?
-  inn             String?
+  opticName   String?
+  doctorName  String?
+  doctorEmail String?
+  company     String?
+  inn         String?
 
   // Delivery
   deliveryMethod  String?
@@ -521,17 +525,17 @@ model Order {
   trackingNumber  String?
 
   // Lens Configuration (stored as JSON)
-  lensConfig      Json
+  lensConfig Json
 
   // 1C Document names (auto-constructed from catalog name1c + характеристика + DK)
-  documentNameOd  String?  // Наименование в 1С для OD
-  documentNameOs  String?  // Наименование в 1С для OS
-  priceOd         Int?     // Цена за единицу OD (из каталога по DK)
-  priceOs         Int?     // Цена за единицу OS (из каталога по DK)
+  documentNameOd String? // Наименование в 1С для OD
+  documentNameOs String? // Наименование в 1С для OS
+  priceOd        Int? // Цена за единицу OD (из каталога по DK)
+  priceOs        Int? // Цена за единицу OS (из каталога по DK)
 
   // Payment
   totalPrice      Int           @default(0)
-  discountPercent Float         @default(0)  // Скидка, применённая к заказу
+  discountPercent Float         @default(0) // Скидка, применённая к заказу
   paymentStatus   PaymentStatus @default(unpaid)
 
   // Timestamps
@@ -542,12 +546,12 @@ model Order {
   deliveredAt           DateTime?
 
   // Notes & Defects
-  notes   String?
-  defects Json?   // Array of defect records
-  comments Json?  // Array of comments: [{ authorId, authorName, role, text, createdAt }]
+  notes    String?
+  defects  Json? // Array of defect records
+  comments Json? // Array of comments: [{ authorId, authorName, role, text, createdAt }]
 
   // Delivery confirmation
-  deliveryConfirmed  Boolean?
+  deliveryConfirmed Boolean?
 
   // Ordered products snapshot: [{ productId, name, category, qty, price }]
   products Json?
@@ -559,8 +563,8 @@ model Order {
   updatedAt DateTime @updatedAt
 
   // External integration (MedMundus)
-  externalId String?  // MedMundus order ID for cross-referencing
-  source     String?  // Origin: 'lensflow' | 'medmundus'
+  externalId String? // MedMundus order ID for cross-referencing
+  source     String? // Origin: 'lensflow' | 'medmundus'
 
   // Distributor assignment
   distributorOrgId String?
@@ -575,38 +579,38 @@ model Order {
   contract   Contract? @relation("OrderContract", fields: [contractId], references: [id])
 
   // CRM Lead link
-  lead       Lead?
+  lead Lead?
 
   @@map("orders")
 }
 
 // ==================== Contract ====================
 model Contract {
-  id          String   @id @default(cuid())
-  number      String
-  date        DateTime
-  
-  providerId  String
-  provider    Organization @relation("ContractProvider", fields: [providerId], references: [id])
-  
-  clientId    String
-  client      Organization @relation("ContractClient", fields: [clientId], references: [id])
+  id     String   @id @default(cuid())
+  number String
+  date   DateTime
 
-  status      String   @default("active") // active | inactive
-  customPrices Json?   // { "productId": 15000, "productId2": 12000 }
-  document    Json?    // { name: string, data: string (base64), mimeType: string, size: number }
+  providerId String
+  provider   Organization @relation("ContractProvider", fields: [providerId], references: [id])
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  clientId String
+  client   Organization @relation("ContractClient", fields: [clientId], references: [id])
 
-  orders      Order[]  @relation("OrderContract")
+  status       String @default("active") // active | inactive
+  customPrices Json? // { "productId": 15000, "productId2": 12000 }
+  document     Json? // { name: string, data: string (base64), mimeType: string, size: number }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[] @relation("OrderContract")
 
   @@map("contracts")
 }
 
 enum OrderStatus {
-  draft           @map("draft") // Черновик (Ожидает оплаты/подтверждения)
-  new_order       @map("new")
+  draft             @map("draft") // Черновик (Ожидает оплаты/подтверждения)
+  new_order         @map("new")
   in_production
   ready
   rework
@@ -627,26 +631,26 @@ enum PaymentStatus {
 
 // ==================== Support Tickets ====================
 model SupportTicket {
-  id           String       @id @default(cuid())
-  title        String
-  description  String       @db.Text
-  category     String       @default("feature") // feature | bug | question
-  status       TicketStatus @default(new_ticket)
-  priority     String       @default("normal")  // low | normal | high
+  id          String       @id @default(cuid())
+  title       String
+  description String       @db.Text
+  category    String       @default("feature") // feature | bug | question
+  status      TicketStatus @default(new_ticket)
+  priority    String       @default("normal") // low | normal | high
 
-  authorId     String
-  author       User         @relation(fields: [authorId], references: [id])
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 
-  adminComment String?      @db.Text
+  adminComment String? @db.Text
 
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("support_tickets")
 }
 
 enum TicketStatus {
-  new_ticket   @map("new")
+  new_ticket  @map("new")
   in_progress
   done
   rejected
@@ -654,25 +658,25 @@ enum TicketStatus {
 
 // ==================== Optic Product Catalog ====================
 model MedicalTemplate {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   organizationId String
-  authorId       String?  // the user who created it
-  
-  category       String   // e.g. complaints, anamnesis_life, anamnesis_disease, biomicroscopy
-  title          String
-  text           String   @db.Text
+  authorId       String? // the user who created it
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  category String // e.g. complaints, anamnesis_life, anamnesis_disease, biomicroscopy
+  title    String
+  text     String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId, authorId, category])
   @@map("medical_templates")
 }
 
 model OpticProduct {
-  id              String   @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   name             String
   slug             String?
@@ -685,37 +689,37 @@ model OpticProduct {
   sku              String?
   barcode          String?
   shortDescription String?
-  fullDescription  String?  @db.Text
+  fullDescription  String? @db.Text
 
-  images           Json?    // ["url1.jpg", "url2.jpg"]
-  specs            Json?    // { "material": "Пластик", ... }
+  images Json? // ["url1.jpg", "url2.jpg"]
+  specs  Json? // { "material": "Пластик", ... }
 
-  purchasePrice    Int      @default(0)
-  retailPrice      Int      @default(0)
+  purchasePrice Int @default(0)
+  retailPrice   Int @default(0)
 
-  minStock         Int      @default(0)
-  currentStock     Int      @default(0)
-  unit             String   @default("шт")
-  trackSerials     Boolean  @default(false)
+  minStock     Int     @default(0)
+  currentStock Int     @default(0)
+  unit         String  @default("шт")
+  trackSerials Boolean @default(false)
 
   // Expiry / certification / shelf location (ТЗ: срок годности, сертификация мед-товаров, ячейка склада)
-  expiryDate       DateTime?               // срок годности (подсветка красным за полгода)
-  shelfLocation    String?                 // ячейка / полка на складе
-  isMedical        Boolean  @default(false) // товар медицинского назначения (нужна сертификация)
-  certNumber       String?                 // № сертификата
-  certUntil        DateTime?               // сертификат действует до
+  expiryDate    DateTime? // срок годности (подсветка красным за полгода)
+  shelfLocation String? // ячейка / полка на складе
+  isMedical     Boolean   @default(false) // товар медицинского назначения (нужна сертификация)
+  certNumber    String? // № сертификата
+  certUntil     DateTime? // сертификат действует до
 
-  isPublic         Boolean  @default(false)
-  isFreePrice      Boolean  @default(false)
-  isActive         Boolean  @default(true)
-  sortOrder        Int      @default(0)
+  isPublic    Boolean @default(false)
+  isFreePrice Boolean @default(false)
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  stockItems       StockItem[]
-  movements        StockMovement[]
-  saleItems        SaleItem[]
+  stockItems          StockItem[]
+  movements           StockMovement[]
+  saleItems           SaleItem[]
   wholesaleOrderItems WholesaleOrderItem[]
 
   @@unique([organizationId, sku])
@@ -724,41 +728,41 @@ model OpticProduct {
 
 // ==================== Stock Item (serial-tracked units) ====================
 model StockItem {
-  id              String   @id @default(cuid())
-  productId       String
-  product         OpticProduct @relation(fields: [productId], references: [id])
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
+  id             String       @id @default(cuid())
+  productId      String
+  product        OpticProduct @relation(fields: [productId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  serialNumber    String?
-  barcode         String?
+  serialNumber String?
+  barcode      String?
 
-  status          String   @default("in_stock")
+  status String @default("in_stock")
   // in_stock | reserved | sold | returned | defective | written_off
-  
-  wholesaleOrderId String?
-  wholesaleOrder   WholesaleOrder? @relation(fields: [wholesaleOrderId], references: [id])
+
+  wholesaleOrderId    String?
+  wholesaleOrder      WholesaleOrder?      @relation(fields: [wholesaleOrderId], references: [id])
   wholesaleOrderItems WholesaleOrderItem[]
 
-  color           String?
-  size            String?
-  sph             Float?
-  cyl             Float?
-  ax              Float?
+  color String?
+  size  String?
+  sph   Float?
+  cyl   Float?
+  ax    Float?
 
-  batchNumber     String?
-  expiryDate      DateTime?
-  productionDate  DateTime?
-  importDate      DateTime?
-  diopters        String?
-  purchasePrice   Int?
-  quantity        Int      @default(1)
+  batchNumber    String?
+  expiryDate     DateTime?
+  productionDate DateTime?
+  importDate     DateTime?
+  diopters       String?
+  purchasePrice  Int?
+  quantity       Int       @default(1)
 
-  receiptDocId    String?
+  receiptDocId String?
 
-  receivedAt      DateTime @default(now())
-  soldAt          DateTime?
-  notes           String?
+  receivedAt DateTime  @default(now())
+  soldAt     DateTime?
+  notes      String?
 
   @@unique([organizationId, serialNumber])
   @@map("stock_items")
@@ -766,89 +770,89 @@ model StockItem {
 
 // ==================== Stock Movement (history log) ====================
 model StockMovement {
-  id              String   @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  productId       String
-  product         OpticProduct @relation(fields: [productId], references: [id])
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  productId      String
+  product        OpticProduct @relation(fields: [productId], references: [id])
 
-  type            String   // receipt | sale | return_in | return_out | write_off | adjustment
-  quantity        Int
+  type     String // receipt | sale | return_in | return_out | write_off | adjustment
+  quantity Int
 
-  serialNumbers   Json?    // ["SN-001", "SN-002"]
+  serialNumbers Json? // ["SN-001", "SN-002"]
 
-  documentNumber  String?
-  documentId      String?
-  supplier        String?
-  customerName    String?
-  reason          String?
+  documentNumber String?
+  documentId     String?
+  supplier       String?
+  customerName   String?
+  reason         String?
 
   performedById   String?
   performedByName String?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@map("stock_movements")
 }
 
 // ==================== Stock Document (invoices, acts) ====================
 model StockDocument {
-  id               String   @id @default(cuid())
-  documentNumber   String
-  organizationId   String
-  organization     Organization @relation(fields: [organizationId], references: [id])
+  id             String       @id @default(cuid())
+  documentNumber String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  type             String   // receipt | write_off | return_out | adjustment
-  status           String   @default("draft")   // draft | confirmed | cancelled
+  type   String // receipt | write_off | return_out | adjustment
+  status String @default("draft") // draft | confirmed | cancelled
 
   counterpartyName String?
   counterpartyInn  String?
 
-  supplierId       String?
-  supplier         Supplier? @relation(fields: [supplierId], references: [id])
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
 
   targetOrganizationId String?
   targetOrganization   Organization? @relation("TransferTarget", fields: [targetOrganizationId], references: [id])
 
-  totalAmount      Int      @default(0)
-  items            Json     // [{ productId, name, qty, price, serialNumbers }]
+  totalAmount Int  @default(0)
+  items       Json // [{ productId, name, qty, price, serialNumbers }]
 
-  notes            String?
+  notes String?
 
-  performedById    String?
-  performedByName  String?
-  confirmedAt      DateTime?
+  performedById   String?
+  performedByName String?
+  confirmedAt     DateTime?
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("stock_documents")
 }
 
 // ==================== Inventory (Stocktaking session) ====================
 model Inventory {
-  id              String   @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  inventoryNumber String            // ИНВ-0001
-  status          String @default("in_progress")  // in_progress | completed | cancelled
+  inventoryNumber String // ИНВ-0001
+  status          String @default("in_progress") // in_progress | completed | cancelled
 
-  items           Json     // [{ productId, name, sku, barcode, systemQty, actualQty, diff, note }]
+  items Json // [{ productId, name, sku, barcode, systemQty, actualQty, diff, note }]
 
   totalProducts   Int @default(0)
   checkedProducts Int @default(0)
   surplusCount    Int @default(0)
   shortageCount   Int @default(0)
 
-  notes           String?
+  notes String?
 
   performedById   String?
   performedByName String?
 
-  completedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@map("inventories")
 }
@@ -857,25 +861,25 @@ model Inventory {
 // A restock order placed to a supplier/counterparty. Does NOT touch own stock
 // until received — on receipt it creates a receipt (приход) that adds stock.
 model SupplierOrder {
-  id              String   @id @default(cuid())
-  organizationId  String
+  id             String @id @default(cuid())
+  organizationId String
 
-  number          String              // ЗП-0001
-  status          String   @default("draft")  // draft | sent | received | cancelled
-  supplierName    String?
-  supplierOrgId   String?             // counterparty Organization id (optional, no FK)
+  number        String // ЗП-0001
+  status        String  @default("draft") // draft | sent | received | cancelled
+  supplierName  String?
+  supplierOrgId String? // counterparty Organization id (optional, no FK)
 
-  items           Json                // [{ productId, name, sku, qty, receivedQty, price }]
-  totalAmount     Int      @default(0)
-  notes           String?
+  items       Json // [{ productId, name, sku, qty, receivedQty, price }]
+  totalAmount Int     @default(0)
+  notes       String?
 
-  createdById     String?
-  createdByName   String?
-  sentAt          DateTime?
-  receivedAt      DateTime?
+  createdById   String?
+  createdByName String?
+  sentAt        DateTime?
+  receivedAt    DateTime?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
   @@map("supplier_orders")
@@ -885,25 +889,25 @@ model SupplierOrder {
 // Moves stock from one branch to another: deduct source on send, add to
 // destination on receive. Acts as the транспортная накладная.
 model StockTransfer {
-  id              String   @id @default(cuid())
-  number          String              // ТР-0001
-  fromOrgId       String
-  toOrgId         String
-  fromName        String?
-  toName          String?
+  id        String  @id @default(cuid())
+  number    String // ТР-0001
+  fromOrgId String
+  toOrgId   String
+  fromName  String?
+  toName    String?
 
-  status          String   @default("draft")  // draft | sent | received | cancelled
-  items           Json                // [{ productId, name, sku, qty }]
-  totalQty        Int      @default(0)
-  notes           String?
+  status   String  @default("draft") // draft | sent | received | cancelled
+  items    Json // [{ productId, name, sku, qty }]
+  totalQty Int     @default(0)
+  notes    String?
 
-  createdById     String?
-  createdByName   String?
-  sentAt          DateTime?
-  receivedAt      DateTime?
+  createdById   String?
+  createdByName String?
+  sentAt        DateTime?
+  receivedAt    DateTime?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([fromOrgId])
   @@index([toOrgId])
@@ -915,28 +919,28 @@ model StockTransfer {
 // status/due date. No User FK (denormalized assignee/author names) to keep the
 // migration light — same style as SupplierOrder/StockTransfer above.
 model Task {
-  id              String    @id @default(cuid())
-  organizationId  String
+  id             String @id @default(cuid())
+  organizationId String
 
-  title           String
-  description     String?   @db.Text
-  status          String    @default("new")     // new | in_progress | done | cancelled
-  priority        String    @default("normal")  // low | normal | high
-  dueDate         DateTime?
+  title       String
+  description String?   @db.Text
+  status      String    @default("new") // new | in_progress | done | cancelled
+  priority    String    @default("normal") // low | normal | high
+  dueDate     DateTime?
 
-  assignedById    String?
-  assignedByName  String?
-  assignedToId    String?
-  assignedToName  String?
+  assignedById   String?
+  assignedByName String?
+  assignedToId   String?
+  assignedToName String?
 
   // Optional link to another entity (order/patient) for context
-  relatedType     String?               // order | patient
-  relatedId       String?
-  relatedLabel    String?
+  relatedType  String? // order | patient
+  relatedId    String?
+  relatedLabel String?
 
-  completedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([organizationId])
   @@index([assignedToId])
@@ -948,18 +952,18 @@ model Task {
 // Org announcement feed with a per-user unread counter (the «Новости (+N)» badge).
 // Additive, no User FK — same style as Task/SupplierOrder/StockTransfer.
 model NewsPost {
-  id              String   @id @default(cuid())
-  organizationId  String
+  id             String @id @default(cuid())
+  organizationId String
 
-  title           String
-  body            String   @db.Text
-  pinned          Boolean  @default(false)
+  title  String
+  body   String  @db.Text
+  pinned Boolean @default(false)
 
-  authorId        String?
-  authorName      String?
+  authorId   String?
+  authorName String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organizationId])
   @@map("news_posts")
@@ -980,27 +984,27 @@ model NewsReadState {
 // Walk-in/registered repair intake: accept an item, describe the problem, price it,
 // track status accepted→in_progress→ready→issued. Additive, no FK — same style.
 model RepairOrder {
-  id              String    @id @default(cuid())
-  organizationId  String
+  id             String @id @default(cuid())
+  organizationId String
 
-  number          String              // Р-0001
-  clientName      String?
-  clientPhone     String?
+  number      String // Р-0001
+  clientName  String?
+  clientPhone String?
 
-  itemDescription String              // что сдали в ремонт
-  problem         String?   @db.Text  // описание неисправности
-  price           Int       @default(0)
-  status          String    @default("accepted") // accepted | in_progress | ready | issued | cancelled
+  itemDescription String // что сдали в ремонт
+  problem         String? @db.Text // описание неисправности
+  price           Int     @default(0)
+  status          String  @default("accepted") // accepted | in_progress | ready | issued | cancelled
   masterName      String?
   notes           String?
 
-  readyAt         DateTime?
-  issuedAt        DateTime?
+  readyAt  DateTime?
+  issuedAt DateTime?
 
-  createdById     String?
-  createdByName   String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([organizationId])
   @@map("repair_orders")
@@ -1011,21 +1015,21 @@ model RepairOrder {
 // (master/diagnosis/seller), cost — gives per-order history + per-employee error
 // accounting (ТЗ). Additive, no FK — same style.
 model OrderRework {
-  id              String    @id @default(cuid())
-  organizationId  String
+  id             String @id @default(cuid())
+  organizationId String
 
-  orderNumber     String?               // linked order (e.g. ITG-123 / native number)
-  description     String    @db.Text     // что переделываем / в чём брак
-  responsibleType String    @default("master")  // master | diagnosis | seller | other
-  responsibleName String?               // на ком ошибка (для учёта по сотрудникам)
-  cost            Int       @default(0)  // стоимость переделки/брака
-  status          String    @default("open")    // open | resolved
+  orderNumber     String? // linked order (e.g. ITG-123 / native number)
+  description     String  @db.Text // что переделываем / в чём брак
+  responsibleType String  @default("master") // master | diagnosis | seller | other
+  responsibleName String? // на ком ошибка (для учёта по сотрудникам)
+  cost            Int     @default(0) // стоимость переделки/брака
+  status          String  @default("open") // open | resolved
 
-  createdById     String?
-  createdByName   String?
-  resolvedAt      DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdById   String?
+  createdByName String?
+  resolvedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([organizationId])
   @@index([orderNumber])
@@ -1034,64 +1038,64 @@ model OrderRework {
 
 // ==================== Sale (POS transaction) ====================
 model Sale {
-  id              String   @id @default(cuid())
-  saleNumber      String   @unique
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
+  id             String       @id @default(cuid())
+  saleNumber     String       @unique
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  customerName    String?
-  customerPhone   String?
-  customerInn     String?
+  customerName  String?
+  customerPhone String?
+  customerInn   String?
 
-  subtotal        Int      @default(0)
-  discountPercent Float    @default(0)
-  discountAmount  Int      @default(0)
-  total           Int      @default(0)
+  subtotal        Int   @default(0)
+  discountPercent Float @default(0)
+  discountAmount  Int   @default(0)
+  total           Int   @default(0)
 
-  paymentMethod   String   @default("cash")   // cash | card | transfer | mixed
-  paymentStatus   String   @default("paid")   // paid | unpaid | partial
-  paidAmount      Int      @default(0)
+  paymentMethod String @default("cash") // cash | card | transfer | mixed
+  paymentStatus String @default("paid") // paid | unpaid | partial
+  paidAmount    Int    @default(0)
 
   invoiceGenerated Boolean @default(false)
   invoiceData      Json?
 
-  doctorId        String?
-  doctor          User?    @relation("SaleDoctor", fields: [doctorId], references: [id])
+  doctorId String?
+  doctor   User?   @relation("SaleDoctor", fields: [doctorId], references: [id])
 
   performedById   String?
   performedByName String?
   notes           String?
 
-  syncedTo1C      Boolean  @default(false)
-  external1CId    String?
+  syncedTo1C   Boolean @default(false)
+  external1CId String?
 
-  patientId       String?
-  patient         Patient?     @relation(fields: [patientId], references: [id])
-  leadId          String?
+  patientId String?
+  patient   Patient? @relation(fields: [patientId], references: [id])
+  leadId    String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  items           SaleItem[]
+  items SaleItem[]
 
   @@map("sales")
 }
 
 // ==================== Sale Item ====================
 model SaleItem {
-  id         String       @id @default(cuid())
-  saleId     String
-  sale       Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  productId  String
-  product    OpticProduct @relation(fields: [productId], references: [id])
+  id        String       @id @default(cuid())
+  saleId    String
+  sale      Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String
+  product   OpticProduct @relation(fields: [productId], references: [id])
 
-  name       String
-  category   String?
-  quantity   Int
-  unitPrice  Int
-  total      Int
+  name      String
+  category  String?
+  quantity  Int
+  unitPrice Int
+  total     Int
 
-  serialNumbers Json?     // ["NE-F-00001"]
+  serialNumbers Json? // ["NE-F-00001"]
 
   @@map("sale_items")
 }
@@ -1107,7 +1111,7 @@ enum LeadSource {
 }
 
 enum LeadStage {
-  new_lead       @map("new")
+  new_lead    @map("new")
   contacted
   follow_up
   qualified
@@ -1126,23 +1130,23 @@ enum LeadStage {
 }
 
 model Lead {
-  id            String     @id @default(cuid())
+  id String @id @default(cuid())
 
   // Contact
-  phone         String     // WhatsApp chatId: 77001234567@c.us
-  name          String?
-  city          String?
-  source        LeadSource @default(whatsapp)
+  phone  String // WhatsApp chatId: 77001234567@c.us
+  name   String?
+  city   String?
+  source LeadSource @default(whatsapp)
 
   // Funnel
-  funnel        String     @default("sales") // "sales" or "retention"
-  stage         LeadStage  @default(new_lead)
-  assigneeId    String?
-  assignee      User?      @relation("AssignedLeads", fields: [assigneeId], references: [id])
+  funnel     String    @default("sales") // "sales" or "retention"
+  stage      LeadStage @default(new_lead)
+  assigneeId String?
+  assignee   User?     @relation("AssignedLeads", fields: [assigneeId], references: [id])
 
   // Partner clinic
-  clinicId      String?
-  clinic        Organization? @relation("ClinicLeads", fields: [clinicId], references: [id])
+  clinicId String?
+  clinic   Organization? @relation("ClinicLeads", fields: [clinicId], references: [id])
 
   // Appointment
   appointmentAt          DateTime?
@@ -1152,13 +1156,13 @@ model Lead {
   doctor                 User?     @relation("DoctorLeads", fields: [doctorId], references: [id])
 
   // Marketing & UTMs
-  campaignId    String?
-  campaign      MarketingCampaign? @relation(fields: [campaignId], references: [id])
-  utmSource     String?
-  utmMedium     String?
-  utmCampaign   String?
-  utmContent    String?
-  utmTerm       String?
+  campaignId  String?
+  campaign    MarketingCampaign? @relation(fields: [campaignId], references: [id])
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
 
   // Metrics
   lostReason      String?
@@ -1172,20 +1176,20 @@ model Lead {
   nextCheckupDate          DateTime?
 
   // Link to patient & order
-  patientId     String?
-  patient       Patient?  @relation(fields: [patientId], references: [id])
-  orderId       String?   @unique
-  order         Order?    @relation(fields: [orderId], references: [id])
+  patientId String?
+  patient   Patient? @relation(fields: [patientId], references: [id])
+  orderId   String?  @unique
+  order     Order?   @relation(fields: [orderId], references: [id])
 
   // Meta
-  tags          String[]
-  notes         String?   @db.Text
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  tags      String[]
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  messages      ChatMessage[]
-  reminders     Reminder[]
-  activities    LeadActivity[]
+  messages   ChatMessage[]
+  reminders  Reminder[]
+  activities LeadActivity[]
 
   @@index([stage])
   @@index([assigneeId])
@@ -1194,84 +1198,83 @@ model Lead {
 }
 
 model MarketingCampaign {
-  id           String      @id @default(cuid())
-  campaignId   String      // ID из Meta Ads / Google Ads
-  name         String
-  source       String      // "facebook" | "google" | "yandex"
-  status       String      @default("active") // "active" | "paused" | "completed"
-  dailyBudget  Int         @default(0) // Дневной бюджет в тенге
-  totalSpend   Int         @default(0) // Всего потрачено
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  leads        Lead[]
-  spends       AdSpend[]
+  id          String    @id @default(cuid())
+  campaignId  String // ID из Meta Ads / Google Ads
+  name        String
+  source      String // "facebook" | "google" | "yandex"
+  status      String    @default("active") // "active" | "paused" | "completed"
+  dailyBudget Int       @default(0) // Дневной бюджет в тенге
+  totalSpend  Int       @default(0) // Всего потрачено
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  leads       Lead[]
+  spends      AdSpend[]
 
-  clinicId     String?
-  clinic       Organization? @relation(fields: [clinicId], references: [id])
+  clinicId String?
+  clinic   Organization? @relation(fields: [clinicId], references: [id])
 
   @@map("marketing_campaigns")
 }
 
 model AdSpend {
-  id           String            @id @default(cuid())
-  campaignId   String
-  campaign     MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  spendDate    DateTime          // Дата расхода
-  amount       Int               // Потраченная сумма в тенге
-  createdAt    DateTime          @default(now())
+  id         String            @id @default(cuid())
+  campaignId String
+  campaign   MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  spendDate  DateTime // Дата расхода
+  amount     Int // Потраченная сумма в тенге
+  createdAt  DateTime          @default(now())
 
   @@unique([campaignId, spendDate])
   @@map("ad_spends")
 }
 
-
 model ChatMessage {
-  id          String   @id @default(cuid())
-  leadId      String
-  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
-  channel     String   // 'whatsapp' | 'instagram'
-  direction   String   // 'incoming' | 'outgoing'
-  messageType String   @default("text") // 'text' | 'image' | 'document' | 'audio'
-  content     String   @db.Text
-  mediaUrl    String?  @db.Text
+  channel     String // 'whatsapp' | 'instagram'
+  direction   String // 'incoming' | 'outgoing'
+  messageType String  @default("text") // 'text' | 'image' | 'document' | 'audio'
+  content     String  @db.Text
+  mediaUrl    String? @db.Text
 
   // Green API metadata
-  externalId  String?  // idMessage from Green API
-  status      String?  // 'sent' | 'delivered' | 'read'
+  externalId String? // idMessage from Green API
+  status     String? // 'sent' | 'delivered' | 'read'
 
-  sentBy      String?  // userId of sales manager (for outgoing)
-  sentAt      DateTime @default(now())
+  sentBy String? // userId of sales manager (for outgoing)
+  sentAt DateTime @default(now())
 
   @@index([leadId])
   @@map("chat_messages")
 }
 
 model Reminder {
-  id          String   @id @default(cuid())
-  leadId      String
-  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
-  type        String   // 'appointment_1d' | 'appointment_2h' | 'follow_up' | 'custom'
-  channel     String   @default("whatsapp")
-  message     String   @db.Text
+  type    String // 'appointment_1d' | 'appointment_2h' | 'follow_up' | 'custom'
+  channel String @default("whatsapp")
+  message String @db.Text
 
   scheduledAt DateTime
   sentAt      DateTime?
-  status      String   @default("pending") // 'pending' | 'sent' | 'failed'
+  status      String    @default("pending") // 'pending' | 'sent' | 'failed'
 
   @@index([scheduledAt, status])
   @@map("reminders")
 }
 
 model LeadActivity {
-  id       String   @id @default(cuid())
-  leadId   String
-  lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
-  action   String   // 'stage_change' | 'note_added' | 'message_sent' | 'appointment_booked'
-  details  String?  @db.Text
-  userId   String?  // null = bot
+  action  String // 'stage_change' | 'note_added' | 'message_sent' | 'appointment_booked'
+  details String? @db.Text
+  userId  String? // null = bot
 
   createdAt DateTime @default(now())
 
@@ -1280,13 +1283,13 @@ model LeadActivity {
 }
 
 model ClinicSubscription {
-  id        String   @id @default(cuid())
-  clinicId  String
-  clinic    Organization @relation("ClinicSubscription", fields: [clinicId], references: [id])
+  id       String       @id @default(cuid())
+  clinicId String
+  clinic   Organization @relation("ClinicSubscription", fields: [clinicId], references: [id])
 
-  plan       String   // 'start' | 'growth' | 'premium'
+  plan       String // 'start' | 'growth' | 'premium'
   leadsLimit Int
-  leadsUsed  Int      @default(0)
+  leadsUsed  Int    @default(0)
   price      Float
 
   startsAt  DateTime
@@ -1298,10 +1301,10 @@ model ClinicSubscription {
 }
 
 model BotScenario {
-  id        String   @id @default(cuid())
-  trigger   String
-  step      Int
-  message   String   @db.Text
+  id      String @id @default(cuid())
+  trigger String
+  step    Int
+  message String @db.Text
 
   nextAction String?
 
@@ -1310,35 +1313,36 @@ model BotScenario {
 
   @@map("bot_scenarios")
 }
+
 // ==================== Bot Configuration (editable via CRM UI) ====================
 model BotConfig {
-  id            String   @id @default(cuid())
-  key           String   @unique   // 'clinic_name' | 'working_hours' | 'address' | 'services' | 'prices' | 'doctors' | 'faq' | 'greeting' | 'system_prompt_extra'
-  value         String   @db.Text
-  label         String             // Human-readable label for UI
-  category      String   @default("general") // general | services | faq
-  updatedAt     DateTime @updatedAt
-  createdAt     DateTime @default(now())
+  id        String   @id @default(cuid())
+  key       String   @unique // 'clinic_name' | 'working_hours' | 'address' | 'services' | 'prices' | 'doctors' | 'faq' | 'greeting' | 'system_prompt_extra'
+  value     String   @db.Text
+  label     String // Human-readable label for UI
+  category  String   @default("general") // general | services | faq
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   @@map("bot_config")
 }
 
 // ==================== AI Bot Session ====================
 model BotSession {
-  id        String   @id @default(cuid())
-  phone     String   @unique          // normalized phone e.g. 77001234567
-  leadId    String?                   // linked Lead
-  state     String   @default("greeting") // greeting | collecting_name | collecting_date | collecting_time | confirming | done | paused
-  collectedName     String?           // extracted patient name
-  collectedDate     String?           // extracted preferred date (ISO string)
-  collectedTime     String?           // extracted preferred time e.g. "14:00"
-  collectedQuestion String?           // last unresolved question from user
-  history   Json     @default("[]")   // array of {role, content} for GPT context
-  bookedAt  DateTime?                 // final appointment datetime
-  patientId String?                   // linked Patient after booking
-  followUpCount     Int      @default(0) // tracks automatic reminders sent (1 day, 2 days, etc)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(cuid())
+  phone             String    @unique // normalized phone e.g. 77001234567
+  leadId            String? // linked Lead
+  state             String    @default("greeting") // greeting | collecting_name | collecting_date | collecting_time | confirming | done | paused
+  collectedName     String? // extracted patient name
+  collectedDate     String? // extracted preferred date (ISO string)
+  collectedTime     String? // extracted preferred time e.g. "14:00"
+  collectedQuestion String? // last unresolved question from user
+  history           Json      @default("[]") // array of {role, content} for GPT context
+  bookedAt          DateTime? // final appointment datetime
+  patientId         String? // linked Patient after booking
+  followUpCount     Int       @default(0) // tracks automatic reminders sent (1 day, 2 days, etc)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([phone])
   @@map("bot_sessions")
@@ -1346,15 +1350,15 @@ model BotSession {
 
 // ==================== Cash Register & Shift Operations ====================
 model CashRegister {
-  id              String            @id @default(cuid())
-  name            String
-  organizationId  String
-  organization    Organization      @relation(fields: [organizationId], references: [id])
-  currentBalance  Int               @default(0)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  shifts          CashShift[]
-  transactions    CashTransaction[]
+  id             String            @id @default(cuid())
+  name           String
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id])
+  currentBalance Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  shifts         CashShift[]
+  transactions   CashTransaction[]
 
   @@map("cash_registers")
 }
@@ -1404,170 +1408,205 @@ model CashTransaction {
 // ==================== Global Finances (P&L, Accounts, Payroll) ====================
 
 model CompanyAccount {
-  id              String       @id @default(cuid())
-  name            String       // e.g. "Kaspi Pay", "Halyk Bank", "Main Safe"
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  balance         Int          @default(0) // Balance in minimal currency unit (e.g. tiyin, or just tenge if integer)
-  isActive        Boolean      @default(true)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  name           String // e.g. "Kaspi Pay", "Halyk Bank", "Main Safe"
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  balance        Int          @default(0) // Balance in minimal currency unit (e.g. tiyin, or just tenge if integer)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  transactions    FinancialTransaction[]
+  transactions FinancialTransaction[]
 
   @@map("company_accounts")
 }
 
 model FinancialTransaction {
-  id              String          @id @default(cuid())
-  accountId       String
-  account         CompanyAccount  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  organizationId  String
-  organization    Organization    @relation(fields: [organizationId], references: [id])
-  
-  type            String          // 'income' | 'expense'
-  category        String          // 'rent', 'salary', 'marketing', 'supplier_payment', 'other'
-  amount          Int
-  date            DateTime        @default(now())
-  description     String?
-  
-  createdById     String
-  createdBy       User            @relation("FinancialTransactionsCreated", fields: [createdById], references: [id])
-  
+  id             String         @id @default(cuid())
+  accountId      String
+  account        CompanyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+
+  type        String // 'income' | 'expense'
+  category    String // 'rent', 'salary', 'marketing', 'supplier_payment', 'other'
+  amount      Int
+  date        DateTime @default(now())
+  description String?
+
+  createdById String
+  createdBy   User   @relation("FinancialTransactionsCreated", fields: [createdById], references: [id])
+
   // Optional link to a specific user (e.g. for salary payout)
-  linkedUserId    String?
-  linkedUser      User?           @relation("FinancialTransactionsLinked", fields: [linkedUserId], references: [id])
-  
+  linkedUserId String?
+  linkedUser   User?   @relation("FinancialTransactionsLinked", fields: [linkedUserId], references: [id])
+
   // Optional link to payroll payout
   payrollPayoutId String?
-  payrollPayout   PayrollPayout?  @relation(fields: [payrollPayoutId], references: [id])
+  payrollPayout   PayrollPayout? @relation(fields: [payrollPayoutId], references: [id])
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("financial_transactions")
 }
 
 model PayrollRule {
-  id              String       @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  userId          String
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  baseSalary      Int          @default(0) // Fixed monthly salary
-  salesPercent    Float        @default(0) // E.g. 5.0 for 5% from sales
+  baseSalary   Int   @default(0) // Fixed monthly salary
+  salesPercent Float @default(0) // E.g. 5.0 for 5% from sales
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([organizationId, userId])
   @@map("payroll_rules")
 }
 
 model PayrollPayout {
-  id              String       @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  userId          String
-  user            User         @relation(fields: [userId], references: [id])
-  
-  periodStart     DateTime
-  periodEnd       DateTime
-  
-  baseAmount      Int          @default(0)
-  salesAmount     Int          @default(0)
-  totalAmount     Int          @default(0)
-  
-  status          String       @default("calculated") // 'calculated' | 'paid'
-  paidAt          DateTime?
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  periodStart DateTime
+  periodEnd   DateTime
 
-  transactions    FinancialTransaction[]
+  baseAmount  Int @default(0)
+  salesAmount Int @default(0)
+  totalAmount Int @default(0)
+
+  status String    @default("calculated") // 'calculated' | 'paid'
+  paidAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions FinancialTransaction[]
 
   @@map("payroll_payouts")
 }
 
 // ==================== Stock Request (from Optic to Distributor or Distributor to Supplier) ====================
 model StockRequest {
-  id              String   @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  
-  requestNumber   String
-  status          String @default("pending") // pending | approved | rejected | fulfilled
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  requestNumber String
+  status        String @default("pending") // pending | approved | rejected | fulfilled
 
   targetOrganizationId String?
   targetOrganization   Organization? @relation("RequestTarget", fields: [targetOrganizationId], references: [id])
 
-  items           Json     // [{ productId, name, sku, qty, note }]
-  notes           String?
+  items Json // [{ productId, name, sku, qty, note }]
+  notes String?
 
   performedById   String?
   performedByName String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("stock_requests")
 }
 
 // ==================== Wholesale Orders (Distributor B2B Sales) ====================
 model WholesaleOrder {
-  id              String   @id @default(cuid())
-  orderNumber     String   @unique
-  organizationId  String
-  organization    Organization @relation("WholesaleOrderOrganization", fields: [organizationId], references: [id])
-  
-  counterpartyId  String?
-  counterparty    Organization? @relation("WholesaleOrderCounterparty", fields: [counterpartyId], references: [id])
-  
-  status          String   @default("draft") 
+  id             String       @id @default(cuid())
+  orderNumber    String       @unique
+  organizationId String
+  organization   Organization @relation("WholesaleOrderOrganization", fields: [organizationId], references: [id])
+
+  counterpartyId String?
+  counterparty   Organization? @relation("WholesaleOrderCounterparty", fields: [counterpartyId], references: [id])
+
+  status String @default("draft")
   // draft | reserved | completed | cancelled
-  
-  totalAmount     Int      @default(0)
-  notes           String?
-  
-  items           WholesaleOrderItem[]
-  stockItems      StockItem[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+
+  totalAmount Int     @default(0)
+  notes       String?
+
+  items      WholesaleOrderItem[]
+  stockItems StockItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("wholesale_orders")
 }
 
 model WholesaleOrderItem {
-  id               String   @id @default(cuid())
+  id               String         @id @default(cuid())
   wholesaleOrderId String
   order            WholesaleOrder @relation(fields: [wholesaleOrderId], references: [id])
-  
-  productId        String
-  product          OpticProduct @relation(fields: [productId], references: [id])
-  
-  stockItemId      String?
-  stockItem        StockItem? @relation(fields: [stockItemId], references: [id])
-  
-  quantity         Int
-  price            Int
-  total            Int
+
+  productId String
+  product   OpticProduct @relation(fields: [productId], references: [id])
+
+  stockItemId String?
+  stockItem   StockItem? @relation(fields: [stockItemId], references: [id])
+
+  quantity Int
+  price    Int
+  total    Int
 
   @@map("wholesale_order_items")
 }
 
 // ==================== Supplier (For Warehouse Receipts) ====================
 model Supplier {
-  id              String   @id @default(cuid())
-  organizationId  String
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  name            String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  stockDocuments  StockDocument[]
+  stockDocuments StockDocument[]
 
   @@unique([organizationId, name])
   @@map("suppliers")
+}
+
+// ==================== Payroll & Timesheet ====================
+model WorkSchedule {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  scheduleType String @default("custom") // "5/2", "2/2", "custom"
+  expectedDays Int    @default(15) // Norma of working days per month
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@map("work_schedules")
+}
+
+model AttendanceRecord {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date   DateTime // Represents the day (e.g. 2026-07-01T00:00:00Z)
+  status String   @default("PRESENT") // PRESENT, ABSENT, SICK, VACATION
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@map("attendance_records")
 }

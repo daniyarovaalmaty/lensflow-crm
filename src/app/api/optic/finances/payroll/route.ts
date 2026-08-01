@@ -29,10 +29,16 @@ export async function GET(req: NextRequest) {
             dateFilter = { gte: firstDay, lte: lastDay };
         }
 
-        // 1. Get all users in the organization with their roles and payroll rules
+        // 1. Get all users in the organization with their roles, payroll rules, schedules, and attendance
         const staff = await prisma.user.findMany({
             where: { organizationId: user.organizationId },
-            include: { payrollRules: true }
+            include: { 
+                payrollRules: true,
+                workSchedules: true,
+                attendanceRecords: {
+                    where: { date: dateFilter }
+                }
+            }
         });
 
         // 2. Calculate sales for cashiers (non-doctors) using CashTransaction
@@ -64,7 +70,12 @@ export async function GET(req: NextRequest) {
 
         const consultationsMap = new Map();
         const fittingsMap = new Map();
-        const fittingsDetailsMap = new Map();
+        const diagnosticsMap = new Map();
+        const stellestMap = new Map();
+        const grossMap = new Map();
+        const armostMap = new Map();
+        const tiedraMap = new Map();
+        const transactionsMap = new Map();
         const primaryMap = new Map();
         const secondaryMap = new Map();
 
@@ -163,23 +174,46 @@ export async function GET(req: NextRequest) {
                         doctorConsultationSalesMap.set(assignedDoctorId, (doctorConsultationSalesMap.get(assignedDoctorId) || 0) + consultationTotal);
                     }
 
-                    const hasFitting = sale.items.some((item: any) => {
-                        const isFittingByName = typeof item.name === 'string' && item.name.toLowerCase().includes('подбор');
-                        const isFittingByCategory = item.category === 'service_fitting';
-                        if (!isFittingByName && !isFittingByCategory) return false;
+                    let isFitting = false, isDiag = false, isStell = false, isGross = false, isArmost = false, isTiedra = false;
+                    let transactionName = 'Транзакция';
+                    let transactionAmount = 0;
+                    
+                    sale.items.forEach((item: any) => {
+                        const name = typeof item.name === 'string' ? item.name.toLowerCase() : '';
+                        const cat = item.category || '';
                         
-                        // For Aigerim, ONLY count night lenses!
-                        const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
-                        if (aigerim && assignedDoctorId === aigerim.id) {
-                            return typeof item.name === 'string' && item.name.toLowerCase().includes('ночн');
+                        let matched = false;
+                        if (name.includes('подбор') || cat === 'service_fitting') {
+                            const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
+                            if (aigerim && assignedDoctorId === aigerim.id) {
+                                if (name.includes('ночн')) { isFitting = true; matched = true; }
+                            } else {
+                                isFitting = true; matched = true;
+                            }
                         }
-                        return true;
+                        if (name.includes('диагностика')) { isDiag = true; matched = true; }
+                        if (name.includes('stellest') || name.includes('стеллест')) { isStell = true; matched = true; }
+                        if (name.includes('gross')) { isGross = true; matched = true; }
+                        if (name.includes('armost')) { isArmost = true; matched = true; }
+                        if (name.includes('tiedra')) { isTiedra = true; matched = true; }
+
+                        if (matched && typeof item.name === 'string') {
+                            transactionName = item.name;
+                            transactionAmount += (item.total || 0);
+                        }
                     });
-                    if (hasFitting) {
-                        fittingsMap.set(assignedDoctorId, (fittingsMap.get(assignedDoctorId) || 0) + 1);
-                        const arr = fittingsDetailsMap.get(assignedDoctorId) || [];
-                        arr.push(sale);
-                        fittingsDetailsMap.set(assignedDoctorId, arr);
+
+                    if (isFitting || isDiag || isStell || isGross || isArmost || isTiedra) {
+                        if (isFitting) fittingsMap.set(assignedDoctorId, (fittingsMap.get(assignedDoctorId) || 0) + 1);
+                        if (isDiag) diagnosticsMap.set(assignedDoctorId, (diagnosticsMap.get(assignedDoctorId) || 0) + 1);
+                        if (isStell) stellestMap.set(assignedDoctorId, (stellestMap.get(assignedDoctorId) || 0) + 1);
+                        if (isGross) grossMap.set(assignedDoctorId, (grossMap.get(assignedDoctorId) || 0) + 1);
+                        if (isArmost) armostMap.set(assignedDoctorId, (armostMap.get(assignedDoctorId) || 0) + 1);
+                        if (isTiedra) tiedraMap.set(assignedDoctorId, (tiedraMap.get(assignedDoctorId) || 0) + 1);
+
+                        const arr = transactionsMap.get(assignedDoctorId) || [];
+                        arr.push({ ...sale, transactionName, transactionAmount });
+                        transactionsMap.set(assignedDoctorId, arr);
                     }
                 }
             }
@@ -188,9 +222,9 @@ export async function GET(req: NextRequest) {
         const results = staff.map(st => {
             const rule = st.payrollRules[0] || { baseSalary: 0, salesPercent: 0 };
             
-            // Build fitting details for the UI from sales
-            const fittingSales = fittingsDetailsMap.get(st.id) || [];
-            const fittingDetails = fittingSales.map((s: any) => {
+            // Build transactions for the UI from sales
+            const doctorTransactions = transactionsMap.get(st.id) || [];
+            const transactions = doctorTransactions.map((s: any) => {
                 let isInstallment = false;
                 if (s.paymentMethod === 'installment12' || 
                     (s.invoiceData as any)?.split?.some((sp: any) => sp.method === 'installment12') || 
@@ -198,26 +232,14 @@ export async function GET(req: NextRequest) {
                     isInstallment = true;
                 }
 
-                const fittingItems = s.items?.filter((item: any) => {
-                    const isFittingByName = typeof item.name === 'string' && item.name.toLowerCase().includes('подбор');
-                    const isFittingByCategory = item.category === 'service_fitting';
-                    if (!isFittingByName && !isFittingByCategory) return false;
-                    
-                    const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
-                    if (aigerim && st.id === aigerim.id) {
-                        return typeof item.name === 'string' && item.name.toLowerCase().includes('ночн');
-                    }
-                    return true;
-                }) || [];
-                const fittingAmount = fittingItems.reduce((sum: number, item: any) => sum + (item.total || 0), 0);
-                const fittingName = fittingItems.length > 0 ? fittingItems[0].name : 'Подбор';
+                let saleAmount = s.transactionAmount > 0 ? s.transactionAmount : s.total;
 
                 return {
                     id: s.id,
                     date: s.createdAt,
                     patientName: s.customerName || s.patient?.fullName || 'Неизвестный',
-                    fittingName,
-                    saleAmount: fittingAmount,
+                    itemName: s.transactionName,
+                    saleAmount: saleAmount,
                     isInstallment
                 };
             });
@@ -225,9 +247,14 @@ export async function GET(req: NextRequest) {
             const docMetrics = {
                 consultations: consultationsMap.get(st.id) || 0,
                 fittings: fittingsMap.get(st.id) || 0,
+                diagnostics: diagnosticsMap.get(st.id) || 0,
+                stellest: stellestMap.get(st.id) || 0,
+                gross: grossMap.get(st.id) || 0,
+                armost: armostMap.get(st.id) || 0,
+                tiedra: tiedraMap.get(st.id) || 0,
                 primary: primaryMap.get(st.id) || 0,
                 secondary: secondaryMap.get(st.id) || 0,
-                fittingDetails
+                transactions
             };
 
             const isValeria = st.fullName?.includes('Валерия');
@@ -353,11 +380,28 @@ export async function GET(req: NextRequest) {
                 salesBonus += extraBonus;
             }
             
-            const totalEstimated = baseSal + salesBonus;
+            // Timesheet / Calendar Deductions
+            const schedule = st.workSchedules && st.workSchedules.length > 0 ? st.workSchedules[0] : null;
+            let expectedDays = schedule ? schedule.expectedDays : 22; // Default to ~22 working days
+            let dailyRate = baseSal > 0 ? Math.round(baseSal / expectedDays) : 0;
+            let missedDays = st.attendanceRecords ? st.attendanceRecords.filter((r: any) => r.status === 'ABSENT').length : 0;
+            let timesheetDeduction = missedDays * dailyRate;
+            let finalBaseSal = Math.max(0, baseSal - timesheetDeduction);
+
+            const totalEstimated = finalBaseSal + salesBonus;
 
             return {
                 user: { id: st.id, fullName: st.fullName, email: st.email, role: st.role, subRole: st.subRole, isDoctor: isDoctor || isValeria },
                 rule: { baseSalary: baseSal, salesPercent: rule.salesPercent },
+                timesheet: { 
+                    expectedDays, 
+                    dailyRate, 
+                    missedDays, 
+                    deduction: timesheetDeduction, 
+                    finalBaseSal,
+                    scheduleType: schedule?.scheduleType || 'custom',
+                    attendance: st.attendanceRecords || []
+                },
                 periodSalesTotal: salesTotal,
                 estimatedSalesBonus: salesBonus,
                 totalEstimated: totalEstimated,
@@ -365,9 +409,11 @@ export async function GET(req: NextRequest) {
             };
         });
 
+        const isMy = url.searchParams.get('my') === 'true';
+
         return NextResponse.json({
             period: dateFilter,
-            staffPayroll: results
+            staffPayroll: isMy ? results.filter(r => r.user.id === user.id) : results
         });
 
     } catch (err: any) {
@@ -423,6 +469,55 @@ export async function POST(req: NextRequest) {
                 }
             });
             return NextResponse.json(payout);
+        }
+
+        if (action === 'update_schedule') {
+            const { scheduleType, expectedDays } = body;
+            const schedule = await prisma.workSchedule.upsert({
+                where: {
+                    organizationId_userId: {
+                        organizationId: user.organizationId,
+                        userId: targetUserId
+                    }
+                },
+                update: {
+                    scheduleType,
+                    expectedDays: parseInt(expectedDays, 10)
+                },
+                create: {
+                    organizationId: user.organizationId,
+                    userId: targetUserId,
+                    scheduleType,
+                    expectedDays: parseInt(expectedDays, 10)
+                }
+            });
+            return NextResponse.json(schedule);
+        }
+
+        if (action === 'toggle_attendance') {
+            const { date, status } = body; // status: PRESENT, ABSENT, SICK, VACATION
+            const dateObj = new Date(date);
+            // reset time to midnight UTC for consistent matching
+            dateObj.setUTCHours(0, 0, 0, 0);
+
+            const record = await prisma.attendanceRecord.upsert({
+                where: {
+                    userId_date: {
+                        userId: targetUserId,
+                        date: dateObj
+                    }
+                },
+                update: {
+                    status
+                },
+                create: {
+                    organizationId: user.organizationId,
+                    userId: targetUserId,
+                    date: dateObj,
+                    status
+                }
+            });
+            return NextResponse.json(record);
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

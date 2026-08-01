@@ -139,7 +139,7 @@ export default function QuickNav() {
         return (clinicPerms as any)[(item as any).permKey] === true;
     });
     
-    if (isAigerim && !isProcurement) {
+    if (!isProcurement) {
         allItems.push({ href: '/profile/payroll', label: 'Зарплата', icon: Banknote, color: 'text-amber-500' } as any);
     }
 
