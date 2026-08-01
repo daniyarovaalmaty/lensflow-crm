@@ -256,16 +256,39 @@ export default function PayrollPage() {
                                                         </div>
                                                     </div>
                                                     
-                                                    <div className="text-[10px] text-gray-500 mb-3 truncate" title={tx.transactionName}>
-                                                        {tx.transactionName || 'Оплата услуг/товаров'}
+                                                    <div className="text-[10px] text-gray-500 mb-2 truncate" title={tx.itemName}>
+                                                        {tx.itemName || 'Оплата услуг/товаров'}
+                                                    </div>
+                                                    
+                                                    <div className="bg-slate-50 rounded p-2 mb-2 flex flex-col gap-1 border border-slate-100 flex-1">
+                                                        {tx.totalCost > 0 && (
+                                                            <div className="flex justify-between text-[9px]">
+                                                                <span className="text-gray-500">Себестоимость:</span>
+                                                                <span className="text-red-500 font-medium">-{fmt(tx.totalCost)} ₸</span>
+                                                            </div>
+                                                        )}
+                                                        {tx.isInstallment && (
+                                                            <div className="flex justify-between text-[9px]">
+                                                                <span className="text-gray-500">Комиссия банка (15%):</span>
+                                                                <span className="text-red-500 font-medium">-{fmt(tx.bankFee)} ₸</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex justify-between text-[10px] font-semibold mt-1 pt-1 border-t border-slate-200">
+                                                            <span className="text-gray-700">Итого база:</span>
+                                                            <span className="text-gray-900">{fmt(tx.netIncome)} ₸</span>
+                                                        </div>
+                                                        <div className="flex justify-between text-[11px] font-bold text-indigo-700 mt-1 bg-indigo-50 -mx-2 -mb-2 p-2 rounded-b">
+                                                            <span>Бонус:</span>
+                                                            <span>+{fmt(tx.bonus)} ₸</span>
+                                                        </div>
                                                     </div>
                                                     
                                                     <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
                                                         <div className="text-[9px] text-gray-400 font-mono">
-                                                            № {tx.saleNumber}
+                                                            № {tx.id.substring(tx.id.length - 6)}
                                                         </div>
                                                         <button 
-                                                            onClick={() => router.push(`/optic/sales-history?search=${tx.saleNumber}`)}
+                                                            onClick={() => router.push(`/optic/sales-history?search=${tx.id}`)}
                                                             className="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded"
                                                         >
                                                             Чек <Receipt className="w-2.5 h-2.5" />
