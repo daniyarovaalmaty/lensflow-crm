@@ -134,13 +134,6 @@ export async function GET(req: NextRequest) {
                 assignedDoctorId = sale.patient.doctor.id;
             }
 
-            if (sale.items && Array.isArray(sale.items)) {
-                if (sale.items.some((item: any) => typeof item.name === 'string' && item.name.toLowerCase().includes('подбор') && item.name.toLowerCase().includes('ночн'))) {
-                    const aigerim = staff.find(s => s.fullName?.includes('Айгерим'));
-                    if (aigerim) assignedDoctorId = aigerim.id;
-                }
-            }
-
             (sale as any)._assignedDoctorId = assignedDoctorId;
 
             if (assignedDoctorId) {
