@@ -140,7 +140,14 @@ export default function PayrollPage() {
                 <tbody className="divide-y divide-gray-100">
                     {staff.map(st => (
                         <Fragment key={st.user.id}>
-                        <tr className={`border-b border-gray-50 hover:bg-slate-50/50 transition-colors ${expandedDoctorId === st.user.id ? 'bg-slate-50/50' : ''}`}>
+                        <tr 
+                            onClick={(e) => {
+                                // Do not toggle if clicking on inputs or buttons
+                                if ((e.target as HTMLElement).closest('input, button, .no-toggle')) return;
+                                setExpandedDoctorId(expandedDoctorId === st.user.id ? null : st.user.id);
+                            }}
+                            className={`border-b border-gray-50 hover:bg-slate-50 transition-colors cursor-pointer ${expandedDoctorId === st.user.id ? 'bg-indigo-50/20' : ''}`}
+                        >
                             <td className="px-6 py-4">
                                 <div className="font-bold text-gray-900">{st.user.fullName || 'Без имени'}</div>
                                 <div className="text-xs text-gray-400 uppercase mt-0.5">{st.user.role}</div>
@@ -164,14 +171,9 @@ export default function PayrollPage() {
                                             <span>Повт: <span className="text-gray-600 font-medium">{st.metrics.secondary}</span></span>
                                         </div>
                                         {st.metrics.transactions && st.metrics.transactions.length > 0 && (
-                                            <div className="mt-2 border-t border-gray-100 pt-2">
-                                                <button 
-                                                    onClick={() => setExpandedDoctorId(expandedDoctorId === st.user.id ? null : st.user.id)}
-                                                    className="text-[10px] text-indigo-600 font-semibold hover:text-indigo-800 transition-colors flex items-center gap-1"
-                                                >
-                                                    {expandedDoctorId === st.user.id ? 'Скрыть транзакции' : 'Показать транзакции'}
-                                                    {expandedDoctorId === st.user.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                                                </button>
+                                            <div className="mt-2 text-[10px] text-indigo-500 font-semibold flex items-center gap-1 group-hover:text-indigo-700">
+                                                {expandedDoctorId === st.user.id ? 'Скрыть список чеков' : 'Нажмите, чтобы увидеть чеки'}
+                                                {expandedDoctorId === st.user.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                             </div>
                                         )}
                                     </div>
