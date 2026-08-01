@@ -203,18 +203,23 @@ export async function GET(req: NextRequest) {
                         }
                     });
 
-                    if (isFitting || isDiag || isStell || isGross || isArmost || isTiedra) {
-                        if (isFitting) fittingsMap.set(assignedDoctorId, (fittingsMap.get(assignedDoctorId) || 0) + 1);
-                        if (isDiag) diagnosticsMap.set(assignedDoctorId, (diagnosticsMap.get(assignedDoctorId) || 0) + 1);
-                        if (isStell) stellestMap.set(assignedDoctorId, (stellestMap.get(assignedDoctorId) || 0) + 1);
-                        if (isGross) grossMap.set(assignedDoctorId, (grossMap.get(assignedDoctorId) || 0) + 1);
-                        if (isArmost) armostMap.set(assignedDoctorId, (armostMap.get(assignedDoctorId) || 0) + 1);
-                        if (isTiedra) tiedraMap.set(assignedDoctorId, (tiedraMap.get(assignedDoctorId) || 0) + 1);
-
-                        const arr = transactionsMap.get(assignedDoctorId) || [];
-                        arr.push({ ...sale, transactionName, transactionAmount });
-                        transactionsMap.set(assignedDoctorId, arr);
+                    // If no specific metric item matched, use a general summary of the items for the display
+                    if (transactionName === 'Транзакция' && sale.items && sale.items.length > 0) {
+                        transactionName = sale.items.map((i: any) => i.name).join(', ');
+                        if (transactionName.length > 40) transactionName = transactionName.substring(0, 40) + '...';
+                        transactionAmount = sale.total;
                     }
+
+                    if (isFitting) fittingsMap.set(assignedDoctorId, (fittingsMap.get(assignedDoctorId) || 0) + 1);
+                    if (isDiag) diagnosticsMap.set(assignedDoctorId, (diagnosticsMap.get(assignedDoctorId) || 0) + 1);
+                    if (isStell) stellestMap.set(assignedDoctorId, (stellestMap.get(assignedDoctorId) || 0) + 1);
+                    if (isGross) grossMap.set(assignedDoctorId, (grossMap.get(assignedDoctorId) || 0) + 1);
+                    if (isArmost) armostMap.set(assignedDoctorId, (armostMap.get(assignedDoctorId) || 0) + 1);
+                    if (isTiedra) tiedraMap.set(assignedDoctorId, (tiedraMap.get(assignedDoctorId) || 0) + 1);
+
+                    const arr = transactionsMap.get(assignedDoctorId) || [];
+                    arr.push({ ...sale, transactionName, transactionAmount });
+                    transactionsMap.set(assignedDoctorId, arr);
                 }
             }
         });
