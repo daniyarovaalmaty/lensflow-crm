@@ -204,7 +204,6 @@ export async function GET(req: NextRequest) {
 
                     // Set transaction name to the first matched item, or concatenate
                     transactionName = sale.items.map((i: any) => i.name).join(', ');
-                    if (transactionName.length > 40) transactionName = transactionName.substring(0, 40) + '...';
 
                     // Update metrics
                     if (isConsultation || isPrimary || isSecondary) consultationsMap.set(assignedDoctorId, (consultationsMap.get(assignedDoctorId) || 0) + 1);

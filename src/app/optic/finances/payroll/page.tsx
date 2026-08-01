@@ -264,7 +264,7 @@ export default function PayrollPage() {
                                                             <td className="px-3 py-2 font-medium text-gray-800 truncate max-w-[150px]" title={tx.patientName}>
                                                                 {tx.patientName || 'Неизвестный'}
                                                             </td>
-                                                            <td className="px-3 py-2 text-gray-500 max-w-[200px] truncate" title={tx.itemName}>
+                                                            <td className="px-3 py-2 text-gray-600 max-w-[300px] whitespace-normal leading-tight" title={tx.itemName}>
                                                                 {tx.itemName || 'Оплата услуг'}
                                                             </td>
                                                             <td className="px-3 py-2 font-semibold text-emerald-600 whitespace-nowrap">
