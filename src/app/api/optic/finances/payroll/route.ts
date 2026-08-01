@@ -454,7 +454,7 @@ export async function GET(req: NextRequest) {
                     
                     transactions.push({
                         id: appt.id,
-                        patientName: appt.patient?.name || 'Пациент',
+                        patientName: appt.patientName || appt.patient?.name || 'Пациент',
                         serviceName: `${typeName} (${counter}-й)`,
                         totalAmount: 0,
                         costPrice: 0,
