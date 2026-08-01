@@ -253,8 +253,65 @@ export async function GET(req: NextRequest) {
             let totalBonus = 0;
 
             const transactions = doctorTransactions.map((s: any) => {
-                const bonus = Math.round(s.netIncome * doctorPercent);
-                totalBonus += bonus;
+                let saleBonus = 0;
+                let validNetIncome = 0;
+
+                s.items.forEach((item: any) => {
+                    const name = typeof item.name === 'string' ? item.name.toLowerCase() : '';
+                    const cat = item.category || item.product?.category || '';
+                    const isService = item.product?.type === 'service' || cat.includes('service') || name.includes('консультация') || name.includes('подбор') || name.includes('диагностика');
+                    
+                    let itemCost = 0;
+                    if (name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог')) {
+                        let isToric = name.includes('торич') || name.includes('торик') || name.includes('toric') || name.includes('tor');
+                        let isHalf = name.includes('1 глаз') || name.includes('один глаз') || name.includes('одна линза') || name.includes('1 линза') || name.includes('поломан');
+                        
+                        let dk = 100;
+                        if (name.includes('180')) dk = 180;
+                        else if (name.includes('125')) dk = 125;
+                        else if (name.includes('100')) dk = 100;
+                        else if (name.includes('50') || name.includes('dk 50') || name.includes('dk50')) dk = 50;
+                        
+                        let baseCost = 0;
+                        if (isToric) {
+                            if (dk === 180) baseCost = 36000 * 2;
+                            else if (dk === 125) baseCost = 33000 * 2;
+                            else if (dk === 100) baseCost = 30000 * 2;
+                            else if (dk === 50) baseCost = 12000 * 2;
+                            else baseCost = 60000;
+                        } else {
+                            if (dk === 180) baseCost = 31000 * 2;
+                            else if (dk === 125) baseCost = 28000 * 2;
+                            else if (dk === 100) baseCost = 25000 * 2;
+                            else if (dk === 50) baseCost = 12000 * 2;
+                            else baseCost = 50000;
+                        }
+                        
+                        if (isHalf) baseCost /= 2;
+                        itemCost = baseCost * (item.quantity || 1);
+                    } else if (!isService && item.product?.purchasePrice) {
+                        itemCost = item.product.purchasePrice * (item.quantity || 1);
+                    }
+
+                    let itemBankFee = s.isInstallment ? Math.round(item.total * 0.15) : 0;
+                    
+                    let isStellestOrGross = name.includes('stellest') || name.includes('стеллест') || name.includes('gross') || name.includes('гросс');
+                    let isFrameOrSunglasses = cat === 'product_frames' || cat === 'product_sunglasses' || name.includes('оправа') || name.includes('солнцезащит') || name.includes('очки');
+                    
+                    if (isStellestOrGross) {
+                        saleBonus += Math.round(item.total * 0.04);
+                        validNetIncome += item.total;
+                    } else if (isFrameOrSunglasses) {
+                        validNetIncome += 0;
+                        saleBonus += 0;
+                    } else {
+                        let net = Math.max(0, item.total - itemCost - itemBankFee);
+                        validNetIncome += net;
+                        saleBonus += Math.round(net * doctorPercent);
+                    }
+                });
+
+                totalBonus += saleBonus;
 
                 return {
                     id: s.id,
@@ -262,8 +319,8 @@ export async function GET(req: NextRequest) {
                     patientName: s.customerName || s.patient?.fullName || 'Неизвестный',
                     itemName: s.transactionName,
                     saleAmount: s.total,
-                    netIncome: s.netIncome,
-                    bonus: bonus,
+                    netIncome: validNetIncome,
+                    bonus: saleBonus,
                     isInstallment: s.isInstallment,
                     totalCost: s.totalCost,
                     bankFee: s.bankFee

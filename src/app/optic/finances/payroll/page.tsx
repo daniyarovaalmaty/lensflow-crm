@@ -283,12 +283,14 @@ export default function PayrollPage() {
                                                                 +{fmt(tx.bonus)} ₸
                                                             </td>
                                                             <td className="px-3 py-2 whitespace-nowrap">
-                                                                <button 
-                                                                    onClick={() => window.open(`/optic/sales-history?search=${tx.id}`, '_blank')}
-                                                                    className="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded no-toggle"
+                                                                <a 
+                                                                    href={`/optic/sales-history?search=${tx.id}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded no-toggle w-max"
                                                                 >
                                                                     Чек <Receipt className="w-2.5 h-2.5" />
-                                                                </button>
+                                                                </a>
                                                             </td>
                                                         </tr>
                                                     ))}
