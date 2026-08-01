@@ -99,7 +99,28 @@ export default function SalesHistoryPage() {
         }
     }, []);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => { 
+        load(); 
+        const q = new URLSearchParams(window.location.search).get('search');
+        if (q) {
+            setSearch(q);
+            // Optionally expand the first matching result once loaded if we have a search param
+            setTimeout(() => {
+                const searchStr = q.toLowerCase();
+                setSales(prev => {
+                    const match = prev.find(s => s.saleNumber.toLowerCase().includes(searchStr));
+                    if (match) {
+                        setExpandedId(match.id);
+                        setTimeout(() => {
+                            const el = document.getElementById(`sale-${match.id}`);
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 100);
+                    }
+                    return prev;
+                });
+            }, 500);
+        }
+    }, [load]);
 
     const filtered = useMemo(() => {
         return sales.filter(s => {
