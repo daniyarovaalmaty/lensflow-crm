@@ -256,6 +256,7 @@ export async function GET(req: NextRequest) {
             const doctorTransactions = transactionsMap.get(st.id) || [];
             
             let totalBonus = 0;
+            let valeriaNightLensCount = 0;
 
             const transactions = doctorTransactions.flatMap((s: any) => {
                 return s.items.map((item: any) => {
@@ -355,14 +356,29 @@ export async function GET(req: NextRequest) {
                             let net = Math.max(0, effectiveItemTotal - itemCost - itemBankFee);
                             validNetIncome = net;
                             
-                            let appliedPercent = doctorPercent;
-                            let isConsultationOrDiagnostic = name.includes('консультация') || name.includes('диагностика') || name.includes('прием');
                             let isNightLens = name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог');
-                            if (st.fullName?.includes('Замира') && (isConsultationOrDiagnostic || name.includes('подбор')) && !isNightLens) {
-                                appliedPercent = 0.50;
+
+                            if (st.fullName?.includes('Валерия') || st.fullName?.includes('Лера')) {
+                                if (name.includes('подбор') && isNightLens) {
+                                    valeriaNightLensCount++;
+                                    if (valeriaNightLensCount > 10) {
+                                        saleBonus = 10000;
+                                    } else {
+                                        saleBonus = 0;
+                                    }
+                                } else {
+                                    saleBonus = 0;
+                                }
+                            } else {
+                                let appliedPercent = doctorPercent;
+                                let isConsultationOrDiagnostic = name.includes('консультация') || name.includes('диагностика') || name.includes('прием');
+                                
+                                if (st.fullName?.includes('Замира') && (isConsultationOrDiagnostic || name.includes('подбор')) && !isNightLens) {
+                                    appliedPercent = 0.50;
+                                }
+                                
+                                saleBonus = Math.round(net * appliedPercent);
                             }
-                            
-                            saleBonus = Math.round(net * appliedPercent);
                         }
                     }
 
