@@ -138,68 +138,70 @@ export async function GET(req: NextRequest) {
 
             if (assignedDoctorId) {
                 doctorSalesMap.set(assignedDoctorId, (doctorSalesMap.get(assignedDoctorId) || 0) + sale.total);
+            }
                 
-                if (sale.items && Array.isArray(sale.items)) {
-                    let totalCost = 0;
-                    let transactionName = 'Транзакция';
-                    let isPrimary = false, isSecondary = false, isConsultation = false;
-                    let isFitting = false, isDiag = false, isStell = false, isGross = false, isArmost = false, isTiedra = false;
+            if (sale.items && Array.isArray(sale.items)) {
+                let totalCost = 0;
+                let transactionName = 'Транзакция';
+                let isPrimary = false, isSecondary = false, isConsultation = false;
+                let isFitting = false, isDiag = false, isStell = false, isGross = false, isArmost = false, isTiedra = false;
 
-                    sale.items.forEach((item: any) => {
-                        const name = typeof item.name === 'string' ? item.name.toLowerCase() : '';
-                        const cat = item.category || item.product?.category || '';
-                        const isService = item.product?.type === 'service' || cat.includes('service') || name.includes('консультация') || name.includes('подбор') || name.includes('диагностика');
+                sale.items.forEach((item: any) => {
+                    const name = typeof item.name === 'string' ? item.name.toLowerCase() : '';
+                    const cat = item.category || item.product?.category || '';
+                    const isService = item.product?.type === 'service' || cat.includes('service') || name.includes('консультация') || name.includes('подбор') || name.includes('диагностика');
+                    
+                    let itemCost = 0;
+                    if (name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог')) {
+                        let isToric = name.includes('торич') || name.includes('торик') || name.includes('toric') || name.includes('tor');
+                        let isHalf = name.includes('1 глаз') || name.includes('один глаз') || name.includes('одна линза') || name.includes('1 линза') || name.includes('поломан');
                         
-                        let itemCost = 0;
-                        if (name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог')) {
-                            let isToric = name.includes('торич') || name.includes('торик') || name.includes('toric') || name.includes('tor');
-                            let isHalf = name.includes('1 глаз') || name.includes('один глаз') || name.includes('одна линза') || name.includes('1 линза') || name.includes('поломан');
-                            
-                            let dk = 100;
-                            if (name.includes('180')) dk = 180;
-                            else if (name.includes('125')) dk = 125;
-                            else if (name.includes('100')) dk = 100;
-                            else if (name.includes('50') || name.includes('dk 50') || name.includes('dk50')) dk = 50;
-                            
-                            let baseCost = 0;
-                            if (isToric) {
-                                if (dk === 180) baseCost = 36000 * 2;
-                                else if (dk === 125) baseCost = 33000 * 2;
-                                else if (dk === 100) baseCost = 30000 * 2;
-                                else if (dk === 50) baseCost = 12000 * 2;
-                                else baseCost = 60000;
-                            } else {
-                                if (dk === 180) baseCost = 31000 * 2;
-                                else if (dk === 125) baseCost = 28000 * 2;
-                                else if (dk === 100) baseCost = 25000 * 2;
-                                else if (dk === 50) baseCost = 12000 * 2;
-                                else baseCost = 50000;
-                            }
-                            
-                            if (isHalf) baseCost /= 2;
-                            itemCost = baseCost * (item.quantity || 1);
-                        } else if (!isService && item.product?.purchasePrice) {
-                            itemCost = item.product.purchasePrice * (item.quantity || 1);
+                        let dk = 100;
+                        if (name.includes('180')) dk = 180;
+                        else if (name.includes('125')) dk = 125;
+                        else if (name.includes('100')) dk = 100;
+                        else if (name.includes('50') || name.includes('dk 50') || name.includes('dk50')) dk = 50;
+                        
+                        let baseCost = 0;
+                        if (isToric) {
+                            if (dk === 180) baseCost = 36000 * 2;
+                            else if (dk === 125) baseCost = 33000 * 2;
+                            else if (dk === 100) baseCost = 30000 * 2;
+                            else if (dk === 50) baseCost = 12000 * 2;
+                            else baseCost = 60000;
+                        } else {
+                            if (dk === 180) baseCost = 31000 * 2;
+                            else if (dk === 125) baseCost = 28000 * 2;
+                            else if (dk === 100) baseCost = 25000 * 2;
+                            else if (dk === 50) baseCost = 12000 * 2;
+                            else baseCost = 50000;
                         }
                         
-                        totalCost += itemCost;
+                        if (isHalf) baseCost /= 2;
+                        itemCost = baseCost * (item.quantity || 1);
+                    } else if (!isService && item.product?.purchasePrice) {
+                        itemCost = item.product.purchasePrice * (item.quantity || 1);
+                    }
+                    
+                    totalCost += itemCost;
 
-                        if (name.includes('первичная')) isPrimary = true;
-                        else if (name.includes('повторная')) isSecondary = true;
-                        else if (name.includes('консультация')) isConsultation = true;
-                        
-                        if (name.includes('подбор') || cat === 'service_fitting') isFitting = true;
-                        if (name.includes('диагностика')) isDiag = true;
-                        if (name.includes('stellest') || name.includes('стеллест')) isStell = true;
-                        if (name.includes('gross')) isGross = true;
-                        if (name.includes('armost') || name.includes('артмост')) isArmost = true;
-                        if (name.includes('tiedra') || name.includes('тиэдра')) isTiedra = true;
-                    });
+                    if (name.includes('первичная')) isPrimary = true;
+                    else if (name.includes('повторная')) isSecondary = true;
+                    else if (name.includes('консультация')) isConsultation = true;
+                    
+                    if (name.includes('подбор') || cat === 'service_fitting') isFitting = true;
+                    if (name.includes('диагностика')) isDiag = true;
+                    if (name.includes('stellest') || name.includes('стеллест')) isStell = true;
+                    if (name.includes('gross')) isGross = true;
+                    if (name.includes('armost') || name.includes('артмост')) isArmost = true;
+                    if (name.includes('tiedra') || name.includes('тиэдра')) isTiedra = true;
+                });
 
-                    // Set transaction name to the first matched item, or concatenate
-                    transactionName = sale.items.map((i: any) => i.name).join(', ');
+                // Set transaction name to the first matched item, or concatenate
+                transactionName = sale.items.map((i: any) => i.name).join(', ');
 
-                    // Update metrics
+                // Update metrics
+                if (assignedDoctorId) {
                     if (isConsultation || isPrimary || isSecondary) consultationsMap.set(assignedDoctorId, (consultationsMap.get(assignedDoctorId) || 0) + 1);
                     if (isPrimary) primaryMap.set(assignedDoctorId, (primaryMap.get(assignedDoctorId) || 0) + 1);
                     if (isSecondary) secondaryMap.set(assignedDoctorId, (secondaryMap.get(assignedDoctorId) || 0) + 1);
@@ -210,29 +212,39 @@ export async function GET(req: NextRequest) {
                     if (isGross) grossMap.set(assignedDoctorId, (grossMap.get(assignedDoctorId) || 0) + 1);
                     if (isArmost) armostMap.set(assignedDoctorId, (armostMap.get(assignedDoctorId) || 0) + 1);
                     if (isTiedra) tiedraMap.set(assignedDoctorId, (tiedraMap.get(assignedDoctorId) || 0) + 1);
+                }
 
-                    // Calculation
-                    let isInstallment = false;
-                    if (sale.paymentMethod === 'installment12' || 
-                        (sale.invoiceData as any)?.split?.some((sp: any) => sp.method === 'installment12' || sp.method === 'installment') || 
-                        (sale.invoiceData as any)?.splitPayment?.installment12) {
-                        isInstallment = true;
-                    }
+                // Calculation
+                let isInstallment = false;
+                if (sale.paymentMethod === 'installment12' || 
+                    (sale.invoiceData as any)?.split?.some((sp: any) => sp.method === 'installment12' || sp.method === 'installment') || 
+                    (sale.invoiceData as any)?.splitPayment?.installment12) {
+                    isInstallment = true;
+                }
 
-                    const bankFee = isInstallment ? Math.round(sale.total * 0.15) : 0;
-                    const netIncome = Math.max(0, sale.total - totalCost - bankFee);
+                const bankFee = isInstallment ? Math.round(sale.total * 0.15) : 0;
+                const netIncome = Math.max(0, sale.total - totalCost - bankFee);
 
+                const txObj = { 
+                    ...sale, 
+                    transactionName, 
+                    transactionAmount: sale.total, // Keep for backward compat
+                    totalCost,
+                    bankFee,
+                    netIncome,
+                    isInstallment 
+                };
+
+                if (assignedDoctorId) {
                     const arr = transactionsMap.get(assignedDoctorId) || [];
-                    arr.push({ 
-                        ...sale, 
-                        transactionName, 
-                        transactionAmount: sale.total, // Keep for backward compat
-                        totalCost,
-                        bankFee,
-                        netIncome,
-                        isInstallment 
-                    });
+                    arr.push(txObj);
                     transactionsMap.set(assignedDoctorId, arr);
+                }
+
+                if (sale.performedById && sale.performedById !== assignedDoctorId) {
+                    const arr = transactionsMap.get(sale.performedById) || [];
+                    arr.push(txObj);
+                    transactionsMap.set(sale.performedById, arr);
                 }
             }
         });
@@ -298,18 +310,42 @@ export async function GET(req: NextRequest) {
                                      name.includes('работа мастера') || name.includes('изготовление') || name.includes('вставка') || name.includes('ремонт') ||
                                      cat === 'product_accessories' || cat === 'product_solutions';
                     
+                    let isCashierTarget = st.fullName?.includes('Татьяна') || st.fullName?.includes('Елена');
+                    let cashierPercent = 0.08;
+
                     let saleBonus = 0;
                     let validNetIncome = 0;
-                    if (isExcluded) {
-                        validNetIncome = 0;
-                        saleBonus = 0;
-                    } else if (isStellestOrGross) {
-                        saleBonus = Math.round(effectiveItemTotal * 0.04);
-                        validNetIncome = effectiveItemTotal;
+                    
+                    if (isCashierTarget) {
+                        let isCashierExcluded = false;
+                        if (name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог')) {
+                            isCashierExcluded = true;
+                        } else if (name.includes('artmost') || name.includes('артмост') || name.includes('tiedra') || name.includes('тиэдра')) {
+                            isCashierExcluded = true;
+                        } else if (isService || name.includes('диагностика') || name.includes('консультация') || name.includes('подбор') || name.includes('прием')) {
+                            isCashierExcluded = true;
+                        }
+                        
+                        if (isCashierExcluded) {
+                            validNetIncome = 0;
+                            saleBonus = 0;
+                        } else {
+                            let net = Math.max(0, effectiveItemTotal - itemCost - itemBankFee);
+                            validNetIncome = net;
+                            saleBonus = Math.round(net * cashierPercent);
+                        }
                     } else {
-                        let net = Math.max(0, effectiveItemTotal - itemCost - itemBankFee);
-                        validNetIncome = net;
-                        saleBonus = Math.round(net * doctorPercent);
+                        if (isExcluded) {
+                            validNetIncome = 0;
+                            saleBonus = 0;
+                        } else if (isStellestOrGross) {
+                            saleBonus = Math.round(effectiveItemTotal * 0.04);
+                            validNetIncome = effectiveItemTotal;
+                        } else {
+                            let net = Math.max(0, effectiveItemTotal - itemCost - itemBankFee);
+                            validNetIncome = net;
+                            saleBonus = Math.round(net * doctorPercent);
+                        }
                     }
 
                     totalBonus += saleBonus;
@@ -349,6 +385,8 @@ export async function GET(req: NextRequest) {
                              st.fullName?.includes('Айгерим') ||
                              st.fullName?.includes('Замира');
             
+            const isCashierTarget = st.fullName?.includes('Татьяна') || st.fullName?.includes('Елена');
+            
             let salesTotal = 0;
             if (isDoctor) {
                 salesTotal = doctorSalesMap.get(st.id) || 0;
@@ -356,7 +394,7 @@ export async function GET(req: NextRequest) {
                 salesTotal = cashierSalesMap.get(st.id) || 0;
             }
 
-            let salesBonus = isDoctor ? totalBonus : Math.round(salesTotal * (rule.salesPercent / 100));
+            let salesBonus = (isDoctor || isCashierTarget) ? totalBonus : Math.round(salesTotal * (rule.salesPercent / 100));
             let baseSal = rule.baseSalary;
 
             // Timesheet / Calendar Deductions
