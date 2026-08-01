@@ -37,9 +37,10 @@ export default function PayrollPage() {
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     });
 
-    // Derive start/end date from currentMonth for the API
+    const [year, month] = currentMonth.split('-');
     const startDate = `${currentMonth}-01`;
-    const endDate = new Date(parseInt(currentMonth.split('-')[0]), parseInt(currentMonth.split('-')[1]), 0).toISOString().split('T')[0];
+    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+    const endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
 
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState({ baseSalary: 0, salesPercent: 0, expectedDays: 15, scheduleType: '2/2' });

@@ -289,6 +289,14 @@ export async function GET(req: NextRequest) {
                             else baseCost = 50000;
                         }
                         
+                        if (name.includes('половинка') || name.includes('0.5') || name.includes(' 1/2') || name.includes('0,5')) {
+                            isHalf = true;
+                        } else if (name.includes('ok-линз') || name.includes('ок-линз') || name.includes('ночн')) {
+                            if (item.quantity === 1 && (item.total === 150000 || item.total === 165000 || item.total === 195000)) {
+                                isHalf = true;
+                            }
+                        }
+                        
                         if (isHalf) baseCost /= 2;
                         itemCost = baseCost * (item.quantity || 1);
                     } else if (!isService && item.product?.purchasePrice) {
@@ -375,7 +383,7 @@ export async function GET(req: NextRequest) {
                 tiedra: tiedraMap.get(st.id) || 0,
                 primary: primaryMap.get(st.id) || 0,
                 secondary: secondaryMap.get(st.id) || 0,
-                transactions
+                transactions: transactions
             };
 
             const isValeria = st.fullName?.includes('Валерия');
