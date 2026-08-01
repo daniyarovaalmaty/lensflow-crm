@@ -343,10 +343,12 @@ export async function GET(req: NextRequest) {
                             saleBonus = Math.round(net * cashierPercent);
                         }
                     } else {
-                        if (isExcluded) {
+                        let isZamiraSolution = st.fullName?.includes('Замира') && (name.includes('сферооко') || name.includes('раствор') || name.includes('систейн') || name.includes('one step') || name.includes('капли'));
+                        
+                        if (isExcluded && !isZamiraSolution) {
                             validNetIncome = 0;
                             saleBonus = 0;
-                        } else if (isStellestOrGross) {
+                        } else if (isStellestOrGross || isZamiraSolution) {
                             saleBonus = Math.round(effectiveItemTotal * 0.04);
                             validNetIncome = effectiveItemTotal;
                         } else {
