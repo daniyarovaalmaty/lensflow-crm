@@ -251,11 +251,8 @@ export async function GET(req: NextRequest) {
             
             let totalBonus = 0;
 
-            const transactions = doctorTransactions.map((s: any) => {
-                let saleBonus = 0;
-                let validNetIncome = 0;
-
-                s.items.forEach((item: any) => {
+            const transactions = doctorTransactions.flatMap((s: any) => {
+                return s.items.map((item: any) => {
                     const name = typeof item.name === 'string' ? item.name.toLowerCase() : '';
                     const cat = item.category || item.product?.category || '';
                     const isService = item.product?.type === 'service' || cat.includes('service') || name.includes('консультация') || name.includes('подбор') || name.includes('диагностика');
@@ -297,33 +294,35 @@ export async function GET(req: NextRequest) {
                     let isStellestOrGross = name.includes('stellest') || name.includes('стеллест') || name.includes('gross') || name.includes('гросс');
                     let isFrameOrSunglasses = cat === 'product_frames' || cat === 'product_sunglasses' || name.includes('оправа') || name.includes('солнцезащит') || name.includes('очки');
                     
+                    let saleBonus = 0;
+                    let validNetIncome = 0;
                     if (isStellestOrGross) {
-                        saleBonus += Math.round(item.total * 0.04);
-                        validNetIncome += item.total;
+                        saleBonus = Math.round(item.total * 0.04);
+                        validNetIncome = item.total;
                     } else if (isFrameOrSunglasses) {
-                        validNetIncome += 0;
-                        saleBonus += 0;
+                        validNetIncome = 0;
+                        saleBonus = 0;
                     } else {
                         let net = Math.max(0, item.total - itemCost - itemBankFee);
-                        validNetIncome += net;
-                        saleBonus += Math.round(net * doctorPercent);
+                        validNetIncome = net;
+                        saleBonus = Math.round(net * doctorPercent);
                     }
+
+                    totalBonus += saleBonus;
+
+                    return {
+                        id: s.id,
+                        date: s.createdAt,
+                        patientName: s.customerName || s.patient?.fullName || 'Неизвестный',
+                        itemName: item.name,
+                        saleAmount: item.total,
+                        netIncome: validNetIncome,
+                        bonus: saleBonus,
+                        isInstallment: s.isInstallment,
+                        totalCost: itemCost,
+                        bankFee: itemBankFee
+                    };
                 });
-
-                totalBonus += saleBonus;
-
-                return {
-                    id: s.id,
-                    date: s.createdAt,
-                    patientName: s.customerName || s.patient?.fullName || 'Неизвестный',
-                    itemName: s.transactionName,
-                    saleAmount: s.total,
-                    netIncome: validNetIncome,
-                    bonus: saleBonus,
-                    isInstallment: s.isInstallment,
-                    totalCost: s.totalCost,
-                    bankFee: s.bankFee
-                };
             });
 
             const docMetrics = {
