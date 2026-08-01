@@ -354,8 +354,8 @@ export async function GET(req: NextRequest) {
                             validNetIncome = net;
                             
                             let appliedPercent = doctorPercent;
-                            let isConsultationOrFitting = name.includes('консультация') || name.includes('диагностика') || name.includes('подбор') || name.includes('прием');
-                            if (st.fullName?.includes('Замира') && isConsultationOrFitting) {
+                            let isConsultationOrDiagnostic = name.includes('консультация') || name.includes('диагностика') || name.includes('прием');
+                            if (st.fullName?.includes('Замира') && isConsultationOrDiagnostic && !name.includes('подбор')) {
                                 appliedPercent = 0.50;
                             }
                             
