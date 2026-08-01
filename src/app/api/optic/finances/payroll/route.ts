@@ -88,7 +88,11 @@ export async function GET(req: NextRequest) {
             const isPrimary = appt.type.includes('primary');
             const isRepeat = appt.type.includes('repeat');
 
-                    });
+            if (isConsultation) consultationsMap.set(docId, (consultationsMap.get(docId) || 0) + 1);
+            if (isFitting) fittingsMap.set(docId, (fittingsMap.get(docId) || 0) + 1);
+            if (isPrimary) primaryMap.set(docId, (primaryMap.get(docId) || 0) + 1);
+            if (isRepeat) secondaryMap.set(docId, (secondaryMap.get(docId) || 0) + 1);
+        });
 
         // 4. Fetch sales and attribute them to doctors
         const periodSales = await prisma.sale.findMany({
