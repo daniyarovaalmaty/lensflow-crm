@@ -94,7 +94,8 @@ export async function GET(req: NextRequest) {
         const periodSales = await prisma.sale.findMany({
             where: {
                 organizationId: user.organizationId,
-                createdAt: dateFilter
+                createdAt: dateFilter,
+                paymentStatus: { not: 'unpaid' }
             },
             include: {
                 items: { include: { product: true } },
