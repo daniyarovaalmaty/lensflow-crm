@@ -355,7 +355,8 @@ export async function GET(req: NextRequest) {
                             
                             let appliedPercent = doctorPercent;
                             let isConsultationOrDiagnostic = name.includes('консультация') || name.includes('диагностика') || name.includes('прием');
-                            if (st.fullName?.includes('Замира') && isConsultationOrDiagnostic && !name.includes('подбор')) {
+                            let isNightLens = name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог');
+                            if (st.fullName?.includes('Замира') && (isConsultationOrDiagnostic || name.includes('подбор')) && !isNightLens) {
                                 appliedPercent = 0.50;
                             }
                             
