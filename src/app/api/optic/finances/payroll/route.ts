@@ -153,11 +153,21 @@ export async function GET(req: NextRequest) {
 
                     sale.items.forEach((item: any) => {
                         const name = typeof item.name === 'string' ? item.name.toLowerCase() : '';
-                        const cat = item.category || '';
+                        const cat = item.category || item.product?.category || '';
+                        const isService = item.product?.type === 'service' || cat.includes('service') || name.includes('консультация') || name.includes('подбор') || name.includes('диагностика');
                         
-                        if (item.product?.purchasePrice) {
-                            totalCost += (item.product.purchasePrice * item.quantity);
+                        let itemCost = 0;
+                        if (name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог')) {
+                            let isToric = name.includes('торич') || name.includes('торик') || name.includes('toric') || name.includes('tor');
+                            let isHalf = name.includes('1 глаз') || name.includes('один глаз') || name.includes('одна линза') || name.includes('1 линза') || name.includes('поломан');
+                            let baseCost = isToric ? 60000 : 50000;
+                            if (isHalf) baseCost /= 2;
+                            itemCost = baseCost * (item.quantity || 1);
+                        } else if (!isService && item.product?.purchasePrice) {
+                            itemCost = item.product.purchasePrice * (item.quantity || 1);
                         }
+                        
+                        totalCost += itemCost;
 
                         if (name.includes('первичная')) isPrimary = true;
                         else if (name.includes('повторная')) isSecondary = true;
