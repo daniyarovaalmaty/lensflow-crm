@@ -213,6 +213,10 @@ export default function EmployeePayrollPage() {
                                                 <th className="px-4 py-3">Пациент</th>
                                                 <th className="px-4 py-3">Товар / Услуга</th>
                                                 <th className="px-4 py-3 text-right">Сумма</th>
+                                                <th className="px-4 py-3 text-right">Себестоимость</th>
+                                                <th className="px-4 py-3 text-right">Комиссия банка</th>
+                                                <th className="px-4 py-3 text-right">Итого (база)</th>
+                                                <th className="px-4 py-3 text-right text-indigo-700">Бонус</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -226,6 +230,18 @@ export default function EmployeePayrollPage() {
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-medium text-emerald-600">
                                                         {formatCurrency(tx.saleAmount)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right text-gray-500">
+                                                        {formatCurrency(tx.totalCost)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right text-gray-500">
+                                                        {formatCurrency(tx.bankFee)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right text-gray-700 font-medium">
+                                                        {formatCurrency(tx.netIncome)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right font-bold text-indigo-600">
+                                                        {formatCurrency(tx.bonus)}
                                                     </td>
                                                 </tr>
                                             ))}
