@@ -808,7 +808,9 @@ export default function OpticDashboard() {
                                             />
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{order.order_id}</h3>
+                                                <Link href={`/optic/orders/${order.order_id}`} onClick={(e) => e.stopPropagation()} className="text-base sm:text-lg font-semibold text-blue-600 hover:text-blue-800 hover:underline">
+                                                    {order.order_id}
+                                                </Link>
                                                 {/* Hide internal 'rework' status from optic — show as "В производстве" */}
                                                 {(() => {
                                                     const displayStatus = order.status === 'rework' ? 'in_production' : order.status;
