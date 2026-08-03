@@ -535,7 +535,9 @@ export default function ProductionHubPage() {
             result = result.filter(o =>
                 o.order_id.toLowerCase().includes(q) ||
                 o.patient.name.toLowerCase().includes(q) ||
-                (o.meta.doctor || '').toLowerCase().includes(q)
+                (o.meta.doctor || '').toLowerCase().includes(q) ||
+                (o.company || '').toLowerCase().includes(q) ||
+                (o.meta.optic_name || '').toLowerCase().includes(q)
             );
         }
         if (dateFrom) {
@@ -2085,7 +2087,7 @@ export default function ProductionHubPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Поиск по номеру, пациенту, врачу..."
+                                placeholder="Поиск по номеру, пациенту, врачу, клинике..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 className="input pl-10 w-full"
