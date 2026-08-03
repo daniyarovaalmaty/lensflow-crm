@@ -40,6 +40,39 @@ export async function POST(
                 data: { paymentStatus: 'refunded' },
             });
 
+            // 1.5 Create refund transaction in the active shift
+            const activeShift = await tx.cashShift.findFirst({
+                where: {
+                    status: 'open',
+                    cashRegister: { organizationId: orgId }
+                },
+                orderBy: { openedAt: 'desc' }
+            });
+
+            if (activeShift && sale.paidAmount > 0) {
+                const expectedDelta = sale.paymentMethod === 'cash' ? sale.paidAmount : 0;
+                
+                if (expectedDelta > 0) {
+                    await tx.cashShift.update({
+                        where: { id: activeShift.id },
+                        data: { expectedCash: { decrement: expectedDelta } }
+                    });
+                }
+
+                await tx.cashTransaction.create({
+                    data: {
+                        shiftId: activeShift.id,
+                        cashRegisterId: activeShift.cashRegisterId,
+                        transType: 'expense',
+                        paymentMethod: sale.paymentMethod,
+                        category: 'refund',
+                        amount: sale.paidAmount,
+                        createdById: user.id,
+                        description: `Возврат по чеку ${sale.saleNumber}`
+                    }
+                });
+            }
+
             // 2. Return items to stock
             for (const item of sale.items) {
                 // If the item has no productId, it's not a real stock item
