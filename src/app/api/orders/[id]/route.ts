@@ -190,7 +190,16 @@ export async function PATCH(
     if (body.delivery_address !== undefined) updateData.deliveryAddress = body.delivery_address;
     if (body.company !== undefined) updateData.company = body.company;
     if (body.inn !== undefined) updateData.inn = body.inn;
-    if (body.config !== undefined) updateData.lensConfig = body.config;
+    if (body.config !== undefined) {
+        updateData.lensConfig = { ...body.config };
+        if (body.rgpFiles) {
+            updateData.lensConfig.rgpFiles = { ...(order.lensConfig as any)?.rgpFiles, ...body.rgpFiles };
+        } else {
+            updateData.lensConfig.rgpFiles = (order.lensConfig as any)?.rgpFiles;
+        }
+    } else if (body.rgpFiles) {
+        updateData.lensConfig = { ...(order.lensConfig as any), rgpFiles: { ...(order.lensConfig as any)?.rgpFiles, ...body.rgpFiles } };
+    }
 
     // Update patient if provided
     if (body.patient && order.patientId) {

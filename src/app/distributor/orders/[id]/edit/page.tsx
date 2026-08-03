@@ -37,6 +37,7 @@ export default function EditOrderPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [rgpPhotos, setRgpPhotos] = useState<{ od?: File; os?: File }>({});
 
     const { register, watch, setValue, handleSubmit, reset, formState: { errors } } = useForm<CreateOrderDTO>();
 
@@ -102,6 +103,60 @@ export default function EditOrderPage() {
         setSaving(true);
         setError('');
         try {
+            let rgpFiles: any = undefined;
+            if (rgpPhotos.od || rgpPhotos.os) {
+                const MAX_SIZE = 1200; // max dimension in px
+                const QUALITY = 0.7;   // JPEG quality
+                const MAX_FILE_MB = 2;
+
+                const compressImage = (file: File): Promise<{ name: string; data: string; mimeType: string; size: number }> =>
+                    new Promise((resolve, reject) => {
+                        // PDFs — send as-is but check size
+                        if (file.type === 'application/pdf') {
+                            if (file.size > MAX_FILE_MB * 1024 * 1024) {
+                                reject(new Error(`Файл "${file.name}" слишком большой (${(file.size / 1024 / 1024).toFixed(1)}MB). Максимум ${MAX_FILE_MB}MB.`));
+                                return;
+                            }
+                            const reader = new FileReader();
+                            reader.onload = () => resolve({ name: file.name, data: (reader.result as string).split(',')[1], mimeType: file.type, size: file.size });
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                            return;
+                        }
+                        // Images — compress via canvas
+                        const img = new Image();
+                        img.onload = () => {
+                            let w = img.width, h = img.height;
+                            if (w > MAX_SIZE || h > MAX_SIZE) {
+                                const ratio = Math.min(MAX_SIZE / w, MAX_SIZE / h);
+                                w = Math.round(w * ratio);
+                                h = Math.round(h * ratio);
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext('2d')!;
+                            ctx.drawImage(img, 0, 0, w, h);
+                            const dataUrl = canvas.toDataURL('image/jpeg', QUALITY);
+                            const base64 = dataUrl.split(',')[1];
+                            const jpgName = file.name.replace(/\.[^.]+$/, '.jpg');
+                            resolve({ name: jpgName, data: base64, mimeType: 'image/jpeg', size: Math.round(base64.length * 0.75) });
+                        };
+                        img.onerror = () => reject(new Error(`Не удалось загрузить изображение "${file.name}"`));
+                        img.src = URL.createObjectURL(file);
+                    });
+
+                try {
+                    rgpFiles = {};
+                    if (rgpPhotos.od) rgpFiles.od = await compressImage(rgpPhotos.od);
+                    if (rgpPhotos.os) rgpFiles.os = await compressImage(rgpPhotos.os);
+                } catch (compressErr: any) {
+                    setError(compressErr.message || 'Ошибка при обработке файла RGP');
+                    setSaving(false);
+                    return;
+                }
+            }
+
             const res = await fetch(`/api/orders/${orderId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -113,6 +168,7 @@ export default function EditOrderPage() {
                     delivery_address: formData.delivery_address,
                     notes: formData.notes || undefined,
                     config: formData.config,
+                    rgpFiles,
                 }),
             });
             if (res.ok) {
@@ -234,6 +290,8 @@ export default function EditOrderPage() {
                         errors={errors}
                         watch={watch}
                         setValue={setValue}
+                        rgpFile={rgpPhotos.od}
+                        onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, od: file ?? undefined }))}
                     />
 
                     {/* Mirror Button */}
@@ -256,6 +314,8 @@ export default function EditOrderPage() {
                         errors={errors}
                         watch={watch}
                         setValue={setValue}
+                        rgpFile={rgpPhotos.os}
+                        onRgpFileChange={(file) => setRgpPhotos(prev => ({ ...prev, os: file ?? undefined }))}
                     />
                 </fieldset>
 
