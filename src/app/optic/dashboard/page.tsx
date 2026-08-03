@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Package, Clock, Check, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Loader2, Wallet } from 'lucide-react';
+import { Plus, Package, Clock, Check, CheckCircle, TruckIcon, Search, SlidersHorizontal, ChevronDown, ArrowUpDown, Download, FileText, Printer, User, Calendar, X, Zap, Pencil, Lock, Truck, MapPin, LogOut, Users, Building2, Menu, MessageSquarePlus, MessageCircle, Send, Warehouse, ShoppingCart, Target, XCircle, FileEdit, Link2, Banknote, Loader2, Wallet, Paperclip } from 'lucide-react';
 import type { Order, OrderStatus, Characteristic } from '@/types/order';
 import { OrderStatusLabels, OrderStatusColors, CharacteristicLabels, PaymentStatusLabels, PaymentStatusColors, canEditOrder, editWindowRemainingMs } from '@/types/order';
 import type { PaymentStatus } from '@/types/order';
@@ -1216,6 +1216,64 @@ export default function OpticDashboard() {
                                                         {odQty > 0 && renderEyeBlock("OD (Правый глаз)", od)}
                                                         {osQty > 0 && renderEyeBlock("OS (Левый глаз)", os)}
                                                     </div>
+
+                                                    {/* RGP Files */}
+                                                    {(() => {
+                                                        const rgpFiles = (order as any).config?.rgpFiles;
+                                                        if (!rgpFiles) return null;
+                                                        const entries = Object.entries(rgpFiles) as [string, { name: string; data?: string; mimeType: string; size: number }][];
+                                                        if (entries.length === 0) return null;
+                                                        return (
+                                                            <div className="mt-4 border border-amber-200 bg-amber-50/50 rounded-xl p-4">
+                                                                <h4 className="text-xs font-semibold text-amber-700 uppercase mb-3 flex items-center gap-1.5">
+                                                                    <Paperclip className="w-4 h-4 inline mr-1" /> Файлы RGP
+                                                                </h4>
+                                                                <div className="space-y-2">
+                                                                    {entries.map(([eye, file]) => (
+                                                                        <div key={eye} className="flex items-center gap-2 text-xs text-amber-700">
+                                                                            <span className="font-bold">{eye.toUpperCase()}</span>
+                                                                            <span>{file.name}</span>
+                                                                            <span className="text-amber-500">({(file.size / 1024).toFixed(0)} KB)</span>
+                                                                            <button
+                                                                                onClick={async (e) => {
+                                                                                    e.stopPropagation();
+                                                                                    try {
+                                                                                        const btn = e.currentTarget;
+                                                                                        const originalText = btn.innerText;
+                                                                                        btn.innerText = 'Загрузка...';
+                                                                                        btn.disabled = true;
+                                                                                        const res = await fetch(`/api/orders/${order.order_id}`);
+                                                                                        if (!res.ok) throw new Error('Failed to fetch');
+                                                                                        const fullOrder = await res.json();
+                                                                                        const f = fullOrder.config?.rgpFiles?.[eye];
+                                                                                        if (f?.data) {
+                                                                                            const link = document.createElement('a');
+                                                                                            link.href = `data:${f.mimeType};base64,${f.data}`;
+                                                                                            link.download = f.name;
+                                                                                            link.click();
+                                                                                        } else {
+                                                                                            alert('Файл не найден');
+                                                                                        }
+                                                                                        btn.innerText = originalText;
+                                                                                        btn.disabled = false;
+                                                                                    } catch (err) {
+                                                                                        alert('Ошибка при скачивании файла');
+                                                                                        const btn = e.currentTarget;
+                                                                                        btn.innerText = 'Скачать';
+                                                                                        btn.disabled = false;
+                                                                                    }
+                                                                                }}
+                                                                                className="px-2 py-1 bg-amber-200 hover:bg-amber-300 text-amber-800 rounded transition-colors ml-auto"
+                                                                            >
+                                                                                Скачать
+                                                                            </button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
+
 
                                                     {/* Additional products */}
                                                     {(order as any).products?.length > 0 && (
