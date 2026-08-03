@@ -176,7 +176,7 @@ export default function EditOrderPage() {
             });
             if (res.ok) {
                 setSuccess(true);
-                setTimeout(() => router.push('/optic'), 1500);
+                setTimeout(() => router.push('/optic/dashboard'), 1500);
             } else {
                 const data = await res.json();
                 setError(data.error || 'Ошибка сохранения');
