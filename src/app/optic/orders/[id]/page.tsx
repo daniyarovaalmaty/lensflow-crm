@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
     ArrowLeft, Package, User, Phone, Mail, Building2,
     Clock, CheckCircle, Truck, Edit2, AlertCircle, Eye,
-    MapPin, FileText, Zap, Calendar, ChevronRight, MessageSquare
+    MapPin, FileText, Zap, Calendar, ChevronRight, MessageSquare, Paperclip
 } from 'lucide-react';
 import { ReadOnlyEyeCard } from '@/components/order/ReadOnlyEyeCard';
 
@@ -212,6 +212,43 @@ export default function OrderViewPage() {
                                     </pre>
                                 </details>
                             )}
+
+                            {/* RGP Files view */}
+                            {(() => {
+                                const rgpFiles = lensConfig?.rgpFiles;
+                                if (!rgpFiles) return null;
+                                const entries = Object.entries(rgpFiles) as [string, { name: string; data?: string; mimeType: string; size: number }][];
+                                if (entries.length === 0) return null;
+                                return (
+                                    <div className="mt-4 border border-amber-200 bg-amber-50/50 rounded-xl p-4">
+                                        <h4 className="text-xs font-semibold text-amber-700 uppercase mb-3 flex items-center gap-1.5">
+                                            <Paperclip className="w-4 h-4 inline mr-1" /> Файлы RGP
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {entries.map(([eye, file]) => (
+                                                <div key={eye} className="flex items-center gap-2 text-xs text-amber-700">
+                                                    <span className="font-bold">{eye.toUpperCase()}</span>
+                                                    <span>{file.name}</span>
+                                                    <span className="text-amber-500">({(file.size / 1024).toFixed(0)} KB)</span>
+                                                    {file.data && (
+                                                        <button
+                                                            onClick={() => {
+                                                                const link = document.createElement('a');
+                                                                link.href = `data:${file.mimeType};base64,${file.data}`;
+                                                                link.download = file.name;
+                                                                link.click();
+                                                            }}
+                                                            className="px-2 py-1 bg-amber-200 hover:bg-amber-300 text-amber-800 rounded transition-colors ml-auto"
+                                                        >
+                                                            Скачать
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
 
                         {/* Notes */}
