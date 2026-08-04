@@ -182,6 +182,7 @@ model User {
   assignedLeads       Lead[]          @relation("AssignedLeads")
   doctorLeads         Lead[]          @relation("DoctorLeads")
   doctorSales         Sale[]          @relation("SaleDoctor")
+  managedSales        Sale[]          @relation("SaleManager")
   patients            Patient[]       @relation("DoctorPatients")
   prescriptions       Prescription[]  @relation("DoctorPrescriptions")
   consultations       Consultation[]  @relation("DoctorConsultations")
@@ -1061,6 +1062,9 @@ model Sale {
 
   doctorId String?
   doctor   User?   @relation("SaleDoctor", fields: [doctorId], references: [id])
+
+  managerId String?
+  manager   User?   @relation("SaleManager", fields: [managerId], references: [id])
 
   performedById   String?
   performedByName String?

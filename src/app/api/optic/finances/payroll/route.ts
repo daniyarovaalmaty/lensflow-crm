@@ -250,6 +250,12 @@ export async function GET(req: NextRequest) {
                     arr.push(txObj);
                     transactionsMap.set(sale.performedById, arr);
                 }
+
+                if (sale.managerId && sale.managerId !== assignedDoctorId && sale.managerId !== sale.performedById) {
+                    const arr = transactionsMap.get(sale.managerId) || [];
+                    arr.push(txObj);
+                    transactionsMap.set(sale.managerId, arr);
+                }
             }
         });
 
@@ -329,7 +335,35 @@ export async function GET(req: NextRequest) {
                     let saleBonus = 0;
                     let validNetIncome = 0;
                     
-                    if (isCashierTarget) {
+                    let isSolution = name.includes('сферооко') || name.includes('раствор') || name.includes('капли') || name.includes('one step') || name.includes('пероксид') || name.includes('avisor') || name.includes('unica') || name.includes('aosept') || name.includes('систейн') || cat === 'product_solutions';
+                    let isFramesOrSunglasses = cat === 'product_frames' || cat === 'product_sunglasses' || name.includes('оправа') || name.includes('солнцезащит') || name.includes('очки');
+
+                    if (isCashierTarget && isFramesOrSunglasses) {
+                        itemCost = 0; // No cost deduction for cashiers on frames/sunglasses
+                    }
+
+                    if (isSolution) {
+                        itemCost = 0; // No cost deduction for solutions
+                    }
+
+                    if (isSolution) {
+                        // Bonus for solutions: 4% of effectiveItemTotal
+                        // Who gets it? If managerId is set, ONLY manager gets it. If managerId is null, performedById gets it.
+                        let getsSolutionBonus = false;
+                        if (s.managerId) {
+                            if (st.id === s.managerId) getsSolutionBonus = true;
+                        } else {
+                            if (st.id === s.performedById || st.id === assignedDoctorId) getsSolutionBonus = true;
+                        }
+                        
+                        if (getsSolutionBonus) {
+                            saleBonus = Math.round(effectiveItemTotal * 0.04);
+                            validNetIncome = effectiveItemTotal;
+                        } else {
+                            saleBonus = 0;
+                            validNetIncome = 0;
+                        }
+                    } else if (isCashierTarget) {
                         let isCashierExcluded = false;
                         if (name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог')) {
                             isCashierExcluded = true;
@@ -343,17 +377,17 @@ export async function GET(req: NextRequest) {
                             validNetIncome = 0;
                             saleBonus = 0;
                         } else {
+                            // Net income calculation for cashier (frames/sunglasses have itemCost = 0)
                             let net = Math.max(0, effectiveItemTotal - itemCost - itemBankFee);
                             validNetIncome = net;
                             saleBonus = Math.round(net * cashierPercent);
                         }
                     } else {
-                        let isZamiraSolution = st.fullName?.includes('Замира') && (name.includes('сферооко') || name.includes('раствор') || name.includes('систейн') || name.includes('one step') || name.includes('капли'));
-                        
-                        if (isExcluded && !isZamiraSolution) {
+                        // Doctor / Manager logic for other items
+                        if (isExcluded && !isStellestOrGross) {
                             validNetIncome = 0;
                             saleBonus = 0;
-                        } else if (isStellestOrGross || isZamiraSolution) {
+                        } else if (isStellestOrGross) {
                             saleBonus = Math.round(effectiveItemTotal * 0.04);
                             validNetIncome = effectiveItemTotal;
                         } else {
@@ -380,6 +414,7 @@ export async function GET(req: NextRequest) {
                                 if (st.fullName?.includes('Замира') && (isConsultationOrDiagnostic || name.includes('подбор')) && !isNightLens) {
                                     appliedPercent = 0.50;
                                 }
+
                                 
                                 saleBonus = Math.round(net * appliedPercent);
                             }

@@ -52,6 +52,18 @@ export async function POST(req: NextRequest) {
     let saleCount = await prisma.sale.count({ where: { organizationId: orgId } });
     let saleNumber = `S-${orgId.slice(0, 4).toUpperCase()}-${String(saleCount + 1).padStart(4, '0')}`;
 
+    // Manager Attribution Logic
+    let finalManagerId = body.managerId || null;
+    if (!finalManagerId && patientId) {
+        const lastAppt = await prisma.appointment.findFirst({
+            where: { patientId },
+            orderBy: { date: 'desc' }
+        });
+        if (lastAppt && lastAppt.createdById) {
+            finalManagerId = lastAppt.createdById;
+        }
+    }
+
     // Auto-attribute lead if patient is provided but no leadId is given
     let finalLeadId = leadId;
     if (!finalLeadId && patientId) {
@@ -201,6 +213,7 @@ export async function POST(req: NextRequest) {
             patientId: patientId || null,
             leadId: finalLeadId || null,
             doctorId: doctorId || null,
+            managerId: finalManagerId,
             subtotal,
             discountPercent: explicitDiscountAmount !== undefined && subtotal > 0 ? (Number(explicitDiscountAmount) / subtotal * 100) : discount,
             discountAmount,

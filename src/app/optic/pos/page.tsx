@@ -133,9 +133,10 @@ export default function POSPage() {
     const [customName, setCustomName] = useState('');
     const [customPrice, setCustomPrice] = useState('');
 
-    // Doctors
-    const [doctors, setDoctors] = useState<any[]>([]);
+    // Staff for Manager / Doctor Selection
+    const [staffList, setStaffList] = useState<any[]>([]);
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+    const [selectedManagerId, setSelectedManagerId] = useState<string>('');
 
     useEffect(() => {
         if (!patientSearch.trim()) {
@@ -201,7 +202,7 @@ export default function POSPage() {
     useEffect(() => { 
         loadProducts(); 
         loadPendingSales();
-        loadDoctors();
+        loadStaff();
         
         const handleBranchChange = (e: any) => {
             if (e.detail?.branchId) {
@@ -243,13 +244,17 @@ export default function POSPage() {
         }
     };
 
-    const loadDoctors = async () => {
+    const loadStaff = async () => {
         try {
             const res = await fetch('/api/clinic-staff');
             if (res.ok) {
                 const data = await res.json();
-                // Filter to only show doctors in the POS dropdown
-                setDoctors(data.filter((u: any) => ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(u.subRole)));
+                // Filter to show doctors and managers (like Lera)
+                setStaffList(data.filter((u: any) => 
+                    ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(u.subRole) ||
+                    u.role === 'manager' || u.subRole === 'manager' ||
+                    u.fullName?.includes('Лера') || u.fullName?.includes('Валерия')
+                ));
             }
         } catch(e) {}
     };
@@ -425,6 +430,7 @@ export default function POSPage() {
                     leadId: leadId || undefined,
                     draftSaleId: draftSaleId || undefined,
                     doctorId: selectedDoctorId || undefined,
+                    managerId: selectedManagerId || undefined,
                     orgId: localStorage.getItem('lf_selected_branch') || 'all',
                 }),
             });
@@ -1005,12 +1011,22 @@ export default function POSPage() {
                                         placeholder="Необязательно" className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Врач / Специалист</label>
+                                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Врач / Специалист (кто подбирал)</label>
                                     <select value={selectedDoctorId} onChange={e => setSelectedDoctorId(e.target.value)}
                                         className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white appearance-none cursor-pointer">
                                         <option value="">Не выбрано</option>
-                                        {doctors.map(d => (
+                                        {staffList.filter(s => ['optic_doctor', 'optic_ophthalmologist', 'optic_orthokeratologist'].includes(s.subRole)).map(d => (
                                             <option key={d.id} value={d.id}>{d.fullName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1.5">Чей клиент? (Менеджер)</label>
+                                    <select value={selectedManagerId} onChange={e => setSelectedManagerId(e.target.value)}
+                                        className="w-full border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 rounded-xl px-4 py-3 text-sm md:text-base font-medium shadow-sm bg-white appearance-none cursor-pointer">
+                                        <option value="">Не выбрано</option>
+                                        {staffList.map(m => (
+                                            <option key={m.id} value={m.id}>{m.fullName} ({m.subRole === 'manager' || m.role === 'manager' ? 'Менеджер' : 'Врач'})</option>
                                         ))}
                                     </select>
                                 </div>
