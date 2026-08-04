@@ -396,28 +396,29 @@ export async function GET(req: NextRequest) {
                             
                             let isNightLens = name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог');
 
-                            if (st.fullName?.includes('Валерия') || st.fullName?.includes('Лера')) {
-                                if (name.includes('подбор') && isNightLens) {
-                                    valeriaNightLensCount++;
-                                    if (valeriaNightLensCount > 10) {
-                                        saleBonus = 10000;
-                                    } else {
-                                        saleBonus = 0;
-                                    }
-                                } else {
-                                    saleBonus = 0;
-                                }
-                            } else {
-                                let appliedPercent = doctorPercent;
-                                let isConsultationOrDiagnostic = name.includes('консультация') || name.includes('диагностика') || name.includes('прием');
-                                
-                                if (st.fullName?.includes('Замира') && (isConsultationOrDiagnostic || name.includes('подбор')) && !isNightLens) {
-                                    appliedPercent = 0.50;
-                                }
-
-                                
-                                saleBonus = Math.round(net * appliedPercent);
+                            let appliedPercent = doctorPercent;
+                            let isConsultationOrDiagnostic = name.includes('консультация') || name.includes('диагностика') || name.includes('прием');
+                            
+                            if (st.fullName?.includes('Замира') && (isConsultationOrDiagnostic || name.includes('подбор')) && !isNightLens) {
+                                appliedPercent = 0.50;
                             }
+                            
+                            saleBonus = Math.round(net * appliedPercent);
+                        }
+                    }
+
+                    // FINAL OVERRIDE FOR LERA
+                    if (st.fullName?.includes('Валерия') || st.fullName?.includes('Лера')) {
+                        saleBonus = 0; // reset bonus
+                        let isNightLens = name.includes('ночн') || name.includes('ок-линз') || name.includes('ok-линз') || name.includes('ортокератолог');
+                        
+                        if (name.includes('подбор') && isNightLens) {
+                            valeriaNightLensCount++;
+                            if (valeriaNightLensCount > 10) {
+                                saleBonus = 10000;
+                            }
+                        } else if (isStellestOrGross && effectiveItemTotal > 200000) {
+                            saleBonus = Math.round(effectiveItemTotal * 0.04);
                         }
                     }
 
