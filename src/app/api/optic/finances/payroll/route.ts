@@ -353,7 +353,7 @@ export async function GET(req: NextRequest) {
                         if (s.managerId) {
                             if (st.id === s.managerId) getsSolutionBonus = true;
                         } else {
-                            if (st.id === s.performedById || st.id === assignedDoctorId) getsSolutionBonus = true;
+                            if (st.id === s.performedById || st.id === s._assignedDoctorId) getsSolutionBonus = true;
                         }
                         
                         if (getsSolutionBonus) {
