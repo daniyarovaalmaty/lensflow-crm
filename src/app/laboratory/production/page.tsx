@@ -1331,13 +1331,18 @@ export default function ProductionHubPage() {
                                             'Optimum extra blue': 'blue',
                                             'Optimum extra green': 'green',
                                             'Optimum extra violet': 'violet',
+                                            'Optimum extra YELLOW': 'yellow',
+                                            'Optimum extra red': 'red',
+                                            'Optimum extra grey': 'grey',
                                             'Optimum extreme blue': 'blue',
                                             'Optimum extreme green': 'green',
                                             'Optimum extreme violet': 'violet',
                                             'Optimum extreme grey': 'grey',
+                                            'Optimum extreme red': 'red',
                                             'Optimum infinite blue': 'light-blue',
                                             'Optimum infinite green': 'light-green',
-                                            'Optimum infinite red': 'red'
+                                            'Optimum infinite red': 'red',
+                                            'Optimum infinite YELLOW': 'yellow'
                                         };
                                         if (eye.color) p.push(colorMap[eye.color] || eye.color.replace(/\s+/g, '-'));
                                         return p.filter(Boolean).join(' ');

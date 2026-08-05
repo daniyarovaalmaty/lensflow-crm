@@ -20,9 +20,9 @@ export const CharacteristicLabels: Record<Characteristic, string> = {
 // ==================== Color options per Dk ====================
 export const ColorsByDk: Record<string, string[]> = {
     '50': ['Contraperm F2Mid dark blue', 'Contraperm F2Mid green'],
-    '100': ['Optimum extra blue', 'Optimum extra green', 'Optimum extra violet'],
-    '125': ['Optimum extreme blue', 'Optimum extreme green', 'Optimum extreme violet', 'Optimum extreme grey'],
-    '180': ['Optimum infinite blue', 'Optimum infinite green', 'Optimum infinite red'],
+    '100': ['Optimum extra blue', 'Optimum extra green', 'Optimum extra violet', 'Optimum extra YELLOW', 'Optimum extra red', 'Optimum extra grey'],
+    '125': ['Optimum extreme blue', 'Optimum extreme green', 'Optimum extreme violet', 'Optimum extreme grey', 'Optimum extreme red'],
+    '180': ['Optimum infinite blue', 'Optimum infinite green', 'Optimum infinite red', 'Optimum infinite YELLOW'],
 };
 
 // ==================== Preprocess helpers ====================
