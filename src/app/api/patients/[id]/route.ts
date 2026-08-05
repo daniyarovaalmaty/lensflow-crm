@@ -9,36 +9,41 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/patients/[id]
 export async function GET(_: Request, { params }: { params: { id: string } }) {
-    const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+        const session = await auth();
+        if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const patient = await prisma.patient.findUnique({
-        where: { id: params.id },
-        include: {
-            organization: true,
-            prescriptions: { orderBy: { prescribedAt: 'desc' } },
-            sales: { orderBy: { createdAt: 'desc' }, include: { items: true, doctor: true } },
-            orders: {
-                orderBy: { createdAt: 'desc' },
-                take: 20,
-                select: {
-                    id: true,
-                    orderNumber: true,
-                    status: true,
-                    createdAt: true,
-                    totalPrice: true,
-                    isUrgent: true,
-                    source: true,
+        const patient = await prisma.patient.findUnique({
+            where: { id: params.id },
+            include: {
+                organization: true,
+                prescriptions: { orderBy: { prescribedAt: 'desc' } },
+                sales: { orderBy: { createdAt: 'desc' }, include: { items: true, doctor: true } },
+                orders: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 20,
+                    select: {
+                        id: true,
+                        orderNumber: true,
+                        status: true,
+                        createdAt: true,
+                        totalPrice: true,
+                        isUrgent: true,
+                        source: true,
+                    },
                 },
+                doctor: { select: { id: true, fullName: true } },
+                parent: true,
+                children: true,
             },
-            doctor: { select: { id: true, fullName: true } },
-            parent: true,
-            children: true,
-        },
-    });
+        });
 
-    if (!patient) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(patient);
+        if (!patient) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        return NextResponse.json(patient);
+    } catch (e: any) {
+        console.error('[PatientGET] Unhandled error:', e);
+        return NextResponse.json({ error: e.message || 'Internal Server Error' }, { status: 500 });
+    }
 }
 
 // PUT /api/patients/[id]

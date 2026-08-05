@@ -338,6 +338,30 @@ export default function PatientDetailPage() {
     const [familyResults, setFamilyResults] = useState<any[]>([]);
     const [searchingFamily, setSearchingFamily] = useState(false);
 
+    const loadPatient = async () => {
+        try {
+            const res = await fetch(`/api/patients/${id}`);
+            if (res.ok) {
+                const data = await res.json();
+                setPatient(data);
+                setEditForm(data);
+                if (data?.metadata?.primaryExam) {
+                    setPrimaryExamState(data.metadata.primaryExam);
+                }
+            } else {
+                if (res.status !== 404) {
+                    const err = await res.json();
+                    alert(`Ошибка загрузки пациента: ${err.error || 'Неизвестная ошибка'}`);
+                }
+                setPatient(null);
+            }
+        } catch (e) {
+            setPatient(null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleSearchFamily = async (e: React.FormEvent) => {
         e.preventDefault();
         setSearchingFamily(true);
@@ -384,18 +408,7 @@ export default function PatientDetailPage() {
         }
     };
 
-    const loadPatient = () => {
-        fetch(`/api/patients/${id}`)
-            .then(r => r.json())
-            .then(data => { 
-                setPatient(data); 
-                setEditForm(data); 
-                if (data?.metadata?.primaryExam) {
-                    setPrimaryExamState(data.metadata.primaryExam);
-                }
-            })
-            .finally(() => setIsLoading(false));
-    };
+
 
     useEffect(() => {
         loadPatient();
