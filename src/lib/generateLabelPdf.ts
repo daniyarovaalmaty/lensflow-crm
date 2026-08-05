@@ -253,7 +253,9 @@ export async function generateLabelPdf(order: LabelOrder): Promise<void> {
     // Row 1
     doc.setFont('Roboto', 'bold');
     doc.setFontSize(7.5);
-    doc.text(pair(od.km, os.km), 2, 15);
+    const odKm = od.isRgp ? null : od.km;
+    const osKm = os.isRgp ? null : os.km;
+    doc.text(pair(odKm, osKm), 2, 15);
     
     doc.text(pair(od.tp, os.tp), 23, 15, { align: 'center' });
 
