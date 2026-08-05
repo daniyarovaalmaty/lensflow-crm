@@ -19,6 +19,8 @@ interface InvoiceOrder {
     price_od?: number;
     price_os?: number;
     products?: Array<{ name: string; qty: number; price: number }>;
+    onecInvoiceNumber?: string | null;
+    onecInvoiceDate?: string | null;
     
     contract?: {
         number: string;
@@ -78,7 +80,7 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
     const discountPct = order.discount_percent ?? 0;
     const isUrgent = order.is_urgent || false;
     const URGENT_PCT = 0; // previously 25
-    const orderDate = new Date(order.meta.created_at);
+    const orderDate = order.onecInvoiceDate ? new Date(order.onecInvoiceDate) : new Date(order.meta.created_at);
     
     const formatter = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
     const dateStr = formatter.format(orderDate).replace(' г.', '');
@@ -175,7 +177,8 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
     // Заголовок Счета
     doc.setFontSize(14);
     doc.setFont('Roboto', 'bold');
-    doc.text(`Счет на оплату №${order.order_id} от ${dateStr} г.`, pageWidth / 2, currentY, { align: 'center' });
+    const invoiceNum = order.onecInvoiceNumber || order.order_id;
+    doc.text(`Счет на оплату № ${invoiceNum} от ${dateStr} г.`, pageWidth / 2, currentY, { align: 'center' });
     currentY += 3;
     doc.setLineWidth(0.5);
     doc.line(margin, currentY, pageWidth - margin, currentY);

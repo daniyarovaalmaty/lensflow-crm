@@ -562,6 +562,11 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // 1C Invoice Data
+  onecInvoiceId     String?
+  onecInvoiceNumber String?
+  onecInvoiceDate   DateTime?
+
   // External integration (MedMundus)
   externalId String? // MedMundus order ID for cross-referencing
   source     String? // Origin: 'lensflow' | 'medmundus'

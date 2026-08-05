@@ -297,6 +297,8 @@ export async function GET(request: NextRequest) {
                 document_name_os: order.documentNameOs || undefined,
                 price_od: order.priceOd || undefined,
                 price_os: order.priceOs || undefined,
+                onecInvoiceNumber: order.onecInvoiceNumber || undefined,
+                onecInvoiceDate: order.onecInvoiceDate?.toISOString() || undefined,
                 delivery_confirmed: (order as any).deliveryConfirmed ?? undefined,
                 lab_org_id: (order as any).labOrgId || null,
                 contract: order.contract ? {

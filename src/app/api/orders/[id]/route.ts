@@ -123,6 +123,15 @@ function transformOrder(order: any) {
             client: order.contract.client,
         } : undefined,
         source: order.source || undefined,
+        total_price: order.totalPrice || 0,
+        discount_percent: order.discountPercent ?? 0,
+        price_od: order.priceOd || undefined,
+        price_os: order.priceOs || undefined,
+        document_name_od: order.documentNameOd || undefined,
+        document_name_os: order.documentNameOs || undefined,
+        products: (order.products as any[]) || [],
+        onecInvoiceNumber: order.onecInvoiceNumber || undefined,
+        onecInvoiceDate: order.onecInvoiceDate?.toISOString() || undefined,
     };
 }
 

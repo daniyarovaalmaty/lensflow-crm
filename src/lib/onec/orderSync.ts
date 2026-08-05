@@ -10,7 +10,7 @@ export class OrderSyncService {
    * 3. Формирует список товаров (пытается найти их по имени в 1С, если нет локального маппинга)
    * 4. Создает документ реализации
    */
-  async syncOrderTo1C(orderId: string) {
+  async createInvoiceIn1C(orderId: string) {
     // 1. Получаем заказ из базы
     const order = await prisma.order.findFirst({
       where: {
@@ -131,7 +131,7 @@ export class OrderSyncService {
 
     // 6. Создаем Счет на оплату
     try {
-      await this.oneCClient.createPaymentBill({
+      const bill = await this.oneCClient.createPaymentBill({
         date: new Date().toISOString().split('.')[0], // Формат OData без миллисекунд
         organizationKey: labOrgKey,
         warehouseKey: labWarehouseKey,
@@ -139,23 +139,23 @@ export class OrderSyncService {
         contractKey,
         items
       });
-      console.log(`[1C Sync] Created Payment Bill for order ${order.id}`);
+      
+      console.log(`[1C Sync] Created Payment Bill for order ${order.id}:`, bill.Number);
+
+      // 7. Сохраняем данные счета в БД
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          onecInvoiceId: bill.Ref_Key,
+          onecInvoiceNumber: bill.Number,
+          onecInvoiceDate: bill.Date ? new Date(bill.Date) : new Date()
+        }
+      });
+
+      return bill;
     } catch (billError: any) {
       console.error(`[1C Sync] Failed to create Payment Bill for order ${order.id}:`, billError.message);
-      // Мы не прерываем создание реализации, если счет не создался (или можно прерывать, на усмотрение)
+      throw billError;
     }
-
-    // 7. Создаем Реализацию
-    const invoice = await this.oneCClient.createSalesInvoice({
-      date: new Date().toISOString().split('.')[0], // Формат OData без миллисекунд
-      organizationKey: labOrgKey,
-      warehouseKey: labWarehouseKey,
-      counterpartyKey,
-      contractKey,
-      items
-    });
-
-    // Можно добавить в Order поле onecInvoiceId, если нужно сохранять статус
-    return invoice;
   }
 }
