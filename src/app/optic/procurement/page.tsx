@@ -173,7 +173,7 @@ export default function OpticProcurementDashboard() {
 
     const loadOrders = async () => {
         try {
-            const response = await fetch('/api/orders?all=true');
+            const response = await fetch('/api/orders?all=true&hideItigris=true');
             if (response.ok) {
                 const data = await response.json();
                 setOrders(data);
