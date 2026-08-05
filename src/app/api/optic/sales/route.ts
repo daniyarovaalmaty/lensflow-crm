@@ -34,17 +34,18 @@ export async function GET(req: NextRequest) {
 
 // ==================== POST — Create sale ====================
 export async function POST(req: NextRequest) {
-    const session = await auth();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+        const session = await auth();
+        if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
-    if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
+        const user = await prisma.user.findUnique({ where: { email: session.user.email! } });
+        if (!user?.organizationId) return NextResponse.json({ error: 'No organization' }, { status: 403 });
 
-    const body = await req.json();
-    const { items, customerName, customerPhone, discountPercent, explicitDiscountAmount, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData, doctorId, draftSaleId, orgId: reqOrgId } = body;
-    // items: [{ productId, quantity, unitPrice }]
+        const body = await req.json();
+        const { items, customerName, customerPhone, discountPercent, explicitDiscountAmount, paymentMethod, paymentSplit, prepaymentAmount, notes, patientId, leadId, invoiceData: reqInvoiceData, doctorId, draftSaleId, orgId: reqOrgId } = body;
+        // items: [{ productId, quantity, unitPrice }]
 
-    if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
+        if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 });
 
     const orgId = (reqOrgId && reqOrgId !== 'all') ? reqOrgId : user.organizationId;
 
@@ -367,4 +368,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(sale, { status: 201 });
+    } catch (e: any) {
+        console.error('[SalePOS] Unhandled error:', e);
+        return NextResponse.json({ error: e.message || 'Internal Server Error' }, { status: 500 });
+    }
 }
