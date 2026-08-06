@@ -693,7 +693,7 @@ export default function ProductionHubPage() {
                         {(od as any).myorthok && (
                             <span className="bg-teal-100 text-teal-700 font-semibold rounded px-1.5 py-0.5">MyOrthoK</span>
                         )}
-                        <span>Km: {od.km ?? '—'}</span>
+                        {!((od as any).isRgp) && <span>Km: {od.km ?? '—'}</span>}
                         <span>Dk: {od.dk ?? '—'}</span>
                     </div>
 
