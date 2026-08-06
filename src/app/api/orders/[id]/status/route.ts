@@ -117,8 +117,8 @@ export async function PATCH(
                     password: process.env.ONEC_API_PASSWORD || ''
                 });
                 const syncService = new OrderSyncService(client);
-                // Ошибки не блокируют ответ клиенту, но логируются
-                syncService.createInvoiceIn1C(updated.id).catch(e => {
+                // Обязательно используем await, иначе Vercel убивает фоновый процесс до завершения запроса
+                await syncService.createInvoiceIn1C(updated.id).catch(e => {
                     console.error('[1C Sync Async Error]:', e);
                 });
             } catch (err) {
