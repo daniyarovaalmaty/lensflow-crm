@@ -462,7 +462,7 @@ export default function ProductionHubPage() {
                     <tr>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;font-weight:700">${label}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db">${eye.characteristic ? (CharacteristicLabels[eye.characteristic as Characteristic] || eye.characteristic) : '—'}${eye.isRgp ? ' <span style="background:#fed7aa;color:#c2410c;font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px">RGP</span>' : ''}</td>
-                        <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.km ?? '—'}</td>
+                        <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.isRgp ? '—' : (eye.km ?? '—')}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.tp ?? '—'}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.dia ?? '—'}</td>
                         <td style="padding:6px 8px;border:1px solid #d1d5db;text-align:center">${eye.e1 != null ? eye.e1 : '—'}${eye.e2 != null ? ' / ' + eye.e2 : ''}</td>
@@ -693,7 +693,7 @@ export default function ProductionHubPage() {
                         {(od as any).myorthok && (
                             <span className="bg-teal-100 text-teal-700 font-semibold rounded px-1.5 py-0.5">MyOrthoK</span>
                         )}
-                        {!((od as any).isRgp) && <span>Km: {od.km ?? '—'}</span>}
+                        <span>Km: {(od as any).isRgp ? '—' : (od.km ?? '—')}</span>
                         <span>Dk: {od.dk ?? '—'}</span>
                     </div>
 
@@ -1159,7 +1159,7 @@ export default function ProductionHubPage() {
                                     const localOd = (order.config as any)?.eyes?.od;
                                     const localOs = (order.config as any)?.eyes?.os;
                                     
-                                    const hasKm = localOd?.km != null || localOs?.km != null;
+                                    const hasKm = (localOd?.km != null && !localOd?.isRgp) || (localOs?.km != null && !localOs?.isRgp);
                                     const hasTp = localOd?.tp != null || localOs?.tp != null;
                                     const hasDia = localOd?.dia != null || localOs?.dia != null;
                                     const hasE = localOd?.e1 != null || localOs?.e1 != null || localOd?.e2 != null || localOs?.e2 != null;
@@ -1208,7 +1208,7 @@ export default function ProductionHubPage() {
                                                             {eye.isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
                                                             {eye.myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                         </td>
-                                                        {hasKm && <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>}
+                                                        {hasKm && <td className="px-2 py-2 text-center text-gray-700">{eye.isRgp ? '—' : (eye.km ?? '—')}</td>}
                                                         {hasTp && <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>}
                                                         {hasDia && <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>}
                                                         {hasE && <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>}
@@ -1304,7 +1304,7 @@ export default function ProductionHubPage() {
                                         if (eye.characteristic === 'spherical') p.push('Spherical');
                                         
                                         p.push(label);
-                                        if (eye.km != null) p.push(String(eye.km).replace(/\./g, ','));
+                                        if (eye.km != null && !eye.isRgp) p.push(String(eye.km).replace(/\./g, ','));
                                         if (eye.tp != null) p.push(String(eye.tp).replace(/\./g, ','));
                                         if (eye.sph != null) p.push(String(eye.sph).replace(/\./g, ','));
                                         if (eye.cyl != null) p.push(`cyl${String(eye.cyl).replace(/\./g, ',')}`);
@@ -1966,7 +1966,7 @@ export default function ProductionHubPage() {
                                                     {eye.isRgp && <span className="ml-1.5 text-[10px] font-bold bg-orange-100 text-orange-700 rounded px-1.5 py-0.5">RGP</span>}
                                                     {eye.myorthok && <span className="ml-1.5 text-[10px] font-bold bg-teal-100 text-teal-700 rounded px-1.5 py-0.5">MyOrthoK</span>}
                                                 </td>
-                                                <td className="px-2 py-2 text-center text-gray-700">{eye.km ?? '—'}</td>
+                                                <td className="px-2 py-2 text-center text-gray-700">{eye.isRgp ? '—' : (eye.km ?? '—')}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.tp ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.dia ?? '—'}</td>
                                                 <td className="px-2 py-2 text-center text-gray-700">{eye.e1 != null ? `${eye.e1}${eye.e2 != null ? ' / ' + eye.e2 : ''}` : '—'}</td>
