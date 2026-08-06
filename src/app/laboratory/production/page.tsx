@@ -1680,6 +1680,40 @@ export default function ProductionHubPage() {
                                     <RefreshCw className={`w-3.5 h-3.5 ${syncingOrderId === order.order_id ? 'animate-spin' : ''}`} />
                                     {syncingOrderId === order.order_id ? 'Отправка...' : 'Отправить в 1С'}
                                 </button>
+                                {(order.status === 'ready' || order.status === 'shipped' || order.status === 'delivered') && (
+                                    <button
+                                        onClick={() => {
+                                            import('@/lib/generateInvoicePdf').then(({ generateInvoicePdf }) => {
+                                                generateInvoicePdf({
+                                                    order_id: order.order_id,
+                                                    patient: order.patient,
+                                                    meta: order.meta,
+                                                    company: order.company,
+                                                    config: order.config,
+                                                    is_urgent: order.is_urgent,
+                                                    total_price: order.total_price,
+                                                    discount_percent: (order as any).discount_percent,
+                                                    document_name_od: (order as any).document_name_od,
+                                                    document_name_os: (order as any).document_name_os,
+                                                    price_od: (order as any).price_od,
+                                                    price_os: (order as any).price_os,
+                                                    products: (order as any).products,
+                                                    contract: order.contract as any,
+                                                    optic_inn: order.inn,
+                                                    optic_address: order.delivery_address,
+                                                    distributor_org: (order as any).distributor_org,
+                                                    lab_org: (order as any).lab_org,
+                                                    onecInvoiceNumber: (order as any).onecInvoiceNumber,
+                                                    onecInvoiceDate: (order as any).onecInvoiceDate,
+                                                });
+                                            });
+                                        }}
+                                        className="btn btn-secondary text-xs py-2 px-3 gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Скачать счет
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => {
                                         import('@/lib/generateLabelPdf').then(({ generateLabelPdf }) => {

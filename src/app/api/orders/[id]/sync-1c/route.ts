@@ -31,7 +31,7 @@ export async function POST(
     });
     const orderSyncService = new OrderSyncService(client);
 
-    const invoice = await orderSyncService.syncOrderTo1C(params.id);
+    const invoice = await orderSyncService.createInvoiceIn1C(params.id);
 
     return NextResponse.json({
       success: true,

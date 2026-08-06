@@ -106,6 +106,26 @@ export async function PATCH(
             }
         }
 
+        // Trigger 1C Invoice creation if status changed to ready
+        if (newStatus === 'ready' && order.status !== 'ready') {
+            try {
+                const { OrderSyncService } = await import('@/lib/onec/orderSync');
+                const { OneCClient } = await import('@/lib/onec/client');
+                const client = new OneCClient({
+                    baseUrl: process.env.ONEC_API_URL || '',
+                    username: process.env.ONEC_API_USER || '',
+                    password: process.env.ONEC_API_PASSWORD || ''
+                });
+                const syncService = new OrderSyncService(client);
+                // Ошибки не блокируют ответ клиенту, но логируются
+                syncService.createInvoiceIn1C(updated.id).catch(e => {
+                    console.error('[1C Sync Async Error]:', e);
+                });
+            } catch (err) {
+                console.error('Error initializing 1C sync:', err);
+            }
+        }
+
         // Transform to frontend format
         
         // Send WhatsApp notifications
