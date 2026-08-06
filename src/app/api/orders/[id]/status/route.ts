@@ -109,18 +109,31 @@ export async function PATCH(
         // Trigger 1C Invoice creation if status changed to ready
         if (newStatus === 'ready' && order.status !== 'ready') {
             try {
-                const { OrderSyncService } = await import('@/lib/onec/orderSync');
-                const { OneCClient } = await import('@/lib/onec/client');
-                const client = new OneCClient({
-                    baseUrl: process.env.ONEC_API_URL || '',
-                    username: process.env.ONEC_API_USER || '',
-                    password: process.env.ONEC_API_PASSWORD || ''
+                // Загружаем настройки 1С из организации лаборатории, так же как в ручной синхронизации
+                const orderWithLab = await prisma.order.findUnique({
+                    where: { id: order.id },
+                    include: { labOrg: true }
                 });
-                const syncService = new OrderSyncService(client);
-                // Обязательно используем await, иначе Vercel убивает фоновый процесс до завершения запроса
-                await syncService.createInvoiceIn1C(updated.id).catch(e => {
-                    console.error('[1C Sync Async Error]:', e);
-                });
+                const onecConf = (orderWithLab?.labOrg as any)?.metadata?.onec;
+                
+                if (onecConf && onecConf.baseUrl && onecConf.username && onecConf.password) {
+                    const { OrderSyncService } = await import('@/lib/onec/orderSync');
+                    const { OneCClient } = await import('@/lib/onec/client');
+                    
+                    const client = new OneCClient({
+                        baseUrl: onecConf.baseUrl,
+                        username: onecConf.username,
+                        password: onecConf.password
+                    });
+                    const syncService = new OrderSyncService(client);
+                    
+                    // Обязательно используем await, иначе Vercel убивает фоновый процесс до завершения запроса
+                    await syncService.createInvoiceIn1C(updated.id).catch(e => {
+                        console.error('[1C Sync Async Error]:', e);
+                    });
+                } else {
+                    console.warn('[1C Sync] Пропущено: нет настроек 1С у лаборатории.');
+                }
             } catch (err) {
                 console.error('Error initializing 1C sync:', err);
             }
