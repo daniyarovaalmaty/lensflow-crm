@@ -227,7 +227,7 @@ export default function ProductionHubPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Не удалось синхронизировать');
-            alert('Успешно отправлено в 1С (создан счет и накладная)!');
+            alert('Успешно отправлено в 1С (создан счет на оплату)!');
             await loadOrders();
         } catch (e: any) {
             console.error('1C sync error:', e);
