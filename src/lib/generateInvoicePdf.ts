@@ -89,16 +89,18 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<void> {
     const odUnitPrice = order.price_od ?? (odQty > 0 ? PRICE_PER_LENS : 0);
     const osUnitPrice = order.price_os ?? (osQty > 0 ? PRICE_PER_LENS : 0);
 
-    const providerName = order.contract?.provider?.name || order.distributor_org?.name || order.lab_org?.name || 'ТОО "MedInnVision"';
-    const providerInn = order.contract?.provider?.inn || order.distributor_org?.inn || order.lab_org?.inn || '970121400808';
-    const providerAddress = order.contract?.provider?.address || order.distributor_org?.address || order.lab_org?.address || 'Алматинская обл., Талгарский р-он, с. Талгар, ул. БЕРЕГОВАЯ, д. 72';
-    const providerBank = order.contract?.provider?.bankName || order.distributor_org?.bankName || order.lab_org?.bankName || 'АО "Народный Банк Казахстана"';
-    const providerBik = order.contract?.provider?.bik || order.distributor_org?.bik || order.lab_org?.bik || 'HSBKKZKX';
-    const providerIban = order.contract?.provider?.iban || order.distributor_org?.iban || order.lab_org?.iban || 'KZ48601A861003807741';
+    // По требованию бизнеса: Поставщиком всегда выступает лаборатория (MedInn Vision Lab),
+    // а Покупателем — её прямой контрагент (Дистрибьютор, если он есть, иначе сама Оптика).
+    const providerName = order.lab_org?.name || 'ТОО "MedInn Vision Lab"';
+    const providerInn = order.lab_org?.inn || '220340019448';
+    const providerAddress = order.lab_org?.address || 'Алматинская обл., Талгарский р-он, с. Талгар, ул. БЕРЕГОВАЯ, д. 72';
+    const providerBank = order.lab_org?.bankName || 'АО "Народный Банк Казахстана"';
+    const providerBik = order.lab_org?.bik || 'HSBKKZKX';
+    const providerIban = order.lab_org?.iban || 'KZ48601A861003807741';
 
-    const clientName = order.contract?.client?.name || order.company || 'Покупатель не указан';
-    const clientInn = order.contract?.client?.inn || order.optic_inn || (order as any).inn || '';
-    const clientAddress = order.contract?.client?.address || order.optic_address || (order as any).delivery_address || '';
+    const clientName = order.distributor_org?.name || order.company || 'Покупатель не указан';
+    const clientInn = order.distributor_org?.inn || order.optic_inn || (order as any).inn || '';
+    const clientAddress = order.distributor_org?.address || order.optic_address || (order as any).delivery_address || '';
 
     let contractStr = '________________________________________';
     if (order.contract) {
