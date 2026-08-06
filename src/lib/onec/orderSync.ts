@@ -98,13 +98,26 @@ export class OrderSyncService {
         return '183a204f-8ccc-11f1-804d-0007432a3458'; // Hardcoded Ref_Key for cloned item
       }
 
+      // Маппинг названий из CRM в точные названия (Наименование) в справочнике 1С
+      let mappedName = name;
+      if (name.includes('DK 180')) {
+        if (name.toLowerCase().includes('тор')) mappedName = 'Линза КЖК OKV-RGP тор. DK 180';
+        else mappedName = 'Линза КЖК OKV-RGP сфер. DK 180';
+      } else if (name.includes('DK 100')) {
+        if (name.toLowerCase().includes('тор')) mappedName = '100 ТОР Линзы КЖК OKV-RGP тор. DK 100';
+        else mappedName = '100 сфер Линзы КЖК OKV-RGP сфер. DK 100';
+      } else if (name.includes('DK 125') || name.includes('DK125')) {
+        if (name.toLowerCase().includes('тор')) mappedName = 'Линза КЖК OKV-RGP OK тор. DK125';
+        else mappedName = 'Линза КЖК OKV-RGP сфер. DK125';
+      }
+
       // В идеале мы должны искать в локальной БД (Product.onecId),
       // но если таблица еще не синхронизирована, ищем напрямую в 1С по OData фильтру:
-      const res = await this.oneCClient.request<any>(`Catalog_Номенклатура?$filter=Description eq '${name}'`);
+      const res = await this.oneCClient.request<any>(`Catalog_Номенклатура?$filter=Description eq '${mappedName}'`);
       if (res.value && res.value.length > 0) {
         return res.value[0].Ref_Key;
       }
-      throw new Error(`Номенклатура '${name}' не найдена в 1С`);
+      throw new Error(`Номенклатура '${mappedName}' (исходно: '${name}') не найдена в 1С`);
     };
 
     if (order.documentNameOd) {
