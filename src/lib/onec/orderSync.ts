@@ -53,11 +53,8 @@ export class OrderSyncService {
     let counterpartyKey = org.onecOrgId;
     
     if (!counterpartyKey) {
-      // Ищем контрагента в 1С по ИНН или Названию
+      // Ищем контрагента в 1С по Названию (поиск по ИНН выдает ошибку "Сегмент пути ИНН не найден" в данной конфигурации 1С)
       let searchFilter = `Description eq '${org.name}'`;
-      if (org.inn) {
-          searchFilter = `ИНН eq '${org.inn}'`;
-      }
       
       const searchRes = await this.oneCClient.request<any>(`Catalog_Контрагенты?$filter=${searchFilter}`);
       
