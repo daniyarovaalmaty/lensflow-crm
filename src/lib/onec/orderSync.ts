@@ -98,22 +98,25 @@ export class OrderSyncService {
         return '183a204f-8ccc-11f1-804d-0007432a3458'; // Hardcoded Ref_Key for cloned item
       }
 
-      // Маппинг названий из CRM в точные названия (Наименование) в справочнике 1С
+      // Маппинг названий из CRM в уникальный Код (Code) из справочника 1С (папка РУ)
+      let mappedCode = null;
       let mappedName = name;
+
       if (name.includes('DK 180')) {
-        if (name.toLowerCase().includes('тор')) mappedName = 'Линза КЖК OKV-RGP тор. DK 180';
-        else mappedName = 'Линза КЖК OKV-RGP сфер. DK 180';
+        if (name.toLowerCase().includes('тор')) { mappedName = 'Линза КЖК OKV-RGP тор. DK 180'; mappedCode = '00000000394'; }
+        else { mappedName = 'Линза КЖК OKV-RGP сфер. DK 180'; mappedCode = '00000000393'; }
       } else if (name.includes('DK 100')) {
-        if (name.toLowerCase().includes('тор')) mappedName = 'Линза ЖКГ OKV-RGP OK тор. 100';
-        else mappedName = 'Линза ЖКГ OKV-RGP OK сфер. 100';
+        if (name.toLowerCase().includes('тор')) { mappedName = '100 ТОР Линзы КЖК OKV-RGP тор. DK 100'; mappedCode = '00000000226'; }
+        else { mappedName = '100 сфер Линзы КЖК OKV-RGP сфер. DK 100'; mappedCode = '00000000225'; }
       } else if (name.includes('DK 125') || name.includes('DK125')) {
-        if (name.toLowerCase().includes('тор')) mappedName = 'Линза ЖКГ OKV-RGP OK тор. 125';
-        else mappedName = 'Линза ЖКГ OKV-RGP OK сфер. 125';
+        if (name.toLowerCase().includes('тор')) { mappedName = 'Линза КЖК OKV-RGP OK тор. DK125'; mappedCode = '00000000229'; }
+        else { mappedName = 'Линза КЖК OKV-RGP сфер. DK125'; mappedCode = '00000000246'; }
       }
 
-      // В идеале мы должны искать в локальной БД (Product.onecId),
-      // но если таблица еще не синхронизирована, ищем напрямую в 1С по OData фильтру:
-      const res = await this.oneCClient.request<any>(`Catalog_Номенклатура?$filter=Description eq '${mappedName}'`);
+      // Если есть жесткий Код, ищем по Коду (100% надежно), иначе ищем по точному Наименованию
+      const filter = mappedCode ? `Code eq '${mappedCode}'` : `Description eq '${mappedName}'`;
+      const res = await this.oneCClient.request<any>(`Catalog_Номенклатура?$filter=${filter}`);
+      
       if (res.value && res.value.length > 0) {
         return res.value[0].Ref_Key;
       }
