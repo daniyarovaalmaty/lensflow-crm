@@ -27,6 +27,12 @@ export class OrderSyncService {
 
     if (!order) throw new Error('Order not found');
     if (!order.organization) throw new Error('Order has no organization attached');
+    
+    // Предотвращение дубликатов: если счет уже создан, не создаем его повторно
+    if (order.onecInvoiceId) {
+      console.log(`[1C Sync] Order ${order.id} already has invoice ${order.onecInvoiceNumber}. Skipping.`);
+      return { Ref_Key: order.onecInvoiceId, Number: order.onecInvoiceNumber, Date: order.onecInvoiceDate };
+    }
 
     const org = order.organization;
 
