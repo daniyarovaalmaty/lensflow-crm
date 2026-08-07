@@ -104,11 +104,11 @@ export class OrderSyncService {
         if (name.toLowerCase().includes('тор')) mappedName = 'Линза КЖК OKV-RGP тор. DK 180';
         else mappedName = 'Линза КЖК OKV-RGP сфер. DK 180';
       } else if (name.includes('DK 100')) {
-        if (name.toLowerCase().includes('тор')) mappedName = '100 ТОР Линзы КЖК OKV-RGP тор. DK 100';
-        else mappedName = '100 сфер Линзы КЖК OKV-RGP сфер. DK 100';
+        if (name.toLowerCase().includes('тор')) mappedName = 'Линза ЖКГ OKV-RGP OK тор. 100';
+        else mappedName = 'Линза ЖКГ OKV-RGP OK сфер. 100';
       } else if (name.includes('DK 125') || name.includes('DK125')) {
-        if (name.toLowerCase().includes('тор')) mappedName = 'Линза КЖК OKV-RGP OK тор. DK125';
-        else mappedName = 'Линза КЖК OKV-RGP сфер. DK125';
+        if (name.toLowerCase().includes('тор')) mappedName = 'Линза ЖКГ OKV-RGP OK тор. 125';
+        else mappedName = 'Линза ЖКГ OKV-RGP OK сфер. 125';
       }
 
       // В идеале мы должны искать в локальной БД (Product.onecId),
