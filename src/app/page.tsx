@@ -139,6 +139,9 @@ export default async function HomePage() {
                         <Link href="/guide" className="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors hidden sm:block">
                             Руководство
                         </Link>
+                        <Link href="/cases" className="px-5 py-2.5 text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors hidden sm:block">
+                            Голосование по кейсам
+                        </Link>
                         {isLoggedIn ? (
                             <Link href={dashboardUrl} className="px-5 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
                                 Перейти в систему →
