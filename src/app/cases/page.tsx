@@ -344,17 +344,17 @@ export default function CasesVotingPage() {
                             disabled={hasVoted}
                             className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between group ${
                               isSelected 
-                                ? \`bg-gradient-to-r \${option.color} border-transparent shadow-lg shadow-white/10\` 
+                                ? `bg-gradient-to-r ${option.color} border-transparent shadow-lg shadow-white/10` 
                                 : hasVoted 
                                   ? 'bg-white/5 border-white/5 opacity-50 cursor-not-allowed'
                                   : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10 cursor-pointer'
                             }`}
                           >
                             <div>
-                              <div className={`font-bold \${isSelected ? 'text-white' : 'text-white group-hover:text-white'}`}>{option.label}</div>
-                              <div className={`text-xs mt-1 \${isSelected ? 'text-white/80' : 'text-slate-400'}`}>{option.desc}</div>
+                              <div className={`font-bold ${isSelected ? 'text-white' : 'text-white group-hover:text-white'}`}>{option.label}</div>
+                              <div className={`text-xs mt-1 ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>{option.desc}</div>
                             </div>
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center \${isSelected ? 'border-white bg-white/20' : 'border-white/20 group-hover:border-white/50'}`}>
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-white bg-white/20' : 'border-white/20 group-hover:border-white/50'}`}>
                               {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
                             </div>
                           </button>
