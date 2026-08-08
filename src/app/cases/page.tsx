@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, ChevronRight, Activity, Eye, Brain, Stethoscope, AlertCircle } from 'lucide-react';
 
-type VoteOption = 'ОКЛ' | 'Stellest' | 'Дефокусные МКЛ' | 'Комбинированный';
+type VoteOption = 'ОКЛ' | 'Дефокусные очки' | 'Stellest' | 'Дефокусные МКЛ Art Most' | 'Stellest + Art Most';
 
 interface CaseData {
   id: number;
@@ -44,7 +44,7 @@ const cases: CaseData[] = [
     axialLength: ["OD: 24,28 мм", "OS: 24,15 мм"],
     keratometry: ["OD: K1 42,75 D @178°, K2 43,25 D @88°", "OS: K1 42,50 D @172°, K2 43,00 D @82°"],
     extra: ["Биомикроскопия: Без особенностей", "Глазное дно: Без патологии"],
-    correctAnswer: 'Stellest',
+    correctAnswer: 'Дефокусные очки',
     explanation: [
       "ребенок категорически не готов к контактным линзам;",
       "родители также против линз;",
@@ -109,7 +109,7 @@ const cases: CaseData[] = [
     axialLength: ["OD: 24,65 мм", "OS: 24,54 мм"],
     keratometry: ["OD: K1 43,00 D, K2 43,50 D", "OS: K1 42,75 D, K2 43,50 D"],
     extra: ["ВРСП — 11 секунд", "Окрашивание флюоресцеином: Отрицательное", "Биомикроскопия: Без особенностей"],
-    correctAnswer: 'Дефокусные МКЛ',
+    correctAnswer: 'Дефокусные МКЛ Art Most',
     explanation: [
       "уже имеет опыт ношения мягких линз;",
       "мотивирована;",
@@ -158,9 +158,10 @@ const cases: CaseData[] = [
 
 const votingOptions: { id: VoteOption; label: string; desc: string; color: string }[] = [
   { id: 'ОКЛ', label: 'ОКЛ', desc: 'Ортокератологические линзы', color: 'from-blue-500 to-indigo-600' },
-  { id: 'Stellest', label: 'Дефокусные очки', desc: 'Например, Stellest', color: 'from-emerald-400 to-teal-500' },
-  { id: 'Дефокусные МКЛ', label: 'Дефокусные МКЛ', desc: 'Например, Art Most', color: 'from-violet-500 to-purple-600' },
-  { id: 'Комбинированный', label: 'Stellest + Art Most', desc: 'Комбинированный подход', color: 'from-amber-400 to-orange-500' }
+  { id: 'Дефокусные очки', label: 'Дефокусные очки', desc: 'Очковые линзы', color: 'from-emerald-400 to-teal-500' },
+  { id: 'Stellest', label: 'Stellest', desc: 'Линзы Stellest', color: 'from-cyan-400 to-blue-500' },
+  { id: 'Дефокусные МКЛ Art Most', label: 'Дефокусные МКЛ Art Most', desc: 'Мягкие контактные линзы', color: 'from-violet-500 to-purple-600' },
+  { id: 'Stellest + Art Most', label: 'Stellest + Art Most', desc: 'Комбинированный подход', color: 'from-amber-400 to-orange-500' }
 ];
 
 export default function CasesVotingPage() {
