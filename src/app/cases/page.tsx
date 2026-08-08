@@ -164,6 +164,8 @@ const votingOptions: { id: VoteOption; label: string; desc: string; color: strin
   { id: 'Stellest + Art Most', label: 'Stellest + Art Most', desc: 'Комбинированный подход', color: 'from-amber-400 to-orange-500' }
 ];
 
+import { submitCaseVote } from './actions';
+
 export default function CasesVotingPage() {
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
   const [votes, setVotes] = useState<Record<number, VoteOption>>({});
@@ -177,7 +179,10 @@ export default function CasesVotingPage() {
     if (hasVoted) return;
     setVotes(prev => ({ ...prev, [activeCase.id]: option }));
     
-    // Simulate API call to register vote, then show result
+    // Send vote to server
+    submitCaseVote(activeCase.id, option).catch(console.error);
+    
+    // Simulate animation delay, then show result
     setTimeout(() => {
       setShowResult(prev => ({ ...prev, [activeCase.id]: true }));
     }, 800);

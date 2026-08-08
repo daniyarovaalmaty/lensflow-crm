@@ -1619,3 +1619,14 @@ model AttendanceRecord {
   @@unique([userId, date])
   @@map("attendance_records")
 }
+
+// ==================== Voting System ====================
+model CaseVote {
+  id         String   @id @default(cuid())
+  caseId     Int
+  voterName  String?  // Anonymous voter identifier
+  vote       String
+  createdAt  DateTime @default(now())
+
+  @@map("case_votes")
+}
